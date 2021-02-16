@@ -24,7 +24,7 @@ For it to work properly, Kubernetes metrics server must be installed in the clus
 ## Get Repo Info
 
 ```bash
-$ helm repo add akeyless-services-helm https://akeylesslabs.github.io/akeyless-services-helm
+$ helm repo add helm-charts https://akeylesslabs.github.io/helm-charts
 $ helm repo update
 ```
 See [helm repo](https://helm.sh/docs/helm/helm_repo/) for command documentation.
@@ -36,7 +36,7 @@ The `values.yaml` file holds default values, replace the values with the ones fr
 
 To install the chart run:
 ```bash
-helm install [RELEASE_NAME] akeyless-services-helm/akeyless-api-gateway
+helm install [RELEASE_NAME] helm-charts/akeyless-api-gateway
 ``` 
 
 ## Parameters

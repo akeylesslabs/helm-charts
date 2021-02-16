@@ -16,7 +16,7 @@ type: application
 # to the chart and its templates, including the app version.
 version: 0.5.0
 appVersion: 0.11.0
-icon: https://akeylesslabs.github.io/akeyless-services-helm/assets/logo/akl.jpeg
+icon: https://akeylesslabs.github.io/helm-charts/assets/logo/akl.jpeg
 home: https://www.akeyless.io
 sources:
-  - https://github.com/akeylesslabs/akeyless-services-helm/tree/feature/helm_repo/akeyless-zero-trust-web-access
+  - https://github.com/akeylesslabs/helm-charts/tree/feature/helm_repo/akeyless-zero-trust-web-access
