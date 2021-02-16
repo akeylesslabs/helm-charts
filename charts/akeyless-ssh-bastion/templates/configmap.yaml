@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $.Release.Name }}-cm-creds
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ $.Values.containerName }}
+    chart: {{ $.Chart.Name }}
+data:
+  ca.pub: |
+{{ required "A valid .Values.conf.CAPublicKey entry required!" .Values.config.CAPublicKey | indent 4 }}
+
+{{- if .Values.config.sessionTermination.enabled }}
+  api-url: |
+
+  api-token: |
+
+{{- end }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $.Release.Name }}-cm-conf
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ $.Values.containerName }}
+    chart: {{ $.Chart.Name }}
+data:
+{{- if .Values.config.logForwording.enabled }}
+  logand.conf: |
+{{ required "A valid .Values.config.logForwording.logand entry required!" .Values.config.logForwording.settings | indent 4 }}
+{{- end }}
+
+{{ with .Values.config }}
+  akeyless_config_file: |
+    {{ required "API Gateway URL is required" .apiGatewayURL }}
+    cmd=auth&access-id={{ .listOnlyCredentials.accessID }}&access-key={{ .listOnlyCredentials.accessKey }}
+    cmd=auth&access-id={{ required "Privileged credentials are required" .privilegedAccess.accessID }}&access-key={{ required "Privileged credentials are required" .privilegedAccess.accessKey }}
+{{- end}}

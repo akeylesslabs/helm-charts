@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "akeyless-services.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "akeyless-services.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "akeyless-services.fullname" . }}
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "akeyless-services.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "akeyless-services.selectorLabels" . | nindent 8 }}
+    spec:
+      volumes:
+      {{- if .Values.customerFragments }}
+      - name: akeyless-config
+        emptyDir: {}
+      - name: configmap-akeyless-config
+        configMap:
+          name: {{ $.Release.Name }}-cm-akeyless-config
+
+      initContainers:
+        # Since k8s 1.9.4, config maps mount read-only volumes. Since the Docker image also writes to the config file,
+        # the file must be mounted as read-write. We use init containers to copy from the config map read-only
+        # path, to a read-write path
+        - name: bootstrap
+          image: busybox:1.30.1
+          imagePullPolicy: IfNotPresent
+          command: ['sh']
+          args:
+            - "-c"
+            - |
+              set -ex
+              [ "$(ls /configmap_akeyless)" ] && cp /configmap_akeyless/* /root/.akeyless
+          volumeMounts:
+            - name: configmap-akeyless-config
+              mountPath: /configmap_akeyless
+            - name: akeyless-config
+              mountPath: /root/.akeyless
+      {{- end }}
+      containers:
+        - name: {{ .Values.containerName }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            {{- range .Values.service.ports }}
+            - containerPort: {{ .port }}
+              name: {{ .name }}
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: 18888
+{{- toYaml .Values.livenessProbe | trim | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /status
+              port: 18888
+{{- toYaml .Values.readinessProbe | trim | nindent 12 }}
+          {{- if .Values.customerFragments }}
+          volumeMounts:
+            - name: akeyless-config
+              mountPath: /root/.akeyless
+          {{- end }}
+          resources:
+{{- toYaml .Values.resources | nindent 12 }}
+          env:
+          {{- if .Values.akeylessUserAuth.adminAccessId }}
+            - name: ADMIN_ACCESS_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Release.Name }}-conf-secret
+                  key: ADMIN_ACCESS_ID
+          {{- end }}
+          {{- if .Values.akeylessUserAuth.adminAccessKey }}
+            - name: ADMIN_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Release.Name }}-conf-secret
+                  key: ADMIN_ACCESS_KEY
+          {{- end }}
+          {{- if .Values.akeylessUserAuth.adminPassword }}
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Release.Name }}-conf-secret
+                  key: ADMIN_PASSWORD
+          {{- end }}
+          {{- if .Values.akeylessUserAuth.clusterName }}
+            - name: CLUSTER_NAME
+              value: {{ .Values.akeylessUserAuth.clusterName }}
+          {{- end }}
+          {{- if .Values.akeylessUserAuth.configProtectionKeyName }}
+            - name: CONFIG_PROTECTION_KEY_NAME
+              value: {{ .Values.akeylessUserAuth.configProtectionKeyName }}
+          {{- end }}
+          {{- if .Values.env }}
+  {{- toYaml .Values.env | nindent 12 }}
+          {{- end }}

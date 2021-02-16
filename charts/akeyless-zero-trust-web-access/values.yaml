@@ -1,0 +1,247 @@
+# Default values for akeyless-zero-trust-web-access.
+
+image:
+  dockerRepositoryCreds:
+
+dispatcher:
+  replicaCount: 1
+  image:
+    repository: akeyless/zero-trust-web-dispatcher
+    pullPolicy: Always
+#    tag: latest
+
+  containerName: "web-dispatcher"
+
+  ## Configure the ingress resource that allows you to access the
+  ## akeyless-zero-trust-web-access installation. Set up the URL
+  ## ref: http://kubernetes.io/docs/user-guide/ingress/
+  ##
+  ingress:
+    ## Set to true to enable ingress record generation
+    ##
+    enabled: false
+
+    annotations: {}
+# Example for Nginx ingress
+#    annotations:
+#      kubernetes.io/ingress.class: nginx
+#      kubernetes.io/proxy-connect-timeout: "4000"
+#      nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
+#      nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+
+    hostname: aztwa.local
+    ## Path for the default host
+    ##
+    path: /
+
+    ## Enable TLS configuration for the hostname defined at ingress.hostname parameter
+    ## TLS certificates will be retrieved from a TLS secret with name: {{- printf "%s-tls" .Values.ingress.hostname }}
+    ## or a custom one if you use the tls.existingSecret parameter
+    ##
+    tls: false
+
+    ## Set this to true in order to add the corresponding annotations for cert-manager
+    ##
+    certManager: false
+
+    ## existingSecret: name-of-existing-secret
+
+  service:
+    # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
+    annotations: {}
+    type: LoadBalancer
+    port: 9000
+
+  resources:
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+     limits:
+       memory: 1Gi
+     requests:
+       cpu: 1000m
+       memory: 1Gi
+
+  livenessProbe:
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+    periodSeconds: 10
+    failureThreshold: 6
+    successThreshold: 1
+
+  readinessProbe:
+    initialDelaySeconds: 5
+    timeoutSeconds: 3
+    periodSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+
+  config:
+    # a full URL of Akeyless API Gateway
+    apiGatewayURL: https://rest.akeyless.io
+
+    # non-privileged credentials with "list" only access
+    listOnlyCredentials:
+      accessID: ""
+      accessKey: ""
+
+    # optional credentials for zero-trust access: if provided, it is possible for
+    # end users to only have "list" permissions on Akeyless items if privileged
+    # credentials have "read" access.
+    privilegedAccess:
+      accessID: ""
+      accessKey: ""
+
+      # limit access to privileged items only for these end user access ids.
+      # if left empty, all access ids are allowed
+      allowedAccessIDs: []
+      # - p-1234
+      # - p-5678
+      # - p-5678
+
+   # When false, only requests with preemptive JWT auth will be accepted
+    allowedInternalAuth: "true"
+   # When false, dispatcher session cookie can be send only on top off encrypted requests (HTTPS)
+    disableSecureCookie: "true"
+
+    logForward:
+#    # audit configuration for log forwarding, currently support several technologies: https://akeyless.readme.io/docs/ssh-log-forwarding
+#    #splunk example
+#    #  logForward: |
+#    #    target_log_type="splunk"
+#    #    target_splunk_sourcetype=""
+#    #    target_splunk_source=""
+#    #    target_splunk_index=""
+#    #    target_splunk_token=""
+#    #    target_splunk_url=""
+
+webWorker:
+  replicaCount: 5
+  image:
+    repository: akeyless/zero-trust-web-worker
+    pullPolicy: Always
+#    tag: latest
+
+  containerName: "web-worker"
+
+  service:
+    # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
+    annotations: {}
+    port: 5800
+
+  resources:
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+     limits:
+       memory: 2Gi
+     requests:
+       cpu: 1000m
+       memory: 2Gi
+
+  livenessProbe:
+    successThreshold: 1
+
+#  readinessProbe:
+#    initialDelaySeconds: 5
+#    periodSeconds: 2
+#    failureThreshold: 1
+#    successThreshold: 1
+#  timeoutSeconds: 5
+
+  config:
+    policies: |
+        {
+          "policies": {
+            "BlockAboutConfig": true,
+            "BlockAboutAddons": true,
+            "BlockAboutProfiles": true,
+            "BlockAboutSupport": true,
+            "DisableDeveloperTools": true,
+            "DisableFirefoxAccounts": true,
+            "DisablePasswordReveal": true,
+            "DisablePrivateBrowsing": true,
+            "DisableProfileImport": true,
+            "DisableSafeMode": true,
+            "OfferToSaveLogins": false,
+            "OfferToSaveLoginsDefault": false,
+            "PasswordManagerEnabled": false,
+            "Proxy": {
+              "Mode": "none",
+              "Locked": true
+            },
+            "Preferences": {},
+            "WebsiteFilter": {
+              "Block": [
+                "<all_urls>"
+              ],
+              "Exceptions": [
+                "https://*.akeyless.io/*",
+                "https://*.okta.com/*"
+              ]
+            }
+          }
+        }
+
+dlp:
+  enabled: false
+  config:
+    hostAddress: ""
+    # host/{pathPrefix}
+    pathPrefix: ""
+    # FORCING or LEARNING
+    mode: ""
+    logLevel: "INFO"
+  audit:
+# audit configuration for log forwarding, currently support several technologies: https://akeyless.readme.io/docs/ssh-log-forwarding
+#splunk example
+#  audit: |
+#    target_log_type="splunk"
+#    target_splunk_sourcetype=""
+#    target_splunk_source=""
+#    target_splunk_index=""
+#    target_splunk_token=""
+#    target_splunk_url=""
+
+
+persistence: {}
+#  shareStorageVolume:
+#    name: share-storage
+#    storageClassName:
+#    accessModes:
+#      - ReadWriteMany
+#    annotations: {}
+#    size: 2Gi
+#    matchLabels:
+
+
+HPA:
+  # Set the below to false in case you do not want to add Horizontal Pod AutoScaling to the StatefulSet (not recommended)
+  enabled: true
+  dispatcher:
+    minReplicas: 1
+    maxReplicas: 14
+    cpuAvgUtil: 50
+    memAvgUtil: 50
+  webWorker:
+    minReplicas: 3
+    maxReplicas: 14
+    cpuAvgUtil: 50
+    memAvgUtil: 50
+
+metrics:
+  enabled: false
+  podAnnotation: false
+  serviceMonitor:
+  # When service monitor is off, we assume that the installed prometheus support pod annotation-based discovery of services
+    enabled: false
+#    namespace: monitoring
+    interval: "15s"
+#    scrapeTimeout:
+
+    # MANDATORY!
+    # Prometheus discovers ServiceMonitors that are labeled with the same release tag as the prometheus-operator release
+#    releaseLabels:
+#      release: prometheus-stack

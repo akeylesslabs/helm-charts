@@ -1,0 +1,54 @@
+{{- if .Values.HPA.enabled }}
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ $.Release.Name }}-hpa-dispatcher
+  namespace: {{ .Release.Namespace }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: web-dispatcher-deployment
+  minReplicas: {{ $.Values.HPA.dispatcher.minReplicas | default 1 }}
+  maxReplicas: {{ $.Values.HPA.dispatcher.maxReplicas | default 14 }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ $.Values.HPA.dispatcher.cpuAvgUtil }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ $.Values.HPA.dispatcher.memAvgUtil }}
+---
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ $.Release.Name }}-hpa-web-worker
+  namespace: {{ .Release.Namespace }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: web-worker-deployment
+  minReplicas: {{ $.Values.HPA.webWorker.minReplicas | default 3 }}
+  maxReplicas: {{ $.Values.HPA.webWorker.maxReplicas | default 14 }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ $.Values.HPA.webWorker.cpuAvgUtil }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ $.Values.HPA.webWorker.memAvgUtil }}
+
+{{- end }}

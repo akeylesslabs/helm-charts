@@ -1,0 +1,33 @@
+{{- if .Values.dispatcher.ingress.enabled }}
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: {{ include "akeyless-zero-web-access.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+{{- include "akeyless-zero-web-access.labels" . | nindent 4 }}
+  annotations:
+{{- if .Values.dispatcher.ingress.certManager }}
+    kubernetes.io/tls-acme: "true"
+{{- end }}
+{{- if .Values.dispatcher.ingress.annotations }}
+{{ toYaml .Values.dispatcher.ingress.annotations | indent 4 }}
+{{- end }}
+spec:
+  rules:
+{{- if .Values.dispatcher.ingress.hostname }}
+  - host: {{ .Values.dispatcher.ingress.hostname }}
+    http:
+      paths:
+      - path: {{ .Values.dispatcher.ingress.path }}
+        backend:
+         serviceName: {{ include "akeyless-zero-web-access.fullname" . }}-dispatcher
+         servicePort: http
+{{- end }}
+{{- if .Values.dispatcher.ingress.tls }}
+  tls:
+    - hosts:
+      - {{ .Values.dispatcher.ingress.hostname }}
+      secretName: {{ template "akeyless-zero-web-access.ingressSecretTLSName" . }}
+{{- end }}
+{{- end }}
