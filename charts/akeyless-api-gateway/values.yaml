@@ -121,7 +121,7 @@ resources: {}
   #   memory: 128Mi
 
 # Akeyless API Gateway application version
-version: latest
+#version:
 
 env: []
 
