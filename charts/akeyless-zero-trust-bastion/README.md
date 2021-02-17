@@ -1,16 +1,16 @@
-# Akeyless-Zero-Trust-Bastion
+# Akeyless Zero Trust Bastion
 
 Akeyless Zero Trust Bastion provides zero trust access to remote resources using Akeyless JIT credentials (dynamic secrets and SSH certificate issuers). 
 
 
 ## Introduction
-This chart bootstraps a Akeyless-Zero-Trust-Bastion deployment on a Kubernetes cluster using the Helm package manager.
+This chart bootstraps a Akeyless Zero Trust Bastion deployment on a Kubernetes cluster using the Helm package manager.
 
 
 ## Preparation
 
 ### Network
-Currently, when using DB application (mysql, mongodb.mssql) via the Zero Trust Bastion, it'll only work properly when using
+Currently, when using DB applications (mysql, mongodb, mssql, postgres) via the Zero Trust Bastion, it'll only work properly when using
 load balancer with "sticky" session:
 - Ingress - Make sure to use sticky session annotation, for example `nginx.ingress.kubernetes.io/affinity: "cookie"` in Nginx
 - Cloud Provider LB - Make sure to config the LB to support sticky session, for example is AWS, using ELB:   
@@ -41,23 +41,23 @@ helm install [RELEASE_NAME] helm-charts/akeyless-zero-trust-bastion
 
 ## Parameters
 
-The following table lists the configurable parameters of the Zero-Trust-Bastion chart, and their default values.
+The following table lists the configurable parameters of the Zero Trust Bastion chart, and their default values.
 
 ### Deployment parameters
 
 | Parameter                                 | Description                                                                                                          | Default                                                      |
 |-------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
-| `image.repository`                        | Zero-Trust-Bastion image name                                                                                        | `akeyless/zero-trust-bastion`                                |
-| `image.tag`                               | Zero-Trust-Bastion image tag                                                                                         | `latest`                                                     |      
-| `image.pullPolicy`                        | Zero-Trust-Bastion image pull policy                                                                                 | `Always`                                                     |  
+| `image.repository`                        | Zero Trust Bastion image name                                                                                        | `akeyless/zero-trust-bastion`                                |
+| `image.tag`                               | Zero Trust Bastion image tag                                                                                         | `latest`                                                     |      
+| `image.pullPolicy`                        | Zero Trust Bastion image pull policy                                                                                 | `Always`                                                     |  
 | `image.dockerRepositoryCreds`             | Akeyless docker repository credentials                                                                               | `nil`                                                        |
 | `updateStrategy`                          | Updating statefulset strategy                                                                                        | `RollingUpdate`                                              |  
-| `containerName`                           | Zero-Trust-Bastion container name                                                                                    | `zero-trust-bastion`                                         |  
-| `replicaCount`                            | Number of Zero-Trust-Bastion nodes                                                                                   | `1`                                                          |
-| `livenessProbe`                           | Liveness probe configuration for Zero-Trust-Bastion                                                                  | Check `values.yaml` file                                     |                   
-| `readinessProbe`                          | Readiness probe configuration for Zero-Trust-Bastion                                                                 | Check `values.yaml` file                                     |         
-| `resources.limits`                        | The resources limits for Zero-Trust-Bastion containers                                                               | `{}`                                                         |
-| `resources.requests`                      | The requested resources for Zero-Trust-Bastion containers                                                            | `{}`                                                         |
+| `containerName`                           | Zero Trust Bastion container name                                                                                    | `zero-trust-bastion`                                         |  
+| `replicaCount`                            | Number of Zero Trust Bastion nodes                                                                                   | `1`                                                          |
+| `livenessProbe`                           | Liveness probe configuration for Zero Trust Bastion                                                                  | Check `values.yaml` file                                     |                   
+| `readinessProbe`                          | Readiness probe configuration for Zero Trust Bastion                                                                 | Check `values.yaml` file                                     |         
+| `resources.limits`                        | The resources limits for Zero Trust Bastion containers                                                               | `{}`                                                         |
+| `resources.requests`                      | The requested resources for Zero Trust Bastion containers                                                            | `{}`                                                         |
 
 
 ### Exposure parameters
@@ -74,7 +74,7 @@ The following table lists the configurable parameters of the Zero-Trust-Bastion 
 | `ingress.tls`                             | Enable TLS configuration for the hostname defined at `ingress.hostname` parameter                                    | `false`                                                      |
 | `ingress.existingSecret`                  | Existing secret for the Ingress TLS certificate                                                                      | `nil`                                                        |  
 
-### Zero-Trust-Bastion configuration parameters
+### Zero Trust Bastion configuration parameters
 
 | Parameter                                 | Description                                                                                                          | Default                                                      |
 |-------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
@@ -85,15 +85,15 @@ The following table lists the configurable parameters of the Zero-Trust-Bastion 
 | `config.rdpRecord.s3.awsAccessKeyId`      | AWS Access Key ID, not required if using EC2 IAM roles                                                               | `nil`                                                        |
 | `config.rdpRecord.s3.awsSecretAccessKey`  | AWS Secret Access Key, not required if using EC2 IAM roles                                                           | `nil`                                                        |
 | `config.rdpRecord.existingSecret`         | Specifies an existing secret to be used for bastion, management AWS credentials                                      | `nil`                                                        |
-| `config.privilegedAccess.accessID` | Access ID with "read" capability for privileged access. | `nil` |
-| `config.privilegedAccess.allowedAccessIDs` | Access will be permitted only to these access IDs. By default, any access ID is accepted. | `[]` |
-| `config.apiGatewayURL` | API Gateway URL to use to fetch the secrets. | `https://rest.akeyless.io` |
+| `config.privilegedAccess.accessID`        | Access ID with "read" capability for privileged access.                                                              | `nil`                                                        |
+| `config.privilegedAccess.allowedAccessIDs`| Access will be permitted only to these access IDs. By default, any access ID is accepted.                            | `[]`                                                         |
+| `config.apiGatewayURL`                    | API Gateway URL to use to fetch the secrets.                                                                         | `https://rest.akeyless.io`                                   |
 
 ### HPA parameters
 
 | Parameter                                 | Description                                                                                                          | Default                                                      |
 |-------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
-| `HPA.enabled`                             | Enable Zero-Trust-Bastion Horizontal Pod Autoscaler                                                                  | `false`                                                      |
+| `HPA.enabled`                             | Enable Zero Trust Bastion Horizontal Pod Autoscaler                                                                  | `false`                                                      |
 | `HPA.minReplicas`                         | Minimum desired number of replicas                                                                                   | `1`                                                          |
 | `HPA.maxReplicas`                         | Minimum desired number of replicas                                                                                   | `14`                                                         |
 | `HPA.cpuAvgUtil`                          | CPU average utilization                                                                                              | `50`                                                         |

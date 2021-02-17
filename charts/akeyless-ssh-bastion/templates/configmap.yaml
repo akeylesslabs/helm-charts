@@ -27,9 +27,9 @@ metadata:
     app: {{ $.Values.containerName }}
     chart: {{ $.Chart.Name }}
 data:
-{{- if .Values.config.logForwording.enabled }}
+{{- if .Values.config.logForwarding.enabled }}
   logand.conf: |
-{{ required "A valid .Values.config.logForwording.logand entry required!" .Values.config.logForwording.settings | indent 4 }}
+{{ required "A valid .Values.config.logForwording.logand entry required!" .Values.config.logForwarding.settings | indent 4 }}
 {{- end }}
 
 {{ with .Values.config }}

@@ -1,4 +1,4 @@
-# Akeyless-Secrets-Injection
+# Akeyless Kubernetes Secrets Injection
 
 This chart will install a mutating admission webhook, that injects an executable to containers in a deployment/statefulset which than can request secrets from Akeyless Vault through environment variable definitions or local file on the container.
 
@@ -22,7 +22,7 @@ export WEBHOOK_NS=`<namepsace>`
 ## Get Repo Info
 
 ```bash
-$ helm repo add helm-charts https://akeylesslabs.github.io/helm-charts
+$ helm repo add akeyless https://akeylesslabs.github.io/helm-charts
 $ helm repo update
 ```
 
@@ -35,7 +35,7 @@ The `values.yaml` file holds default values, replace the values with the ones fr
 
 To install the chart run:
 ```bash
-helm install [RELEASE_NAME] helm-charts/akeyless-secrets-injection --namespace "${WEBHOOK_NS}"
+helm install [RELEASE_NAME] akeyless/akeyless-secrets-injection --namespace "${WEBHOOK_NS}"
 ``` 
 
 ## Deleting the Chart

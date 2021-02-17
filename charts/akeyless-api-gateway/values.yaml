@@ -1,6 +1,6 @@
 # Default values for akeyless-api-gateway.
 
-replicaCount: 1
+replicaCount: 2
 
 image:
   repository: akeyless/base
@@ -14,14 +14,17 @@ service:
   annotations: {}
   type: LoadBalancer
   ports:
-    - name: web-ui
+    - name: web
       port: 18888
       protocol: TCP
     - name: configure-app
       port: 8000
       protocol: TCP
-    - name: curl-proxy
+    - name: legacy-api
       port: 8080
+      protocol: TCP
+    - name: api
+      port: 8081
       protocol: TCP
     - name: hvp
       port: 8200
@@ -64,15 +67,18 @@ ingress:
   #      alb.ingress.kubernetes.io/scheme: internet-facing
 
   rules:
-    - servicePort: web-ui
-      serviceName: web-ui
+    - servicePort: web
+      serviceName: web
       hostname: "ui.gateway.local"
     - servicePort: hvp
       serviceName: hvp
       hostname: "hvp.gateway.local"
-    - servicePort: curl-proxy
-      serviceName: curl-proxy
+    - servicePort: legacy-api
+      serviceName: legacy-api
       hostname: "rest.gateway.local"
+    - servicePort: api
+      serviceName: api
+      hostname: "api.gateway.local"
     - servicePort: configure-app
       serviceName: configure-app
       hostname: "conf.gateway.local"
@@ -113,6 +119,9 @@ resources: {}
   # requests:
   #   cpu: 100m
   #   memory: 128Mi
+
+# Akeyless API Gateway application version
+version: latest
 
 env: []
 

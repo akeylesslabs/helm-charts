@@ -1,9 +1,9 @@
-# Akeyless-SSH-Bastion
+# Akeyless SSH Bastion
 
-[Akeyless-SSH-Bastion](https://docs.akeyless.io/docs/how-to-configure-ssh#akeyless-ssh-bastion) Traffic SSH connections with signed certificate authentication, together with session recording. 
+[Akeyless SSH Bastion](https://docs.akeyless.io/docs/how-to-configure-ssh#akeyless-ssh-bastion) Traffic SSH connections with signed certificate authentication, together with session recording. 
 
 ## Introduction
-This chart bootstraps a Akeyless-SSH-Bastion deployment on a Kubernetes cluster using the Helm package manager.
+This chart bootstraps a Akeyless SSH Bastion deployment on a Kubernetes cluster using the Helm package manager.
 
 
 ## Preparation
@@ -32,7 +32,7 @@ For it to work properly, Kubernetes metrics server must be installed in the clus
 ## Get Repo Info
 
 ```bash
-$ helm repo add helm-charts https://akeylesslabs.github.io/helm-charts
+$ helm repo add akeyless https://akeylesslabs.github.io/helm-charts
 $ helm repo update
 ```
 See [helm repo](https://helm.sh/docs/helm/helm_repo/) for command documentation.
@@ -43,27 +43,27 @@ The `values.yaml` file holds default values, replace the values with the ones fr
 
 To install the chart run:
 ```bash
-helm install [RELEASE_NAME] helm-charts/akeyless-ssh-proxy
+helm install [RELEASE_NAME] akeyless/akeyless-ssh-proxy
 ``` 
 
 ## Parameters
 
-The following table lists the configurable parameters of the SSH-Bastion chart and their default values.
+The following table lists the configurable parameters of the SSH Bastion chart and their default values.
 
 ### Statefulset parameters
 
 | Parameter                                 | Description                                                                                                          | Default                                                      |
 |-------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
-| `image.repository`                        | SSH-Bastion image name                                                                                               | `akeyless/ssh-proxy`                                         |
-| `image.tag`                               | SSH-Bastion image tag                                                                                                | `latest`                                                     |      
-| `image.pullPolicy`                        | SSH-Bastion image pull policy                                                                                        | `Always`                                                     |  
+| `image.repository`                        | SSH Bastion image name                                                                                               | `akeyless/ssh-proxy`                                         |
+| `image.tag`                               | SSH Bastion image tag                                                                                                | `latest`                                                     |      
+| `image.pullPolicy`                        | SSH Bastion image pull policy                                                                                        | `Always`                                                     |  
 | `image.dockerRepositoryCreds`             | Akeyless docker repository credentials                                                                               | `nil`                                                        |
 | `updateStrategy`                          | Updating statefulset strategy                                                                                        | `RollingUpdate`                                              |  
-| `containerName`                           | SSH-Bastion container name                                                                                           | `ssh-proxy`                                                  |  
+| `containerName`                           | SSH Bastion container name                                                                                           | `ssh-proxy`                                                  |  
 | `replicaCount`                            | Number of SSH-Bastion nodes                                                                                          | `1`                                                          |
-| `livenessProbe`                           | Liveness probe configuration for SSH-Bastion                                                                         | Check `values.yaml` file                                     |                   
-| `readinessProbe`                          | Readiness probe configuration for SSH-Bastion                                                                        | Check `values.yaml` file                                     |         
-| `resources.limits`                        | The resources limits for SSH-Bastion containers                                                                      | `{}`                                                         |
+| `livenessProbe`                           | Liveness probe configuration for SSH Bastion                                                                         | Check `values.yaml` file                                     |                   
+| `readinessProbe`                          | Readiness probe configuration for SSH Bastion                                                                        | Check `values.yaml` file                                     |         
+| `resources.limits`                        | The resources limits for SSH Bastion containers                                                                      | `{}`                                                         |
 | `resources.requests`                      | The requested resources for SSH-Bastion containers                                                                   | `{}`                                                         |
 
 
@@ -87,7 +87,7 @@ The following table lists the configurable parameters of the SSH-Bastion chart a
 
 | Parameter                                 | Description                                                                                                          | Default                                                      |
 |-------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
-| `HPA.enabled`                             | Enable SSH-Bastion Horizontal Pod Autoscaler                                                                         | `false`                                                      |
+| `HPA.enabled`                             | Enable SSH Bastion Horizontal Pod Autoscaler                                                                         | `false`                                                      |
 | `HPA.minReplicas`                         | Minimum desired number of replicas                                                                                   | `1`                                                          |
 | `HPA.maxReplicas`                         | Minimum desired number of replicas                                                                                   | `14`                                                         |
 | `HPA.cpuAvgUtil`                          | CPU average utilization                                                                                              | `50`                                                         |
@@ -104,7 +104,7 @@ The following table lists the configurable parameters of the SSH-Bastion chart a
 | `config.sessionTermination.apiToken`      | API Token                                                                                                            | `nil`                                                        |
 | `config.logForwording.enabled`            | Enable [log forwarding](https://docs.akeyless.io/docs/ssh-log-forwarding)                                            | `false`                                                      |
 | `config.logForwording.settings`           | Log forwarding configuration                                                                                         | `nil`                                                        |
-| `config.privilegedAccess.accessID` | Access ID with "read" capability for privileged access. | `nil` |
-| `config.privilegedAccess.accessKey` | Access Key of the provided access ID. | `nil` |
-| `config.apiGatewayURL` | API Gateway URL to use to fetch the secrets. | `https://rest.akeyless.io` |
+| `config.privilegedAccess.accessID`        | Access ID with "read" capability for privileged access.                                                              | `nil`                                                        |
+| `config.privilegedAccess.accessKey`       | Access Key of the provided access ID.                                                                                | `nil`                                                        |
+| `config.apiGatewayURL`                    | API Gateway URL to use to fetch the secrets.                                                                         | `https://rest.akeyless.io`                                   |
                        

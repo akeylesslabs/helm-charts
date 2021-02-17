@@ -1,4 +1,4 @@
-# Akeyless-Zero-Trust-Web-Access
+# Akeyless Zero Trust Web Access
  
 
 ## Introduction
@@ -26,7 +26,7 @@ For it to work properly, Kubernetes metrics server must be installed in the clus
 ## Get Repo Info
 
 ```bash
-$ helm repo add helm-charts https://akeylesslabs.github.io/helm-charts
+$ helm repo add akeyless https://akeylesslabs.github.io/helm-charts
 $ helm repo update
 ```
 See [helm repo](https://helm.sh/docs/helm/helm_repo/) for command documentation.
@@ -37,36 +37,36 @@ The `values.yaml` file holds default values, replace the values with the ones fr
 
 To install the chart run:
 ```bash
-helm install [RELEASE_NAME] helm-charts/akeyless-zero-trust-web-access
+helm install [RELEASE_NAME] akeyless/akeyless-zero-trust-web-access
 ``` 
 
 ## Parameters
 
-The following table lists the configurable parameters of the Zero-Trust-Web-Access chart and their default values.
+The following table lists the configurable parameters of the Zero Trust Web Access chart and their default values.
 
 ### Deployment parameters
 
 | Parameter                                 | Description                                                                                                          | Default                                                      |
 |-------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
 | `image.dockerRepositoryCreds`             | Akeyless docker repository credentials - required                                                                    | `nil`                                                        |
-| `dispatcher.image.repository`             | Zero-Trust-Web-Access Dispatcher image name                                                                          | `akeyless/zero-trust-web-dispatcher`                         |
-| `dispatcher.image.tag`                    | Zero-Trust-Web-Access Dispatcher image tag                                                                           | `latest`                                                     |      
-| `dispatcher.image.pullPolicy`             | Zero-Trust-Web-Access Dispatcher image pull policy                                                                   | `Always`                                                     |  
-| `dispatcher.containerName`                | Zero-Trust-Web-Access Dispatcher container name                                                                      | `web-dispatcher`                                             |    
-| `dispatcher.replicaCount`                 | Number of Zero-Trust-Web-Access Dispatcher nodes                                                                     | `1`                                                          |
-| `dispatcher.livenessProbe`                | Liveness probe configuration for Zero-Trust-Web-Access Dispatcher                                                    | Check `values.yaml` file                                     |                   
-| `dispatcher.readinessProbe`               | Readiness probe configuration for Zero-Trust-Web-Access Dispatcher                                                   | Check `values.yaml` file                                     |         
-| `dispatcher.resources.limits`             | The resources limits for Zero-Trust-Web-Access Dispatcher containers                                                 | `{}`                                                         |
-| `dispatcher.resources.requests`           | The requested resources for Zero-Trust-Web-Access Dispatcher containers                                              | `{}`                                                         |
-| `webWorker.image.repository`              | Zero-Trust-Web-Access Web Worker image name                                                                          | `akeyless/zero-trust-web-worker`                             |
-| `webWorker.image.tag`                     | Zero-Trust-Web-Access Web Worker image tag                                                                           | `latest`                                                     |      
-| `webWorker.image.pullPolicy`              | Zero-Trust-Web-Access Web Worker image pull policy                                                                   | `Always`                                                     |
-| `webWorker.containerName`                 | Zero-Trust-Web-Access Web Worker container name                                                                      | `web-worker`                                                 |
-| `webWorker.replicaCount`                  | Number of Zero-Trust-Web-Access Web Worker nodes                                                                     | `5`                                                          |
-| `webWorker.livenessProbe`                 | Liveness probe configuration for Zero-Trust-Web-Access Web Worker                                                    | Check `values.yaml` file                                     |                   
-| `webWorker.readinessProbe`                | Readiness probe configuration for Zero-Trust-Web-Access Web Worker                                                   | Check `values.yaml` file                                     |         
-| `webWorker.resources.limits`              | The resources limits for Zero-Trust-Web-Access Web Worker containers                                                 | `{}`                                                         |
-| `webWorker.resources.requests`            | The requested resources for Zero-Trust-Web-Access Web Worker containers                                              | `{}`                                                         |
+| `dispatcher.image.repository`             | Zero Trust Web Access Dispatcher image name                                                                          | `akeyless/zero-trust-web-dispatcher`                         |
+| `dispatcher.image.tag`                    | Zero Trust Web Access Dispatcher image tag                                                                           | `latest`                                                     |      
+| `dispatcher.image.pullPolicy`             | Zero Trust Web Access Dispatcher image pull policy                                                                   | `Always`                                                     |  
+| `dispatcher.containerName`                | Zero Trust Web Access Dispatcher container name                                                                      | `web-dispatcher`                                             |    
+| `dispatcher.replicaCount`                 | Number of Zero Trust Web Access Dispatcher nodes                                                                     | `1`                                                          |
+| `dispatcher.livenessProbe`                | Liveness probe configuration for Zero Trust Web Access Dispatcher                                                    | Check `values.yaml` file                                     |                   
+| `dispatcher.readinessProbe`               | Readiness probe configuration for Zero Trust Web Access Dispatcher                                                   | Check `values.yaml` file                                     |         
+| `dispatcher.resources.limits`             | The resources limits for Zero Trust Web Access Dispatcher containers                                                 | `{}`                                                         |
+| `dispatcher.resources.requests`           | The requested resources for Zero Trust Web Access Dispatcher containers                                              | `{}`                                                         |
+| `webWorker.image.repository`              | Zero Trust Web Access Web Worker image name                                                                          | `akeyless/zero-trust-web-worker`                             |
+| `webWorker.image.tag`                     | Zero Trust Web Access Web Worker image tag                                                                           | `latest`                                                     |      
+| `webWorker.image.pullPolicy`              | Zero Trust Web Access Web Worker image pull policy                                                                   | `Always`                                                     |
+| `webWorker.containerName`                 | Zero Trust Web Access Web Worker container name                                                                      | `web-worker`                                                 |
+| `webWorker.replicaCount`                  | Number of Zero Trust Web Access Web Worker nodes                                                                     | `5`                                                          |
+| `webWorker.livenessProbe`                 | Liveness probe configuration for Zero Trust Web Access Web Worker                                                    | Check `values.yaml` file                                     |                   
+| `webWorker.readinessProbe`                | Readiness probe configuration for Zero Trust Web Access Web Worker                                                   | Check `values.yaml` file                                     |         
+| `webWorker.resources.limits`              | The resources limits for Zero Trust Web Access Web Worker containers                                                 | `{}`                                                         |
+| `webWorker.resources.requests`            | The requested resources for Zero Trust Web Access Web Worker containers                                              | `{}`                                                         |
 
 ### Exposure parameters
 
@@ -89,7 +89,7 @@ The following table lists the configurable parameters of the Zero-Trust-Web-Acce
 
 | Parameter                                 | Description                                                                                                          | Default                                                      |
 |-------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
-| `HPA.enabled`                             | Enable Zero-Trust-Web-Access Horizontal Pod Autoscaler                                                               | `false`                                                      |
+| `HPA.enabled`                             | Enable Zero Trust Web Access Horizontal Pod Autoscaler                                                               | `false`                                                      |
 | `HPA.dispatcher.minReplicas`              | Dispatcher Minimum desired number of replicas                                                                        | `1`                                                          |
 | `HPA.dispatcher.maxReplicas`              | Dispatcher Minimum desired number of replicas                                                                        | `14`                                                         |
 | `HPA.dispatcher.cpuAvgUtil`               | Dispatcher CPU average utilization                                                                                   | `50`                                                         |
@@ -99,14 +99,13 @@ The following table lists the configurable parameters of the Zero-Trust-Web-Acce
 | `HPA.webWorker.cpuAvgUtil`                | Web Worker CPU average utilization                                                                                   | `50`                                                         |
 | `HPA.webWorker.memAvgUtil`                | Web Worker Memory average utilization                                                                                | `50`                                                         |                                                                                        
 
-### Zero-Trust-Web-Access configuration parameters
+### Zero Trust Web Access configuration parameters
 
-| Parameter                                 | Description                                                                                                          | Default                                                      |
-|-------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
-| `dispatcher.config.privilegedAccess.accessID` | Access ID with "read" capability for privileged access. | `nil` |
-| `dispatcher.config.privilegedAccess.accessKey` | Access Key of the provided access ID. | `nil` |
-| `dispatcher.config.privilegedAccess.allowedAccessIDs` | Access will be permitted only to these access IDs. By default, any access ID is accepted. | `[]` |
-| `dispatcher.config.apiGatewayURL` | API Gateway URL to use to fetch the secrets. | `https://rest.akeyless.io` |
-| `dispatcher.config.akeyless` | Akeyless browser extension config. This field is deprecated, please use the above privileged access configuration. | Check `values.yaml` file |
-| `dispatcher.config.disableSecureCookie`   | Use browser secure cookie only (HTTPS)                                                                               | `true`                                                       |
-| `webWorker.config.policies`               | Web worker browser policy configuration                                                                              | Check `values.yaml` file                                     |
+| Parameter                                             | Description                                                                                                          | Default                                                      |
+|-------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
+| `dispatcher.config.privilegedAccess.accessID`         | Access ID with "read" capability for privileged access.                                                              | `nil`                                                        |
+| `dispatcher.config.privilegedAccess.accessKey`        | Access Key of the provided access ID.                                                                                | `nil`                                                        |
+| `dispatcher.config.privilegedAccess.allowedAccessIDs` | Access will be permitted only to these access IDs. By default, any access ID is accepted.                            | `[]`                                                         |
+| `dispatcher.config.apiGatewayURL`                     | API Gateway URL to use to fetch the secrets.                                                                         | `https://rest.akeyless.io`                                   |
+| `dispatcher.config.disableSecureCookie`               | Use browser secure cookie only (HTTPS)                                                                               | `true`                                                       |
+| `webWorker.config.policies`                           | Web worker browser policy configuration                                                                              | Check `values.yaml` file                                     |

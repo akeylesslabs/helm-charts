@@ -13,7 +13,7 @@ image:
   tag: latest
   dockerRepositoryCreds:
 
-containerName: "ssh-proxy"
+containerName: "ssh-bastion"
 
 service:
   # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
@@ -98,6 +98,6 @@ config:
   ## SSH log forwarding enables forwarding of the recordings of SSH sessions to customer log repository.
   ## Ref: https://docs.akeyless.io/docs/ssh-log-forwarding
   ##
-  logForwording:
+  logForwarding:
     enabled: false
     settings: |

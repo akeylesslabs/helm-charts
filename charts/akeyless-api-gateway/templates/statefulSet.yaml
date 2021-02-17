@@ -99,6 +99,10 @@ spec:
             - name: CONFIG_PROTECTION_KEY_NAME
               value: {{ .Values.akeylessUserAuth.configProtectionKeyName }}
           {{- end }}
+          {{- if .Values.version }}
+            - name: VERSION
+              value: {{ .Values.version }}
+          {{- end }}
           {{- if .Values.env }}
   {{- toYaml .Values.env | nindent 12 }}
           {{- end }}

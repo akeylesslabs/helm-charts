@@ -1,7 +1,6 @@
 apiVersion: v2
 name: akeyless-secrets-injection
-description: A Helm chart that deploys a mutating admission webhook that configures
-applications to request env vars from Akeyless Vault Secrets
+description: A Helm chart that deploys a mutating admission webhook that configures applications to request env vars from Akeyless Vault Secrets
 
 type: application
 
