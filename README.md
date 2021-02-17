@@ -9,10 +9,10 @@ Please refer to Helm's [documentation](https://helm.sh/docs/) to get started.
 Once Helm is set up properly, add the repo as follows:
 
 ```console
-helm repo add akeylesslabs https://akeylesslabs.github.io/helm-charts
+helm repo add akeyless https://akeylesslabs.github.io/helm-charts
 ```
 
-You can then run `helm search repo akeylesslabs` to see the charts.
+You can then run `helm search repo akeyless` to see the charts.
 
 
 ## Helm Charts
@@ -20,6 +20,8 @@ You can then run `helm search repo akeylesslabs` to see the charts.
 This repo holds kubernetes helm charts for Akeyless services:
 
 [Akeyless API Gateway](https://github.com/akeylesslabs/helm-charts/tree/main/charts/akeyless-api-gateway)
+
+[Akeyless K8S Secrets Injection](https://github.com/akeylesslabs/helm-charts/tree/main/charts/akeyless-k8s-secrets-injection)
 
 [Akeyless SSH Bastion](https://github.com/akeylesslabs/helm-charts/tree/main/charts/akeyless-ssh-bastion)
 
