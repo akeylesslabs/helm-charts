@@ -15,6 +15,19 @@ to a reasonable high value, or event unlimited.
 e.g when running on AWS with ELB:
 https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/config-idle-timeout.html?icmpid=docs_elb_console
 
+## Storage
+To be able to download files to your local machine, the helm chart requires a storage class with ReadWriteMany access modes.  
+Since a storage class is more environment specific, you will need to provide one before proceeding.
+In addition, please provide 1 PersistentVolumes and reference those PVs under `persistence` section in the `values.yaml` file
+
+e.g when running on AWS with EKS:
+https://docs.aws.amazon.com/eks/latest/userguide/efs-csi.html
+
+For security reason, please limit the PersistentVolumes mount permissions to `0650`, example: 
+```mountOptions:
+   - dir_mode=0650
+   - file_mode=0650
+```
 
 ### Prerequisites
 

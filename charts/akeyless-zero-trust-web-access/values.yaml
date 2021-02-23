@@ -206,6 +206,26 @@ dlp:
 #    target_splunk_url=""
 
 
+# To be able to download files to your local machine, the helm chart requires a storage class with ReadWriteMany access modes.
+# Since a storage class is more environment specific, you will need to provide one before proceeding.
+# For security reason, please limit the PersistentVolumes mount permissions to `0650`, example:
+#  ```mountOptions:
+#       - dir_mode=0650
+#       - file_mode=0650
+#  ```
+# Azure example:
+# persistence:
+  #  shareStorageVolume:
+  #    name: share-storage
+  #    storageClassName: ""
+  #    accessModes:
+  #      - ReadWriteMany
+  #    annotations:
+  #      volume.beta.kubernetes.io/storage-class: ""
+  #    size: 2Gi
+  #    matchLabels:
+  #      usage: fileshare-pv
+#
 persistence: {}
 #  shareStorageVolume:
 #    name: share-storage

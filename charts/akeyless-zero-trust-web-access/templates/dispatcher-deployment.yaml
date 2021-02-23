@@ -21,6 +21,8 @@ spec:
         prometheus.io/port:   '2000'
   {{- end }}
     spec:
+      securityContext:
+        fsGroup: 10000
       volumes:
         - name: akeyless-config
           emptyDir: {}
