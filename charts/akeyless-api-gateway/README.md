@@ -10,7 +10,7 @@ This chart has been tested to work with [NGINX Ingress](https://kubernetes.githu
 
 ##### Horizonal Auto-Scaling
 Horizontal auto-scaling is based on the HorizonalPodAutoscaler object.  
-For it to work properly, Kubernetes metrics server must be installed in the cluster - https://github.com/kubernetes-sigs/metrics-server
+For it to work properly, Kubernetes metrics server must be installed in the cluster - https://github.com/kubernetes-sigs/metrics-server.
 
 ## Get Repo Info
 
@@ -27,7 +27,7 @@ The `values.yaml` file holds default values, replace the values with the ones fr
 
 To install the chart run:
 ```bash
-helm install [RELEASE_NAME] akeyless/akeyless-api-gateway
+helm install RELEASE_NAME akeyless/akeyless-api-gateway
 ``` 
 
 ## Parameters
@@ -42,11 +42,11 @@ The following table lists the configurable parameters of the API Gateway chart a
 | `image.tag`                               | API Gateway image tag                                                                                                | `latest`                                                     |      
 | `image.pullPolicy`                        | API Gateway image pull policy                                                                                        | `Always`                                                     |  
 | `containerName`                           | API Gateway container name                                                                                           | `api-gateway`                                                |    
-| `replicaCount`                            | Number of API Gateway nodes                                                                                          | `2`                                                          |
-| `livenessProbe`                           | Liveness probe configuration for API Gateway                                                                        | Check `values.yaml` file                                      |                   
-| `readinessProbe`                          | Readiness probe configuration for API Gateway                                                                       | Check `values.yaml` file                                      |         
-| `resources.limits`                        | The resources limits for API Gateway                                                                                | `{}`                                                          |
-| `resources.requests`                      | The requested resources for API Gateway                                                                             | `{}`                                                          |
+| `replicaCount`                            | Number of API Gateway pods                                                                                           | `2`                                                          |
+| `livenessProbe`                           | Liveness probe configuration for API Gateway                                                                         | Check `values.yaml` file                                     |                   
+| `readinessProbe`                          | Readiness probe configuration for API Gateway                                                                        | Check `values.yaml` file                                     |         
+| `resources.limits`                        | The resources limits for API Gateway (If HPA is enabled these must be set)                                           | `{}`                                                         |
+| `resources.requests`                      | The requested resources for API Gateway (If HPA is enabled these must be set)                                        | `{}`                                                         |
 
 ### Exposure parameters
 
@@ -78,7 +78,7 @@ The following table lists the configurable parameters of the API Gateway chart a
 |-------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
 | `akeylessUserAuth.adminAccessId`          | Akeyless Access ID (can used as email address)                                                                       | `nil`                                                        |
 | `akeylessUserAuth.adminAccessKey`         | Akeyless Access Key                                                                                                  | `nil`                                                        |
-| `akeylessUserAuth.adminPassword`          | Akeyless Access Password (should be use only with access ID as email)                                                | `nil`                                                        |
+| `akeylessUserAuth.adminPassword`          | Akeyless Access Password (should be used only when `akeylessUserAuth.adminAccessId` is email)                        | `nil`                                                        |
 | `akeylessUserAuth.clusterName`            | API Gateway cluster name                                                                                             | `nil`                                                        |
 | `akeylessUserAuth.configProtectionKeyName`| Akeyless Protection key name                                                                                         | `nil`                                                        |
                        

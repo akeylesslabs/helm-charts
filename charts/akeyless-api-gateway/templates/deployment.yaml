@@ -1,12 +1,11 @@
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: {{ include "akeyless-services.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "akeyless-services.labels" . | nindent 4 }}
 spec:
-  serviceName: {{ include "akeyless-services.fullname" . }}
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
@@ -16,8 +15,8 @@ spec:
       labels:
         {{- include "akeyless-services.selectorLabels" . | nindent 8 }}
     spec:
-      volumes:
       {{- if .Values.customerFragments }}
+      volumes:
       - name: akeyless-config
         emptyDir: {}
       - name: configmap-akeyless-config

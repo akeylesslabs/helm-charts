@@ -24,7 +24,7 @@ $ helm install [RELEASE_NAME] prometheus-community/kube-prometheus-stack -n [NAM
 ```
 
 ### prometheus.io/scrape
-There are two ways to scrap data:
+There are two ways to scrape data:
 - **Pod Annotation-based Discovery** - make sure your prometheus contains pod annotation `job` in the config map, for example:
 ```yaml
 - job_name: 'kubernetes-pods'

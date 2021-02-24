@@ -58,7 +58,7 @@ spec:
             - name: creds
               mountPath: /var/akeyless/creds
       imagePullSecrets:
-        - name: akeyless-docker-hub
+        - name: akeyless-docker-hub-ssh
       containers:
         - name: {{ .Values.containerName }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"

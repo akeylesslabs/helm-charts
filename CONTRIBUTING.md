@@ -9,13 +9,13 @@ Contributions are welcome via GitHub pull requests. This document outlines the p
 
 ### Technical Requirements
 
-* Any change to a chart requires a version bump following [semver](https://semver.org/) principles. See [Immutability](#immutability) and [Versioning](#versioning) below
+* Any changes to a chart require a version bump following [semver](https://semver.org/) principles. See [Immutability](#immutability) and [Versioning](#versioning) below.
 
-Once changes have been merged, the release job will automatically run to package and release changed charts.
+Once the changes have been merged, a release job will automatically run to package and release the changed charts.
 
 ### Immutability
 
-Chart releases must be immutable. Any change to a chart warrants a chart version bump even if it is only changed to the documentation.
+Chart releases must be immutable. Any change to a chart warrants a chart version bump even if there are only documentation changes.
 
 ### Versioning
 

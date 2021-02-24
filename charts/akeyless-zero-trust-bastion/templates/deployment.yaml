@@ -16,7 +16,7 @@ spec:
         app: zero-trust-bastion
     spec:
       imagePullSecrets:
-        - name: akeyless-docker-hub
+        - name: akeyless-docker-hub-bastion
       containers:
         - name: {{ .Values.containerName }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"

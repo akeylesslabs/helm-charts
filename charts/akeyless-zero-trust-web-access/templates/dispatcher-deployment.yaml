@@ -70,7 +70,7 @@ spec:
             - name: akeyless-config
               mountPath: /var/akeyless/conf
       imagePullSecrets:
-        - name: akeyless-docker-hub
+        - name: akeyless-docker-hub-web-access
       containers:
         - name: {{ .Values.dispatcher.containerName }}
           image: "{{ .Values.dispatcher.image.repository }}:{{ .Values.dispatcher.image.tag  | default .Chart.AppVersion }}"

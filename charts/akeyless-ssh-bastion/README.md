@@ -43,7 +43,7 @@ The `values.yaml` file holds default values, replace the values with the ones fr
 
 To install the chart run:
 ```bash
-helm install [RELEASE_NAME] akeyless/akeyless-ssh-proxy
+helm install RELEASE_NAME akeyless/akeyless-ssh-proxy
 ``` 
 
 ## Parameters

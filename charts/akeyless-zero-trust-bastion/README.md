@@ -36,7 +36,7 @@ The `values.yaml` file holds default values, replace the values with the ones fr
 
 To install the chart run:
 ```bash
-helm install [RELEASE_NAME] helm-charts/akeyless-zero-trust-bastion
+helm install RELEASE_NAME helm-charts/akeyless-zero-trust-bastion
 ``` 
 
 ## Parameters

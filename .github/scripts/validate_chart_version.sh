@@ -7,13 +7,8 @@ function die() {
   exit 1
 }
 
-lookup_latest_tag() {
-    git fetch --tags > /dev/null 2>&1
-
-    if ! git describe --tags --abbrev=0 2> /dev/null; then
-        git rev-list --max-parents=0 --first-parent HEAD
-    fi
-}
+dir_path="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+source "${dir_path}/common.sh"
 
 lookup_changed_charts() {
   commit=$(lookup_latest_tag)
