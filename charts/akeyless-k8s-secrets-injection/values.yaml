@@ -22,7 +22,7 @@ service:
   internalPort: 8443
 
 env:
-  AKEYLESS_URL: "https://vault.akeyless.io"
+  AKEYLESS_URL: "https://hvp.akeyless.io"
   AKEYLESS_ACCESS_ID: "" 
   AKEYLESS_ACCESS_TYPE: ""  # azure_ad/aws_iam/api_key/universal_identity
 
