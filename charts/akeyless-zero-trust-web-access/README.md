@@ -69,8 +69,8 @@ The following table lists the configurable parameters of the Zero Trust Web Acce
 | `dispatcher.replicaCount`                 | Number of Zero Trust Web Access Dispatcher nodes                                                                     | `1`                                                          |
 | `dispatcher.livenessProbe`                | Liveness probe configuration for Zero Trust Web Access Dispatcher                                                    | Check `values.yaml` file                                     |                   
 | `dispatcher.readinessProbe`               | Readiness probe configuration for Zero Trust Web Access Dispatcher                                                   | Check `values.yaml` file                                     |         
-| `dispatcher.resources.limits`             | The resources limits for Zero Trust Web Access Dispatcher containers                                                 | `{}`                                                         |
-| `dispatcher.resources.requests`           | The requested resources for Zero Trust Web Access Dispatcher containers                                              | `{}`                                                         |
+| `dispatcher.resources.limits`             | The resources limits for Zero Trust Web Access Dispatcher containers (If HPA is enabled these must be set)           | `{}`                                                         |
+| `dispatcher.resources.requests`           | The requested resources for Zero Trust Web Access Dispatcher containers (If HPA is enabled these must be set)        | `{}`                                                         |
 | `webWorker.image.repository`              | Zero Trust Web Access Web Worker image name                                                                          | `akeyless/zero-trust-web-worker`                             |
 | `webWorker.image.tag`                     | Zero Trust Web Access Web Worker image tag                                                                           | `latest`                                                     |      
 | `webWorker.image.pullPolicy`              | Zero Trust Web Access Web Worker image pull policy                                                                   | `Always`                                                     |
@@ -78,8 +78,8 @@ The following table lists the configurable parameters of the Zero Trust Web Acce
 | `webWorker.replicaCount`                  | Number of Zero Trust Web Access Web Worker nodes                                                                     | `5`                                                          |
 | `webWorker.livenessProbe`                 | Liveness probe configuration for Zero Trust Web Access Web Worker                                                    | Check `values.yaml` file                                     |                   
 | `webWorker.readinessProbe`                | Readiness probe configuration for Zero Trust Web Access Web Worker                                                   | Check `values.yaml` file                                     |         
-| `webWorker.resources.limits`              | The resources limits for Zero Trust Web Access Web Worker containers                                                 | `{}`                                                         |
-| `webWorker.resources.requests`            | The requested resources for Zero Trust Web Access Web Worker containers                                              | `{}`                                                         |
+| `webWorker.resources.limits`              | The resources limits for Zero Trust Web Access Web Worker containers (If HPA is enabled these must be set)           | `{}`                                                         |
+| `webWorker.resources.requests`            | The requested resources for Zero Trust Web Access Web Worker containers (If HPA is enabled these must be set)        | `{}`                                                         |
 
 ### Exposure parameters
 

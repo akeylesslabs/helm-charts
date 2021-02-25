@@ -1,6 +1,7 @@
 # Akeyless Kubernetes Secrets Injection
 
-This chart will install a mutating admission webhook, that injects an executable to containers in a deployment/statefulset which than can request secrets from Akeyless Vault through environment variable definitions or local file on the container.
+This chart will install a mutating admission webhook, that injects an executable to containers in pods which than can request secrets from Akeyless Vault through environment variable definitions or local file on the container.
+This chart has been tested to work with Kubernetes version 1.16, and above. 
 
 ## Before you start
 

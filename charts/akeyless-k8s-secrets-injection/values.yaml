@@ -4,6 +4,7 @@
 
 replicaCount: 1
 minikube: false
+openshiftEnabled: false
 debug: false
 
 tlsCertsSecretName: vault-secrets-webhook-tls-certs

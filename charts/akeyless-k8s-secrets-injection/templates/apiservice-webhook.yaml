@@ -45,5 +45,5 @@ items:
         operator: NotIn
         values:
         - {{ .Release.Namespace }}
-    admissionReviewVersions: ["v1beta1"]
+    admissionReviewVersions: ["v1"]
     sideEffects: None #Unknown

@@ -72,7 +72,7 @@ The following table lists the configurable parameters of the API Gateway chart a
 | `HPA.cpuAvgUtil`                          | CPU average utilization                                                                                              | `50`                                                         |
 | `HPA.memAvgUtil`                          | Memory average utilization                                                                                           | `50`                                                         |                                                                                        
 
-### API-Gatewayconfiguration parameters
+### API-Gateway configuration parameters
 
 | Parameter                                 | Description                                                                                                          | Default                                                      |
 |-------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
@@ -81,4 +81,4 @@ The following table lists the configurable parameters of the API Gateway chart a
 | `akeylessUserAuth.adminPassword`          | Akeyless Access Password (should be used only when `akeylessUserAuth.adminAccessId` is email)                        | `nil`                                                        |
 | `akeylessUserAuth.clusterName`            | API Gateway cluster name                                                                                             | `nil`                                                        |
 | `akeylessUserAuth.configProtectionKeyName`| Akeyless Protection key name                                                                                         | `nil`                                                        |
-                       
+| `customerFragments`                       | API Gateway customer fragment                                                                                        | `nil`                                                        |

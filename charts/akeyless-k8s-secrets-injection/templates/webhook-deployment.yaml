@@ -51,9 +51,11 @@ spec:
           volumeMounts:
           - mountPath: /var/serving-cert
             name: serving-cert
+{{- if not .Values.openshiftEnabled }}
           securityContext: #//only for k8s - not openshift compatible
             runAsUser: 65534
             allowPrivilegeEscalation: false
+{{- end }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
     {{- if .Values.nodeSelector }}

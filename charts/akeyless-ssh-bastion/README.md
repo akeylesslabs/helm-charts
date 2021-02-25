@@ -3,7 +3,7 @@
 [Akeyless SSH Bastion](https://docs.akeyless.io/docs/how-to-configure-ssh#akeyless-ssh-bastion) Traffic SSH connections with signed certificate authentication, together with session recording. 
 
 ## Introduction
-This chart bootstraps a Akeyless SSH Bastion deployment on a Kubernetes cluster using the Helm package manager.
+This chart bootstraps an Akeyless SSH Bastion deployment on a Kubernetes cluster using the Helm package manager.
 
 
 ## Preparation
@@ -62,8 +62,8 @@ The following table lists the configurable parameters of the SSH Bastion chart a
 | `replicaCount`                            | Number of SSH-Bastion nodes                                                                                          | `1`                                                          |
 | `livenessProbe`                           | Liveness probe configuration for SSH Bastion                                                                         | Check `values.yaml` file                                     |                   
 | `readinessProbe`                          | Readiness probe configuration for SSH Bastion                                                                        | Check `values.yaml` file                                     |         
-| `resources.limits`                        | The resources limits for SSH Bastion containers                                                                      | `{}`                                                         |
-| `resources.requests`                      | The requested resources for SSH-Bastion containers                                                                   | `{}`                                                         |
+| `resources.limits`                        | The resources limits for SSH Bastion containers  (If HPA is enabled these must be set)                               | `{}`                                                         |
+| `resources.requests`                      | The requested resources for SSH-Bastion containers (If HPA is enabled these must be set)                             | `{}`                                                         |
 
 
 ### Exposure parameters
