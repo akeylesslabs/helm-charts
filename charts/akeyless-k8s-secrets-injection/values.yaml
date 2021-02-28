@@ -26,7 +26,7 @@ env:
   AKEYLESS_ACCESS_ID: "" 
   AKEYLESS_ACCESS_TYPE: ""  # azure_ad/aws_iam/api_key/universal_identity
 
- # AKEYLESS_API_GW_URL: "https://api-gw-dns"
+ # AKEYLESS_API_GW_URL: "https://api-gw-url"
  # AKEYLESS_POD_ACCESS_PATH: "<location-to-access-secrets-per-pod-name>"
  # AKEYLESS_NAMESPACE_ACCESS_PATH: "<location-to-access-secrets-per-namespace>"
  # AKEYLESS_INIT_TOKEN: "<universal_identity_init_token>"
