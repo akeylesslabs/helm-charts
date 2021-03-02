@@ -31,7 +31,7 @@ spec:
     - hosts:
       - {{ .hostname }}
       {{- if $.Values.ingress.certManager }}
-      secretName: {{ template "akeyless-api-gw.ingressSecretTLSName" . }}
+      secretName: {{ template "akeyless-api-gw.ingressSecretTLSName" $ }}
       {{- end }}
     {{- end }}
 {{- end }}

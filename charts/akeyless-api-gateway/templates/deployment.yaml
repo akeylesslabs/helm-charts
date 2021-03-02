@@ -44,7 +44,7 @@ spec:
       {{- end }}
       containers:
         - name: {{ .Values.containerName }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             {{- range .Values.service.ports }}
@@ -98,10 +98,8 @@ spec:
             - name: CONFIG_PROTECTION_KEY_NAME
               value: {{ .Values.akeylessUserAuth.configProtectionKeyName }}
           {{- end }}
-          {{- if .Values.version }}
             - name: VERSION
-              value: {{ .Values.version }}
-          {{- end }}
+              value: {{ .Values.version | default .Chart.AppVersion }}
           {{- if .Values.env }}
   {{- toYaml .Values.env | nindent 12 }}
           {{- end }}
