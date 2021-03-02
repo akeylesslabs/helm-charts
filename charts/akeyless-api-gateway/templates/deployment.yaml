@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "akeyless-services.fullname" . }}
+  name: {{ include "akeyless-api-gw.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "akeyless-services.labels" . | nindent 4 }}
+    {{- include "akeyless-api-gw.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      {{- include "akeyless-services.selectorLabels" . | nindent 6 }}
+      {{- include "akeyless-api-gw.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "akeyless-services.selectorLabels" . | nindent 8 }}
+        {{- include "akeyless-api-gw.selectorLabels" . | nindent 8 }}
     spec:
       {{- if .Values.customerFragments }}
       volumes:

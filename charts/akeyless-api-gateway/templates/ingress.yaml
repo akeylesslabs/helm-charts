@@ -2,10 +2,10 @@
 apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
-  name: {{ include "akeyless-services.fullname" . }}
+  name: {{ include "akeyless-api-gw.fullname" . }}
   namespace: {{ .Release.Namespace | quote }}
   labels:
-{{- include "akeyless-services.labels" . | nindent 4 }}
+{{- include "akeyless-api-gw.labels" . | nindent 4 }}
   annotations:
 {{- if .Values.ingress.certManager }}
     kubernetes.io/tls-acme: "true"
@@ -21,7 +21,7 @@ spec:
       paths:
       - path: {{ $.Values.ingress.path }}
         backend:
-         serviceName: {{ include "akeyless-services.fullname" $ }}
+         serviceName: {{ include "akeyless-api-gw.fullname" $ }}
          servicePort: {{ .servicePort }}
 {{- end }}
 
@@ -31,7 +31,7 @@ spec:
     - hosts:
       - {{ .hostname }}
       {{- if $.Values.ingress.certManager }}
-      secretName: {{ .hostname }}-tls
+      secretName: {{ template "akeyless-api-gw.ingressSecretTLSName" . }}
       {{- end }}
     {{- end }}
 {{- end }}
