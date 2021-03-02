@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "akeyless-services.fullname" . }}
+  name: {{ include "akeyless-api-gw.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "akeyless-services.labels" . | nindent 4 }}
+    {{- include "akeyless-api-gw.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      {{- include "akeyless-services.selectorLabels" . | nindent 6 }}
+      {{- include "akeyless-api-gw.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "akeyless-services.selectorLabels" . | nindent 8 }}
+        {{- include "akeyless-api-gw.selectorLabels" . | nindent 8 }}
     spec:
       {{- if .Values.customerFragments }}
       volumes:
@@ -44,7 +44,7 @@ spec:
       {{- end }}
       containers:
         - name: {{ .Values.containerName }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             {{- range .Values.service.ports }}
@@ -98,10 +98,8 @@ spec:
             - name: CONFIG_PROTECTION_KEY_NAME
               value: {{ .Values.akeylessUserAuth.configProtectionKeyName }}
           {{- end }}
-          {{- if .Values.version }}
             - name: VERSION
-              value: {{ .Values.version }}
-          {{- end }}
+              value: {{ .Values.version | default .Chart.AppVersion }}
           {{- if .Values.env }}
   {{- toYaml .Values.env | nindent 12 }}
           {{- end }}
