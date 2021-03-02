@@ -1,0 +1,139 @@
+# Default values for akeyless-api-gateway.
+
+replicaCount: 2
+
+image:
+  repository: akeyless/base
+  pullPolicy: IfNotPresent
+#  tag: latest
+
+containerName: "api-gateway"
+
+service:
+  # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
+  annotations: {}
+  type: LoadBalancer
+  ports:
+    - name: web
+      port: 18888
+      protocol: TCP
+    - name: configure-app
+      port: 8000
+      protocol: TCP
+    - name: legacy-api
+      port: 8080
+      protocol: TCP
+    - name: api
+      port: 8081
+      protocol: TCP
+    - name: hvp
+      port: 8200
+      protocol: TCP
+
+
+livenessProbe:
+  initialDelaySeconds: 120
+  periodSeconds: 60
+  failureThreshold: 10
+
+readinessProbe:
+  initialDelaySeconds: 120 # Startup can take time
+  periodSeconds: 10
+  timeoutSeconds: 5
+
+## Configure the ingress resource that allows you to access the
+## akeyless-api-gateway installation. Set up the URL
+## ref: http://kubernetes.io/docs/user-guide/ingress/
+##
+ingress:
+  ## Set to true to enable ingress record generation
+  ##
+  enabled: false
+
+  annotations: {}
+  # Example for Nginx ingress
+  #    annotations:
+  #      kubernetes.io/ingress.class: nginx
+  #      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  #      nginx.ingress.kubernetes.io/proxy-connect-timeout: "3600"
+  #      nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+  #      nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+  #      nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
+  #      nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+
+  # Example for AWS ELB ingress
+  #    annotations:
+  #      kubernetes.io/ingress.class: alb
+  #      alb.ingress.kubernetes.io/scheme: internet-facing
+
+  rules:
+    - servicePort: web
+      serviceName: web
+      hostname: "ui.gateway.local"
+    - servicePort: hvp
+      serviceName: hvp
+      hostname: "hvp.gateway.local"
+    - servicePort: legacy-api
+      serviceName: legacy-api
+      hostname: "rest.gateway.local"
+    - servicePort: api
+      serviceName: api
+      hostname: "api.gateway.local"
+    - servicePort: configure-app
+      serviceName: configure-app
+      hostname: "conf.gateway.local"
+
+  ## Path for the default host
+  ##
+  path: /
+
+  ## Enable TLS configuration for the hostname defined at ingress.hostname parameter
+  ## TLS certificates will be retrieved from a TLS secret with name: {{- printf "%s-tls" .Values.ingress.hostname }}
+  ## or a custom one if you use the tls.existingSecret parameter
+  ##
+  tls: false
+
+  ## Set this to true in order to add the corresponding annotations for cert-manager and secret name
+  ##
+  certManager: false
+
+  ## existingSecret: name-of-existing-secret
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+# Akeyless API Gateway application version
+#version:
+
+env: []
+
+akeylessUserAuth:
+  adminAccessId:
+  adminAccessKey:
+  adminPassword:
+  clusterName:
+  configProtectionKeyName:
+
+# Customer Fragment is a critical component that allow customers to use a Zero-Knowledge Encryption.
+# For more information: https://akeyless.readme.io/docs/implement-zero-trust
+#customerFragments: |
+
+
+HPA:
+  # Set the below to false in case you do not want to add Horizontal Pod AutoScaling to the StatefulSet (not recommended)
+  # Note that metrics server must be installed for this to work:
+  # https://github.com/kubernetes-sigs/metrics-server
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 14
+  cpuAvgUtil: 50
+  memAvgUtil: 50

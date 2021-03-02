@@ -1,0 +1,29 @@
+{{- if and .Values.metrics.enabled  .Values.metrics.serviceMonitor.enabled}}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: dispatcher-metrics-servicemonitor
+{{- if .Values.metrics.serviceMonitor.namespace }}
+  namespace: {{ .Values.metrics.serviceMonitor.namespace }}
+{{- else }}
+  namespace: {{ .Release.Namespace | quote }}
+{{- end }}
+  labels:
+  {{ toYaml .Values.metrics.serviceMonitor.releaseLabels | indent 4 }}
+spec:
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace | quote }}
+  selector:
+    matchLabels:
+      app: dispatcher-metric-svc
+  endpoints:
+    - port: metrics
+{{- if .Values.metrics.serviceMonitor.interval }}
+      interval: {{ .Values.metrics.serviceMonitor.interval }}
+{{- end }}
+{{- if .Values.metrics.serviceMonitor.scrapeTimeout }}
+      scrapeTimeout: {{ .Values.metrics.serviceMonitor.scrapeTimeout }}
+{{- end }}
+
+{{- end }}

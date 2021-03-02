@@ -1,0 +1,27 @@
+---
+{{ if and .Values.persistence .Values.persistence.shareStorageVolume }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ printf "%s-%s" $.Release.Name .Values.persistence.shareStorageVolume.name | title | lower }}
+  namespace: {{ .Release.Namespace }}
+{{- if .Values.persistence.shareStorageVolume.annotations }}
+  annotations:
+    {{- toYaml .Values.persistence.shareStorageVolume.annotations | nindent 4 }}
+{{- end }}
+  labels:
+    chart: {{ $.Chart.Name }}
+spec:
+  accessModes:
+  {{- $.Values.persistence.shareStorageVolume.accessModes | toYaml | nindent 2 }}
+  storageClassName: {{ .Values.persistence.shareStorageVolume.storageClassName }}
+  resources:
+    requests:
+      storage: {{ required "A valid .Values.persistence.volumes.size entry required!" .Values.persistence.shareStorageVolume.size }}
+{{- if .Values.persistence.shareStorageVolume.matchLabels }}
+  selector:
+  #    # To make sure we match the claim with the exact volume, match the label
+    matchLabels:
+{{- toYaml $.Values.persistence.shareStorageVolume.matchLabels | nindent 6 }}
+{{- end }}
+{{- end }}

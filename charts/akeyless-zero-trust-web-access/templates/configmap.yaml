@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $.Release.Name }}-cm-akeyless
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ $.Values.dispatcher.containerName }}
+    chart: {{ $.Chart.Name }}
+data:
+{{ with .Values.dispatcher.config }}
+  akeyless_config_file: |
+    {{ required "API Gateway URL is required" .apiGatewayURL }}
+    cmd=auth&access-id={{ .listOnlyCredentials.accessID }}&access-key={{ .listOnlyCredentials.accessKey }}
+    cmd=auth&access-id={{ required "Privileged credentials are required" .privilegedAccess.accessID }}&access-key={{ required "Privileged credentials are required" .privilegedAccess.accessKey }}
+{{- end}}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $.Release.Name }}-cm-web-policies
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ $.Values.webWorker.containerName }}
+    chart: {{ $.Chart.Name }}
+data:
+  policies.json: |
+{{ required "A valid .Values.webWorker.config.policies entry required!" .Values.webWorker.config.policies | indent 4 }}
+
+
+{{- if .Values.dlp.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $.Release.Name }}-cm-dlp-conf
+  namespace: {{ .Release.Namespace }}
+  labels:
+    chart: {{ $.Chart.Name }}
+data:
+  dlp.conf: |
+    host={{ .Values.dlp.config.hostAddress | quote }}
+    path_prefix={{ .Values.dlp.config.pathPrefix | quote }}
+    mode={{ .Values.dlp.config.mode | quote }}
+    log_level={{ .Values.dlp.config.logLevel | quote }}
+{{ if .Values.dlp.audit }}
+  logand.conf: |
+{{ .Values.dlp.audit | indent 4 }}
+{{- end }}
+{{- end }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $.Release.Name }}-cm-akeyless-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    chart: {{ $.Chart.Name }}
+data:
+{{ if .Values.dispatcher.config.logForward }}
+  logand.conf: |
+{{ .Values.dispatcher.config.logForward | indent 4 }}
+{{- end }}

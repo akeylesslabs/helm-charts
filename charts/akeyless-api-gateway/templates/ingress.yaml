@@ -1,0 +1,39 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: {{ include "akeyless-services.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+{{- include "akeyless-services.labels" . | nindent 4 }}
+  annotations:
+{{- if .Values.ingress.certManager }}
+    kubernetes.io/tls-acme: "true"
+{{- end }}
+{{- if .Values.ingress.annotations }}
+{{ toYaml .Values.ingress.annotations | indent 4 }}
+{{- end }}
+spec:
+  rules:
+{{- range .Values.ingress.rules }}
+  - host: {{ .hostname }}
+    http:
+      paths:
+      - path: {{ $.Values.ingress.path }}
+        backend:
+         serviceName: {{ include "akeyless-services.fullname" $ }}
+         servicePort: {{ .servicePort }}
+{{- end }}
+
+{{- if $.Values.ingress.tls }}
+  tls:
+    {{- range .Values.ingress.rules }}
+    - hosts:
+      - {{ .hostname }}
+      {{- if $.Values.ingress.certManager }}
+      secretName: {{ .hostname }}-tls
+      {{- end }}
+    {{- end }}
+{{- end }}
+
+{{- end }}

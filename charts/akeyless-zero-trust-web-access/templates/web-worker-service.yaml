@@ -1,0 +1,23 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "akeyless-zero-web-access.fullname" . }}-discovery
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{- include "akeyless-zero-web-access.labels" . | nindent 4 }}
+  annotations:
+{{- toYaml .Values.webWorker.service.annotations | nindent 4 }}
+spec:
+  clusterIP: None
+  ports:
+    - port: {{ .Values.webWorker.service.port }}
+      targetPort: web
+      protocol: TCP
+      name: web
+    - port: 9090
+      targetPort: agent
+      protocol: TCP
+      name: web-agent
+  selector:
+    app: web-worker

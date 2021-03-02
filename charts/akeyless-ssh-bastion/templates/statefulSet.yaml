@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "akeyless-ssh-proxy.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "akeyless-ssh-proxy.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "akeyless-ssh-proxy.fullname" . }}
+  replicas: {{ .Values.replicaCount }}
+  updateStrategy:
+    type: {{ .Values.updateStrategy }}
+  selector:
+    matchLabels:
+      {{- include "akeyless-ssh-proxy.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "akeyless-ssh-proxy.selectorLabels" . | nindent 8 }}
+    spec:
+      volumes:
+      - name: config
+        emptyDir: {}
+      - name: creds
+        emptyDir: {}
+      {{- range .Values.persistence.volumes }}
+      - name: {{ .name | title | lower }}
+        persistentVolumeClaim:
+          claimName: {{ printf "%s-%s" $.Release.Name .name | title | lower }}
+      {{- end }}
+      - name: configmap-creds
+        configMap:
+          name: {{ $.Release.Name }}-cm-creds
+      - name: configmap-conf
+        configMap:
+          name: {{ $.Release.Name }}-cm-conf
+      initContainers:
+        # Since k8s 1.9.4, config maps mount read-only volumes. Since the Docker image also writes to the config file,
+        # the file must be mounted as read-write. We use init containers to copy from the config map read-only
+        # path, to a read-write path
+        - name: bootstrap
+          image: busybox:1.30.1
+          imagePullPolicy: IfNotPresent
+          command: ['sh']
+          args:
+            - "-c"
+            - |
+              set -ex
+              [ "$(ls /configmap_conf)" ] && cp /configmap_conf/* /var/akeyless/conf
+              [ "$(ls /configmap_creds)" ] && cp /configmap_creds/* /var/akeyless/creds
+          volumeMounts:
+            - name: configmap-conf
+              mountPath: /configmap_conf
+            - name: configmap-creds
+              mountPath: /configmap_creds
+            - name: config
+              mountPath: /var/akeyless/conf
+            - name: creds
+              mountPath: /var/akeyless/creds
+      imagePullSecrets:
+        - name: akeyless-docker-hub-ssh
+      containers:
+        - name: {{ .Values.containerName }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["SYS_ADMIN"]
+          ports:
+          - containerPort: 22
+            name: ssh
+          - containerPort: 9900
+            name: curl-proxy
+          livenessProbe:
+            exec:
+              command:
+              - sh
+              - /usr/local/bin/health.sh
+{{- toYaml .Values.livenessProbe | trim | nindent 12 }}
+          readinessProbe:
+            exec:
+              command:
+              - sh
+              - /usr/local/bin/health.sh
+{{- toYaml .Values.readinessProbe | trim | nindent 12 }}
+          volumeMounts:
+          {{- range .Values.persistence.volumes }}
+            - name: {{ .name | title | lower }}
+              mountPath: {{ .mountPath | quote }}
+          {{- end }}
+            - name: config
+              mountPath: /var/akeyless/conf
+            - name: creds
+              mountPath: /var/akeyless/creds
+          resources:
+{{- toYaml .Values.resources | nindent 12 }}

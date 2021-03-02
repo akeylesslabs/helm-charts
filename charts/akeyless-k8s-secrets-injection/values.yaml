@@ -1,0 +1,58 @@
+# Default values for spot-config-webhook.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+minikube: false
+openshiftEnabled: false
+debug: false
+
+tlsCertsSecretName: vault-secrets-webhook-tls-certs
+
+image:
+  repository: akeyless/k8s-webhook-server
+  pullPolicy: Always
+#  tag: latest
+
+
+service:
+  name: secrets-webhook
+  type: ClusterIP
+  externalPort: 443
+  internalPort: 8443
+
+env:
+  AKEYLESS_URL: "https://vault.akeyless.io"
+  AKEYLESS_ACCESS_ID: "" 
+  AKEYLESS_ACCESS_TYPE: ""  # azure_ad/aws_iam/api_key/universal_identity
+
+ # AKEYLESS_API_GW_URL: "https://api-gw-url"
+ # AKEYLESS_POD_ACCESS_PATH: "<location-to-access-secrets-per-pod-name>"
+ # AKEYLESS_NAMESPACE_ACCESS_PATH: "<location-to-access-secrets-per-namespace>"
+ # AKEYLESS_INIT_TOKEN: "<universal_identity_init_token>"
+ # AKEYLESS_SECRET_DIR_NAME: "<path>"
+ # AKEYLESS_API_KEY: "<api_key>"
+ 
+
+resources:
+  limits:
+    cpu: 0.5
+    memory: 192Mi
+  requests:
+    cpu: 0.25
+    memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: |
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        topologyKey: kubernetes.io/hostname
+        labelSelector:
+          matchLabels:
+            app: {{ template "vault-secrets-webhook.name" . }}
+            release: {{ .Release.Name }}

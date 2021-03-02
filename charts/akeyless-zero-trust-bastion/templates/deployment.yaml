@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zero-trust-bastion-deployment
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{- include "akeyless-zero-trust-bastion.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app: zero-trust-bastion
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: zero-trust-bastion
+    spec:
+      imagePullSecrets:
+        - name: akeyless-docker-hub-bastion
+      containers:
+        - name: {{ .Values.containerName }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 8888
+              name: api
+          env:
+{{- if .Values.config.apiGatewayURL }}
+            - name: AKEYLESS_URL
+              value: {{ .Values.config.apiGatewayURL }}
+{{- end }}
+{{- with .Values.config.privilegedAccess }}
+  {{- if .accessID }}
+            - name: PRIVILEGED_ACCESS_ID
+              value: .accessID
+  {{- end }}
+  {{- if .allowedAccessIDs }}
+            - name: ALLOWED_ACCESS_IDS
+              value: {{ range $index, $element := .allowedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }}
+  {{- end }}
+{{- end }}
+{{- if .Values.config.rdpRecord.enabled }}
+            - name: AWS_REGION
+              value: {{ required "A valid .Values.config.rdpRecording.s3.region required!" .Values.config.rdpRecord.s3.region }}
+            - name: AWS_S3_BUCKET
+              value: {{ required "A valid .Values.config.rdpRecording.s3.bucketName required!" .Values.config.rdpRecord.s3.bucketName }}
+            - name: AWS_S3_PREFIX
+              value: {{ required "A valid .Values.config.rdpRecording.s3.bucketPrefix required!" .Values.config.rdpRecord.s3.bucketPrefix }}
+  {{- if or ( .Values.config.rdpRecord.s3.awsAccessKeyId) ( .Values.config.rdpRecord.existingSecret) }}
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "akeyless-zero-trust-bastion.secretName" . }}
+                  key: aws-access-key-id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "akeyless-zero-trust-bastion.secretName" . }}
+                  key: aws-secret-access-key
+  {{- end }}
+{{- end }}
+          resources:
+{{- toYaml .Values.resources | nindent 12 }}
+          livenessProbe:
+            tcpSocket:
+              port: 8888
+{{- toYaml .Values.livenessProbe | trim | nindent 12 }}
+          readinessProbe:
+            tcpSocket:
+              port: 8888
+{{- toYaml .Values.readinessProbe | trim | nindent 12 }}

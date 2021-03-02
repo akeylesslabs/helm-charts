@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name:  {{ include "akeyless-zero-web-access.fullname" . }}-dispatcher
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: dispatcher-svc
+{{- include "akeyless-zero-web-access.labels" . | nindent 4 }}
+  annotations:
+{{- toYaml .Values.dispatcher.service.annotations | nindent 4 }}
+spec:
+{{- if .Values.dispatcher.ingress.enabled }}
+  type: NodePort
+{{- else }}
+  type: {{ .Values.dispatcher.service.type }}
+{{- end }}
+  ports:
+    - name: http
+      port: {{ .Values.dispatcher.service.port }}
+      targetPort: web
+      protocol: TCP
+  selector:
+    app: dispatcher

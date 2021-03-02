@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-dispatcher-deployment
+  namespace: {{ .Release.Namespace }}
+  labels:
+        {{- include "akeyless-zero-web-access.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app: dispatcher
+  replicas: {{ .Values.dispatcher.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: dispatcher
+  {{- if .Values.metrics.podAnnotation }}
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/path:   '/metrics'
+        prometheus.io/port:   '2000'
+  {{- end }}
+    spec:
+      securityContext:
+        fsGroup: 10000
+      volumes:
+        - name: akeyless-config
+          emptyDir: {}
+        - name: ng-config
+          emptyDir: {}
+        - name: configmap-akeyless
+          configMap:
+            name: {{ $.Release.Name }}-cm-akeyless
+        - name: configmap-akeyless-config
+          configMap:
+            name: {{ $.Release.Name }}-cm-akeyless-config
+        {{ if and .Values.persistence .Values.persistence.shareStorageVolume }}
+        - name: {{ .Values.persistence.shareStorageVolume.name | title | lower }}
+          persistentVolumeClaim:
+            claimName: {{ printf "%s-%s" $.Release.Name .Values.persistence.shareStorageVolume.name | title | lower }}
+        {{ end }}
+      initContainers:
+        # Since k8s 1.9.4, config maps mount read-only volumes. Since the Docker image also writes to the config file,
+        # the file must be mounted as read-write. We use init containers to copy from the config map read-only
+        # path, to a read-write path
+        - name: bootstrap
+          image: busybox:1.30.1
+          imagePullPolicy: IfNotPresent
+          command: ['sh']
+          args:
+            - "-c"
+            - |
+              set -ex
+              [ "$(ls /configmap_akeyless)" ] && cp /configmap_akeyless/* /etc/akeyless
+              [ "$(ls /configmap_akeyless_config)" ] && cp /configmap_akeyless_config/* /var/akeyless/conf
+              echo {{ include "akeyless-zero-web-access.fullname" . }}-discovery > /etc/akeyless/service-dns
+              export WEB_WORKER_SERVICE_DNS=$(cat /etc/akeyless/service-dns)
+              echo {{ .Values.dispatcher.config.allowedInternalAuth }} > /etc/akeyless/allowed_internal_auth
+              echo {{ .Values.dispatcher.config.disableSecureCookie }} > /etc/akeyless/disable_secure_cookie
+{{- if .Values.dispatcher.config.privilegedAccess.allowedAccessIDs }}
+              echo {{ range $index, $element := .Values.dispatcher.config.privilegedAccess.allowedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_access_ids
+{{- end }}
+          volumeMounts:
+            - name: configmap-akeyless
+              mountPath: /configmap_akeyless
+            - name: configmap-akeyless-config
+              mountPath: /configmap_akeyless_config
+            - name: ng-config
+              mountPath: /etc/akeyless
+            - name: akeyless-config
+              mountPath: /var/akeyless/conf
+      imagePullSecrets:
+        - name: akeyless-docker-hub-web-access
+      containers:
+        - name: {{ .Values.dispatcher.containerName }}
+          image: "{{ .Values.dispatcher.image.repository }}:{{ .Values.dispatcher.image.tag  | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.dispatcher.image.pullPolicy }}
+          ports:
+            - containerPort: 9000
+              name: web
+            - containerPort: 12411
+              name: akl
+            - containerPort: 2000
+              name: metrics
+          env:
+            - name: WEB_WORKER_SERVICE_DNS
+              value: {{ include "akeyless-zero-web-access.fullname" . }}-discovery
+          volumeMounts:
+            - name: configmap-akeyless
+              mountPath: /configmap_conf
+            - name: ng-config
+              mountPath: /etc/akeyless
+            - name: akeyless-config
+              mountPath: /var/akeyless/conf
+            {{ if and .Values.persistence .Values.persistence.shareStorageVolume }}
+            - name: {{ .Values.persistence.shareStorageVolume.name | title | lower }}
+              mountPath: /etc/shared
+            {{ end }}
+          resources:
+{{- toYaml .Values.dispatcher.resources | nindent 12 }}
+          livenessProbe:
+            tcpSocket:
+              port: 9000
+{{- toYaml .Values.dispatcher.livenessProbe | trim | nindent 12 }}
+          readinessProbe:
+            tcpSocket:
+              port: 9000
+{{- toYaml .Values.dispatcher.readinessProbe | trim | nindent 12 }}

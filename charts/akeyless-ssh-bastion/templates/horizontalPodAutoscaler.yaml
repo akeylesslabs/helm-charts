@@ -1,0 +1,27 @@
+{{- if .Values.HPA.enabled }}
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ $.Release.Name }}-hpa
+  namespace: {{ .Release.Namespace }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: StatefulSet
+    name: {{ include "akeyless-ssh-proxy.fullname" . }}
+  minReplicas: {{ $.Values.HPA.minReplicas | default 1 }}
+  maxReplicas: {{ $.Values.HPA.maxReplicas | default 14 }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ $.Values.HPA.cpuAvgUtil }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ $.Values.HPA.memAvgUtil }}
+  {{- end }}

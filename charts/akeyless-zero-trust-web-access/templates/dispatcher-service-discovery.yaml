@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name:  {{ include "akeyless-zero-web-access.fullname" . }}-disc-disp
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{- include "akeyless-zero-web-access.labels" . | nindent 4 }}
+  annotations:
+{{- toYaml .Values.dispatcher.service.annotations | nindent 4 }}
+spec:
+  clusterIP: None
+  ports:
+    - name: http
+      port: {{ .Values.dispatcher.service.port }}
+      targetPort: web
+      protocol: TCP
+    - name: http-akl
+      port: 12411
+      targetPort: akl
+      protocol: TCP
+  selector:
+    app: dispatcher
