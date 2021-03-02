@@ -1,0 +1,63 @@
+apiVersion: v1
+entries:
+  akeyless-api-gateway:
+  - apiVersion: v2
+    appVersion: 2.8.0
+    created: "2021-03-02T08:24:45.984227251Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
+    digest: ce0303d7bf93a4bb75ab4d69cdc8789f0d5beebbbaf802e3aac5329b51900533
+    name: akeyless-api-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-api-gateway-1.0.0/akeyless-api-gateway-1.0.0.tgz
+    version: 1.0.0
+  akeyless-secrets-injection:
+  - apiVersion: v2
+    appVersion: latest
+    created: "2021-03-02T08:24:46.112153535Z"
+    description: A Helm chart that deploys a mutating admission webhook that configures
+      applications to request env vars from Akeyless Vault Secrets
+    digest: 6af75f791f946043d4616a297a53d1b284e318928930786d7da42ee96193c193
+    name: akeyless-secrets-injection
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-secrets-injection-1.0.0/akeyless-secrets-injection-1.0.0.tgz
+    version: 1.0.0
+  akeyless-ssh-proxy:
+  - apiVersion: v2
+    appVersion: latest
+    created: "2021-03-02T08:24:46.242453097Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-ssh-proxy
+    digest: 85ef246dd5a1a354483d01c1df10fe6d2fad6e565ac210e609a81b9f17626e2c
+    name: akeyless-ssh-proxy
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-ssh-proxy-1.0.0/akeyless-ssh-proxy-1.0.0.tgz
+    version: 1.0.0
+  akeyless-zero-trust-bastion:
+  - apiVersion: v2
+    appVersion: v0.5.0
+    created: "2021-03-02T08:24:46.399974582Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-zero-trust-bastion
+    digest: e9f129f48b67e0aab602604945443bfffaa861d3773486f497af8073a647bba8
+    name: akeyless-zero-trust-bastion
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-bastion-1.0.0/akeyless-zero-trust-bastion-1.0.0.tgz
+    version: 1.0.0
+  akeyless-zero-trust-web-access:
+  - apiVersion: v2
+    appVersion: 0.11.0
+    created: "2021-03-02T08:24:46.53638412Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-zero-trust-web-access
+    digest: f3a6ed37df06b162a2fb0584c34c12fbbb4b7a219f0280bc9c60b406a7fe5bbc
+    home: https://www.akeyless.io
+    icon: https://akeylesslabs.github.io/helm-charts/assets/logo/akl.jpeg
+    name: akeyless-zero-trust-web-access
+    sources:
+    - https://github.com/akeylesslabs/helm-charts/tree/feature/helm_repo/akeyless-zero-trust-web-access
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
+    version: 1.0.0
+generated: "2021-03-02T08:24:45.752836224Z"
