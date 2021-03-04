@@ -1,5 +1,6 @@
 # Akeyless Kubernetes Helm Charts
 
+![Release Charts](https://github.com/akeylesslabs/helm-charts/workflows/Release%20Charts/badge.svg?branch=main)
 
 ## Usage
 
