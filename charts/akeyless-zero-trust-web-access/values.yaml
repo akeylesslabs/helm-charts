@@ -83,12 +83,12 @@ dispatcher:
 
     # non-privileged credentials with "list" only access
     listOnlyCredentials:
-      accessID: ""
-      accessKey: ""
+      samlAccessID: ""
 
     # optional credentials for zero-trust access: if provided, it is possible for
     # end users to only have "list" permissions on Akeyless items if privileged
     # credentials have "read" access.
+    # if accessKey left empty, accessID can represent Auth method of cloud provider, such as GCP, AWS, and Azure
     privilegedAccess:
       accessID: ""
       accessKey: ""
@@ -144,13 +144,6 @@ webWorker:
   livenessProbe:
     successThreshold: 1
 
-#  readinessProbe:
-#    initialDelaySeconds: 5
-#    periodSeconds: 2
-#    failureThreshold: 1
-#    successThreshold: 1
-#  timeoutSeconds: 5
-
   config:
     policies: |
         {
@@ -178,8 +171,7 @@ webWorker:
                 "<all_urls>"
               ],
               "Exceptions": [
-                "https://*.akeyless.io/*",
-                "https://*.okta.com/*"
+                "https://*.akeyless.io/*"
               ]
             }
           }
