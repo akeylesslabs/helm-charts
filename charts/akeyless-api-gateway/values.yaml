@@ -5,7 +5,7 @@ replicaCount: 2
 image:
   repository: akeyless/base
   pullPolicy: IfNotPresent
-#  tag: latest
+  tag: latest
 
 containerName: "api-gateway"
 
