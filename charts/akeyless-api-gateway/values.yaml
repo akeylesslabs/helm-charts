@@ -117,7 +117,7 @@ resources: {}
 env: []
 
 akeylessUserAuth:
-  adminAccessId: 
+  adminAccessId:
   adminAccessKey:
   adminPassword:
   loginAccessId: 
