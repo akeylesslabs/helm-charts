@@ -72,3 +72,7 @@ Get the Ingress TLS secret.
         {{- printf "%s-tls" .Values.ingress.hostname -}}
     {{- end -}}
 {{- end -}}
+
+{{- define "akeyless-api-gw.allowedAccessIDs" -}}
+{{- join "," .Values.akeylessUserAuth.allowedAccessIDs }}
+{{- end -}}

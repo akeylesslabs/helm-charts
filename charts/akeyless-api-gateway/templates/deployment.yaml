@@ -76,6 +76,13 @@ spec:
                   name: {{ $.Release.Name }}-conf-secret
                   key: ADMIN_ACCESS_ID
           {{- end }}
+          {{- if .Values.akeylessUserAuth.allowedAccessIDs }}
+            - name: ALLOWED_ACCESS_IDS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Release.Name }}-conf-secret
+                  key: ALLOWED_ACCESS_IDS
+          {{- end }}
           {{- if .Values.akeylessUserAuth.adminAccessKey }}
             - name: ADMIN_ACCESS_KEY
               valueFrom:
