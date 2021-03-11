@@ -112,14 +112,15 @@ resources: {}
   #   memory: 128Mi
 
 # Akeyless API Gateway application version
-#version:
+# version:
 
 env: []
 
 akeylessUserAuth:
-  adminAccessId:
+  adminAccessId: 
   adminAccessKey:
   adminPassword:
+  loginAccessId: 
   clusterName:
   configProtectionKeyName:
 
