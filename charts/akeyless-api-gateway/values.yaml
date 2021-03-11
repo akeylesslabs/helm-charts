@@ -120,9 +120,12 @@ akeylessUserAuth:
   adminAccessId:
   adminAccessKey:
   adminPassword:
-  loginAccessId: 
   clusterName:
   configProtectionKeyName:
+  allowedAccessIDs: []
+  # - p-1234
+  # - p-5678
+  # - p-5678
 
 # Customer Fragment is a critical component that allow customers to use a Zero-Knowledge Encryption.
 # For more information: https://akeyless.readme.io/docs/implement-zero-trust
