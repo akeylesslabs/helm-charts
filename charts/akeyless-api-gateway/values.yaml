@@ -117,13 +117,13 @@ resources: {}
 env: []
 
 akeylessUserAuth:
-  # adminAccessId is required field, supported types: access_key,password or cloud identity(aws_iam/azure_ad/gcp)
+  # adminAccessId is required field, supported types: access_key,password or cloud identity(aws_iam/azure_ad/gcp_gce)
   adminAccessId:
   adminAccessKey:
   adminPassword:
   clusterName:
   configProtectionKeyName:
-  # list of allowed access-ids from your account that can login to the cluster, supported types: access_key,password  
+  # list of allowed access-ids from your account that can login to the Configuration Managment WebUI
   allowedAccessIDs: []
   # - p-1234
   # - p-5678
@@ -143,3 +143,4 @@ HPA:
   maxReplicas: 14
   cpuAvgUtil: 50
   memAvgUtil: 50
+
