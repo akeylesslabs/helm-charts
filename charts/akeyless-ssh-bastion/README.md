@@ -105,5 +105,6 @@ The following table lists the configurable parameters of the SSH Bastion chart a
 | `config.logForwording.settings`           | Log forwarding configuration                                                                                         | `nil`                                                        |
 | `config.privilegedAccess.accessID`        | Access ID with "read" capability for privileged access.                                                              | `nil`                                                        |
 | `config.privilegedAccess.accessKey`       | Access Key of the provided access ID.                                                                                | `nil`                                                        |
+| `config.listOnlyCredentials.samlAccessID` | Non-privileged SAML credentials with "list" only access.                                                             | `nil`                                                        |
 | `config.apiGatewayURL`                    | API Gateway URL to use to fetch the secrets.                                                                         | `https://rest.akeyless.io`                                   |
                        
