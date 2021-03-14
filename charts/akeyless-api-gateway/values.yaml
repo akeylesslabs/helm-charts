@@ -122,6 +122,9 @@ akeylessUserAuth:
   adminAccessKey:
   adminPassword:
   clusterName:
+  # The key which is used to encrypt the API Gateway configuration. 
+  # If left empty - the account’s default key will be used. 
+  # This key can be determined on cluster bringup only and cannot be modified afterwards
   configProtectionKeyName:
   # list of allowed access-ids from your account that can login to the Configuration Managment WebUI
   allowedAccessIDs: []
