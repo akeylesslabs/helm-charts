@@ -80,8 +80,7 @@ config:
 
   # non-privileged credentials with "list" only access
   listOnlyCredentials:
-    accessID: ""
-    accessKey: ""
+    samlAccessID: ""
 
   # optional credentials for zero-trust access: if provided, it is possible for
   # end users to only have "list" permissions on Akeyless items if privileged

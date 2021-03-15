@@ -35,6 +35,11 @@ data:
 {{ with .Values.config }}
   akeyless_config_file: |
     {{ required "API Gateway URL is required" .apiGatewayURL }}
-    cmd=auth&access-id={{ .listOnlyCredentials.accessID }}&access-key={{ .listOnlyCredentials.accessKey }}
+    {{- if .listOnlyCredentials.accessID  }}
+    cmd=auth&access-id={{ .listOnlyCredentials.accessID }}
+    {{- end }}
+    {{- if .listOnlyCredentials.samlAccessID  }}
+    cmd=auth&access-id={{ .listOnlyCredentials.samlAccessID }}
+    {{- end }}
     cmd=auth&access-id={{ required "Privileged credentials are required" .privilegedAccess.accessID }}&access-key={{ required "Privileged credentials are required" .privilegedAccess.accessKey }}
 {{- end}}
