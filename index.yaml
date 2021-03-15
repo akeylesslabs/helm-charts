@@ -86,6 +86,16 @@ entries:
   akeyless-ssh-proxy:
   - apiVersion: v2
     appVersion: latest
+    created: "2021-03-15T12:22:17.244580374Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-ssh-proxy
+    digest: fbf500bbd85d7bf92832fe7ba612f3cd270cab9a03b38905034e04bf28c53e6a
+    name: akeyless-ssh-proxy
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-ssh-proxy-1.1.0/akeyless-ssh-proxy-1.1.0.tgz
+    version: 1.1.0
+  - apiVersion: v2
+    appVersion: latest
     created: "2021-03-02T08:24:46.242453097Z"
     description: A Helm chart for Kubernetes that deploys akeyless-ssh-proxy
     digest: 85ef246dd5a1a354483d01c1df10fe6d2fad6e565ac210e609a81b9f17626e2c
@@ -106,6 +116,20 @@ entries:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-bastion-1.0.0/akeyless-zero-trust-bastion-1.0.0.tgz
     version: 1.0.0
   akeyless-zero-trust-web-access:
+  - apiVersion: v2
+    appVersion: 0.11.0
+    created: "2021-03-15T12:22:17.338955348Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-zero-trust-web-access
+    digest: c97aa71bed880d83207b167d615c451d1e6e3dcbce804c19476d8099d4c17aa9
+    home: https://www.akeyless.io
+    icon: https://akeylesslabs.github.io/helm-charts/assets/logo/akl.jpeg
+    name: akeyless-zero-trust-web-access
+    sources:
+    - https://github.com/akeylesslabs/helm-charts/tree/feature/helm_repo/akeyless-zero-trust-web-access
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.2/akeyless-zero-trust-web-access-1.0.2.tgz
+    version: 1.0.2
   - apiVersion: v2
     appVersion: 0.11.0
     created: "2021-03-04T08:04:10.680110388Z"
