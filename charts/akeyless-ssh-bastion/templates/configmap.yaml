@@ -41,5 +41,5 @@ data:
     {{- if .listOnlyCredentials.samlAccessID  }}
     cmd=auth&access-id={{ .listOnlyCredentials.samlAccessID }}
     {{- end }}
-    cmd=auth&access-id={{ required "Privileged credentials are required" .privilegedAccess.accessID }}&access-key={{ required "Privileged credentials are required" .privilegedAccess.accessKey }}
+    cmd=auth&access-id={{ required "Privileged credentials are required" .privilegedAccess.accessID }}&access-key={{ .privilegedAccess.accessKey }}
 {{- end}}
