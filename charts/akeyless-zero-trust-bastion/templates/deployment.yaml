@@ -32,7 +32,7 @@ spec:
 {{- with .Values.config.privilegedAccess }}
   {{- if .accessID }}
             - name: PRIVILEGED_ACCESS_ID
-              value: .accessID
+              value: {{ .accessID }}
   {{- end }}
   {{- if .allowedAccessIDs }}
             - name: ALLOWED_ACCESS_IDS
