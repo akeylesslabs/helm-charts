@@ -81,20 +81,19 @@ dispatcher:
     # a full URL of Akeyless API Gateway
     apiGatewayURL: https://rest.akeyless.io
 
-    # non-privileged credentials with "list" only access
+    # For the Zero-Trust Web Access, it's recommended to grant minimal permissions ("List" only) to the Zero-Trust client,
+    # while the privilegedAccess will have "Read" and "List" permissions.
     listOnlyCredentials:
       samlAccessID: ""
 
-    # Relevant for Zero-Trust Access for non-SSH targets (e.g. DBs, K8s, AWS CLIs).
-    # If provided, it's recommended to grant minimal permissions ("List" only) to the Zero-Trust Dynamic Secrets,
-    # while the privilegedAccess will have "Read" and "List" permissions.
+    # The privilegedAccess should have "Read" and "List" permissions to the relevant secrets.
     # If accessKey field is left empty, the accessID will be used as a Cloud Provider IAM Auth Method (e.g. AWS-IAM, AzureAD, GCP-GCE)
     privilegedAccess:
       accessID: ""
       accessKey: ""
 
-      # limit access to privileged items only for these end user access ids.
-      # if left empty, all access ids are allowed
+      # Restrict Zero-Trust Web Access to the following list of clients Access-IDs (saml)
+      # if left empty, any Access-ID will be accepted (still required to have "List" permission on the relevant secret names)
       allowedAccessIDs: []
       # - p-1234
       # - p-5678
