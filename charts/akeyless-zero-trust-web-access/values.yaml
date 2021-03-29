@@ -85,10 +85,10 @@ dispatcher:
     listOnlyCredentials:
       samlAccessID: ""
 
-    # optional credentials for zero-trust access: if provided, it is possible for
-    # end users to only have "list" permissions on Akeyless items if privileged
-    # credentials have "read" access.
-    # if accessKey left empty, accessID can represent Auth method of cloud provider, such as GCP, AWS, and Azure
+    # Relevant for Zero-Trust Access for non-SSH targets (e.g. DBs, K8s, AWS CLIs).
+    # If provided, it's recommended to grant minimal permissions ("List" only) to the Zero-Trust Dynamic Secrets,
+    # while the privilegedAccess will have "Read" and "List" permissions.
+    # If accessKey field is left empty, the accessID will be used as a Cloud Provider IAM Auth Method (e.g. AWS-IAM, AzureAD, GCP-GCE)
     privilegedAccess:
       accessID: ""
       accessKey: ""

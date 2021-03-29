@@ -78,13 +78,9 @@ config:
   # a full URL of Akeyless API Gateway
   apiGatewayURL: https://rest.akeyless.io
 
-  # non-privileged credentials with "list" only access
-  listOnlyCredentials:
-    samlAccessID: ""
-
-  # optional credentials for zero-trust access: if provided, it is possible for
-  # end users to only have "list" permissions on Akeyless items if privileged
-  # credentials have "read" access.
+  # Relevant for Zero-Trust Access for non-SSH targets (e.g. DBs, K8s, AWS CLIs).
+  # If provided, it's recommended to grant minimal permissions ("List" only) to the Zero-Trust Dynamic Secrets,
+  # while the privilegedAccess will have "Read" and "List" permissions.
   privilegedAccess:
     accessID: ""
     accessKey: ""
