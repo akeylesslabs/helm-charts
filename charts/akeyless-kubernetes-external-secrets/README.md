@@ -2,12 +2,6 @@
 
 [Kubernetes External Secrets](https://github.com/external-secrets/kubernetes-external-secrets) allows you to use external secret management systems (*e.g.*, [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/)) to securely add secrets in Kubernetes. Read more about the design and motivation for Kubernetes External Secrets on the [GoDaddy Engineering Blog](https://godaddy.github.io/2019/04/16/kubernetes-external-secrets/).
 
-## TL;DR;
-
-```bash
-$ helm repo add external-secrets https://external-secrets.github.io/kubernetes-external-secrets/
-$ helm install external-secrets/kubernetes-external-secrets
-```
 
 See below for [Helm V2 considerations](#helm-v2-considerations) when installing the chart.
 
@@ -20,8 +14,8 @@ See below for [Helm V2 considerations](#helm-v2-considerations) when installing 
 To install the chart with the release named `my-release`:
 
 ```bash
-$ helm install my-release external-secrets/kubernetes-external-secrets
-```
+ helm install my-release  charts/akeyless-kubernetes-external-secrets -f charts/akeyless-kubernetes-external-secrets/values.yaml
+ ```
 
 To install the chart with [AWS IAM Roles for Service Accounts](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html):
 
