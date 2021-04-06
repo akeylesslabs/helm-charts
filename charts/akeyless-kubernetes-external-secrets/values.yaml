@@ -14,9 +14,9 @@ env:
 
   #Akeyless rest-v2 endpoint 
   AKEYLESS_API_ENDPOINT:  https://api.akeyless.io 
-  AKEYLESS_ACCESS_ID:
+  AKEYLESS_ACCESS_ID: 
   #AKEYLESS_ACCESS_TYPE can be one of the following: aws_iam/azure_ad/gcp/access_key
-  AKEYLESS_ACCESS_TYPE:
+  AKEYLESS_ACCESS_TYPE: 
   #AKEYLESS_ACCESS_TYPE_PARAM can be one of the following: gcp-audience/azure-obj-id/access-key
   #AKEYLESS_ACCESS_TYPE_PARAM: 
   
@@ -84,7 +84,7 @@ replicaCount: 1
 
 image:
   repository: akeyless/kubernetes-external-secrets
-  tag: 0.0.4
+  tag: 0.0.6
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
