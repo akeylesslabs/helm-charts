@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ .Release.Name }}-validator"
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  containers:
+    - name: post-install-job
+      image: apteno/alpine-jq:2021-04-04
+      imagePullPolicy: IfNotPresent
+      command: ["/bin/sh"]
+      args:
+          - "-c"
+          - |
+            jq -nr 'env | .POLICY_CONFIG' > policy_check
+            jq -e . policy_check || (echo "Policies JSON validation failed! please correct the policies JSON structure in the values.yaml file" && exit 1)
+      env:
+        - name: POLICY_CONFIG
+          valueFrom:
+            configMapKeyRef:
+              name: {{ $.Release.Name }}-cm-web-policies
+              key: policies.json           
+  restartPolicy: Never
