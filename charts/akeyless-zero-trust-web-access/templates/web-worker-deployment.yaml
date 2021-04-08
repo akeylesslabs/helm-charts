@@ -52,8 +52,10 @@ spec:
               [ "$(ls /configmap_policy_conf)" ] && cp /configmap_policy_conf/* /var/akeyless/policy_conf
               jq -e . /var/akeyless/policy_conf || (echo "Policies JSON validation failed! please correct the policies JSON structure in the values.yaml file" && exit 1)
           volumeMounts:
+{{- if .Values.dlp.enabled }}
             - name: configmap-conf
               mountPath: /configmap_conf
+{{- end }}
             - name: config
               mountPath: /var/akeyless/conf
             - name: configmap-policies

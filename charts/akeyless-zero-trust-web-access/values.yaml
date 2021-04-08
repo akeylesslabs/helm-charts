@@ -177,6 +177,7 @@ webWorker:
         }
 
 dlp:
+  enabled: false
   config:
     hostAddress: ""
     # host/{pathPrefix}
