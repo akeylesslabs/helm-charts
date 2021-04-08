@@ -36,7 +36,6 @@ spec:
           persistentVolumeClaim:
             claimName: {{ printf "%s-%s" $.Release.Name .Values.persistence.shareStorageVolume.name | title | lower }}
         {{ end }}
-     {{- if .Values.dlp.enabled }}
       initContainers:
         # Since k8s 1.9.4, config maps mount read-only volumes. Since the Docker image also writes to the config file,
         # the file must be mounted as read-write. We use init containers to copy from the config map read-only
@@ -59,7 +58,6 @@ spec:
               mountPath: /var/akeyless/conf
             - name: configmap-policies
               mountPath: /configmap_policy_conf
-     {{- end }}
       containers:
         - name: {{ .Values.webWorker.containerName }}
           image: "{{ .Values.webWorker.image.repository }}:{{ .Values.webWorker.image.tag  | default .Chart.AppVersion }}"
