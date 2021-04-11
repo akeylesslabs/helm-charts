@@ -36,26 +36,30 @@ spec:
           persistentVolumeClaim:
             claimName: {{ printf "%s-%s" $.Release.Name .Values.persistence.shareStorageVolume.name | title | lower }}
         {{ end }}
-     {{- if .Values.dlp.enabled }}
       initContainers:
         # Since k8s 1.9.4, config maps mount read-only volumes. Since the Docker image also writes to the config file,
         # the file must be mounted as read-write. We use init containers to copy from the config map read-only
         # path, to a read-write path
         - name: bootstrap
-          image: busybox:1.30.1
+          image: apteno/alpine-jq:2021-04-04
           imagePullPolicy: IfNotPresent
-          command: ['sh']
+          command: ["/bin/sh"]
           args:
             - "-c"
             - |
               set -ex
               [ "$(ls /configmap_conf)" ] && cp /configmap_conf/* /var/akeyless/conf
+              [ "$(ls /configmap_policy_conf)" ] && cp /configmap_policy_conf/* /var/akeyless/policy_conf
+              jq -e . /var/akeyless/policy_conf || (echo "Policies JSON validation failed! please correct the policies JSON structure in the values.yaml file" && exit 1)
           volumeMounts:
+{{- if .Values.dlp.enabled }}
             - name: configmap-conf
               mountPath: /configmap_conf
+{{- end }}
             - name: config
               mountPath: /var/akeyless/conf
-     {{- end }}
+            - name: configmap-policies
+              mountPath: /configmap_policy_conf
       containers:
         - name: {{ .Values.webWorker.containerName }}
           image: "{{ .Values.webWorker.image.repository }}:{{ .Values.webWorker.image.tag  | default .Chart.AppVersion }}"
