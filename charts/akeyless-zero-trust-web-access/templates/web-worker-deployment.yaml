@@ -60,6 +60,8 @@ spec:
               mountPath: /var/akeyless/conf
             - name: configmap-policies
               mountPath: /configmap_policy_conf
+      imagePullSecrets:
+        - name: akeyless-docker-hub-web-access
       containers:
         - name: {{ .Values.webWorker.containerName }}
           image: "{{ .Values.webWorker.image.repository }}:{{ .Values.webWorker.image.tag  | default .Chart.AppVersion }}"
