@@ -14,6 +14,16 @@ image:
   pullPolicy: Always
 #  tag: latest
 
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  # name: ""
+  # Optional additional annotations to add to the controller's ServiceAccount
+  # annotations: {}
+  # Automount API credentials for a Service Account.
+  automountServiceAccountToken: true
 
 service:
   name: secrets-webhook
