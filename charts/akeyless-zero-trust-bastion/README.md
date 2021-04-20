@@ -85,9 +85,10 @@ The following table lists the configurable parameters of the Zero Trust Bastion 
 | `config.rdpRecord.s3.awsAccessKeyId`      | AWS Access Key ID, not required if using EC2 IAM roles                                                               | `nil`                                                        |
 | `config.rdpRecord.s3.awsSecretAccessKey`  | AWS Secret Access Key, not required if using EC2 IAM roles                                                           | `nil`                                                        |
 | `config.rdpRecord.existingSecret`         | Specifies an existing secret to be used for bastion, management AWS credentials                                      | `nil`                                                        |
-| `config.privilegedAccess.accessID`        | Access ID with "read" capability for privileged access.                                                              | `nil`                                                        |
-| `config.privilegedAccess.allowedAccessIDs`| Access will be permitted only to these access IDs. By default, any access ID is accepted.                            | `[]`                                                         |
-| `config.apiGatewayURL`                    | API Gateway URL to use to fetch the secrets.                                                                         | `https://rest.akeyless.io`                                   |
+| `config.privilegedAccess.accessID` | Access ID with "read" capability for privileged access. Supported auth methods: AWS IAM and API Key. | `nil` |
+| `config.privilegedAccess.accessKey` | Access Key with "read" capability for privileged access. Use with privileged accessID of type API Key. | `nil` |
+| `config.privilegedAccess.allowedAccessIDs` | Access will be permitted only to these access IDs. By default, any access ID is accepted. | `[]` |
+| `config.apiGatewayURL` | API Gateway URL to use to fetch the secrets. | `https://rest.akeyless.io` |
 
 ### HPA parameters
 

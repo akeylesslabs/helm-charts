@@ -34,6 +34,10 @@ spec:
             - name: PRIVILEGED_ACCESS_ID
               value: {{ .accessID }}
   {{- end }}
+  {{- if .accessKey }}
+            - name: PRIVILEGED_ACCESS_KEY
+              value: {{ .accessKey }}
+  {{- end }}
   {{- if .allowedAccessIDs }}
             - name: ALLOWED_ACCESS_IDS
               value: {{ range $index, $element := .allowedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }}
