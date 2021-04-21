@@ -84,7 +84,7 @@ replicaCount: 1
 
 image:
   repository: akeyless/kubernetes-external-secrets
-  tag: 0.0.6
+  tag: 0.0.7
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
