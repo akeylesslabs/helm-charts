@@ -38,7 +38,7 @@ items:
       - "*"
       resources:
       - pods
-    failurePolicy: Fail
+    failurePolicy: Ignore
     namespaceSelector:
       matchExpressions:
       - key: name
