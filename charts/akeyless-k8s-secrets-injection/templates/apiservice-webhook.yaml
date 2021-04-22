@@ -45,5 +45,11 @@ items:
         operator: NotIn
         values:
         - {{ .Release.Namespace }}
+    objectSelector:
+      matchExpressions:
+      - key: release
+        operator: NotIn
+        values: 
+        - {{ .Release.Name }}
     admissionReviewVersions: ["v1beta1"]
     sideEffects: None #Unknown
