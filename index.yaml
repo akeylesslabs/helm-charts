@@ -118,6 +118,16 @@ entries:
   akeyless-ssh-proxy:
   - apiVersion: v2
     appVersion: latest
+    created: "2021-04-22T08:05:55.34630159Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-ssh-proxy
+    digest: 95e5dbedaeec4d307a4aad5877e14d9682b0976759e5124ba02e8b6c602185c6
+    name: akeyless-ssh-proxy
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-ssh-proxy-1.2.1/akeyless-ssh-proxy-1.2.1.tgz
+    version: 1.2.1
+  - apiVersion: v2
+    appVersion: latest
     created: "2021-03-29T07:13:14.050053323Z"
     description: A Helm chart for Kubernetes that deploys akeyless-ssh-proxy
     digest: e6293c40e60f1a3797f524d0403a40c6b77a5b7ff17e8c085d05b9a1f2e76464
