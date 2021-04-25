@@ -91,8 +91,8 @@ config:
   # end users to only have "list" permissions on Akeyless items if privileged
   # credentials have "read" access.
   privilegedAccess:
-    # supported auth methods: AWS IAM and API Key;
-    # for AWS IAM, provide only accessID;
+    # supported auth methods: AWS IAM, Azure AD and API Key;
+    # for AWS IAM or Azure AD, provide only accessID;
     # for API Key, provide both accessID and accessKey
     accessID: ""
     accessKey: ""
