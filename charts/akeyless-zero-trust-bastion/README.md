@@ -88,6 +88,8 @@ The following table lists the configurable parameters of the Zero Trust Bastion 
 | `config.privilegedAccess.accessID` | Access ID with "read" capability for privileged access. Supported auth methods: AWS IAM, Azure AD and API Key. | `nil` |
 | `config.privilegedAccess.accessKey` | Access Key with "read" capability for privileged access. Use with privileged accessID of type API Key. | `nil` |
 | `config.privilegedAccess.allowedAccessIDs` | Access will be permitted only to these access IDs. By default, any access ID is accepted. | `[]` |
+| `config.privilegedAccess.azureObjectID` | Azure Object ID to use with privileged credentials of type Azure AD. | `nil` |
+| `config.privilegedAccess.gcpAudience` | Audience to use with privileged credentials of type GCP. | `akeyless.io` |
 | `config.apiGatewayURL` | API Gateway URL to use to fetch the secrets. | `https://rest.akeyless.io` |
 
 ### HPA parameters

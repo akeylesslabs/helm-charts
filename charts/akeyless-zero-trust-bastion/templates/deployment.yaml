@@ -42,6 +42,14 @@ spec:
             - name: ALLOWED_ACCESS_IDS
               value: {{ range $index, $element := .allowedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }}
   {{- end }}
+  {{- if .azureObjectID }}
+            - name: AZURE_OBJECT_ID
+              value: {{ .azureObjectID }}
+  {{- end }}
+  {{- if .gcpAudience }}
+            - name: GCP_AUDIENCE
+              value: {{ .gcpAudience }}
+  {{- end }}
 {{- end }}
 {{- if .Values.config.rdpRecord.enabled }}
             - name: AWS_REGION
