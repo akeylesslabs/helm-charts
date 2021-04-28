@@ -29,7 +29,7 @@ metadata:
 data:
 {{- if .Values.config.logForwarding.enabled }}
   logand.conf: |
-{{ required "A valid .Values.config.logForwording.logand entry required!" .Values.config.logForwarding.settings | indent 4 }}
+{{ required "A valid .Values.config.logForwarding.logand entry required!" .Values.config.logForwarding.settings | indent 4 }}
 {{- end }}
 
 {{ with .Values.config }}
