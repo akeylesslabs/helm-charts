@@ -10,6 +10,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with: 
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Fetch history
         run: git fetch --prune --unshallow
@@ -21,6 +23,5 @@ jobs:
 
       - name: Validate chart version
         env:
-          # GITHUB_TOKEN: ${{ secrets.MAIN_REPO_GITHUB_TOKEN }}
           GITHUB_CONTEXT: ${{ toJson(github.event.deployment) }}
         run: .github/scripts/apigw_latest_version_release.sh
