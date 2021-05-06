@@ -105,7 +105,7 @@ dispatcher:
     disableSecureCookie: "true"
 
     logForward:
-#    # audit configuration for log forwarding, currently support several technologies: https://akeyless.readme.io/docs/ssh-log-forwarding
+#    # audit configuration for log forwarding, currently support several technologies: https://docs.akeyless.io/docs/ssh-log-forwarding
 #    #splunk example
 #    #  logForward: |
 #    #    target_log_type="splunk"
@@ -186,7 +186,7 @@ dlp:
     mode: ""
     logLevel: "INFO"
   audit:
-# audit configuration for log forwarding, currently support several technologies: https://akeyless.readme.io/docs/ssh-log-forwarding
+# audit configuration for log forwarding, currently support several technologies: https://docs.akeyless.io/docs/ssh-log-forwarding
 #splunk example
 #  audit: |
 #    target_log_type="splunk"
