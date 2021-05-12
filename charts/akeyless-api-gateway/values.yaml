@@ -13,6 +13,13 @@ service:
   # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
   annotations: {}
   type: LoadBalancer
+
+  # Here you can manage the list of ports you want to expose on the service:
+  # 8000 - Configuration manager
+  # 8080 - Akeyless Restful API
+  # 8081 - Akeyless Restful API V2
+  # 8200 - HVP vault proxy
+  # 18888 - Akeyless UI
   ports:
     - name: web
       port: 18888
@@ -68,19 +75,14 @@ ingress:
 
   rules:
     - servicePort: web
-      serviceName: web
       hostname: "ui.gateway.local"
     - servicePort: hvp
-      serviceName: hvp
       hostname: "hvp.gateway.local"
     - servicePort: legacy-api
-      serviceName: legacy-api
       hostname: "rest.gateway.local"
     - servicePort: api
-      serviceName: api
       hostname: "api.gateway.local"
     - servicePort: configure-app
-      serviceName: configure-app
       hostname: "conf.gateway.local"
 
   ## Path for the default host
