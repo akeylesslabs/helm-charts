@@ -1,11 +1,11 @@
-name: Api-gw Latest App Version Release
+name: Helm Chart Latest App Version Release
 
 on:
   deployment:
 
 jobs:
-  update-latest-api-gw-version:
-    if: github.event.deployment.task == 'update-latest-api-gw-version'
+  update-latest-helm-chart-version:
+    if: github.event.deployment.task == 'update-latest-version'
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout
@@ -21,7 +21,7 @@ jobs:
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
-      - name: Update latest api-gw version
+      - name: Update latest helm chart version
         env:
           GITHUB_CONTEXT: ${{ toJson(github.event.deployment) }}
-        run: .github/scripts/apigw_latest_version_release.sh
+        run: .github/scripts/latest_version_release.sh

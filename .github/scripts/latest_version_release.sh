@@ -9,7 +9,17 @@ service=$(echo "$GITHUB_CONTEXT" | jq -r '.payload.service | select (.!=null)')
 major_minor_patch=$(echo "$GITHUB_CONTEXT" | jq -r '.payload.major_minor_patch | select (.!=null)')
 app_version=$(echo "$GITHUB_CONTEXT" | jq -r '.payload.app_version | select (.!=null)')
 
-pushd "$GITHUB_WORKSPACE"/charts/akeyless-api-gateway/
+if [[ "${service}" == "akeyless-api-proxy" ]]; then
+    chart_dir="akeyless-api-gateway"
+elif [[ "${service}" == "ssh-proxy" ]]; then
+    chart_dir="akeyless-ssh-bastion"
+elif [[ "${service}" == "zero-trust-web-access" ]]; then
+    chart_dir="akeyless-zero-trust-web-access"
+else
+die "Bad service name"
+fi
+
+pushd "$GITHUB_WORKSPACE/charts/$chart_dir"
 # bump chart version
     chart_version=$(grep '^version:[[:space:]][[:digit:]]' Chart.yaml | awk '{print $2}') || die "Failed to retrieve current chart version"
     bump_version "${chart_version}" "${major_minor_patch}"
@@ -23,7 +33,7 @@ pushd "$GITHUB_WORKSPACE"/charts/akeyless-api-gateway/
     git push origin HEAD
 popd
 
-echo "Api-gw app version was successfully updated to latest: ${app_version}"
-echo "Api-gw Helm chart version was updated to: ${new_chart_version}"
+echo "$chart_dir app version was successfully updated to latest: ${app_version}"
+echo "$chart_dir Helm chart version was updated to: ${new_chart_version}"
 
 
