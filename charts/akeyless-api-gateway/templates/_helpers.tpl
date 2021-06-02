@@ -76,3 +76,14 @@ Get the Ingress TLS secret.
 {{- define "akeyless-api-gw.allowedAccessIDs" -}}
 {{- join "," .Values.akeylessUserAuth.allowedAccessIDs }}
 {{- end -}}
+
+{{/*
+Generate chart secret name
+*/}}
+{{- define "akeyless-api-gw.secretName" -}}
+    {{- if .Values.existingSecret -}}
+        {{- printf "%s" .Values.existingSecret -}}
+    {{- else -}}
+        {{ $.Release.Name }}-conf-secret
+    {{- end -}}
+{{- end -}}

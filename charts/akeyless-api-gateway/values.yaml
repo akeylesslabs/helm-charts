@@ -138,6 +138,13 @@ akeylessUserAuth:
 # For more information: https://docs.akeyless.io/docs/implement-zero-knowledge
 #customerFragments: |
 
+# Specifies an existing secret to be used for API Gateway, must include:
+#  - admin-access-id,
+#  - admin-access-key
+#  - admin-password
+#  - allowed-access-ids
+#  - customer-fragments
+existingSecret: ""
 
 HPA:
   # Set the below to false in case you do not want to add Horizontal Pod AutoScaling to the StatefulSet (not recommended)

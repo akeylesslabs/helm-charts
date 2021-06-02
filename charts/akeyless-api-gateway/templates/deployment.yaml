@@ -19,9 +19,12 @@ spec:
       volumes:
       - name: akeyless-config
         emptyDir: {}
-      - name: configmap-akeyless-config
-        configMap:
-          name: {{ $.Release.Name }}-cm-akeyless-config
+      - name: customer-fragments-secret
+        secret:
+          secretName: {{ include "akeyless-api-gw.secretName" . }}
+          items:
+            - key: customer-fragments
+              path: customer_fragments.json
 
       initContainers:
         # Since k8s 1.9.4, config maps mount read-only volumes. Since the Docker image also writes to the config file,
@@ -35,10 +38,10 @@ spec:
             - "-c"
             - |
               set -ex
-              [ "$(ls /configmap_akeyless)" ] && cp /configmap_akeyless/* /root/.akeyless
+              [ "$(ls /customer_fragments)" ] && cp /customer_fragments/* /root/.akeyless
           volumeMounts:
-            - name: configmap-akeyless-config
-              mountPath: /configmap_akeyless
+            - name: customer-fragments-secret
+              mountPath: /customer_fragments
             - name: akeyless-config
               mountPath: /root/.akeyless
       {{- end }}
@@ -73,29 +76,29 @@ spec:
             - name: ADMIN_ACCESS_ID
               valueFrom:
                 secretKeyRef:
-                  name: {{ $.Release.Name }}-conf-secret
-                  key: ADMIN_ACCESS_ID
+                  name: {{ include "akeyless-api-gw.secretName" . }}
+                  key: admin-access-id
           {{- end }}
           {{- if .Values.akeylessUserAuth.allowedAccessIDs }}
             - name: ALLOWED_ACCESS_IDS
               valueFrom:
                 secretKeyRef:
-                  name: {{ $.Release.Name }}-conf-secret
-                  key: ALLOWED_ACCESS_IDS
+                  name: {{ include "akeyless-api-gw.secretName" . }}
+                  key: allowed-access-ids
           {{- end }}
           {{- if .Values.akeylessUserAuth.adminAccessKey }}
             - name: ADMIN_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ $.Release.Name }}-conf-secret
-                  key: ADMIN_ACCESS_KEY
+                  name: {{ include "akeyless-api-gw.secretName" . }}
+                  key: admin-access-key
           {{- end }}
           {{- if .Values.akeylessUserAuth.adminPassword }}
             - name: ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ $.Release.Name }}-conf-secret
-                  key: ADMIN_PASSWORD
+                  name: {{ include "akeyless-api-gw.secretName" . }}
+                  key: admin-password
           {{- end }}
           {{- if .Values.akeylessUserAuth.clusterName }}
             - name: CLUSTER_NAME
