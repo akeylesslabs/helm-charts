@@ -130,8 +130,9 @@ akeylessUserAuth:
   configProtectionKeyName:
   # list of allowed access-ids from your account that can login to the Configuration Managment WebUI
   allowedAccessIDs: []
-  # - p-1234
-  # - p-5678
+  # - p-1234 subClimekey1=subClimeVal1
+  # - p-1234 subClimekey2=subClimeVal2
+  # - p-5678 subClimekey1=subClimeVal1
   # - p-5678
 
 # Customer Fragment is a critical component that allow customers to use a Zero-Knowledge Encryption.
