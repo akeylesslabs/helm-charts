@@ -15,7 +15,7 @@ spec:
       labels:
         {{- include "akeyless-api-gw.selectorLabels" . | nindent 8 }}
     spec:
-      {{- if .Values.customerFragments }}
+      {{- if or .Values.customerFragments .Values.existingSecret }}
       volumes:
       - name: akeyless-config
         emptyDir: {}
