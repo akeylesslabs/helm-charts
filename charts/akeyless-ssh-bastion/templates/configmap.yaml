@@ -12,9 +12,9 @@ data:
 
 {{- if .Values.config.sessionTermination.enabled }}
   api-url: |
-{{ .Values.config.sessionTermination.apiURL }}
+{{ .Values.config.sessionTermination.apiURL | indent 4  }}
   api-token: |
-{{ .Values.config.sessionTermination.apiToken }}
+{{ .Values.config.sessionTermination.apiToken | indent 4  }}
 {{- end }}
 
 ---
