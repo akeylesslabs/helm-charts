@@ -15,7 +15,7 @@ spec:
       labels:
         {{- include "akeyless-api-gw.selectorLabels" . | nindent 8 }}
     spec:
-      {{- if or .Values.customerFragments .Values.existingSecret }}
+      {{- if or .Values.customerFragments (and ( hasKey (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)).data "customer-fragments") .Values.existingSecret) }}
       volumes:
       - name: akeyless-config
         emptyDir: {}
