@@ -64,7 +64,7 @@ spec:
               path: /status
               port: 18888
 {{- toYaml .Values.readinessProbe | trim | nindent 12 }}
-          {{- if .Values.customerFragments }}
+          {{- if or .Values.customerFragments (and ( hasKey (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)).data "customer-fragments") .Values.existingSecret) }}
           volumeMounts:
             - name: akeyless-config
               mountPath: /root/.akeyless
