@@ -72,28 +72,28 @@ spec:
           resources:
 {{- toYaml .Values.resources | nindent 12 }}
           env:
-          {{- if .Values.akeylessUserAuth.adminAccessId }}
+          {{- if or .Values.akeylessUserAuth.adminAccessId (and ( hasKey (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)).data "admin-access-id" ) .Values.existingSecret) }}
             - name: ADMIN_ACCESS_ID
               valueFrom:
                 secretKeyRef:
                   name: {{ include "akeyless-api-gw.secretName" . }}
                   key: admin-access-id
           {{- end }}
-          {{- if .Values.akeylessUserAuth.allowedAccessIDs }}
+          {{- if or .Values.akeylessUserAuth.allowedAccessIDs (and ( hasKey (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)).data "allowed-access-ids") .Values.existingSecret) }}
             - name: ALLOWED_ACCESS_IDS
               valueFrom:
                 secretKeyRef:
                   name: {{ include "akeyless-api-gw.secretName" . }}
                   key: allowed-access-ids
           {{- end }}
-          {{- if .Values.akeylessUserAuth.adminAccessKey }}
+          {{- if or .Values.akeylessUserAuth.adminAccessKey (and ( hasKey (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)).data "admin-access-key") .Values.existingSecret) }}
             - name: ADMIN_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
                   name: {{ include "akeyless-api-gw.secretName" . }}
                   key: admin-access-key
           {{- end }}
-          {{- if .Values.akeylessUserAuth.adminPassword }}
+          {{- if or .Values.akeylessUserAuth.adminPassword (and ( hasKey (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)).data "admin-password") .Values.existingSecret) }}
             - name: ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
