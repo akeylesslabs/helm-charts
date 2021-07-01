@@ -1,0 +1,162 @@
+# Run the "pre_install.sh" script first for generating the required certificates
+# Deploy manifest into your K8s cluster
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: akeyless
+  labels:
+    app.kubernetes.io/name: akeyless
+    app.kubernetes.io/instance: akeyless
+    name: akeyless
+---
+# Source: akeyless-secrets-injection/templates/webhook-servicaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+automountServiceAccountToken: true
+metadata:
+  name: akeyless-secrets-injection
+  namespace: akeyless
+  labels:
+    app: akeyless-secrets-injection
+---
+# Source: akeyless-secrets-injection/templates/apiservice-webhook.yaml
+apiVersion: v1
+kind: List
+metadata:
+items:
+
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: akeyless-secrets-injection
+    namespace: akeyless
+  data:
+    servingCert: __serverKey__
+    servingKey: __serverCert__
+    caCert: __caCert__
+
+- apiVersion: admissionregistration.k8s.io/v1
+  kind: MutatingWebhookConfiguration
+  metadata:
+    name: akeyless-secrets-injection
+    namespace: akeyless
+  webhooks:
+  - name: pods.akeyless-secrets-injection.admission
+    clientConfig:
+      service:
+        namespace: akeyless
+        name: akeyless-secrets-injection
+        path: /pods
+      caBundle: __caCert__
+    rules:
+    - operations:
+      - CREATE
+      apiGroups:
+      - "*"
+      apiVersions:
+      - "*"
+      resources:
+      - pods
+    failurePolicy: Ignore
+    namespaceSelector:
+      matchExpressions:
+      - key: name
+        operator: NotIn
+        values:
+        - akeyless
+    objectSelector:
+      matchExpressions:
+      - key: release
+        operator: NotIn
+        values:
+        - akeyless-secrets-injection
+    admissionReviewVersions: ["v1beta1"]
+    sideEffects: None 
+---
+# Source: akeyless-secrets-injection/templates/webhook-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: akeyless-secrets-injection
+  namespace: akeyless
+  labels:
+    app: akeyless-secrets-injection
+spec:
+  type: ClusterIP
+  ports:
+    - port: 443
+      targetPort: 8443
+      protocol: TCP
+      name: secrets-webhook
+  selector:
+    app: akeyless-secrets-injection
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: akeyless-secrets-injection
+  namespace: akeyless
+  labels:
+    app: akeyless-secrets-injection
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: akeyless-secrets-injection
+  template:
+    metadata:
+      labels:
+        app: akeyless-secrets-injection
+      annotations:
+        checksum/config: 69d4ba8465ff9fbcc012478173fc7545a7642d1a4ec5b3b4936d73e34112401b
+    spec:
+      serviceAccountName: akeyless-secrets-injection
+      volumes:
+      - name: serving-cert
+        secret:
+          defaultMode: 420
+          secretName: akeyless-secrets-injection
+      containers:
+        - name: akeyless-secrets-injection
+          image: "akeyless/k8s-webhook-server:latest"
+          env:
+          - name: TLS_CERT_FILE
+            value: /var/serving-cert/servingCert
+          - name: TLS_PRIVATE_KEY_FILE
+            value: /var/serving-cert/servingKey
+          - name: DEBUG
+            value: "false"
+          - name: AKEYLESS_ACCESS_ID
+            value: p-p2kq0di4rx3z
+          - name: AKEYLESS_API_KEY
+            value: 7JHUEFVV9S/8PQ+3uqTIU9+WFY2xuJoFPr33trqrrc4=
+          - name: AKEYLESS_ACCESS_TYPE
+            value: api_key
+          - name: AKEYLESS_URL
+            value: https://vault.akeyless.io
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8443
+          volumeMounts:
+          - mountPath: /var/serving-cert
+            name: serving-cert
+          securityContext: #//only for k8s - not openshift compatible
+            runAsUser: 65534
+            allowPrivilegeEscalation: false
+          resources:
+            limits:
+              cpu: 0.5
+              memory: 192Mi
+            requests:
+              cpu: 0.25
+              memory: 128Mi
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  app: akeyless-secrets-injection
