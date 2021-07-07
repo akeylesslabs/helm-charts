@@ -1,5 +1,6 @@
 # Run the "pre_install.sh" script first for generating the required certificates
 # Deploy manifest into your K8s cluster
+# Note: Make sure you have entered your AKEYLESS_ACCESS_ID and AKEYLESS_API_KEY in the Deployment environment variables before deploying
 
 apiVersion: v1
 kind: Namespace
