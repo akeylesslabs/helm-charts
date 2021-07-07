@@ -128,9 +128,9 @@ spec:
           - name: DEBUG
             value: "false"
           - name: AKEYLESS_ACCESS_ID
-            value: p-p2kq0di4rx3z
+            value: 
           - name: AKEYLESS_API_KEY
-            value: 7JHUEFVV9S/8PQ+3uqTIU9+WFY2xuJoFPr33trqrrc4=
+            value: 
           - name: AKEYLESS_ACCESS_TYPE
             value: api_key
           - name: AKEYLESS_URL
