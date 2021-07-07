@@ -15,7 +15,7 @@ spec:
       labels:
         {{- include "akeyless-api-gw.selectorLabels" . | nindent 8 }}
     spec:
-      {{- if or .Values.customerFragments (and ( hasKey (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)).data "customer-fragments") .Values.existingSecret) }}
+      {{- if eq (include "akeyless-api-gw.customerFragmentExist" .) "true" }}
       volumes:
       - name: akeyless-config
         emptyDir: {}
@@ -64,7 +64,7 @@ spec:
               path: /status
               port: 18888
 {{- toYaml .Values.readinessProbe | trim | nindent 12 }}
-          {{- if or .Values.customerFragments (and ( hasKey (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)).data "customer-fragments") .Values.existingSecret) }}
+          {{- if eq (include "akeyless-api-gw.customerFragmentExist" .) "true" }}
           volumeMounts:
             - name: akeyless-config
               mountPath: /root/.akeyless
@@ -72,29 +72,29 @@ spec:
           resources:
 {{- toYaml .Values.resources | nindent 12 }}
           env:
-          {{- if or .Values.akeylessUserAuth.adminAccessId (and ( hasKey (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)).data "admin-access-id" ) .Values.existingSecret) }}
+          {{- if eq (include "akeyless-api-gw.adminAccessIdExist" .) "true" }}
             - name: ADMIN_ACCESS_ID
               valueFrom:
                 secretKeyRef:
                   name: {{ include "akeyless-api-gw.secretName" . }}
                   key: admin-access-id
           {{- end }}
-          {{- if or .Values.akeylessUserAuth.allowedAccessIDs (and ( hasKey (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)).data "allowed-access-ids") .Values.existingSecret) }}
+          {{- if eq (include "akeyless-api-gw.allowedAccessIDsExist" .) "true" }}
             - name: ALLOWED_ACCESS_IDS
               valueFrom:
                 secretKeyRef:
                   name: {{ include "akeyless-api-gw.secretName" . }}
                   key: allowed-access-ids
           {{- end }}
-          {{- if or .Values.akeylessUserAuth.adminAccessKey (and ( hasKey (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)).data "admin-access-key") .Values.existingSecret) }}
-            - name: ADMIN_ACCESS_KEY
+          {{- if eq (include "akeyless-api-gw.adminAccessKeyExist" .) "true" }}
+            - name: ADMIN_ACCESS_KEY 
               valueFrom:
                 secretKeyRef:
                   name: {{ include "akeyless-api-gw.secretName" . }}
                   key: admin-access-key
           {{- end }}
-          {{- if or .Values.akeylessUserAuth.adminPassword (and ( hasKey (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)).data "admin-password") .Values.existingSecret) }}
-            - name: ADMIN_PASSWORD
+          {{- if eq (include "akeyless-api-gw.adminPasswordExist" .) "true" }}
+            - name: ADMIN_PASSWORD 
               valueFrom:
                 secretKeyRef:
                   name: {{ include "akeyless-api-gw.secretName" . }}
