@@ -10,8 +10,7 @@ changed_charts=($(lookup_changed_charts | awk '{print $1}'))
 if [[ -n "${changed_charts[*]}" ]]; then
     for chart in "${changed_charts[@]}"; do
         if [[ -d "$chart" ]]; then
-        chart_name=$(helm show chart "$chart" | grep name: | awk '{print $2}') || die "failed to get chart name"
-        helm lint "${GITHUB_WORKSPACE}/charts/${chart_name}"
+        helm lint "$chart"
         else
         echo "Chart '$chart' no longer exists in repo. Skipping it..."
         fi
