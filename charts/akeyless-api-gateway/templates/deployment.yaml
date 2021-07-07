@@ -15,7 +15,7 @@ spec:
       labels:
         {{- include "akeyless-api-gw.selectorLabels" . | nindent 8 }}
     spec:
-      {{- if .Values.customerFragments }}
+      {{- if eq (include "akeyless-api-gw.customerFragmentExist" .) "true" }}
       volumes:
       - name: akeyless-config
         emptyDir: {}
@@ -64,7 +64,7 @@ spec:
               path: /status
               port: 18888
 {{- toYaml .Values.readinessProbe | trim | nindent 12 }}
-          {{- if .Values.customerFragments }}
+          {{- if eq (include "akeyless-api-gw.customerFragmentExist" .) "true" }}
           volumeMounts:
             - name: akeyless-config
               mountPath: /root/.akeyless
@@ -72,29 +72,29 @@ spec:
           resources:
 {{- toYaml .Values.resources | nindent 12 }}
           env:
-          {{- if .Values.akeylessUserAuth.adminAccessId }}
+          {{- if eq (include "akeyless-api-gw.adminAccessIdExist" .) "true" }}
             - name: ADMIN_ACCESS_ID
               valueFrom:
                 secretKeyRef:
                   name: {{ include "akeyless-api-gw.secretName" . }}
                   key: admin-access-id
           {{- end }}
-          {{- if .Values.akeylessUserAuth.allowedAccessIDs }}
+          {{- if eq (include "akeyless-api-gw.allowedAccessIDsExist" .) "true" }}
             - name: ALLOWED_ACCESS_IDS
               valueFrom:
                 secretKeyRef:
                   name: {{ include "akeyless-api-gw.secretName" . }}
                   key: allowed-access-ids
           {{- end }}
-          {{- if .Values.akeylessUserAuth.adminAccessKey }}
-            - name: ADMIN_ACCESS_KEY
+          {{- if eq (include "akeyless-api-gw.adminAccessKeyExist" .) "true" }}
+            - name: ADMIN_ACCESS_KEY 
               valueFrom:
                 secretKeyRef:
                   name: {{ include "akeyless-api-gw.secretName" . }}
                   key: admin-access-key
           {{- end }}
-          {{- if .Values.akeylessUserAuth.adminPassword }}
-            - name: ADMIN_PASSWORD
+          {{- if eq (include "akeyless-api-gw.adminPasswordExist" .) "true" }}
+            - name: ADMIN_PASSWORD 
               valueFrom:
                 secretKeyRef:
                   name: {{ include "akeyless-api-gw.secretName" . }}
