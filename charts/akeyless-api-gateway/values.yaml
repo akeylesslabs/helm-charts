@@ -9,6 +9,9 @@ image:
 
 containerName: "api-gateway"
 
+deployment:
+  annotations: {}
+
 service:
   # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
   annotations: {}

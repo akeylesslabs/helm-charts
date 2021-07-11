@@ -5,6 +5,8 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "akeyless-api-gw.labels" . | nindent 4 }}
+  annotations:
+  {{- toYaml .Values.deployment.annotations | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
