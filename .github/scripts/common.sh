@@ -51,3 +51,13 @@ function bump_version() {
 
   new_version="${major_version}.${minor_version}.${patch_version}"
 }
+
+lookup_changed_charts() {
+  commit=$(lookup_latest_tag)
+  changed_files=$(git diff --find-renames --name-only "$commit" -- charts)
+
+  local depth=$(( $(tr "/" "\n" <<< charts | wc -l) + 1 ))
+  local fields="1-${depth}"
+
+  cut -d '/' -f "$fields" <<< "$changed_files" | uniq
+}

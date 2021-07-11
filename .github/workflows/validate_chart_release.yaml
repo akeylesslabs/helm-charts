@@ -19,5 +19,14 @@ jobs:
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
+      - name: Install Helm
+        run: |
+          curl -fsSLo get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+          chmod 700 get_helm.sh
+          ./get_helm.sh
+
+      - name: Helm Chart Lint
+        run: .github/scripts/helm_lint.sh
+
       - name: Validate chart version
         run: .github/scripts/validate_chart_version.sh
