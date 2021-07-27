@@ -29,9 +29,9 @@ spec:
               value: {{ include "akeyless-ssh-proxy.fullname" . }}:{{ .Values.sshConfig.service.curlProxyPort }}
             - name: BASTION_SSH
               value: {{ include "akeyless-ssh-proxy.fullname" . }}:{{ .Values.sshConfig.service.port }}
-{{- if .Values.ztbConfig.config.apiGatewayURL }}
+{{- if .Values.apiGatewayURL }}
             - name: AKEYLESS_URL
-              value: {{ .Values.ztbConfig.config.apiGatewayURL }}
+              value: {{ .Values.apiGatewayURL }}
 {{- end }}
 {{- with .Values.ztbConfig.config.privilegedAccess }}
   {{- if .accessID }}

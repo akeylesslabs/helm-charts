@@ -112,5 +112,5 @@ Get the Ingress TLS secret.
 Generate chart secret name
 */}}
 {{- define "akeyless-zero-trust-bastion.secretName" -}}
-{{ default (include "akeyless-zero-trust-bastion.fullname" .) .Values.config.rdpRecord.existingSecret }}
+{{ default (include "akeyless-zero-trust-bastion.fullname" .) .Values.ztbConfig.config.rdpRecord.existingSecret }}
 {{- end -}}

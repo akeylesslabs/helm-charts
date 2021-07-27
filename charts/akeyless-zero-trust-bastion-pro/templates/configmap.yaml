@@ -30,9 +30,8 @@ data:
   logand.conf: |
 {{ required "A valid .Values.sshConfig.config.logForwarding.logand entry required!" .Values.sshConfig.config.logForwarding.settings | indent 4 }}
 {{- end }}
-
-{{ with .Values.sshConfig.config }}
   akeyless_config_file: |
-    {{ required "API Gateway URL is required" .apiGatewayURL }}
+    {{ required "API Gateway URL is required" .Values.apiGatewayURL }}
+{{ with .Values.sshConfig.config }}
     cmd=auth&access-id={{ required "Privileged credentials are required" .privilegedAccess.accessID }}&access-key={{ .privilegedAccess.accessKey }}
 {{- end}}

@@ -1,8 +1,18 @@
+# This values.yaml file contains the default values for akeyless-zero-trust-bastion and akeyless-ssh-bastion
+# Enter your configuration in the global and dedicated service sections
+
+############
+## Global ##
+############
+
+dockerRepositoryCreds: ""
+
+# a full URL of Akeyless API Gateway
+apiGatewayURL: https://rest.akeyless.io
+
 ####################################################
 ## Default values for akeyless-zero-trust-bastion ##
 ####################################################
-
-dockerRepositoryCreds: ""
 
 ztbConfig:
   replicaCount: 2
@@ -83,11 +93,8 @@ ztbConfig:
     # requests:
     #   cpu: 100m
     #   memory: 128Mi
-
+  
   config:
-    # a full URL of Akeyless API Gateway
-    apiGatewayURL: https://rest.akeyless.io
-
     # optional credentials for zero-trust access: if provided, it is possible for
     # end users to only have "list" permissions on Akeyless items if privileged
     # credentials have "read" access.
@@ -209,10 +216,6 @@ sshConfig:
   config:
     CAPublicKey:
     # CAPublicKey: | 
-     
-
-    # a full URL of Akeyless API Gateway
-    apiGatewayURL: https://rest.akeyless.io
 
     # Relevant for Zero-Trust Access for non-SSH targets (e.g. DBs, K8s, AWS CLIs).
     # If provided, it's recommended to grant minimal permissions ("List" only) to the Zero-Trust Dynamic Secrets,
@@ -231,4 +234,4 @@ sshConfig:
     ##
     logForwarding:
       enabled: false
-      settings: |
+      settings: |      

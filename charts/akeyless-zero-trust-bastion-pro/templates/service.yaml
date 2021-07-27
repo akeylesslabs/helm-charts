@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "akeyless-ssh-proxy.fullname" . }}
+  name: ssh-{{ include "akeyless-ssh-proxy.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "akeyless-ssh-proxy.labels" . | nindent 4 }}
@@ -25,7 +25,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "akeyless-zero-trust-bastion.fullname" . }}
+  name: ztb-{{ include "akeyless-zero-trust-bastion.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "akeyless-zero-trust-bastion.labels" . | nindent 4 }}
