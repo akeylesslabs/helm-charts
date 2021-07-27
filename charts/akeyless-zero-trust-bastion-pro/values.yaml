@@ -1,0 +1,234 @@
+####################################################
+## Default values for akeyless-zero-trust-bastion ##
+####################################################
+
+dockerRepositoryCreds: ""
+
+ztbConfig:
+  replicaCount: 2
+
+  image:
+    repository: akeyless/zero-trust-bastion
+    pullPolicy: Always
+    tag: latest
+    
+  containerName: "zero-trust-bastion"
+  service:
+
+    # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
+    annotations: {}
+    type: LoadBalancer
+    port: 8888
+
+  ## Configure the ingress resource that allows you to access the
+  ## akeyless-zero-trust-bastion installation. Set up the URL
+  ## ref: http://kubernetes.io/docs/user-guide/ingress/
+  ##
+  ingress:
+    ## Set to true to enable ingress record generation
+    ##
+    # enabled: true
+    annotations: {}
+  # Example for Nginx ingress
+    #  annotations:
+      #  kubernetes.io/ingress.class: nginx
+      #  nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      #  nginx.ingress.kubernetes.io/proxy-connect-timeout: "3600"
+      #  nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+      #  nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+      #  nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
+      #  nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+
+  # IMPORTANT: When using DB application such as mysql, mssql, and mongodb, the ingress must be configured with "sticky" session!
+  # Example for sticky session on Nginx ingress
+  #      nginx.ingress.kubernetes.io/affinity: "cookie"
+  #      nginx.ingress.kubernetes.io/session-cookie-expires: "172800"
+  #      nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
+
+    hostname: zero-trust-bastion.local
+    ## Path for the default host
+    ##
+    path: /
+
+    ## Enable TLS configuration for the hostname defined at ingress.hostname parameter
+    ## TLS certificates will be retrieved from a TLS secret with name: {{- printf "%s-tls" .Values.ingress.hostname }}
+    ## or a custom one if you use the tls.existingSecret parameter
+    ##
+    tls: false
+
+    ## Set this to true in order to add the corresponding annotations for cert-manager
+    ##
+    certManager: false
+
+    ## existingSecret: name-of-existing-secret
+
+  livenessProbe:
+    initialDelaySeconds: 15
+    periodSeconds: 30
+    failureThreshold: 10
+
+  readinessProbe:
+    initialDelaySeconds: 15
+    periodSeconds: 30
+    timeoutSeconds: 5
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  config:
+    # a full URL of Akeyless API Gateway
+    apiGatewayURL: https://rest.akeyless.io
+
+    # optional credentials for zero-trust access: if provided, it is possible for
+    # end users to only have "list" permissions on Akeyless items if privileged
+    # credentials have "read" access.
+    privilegedAccess:
+      # supported auth methods: AWS IAM, Azure AD, GCP and API Key;
+      # for AWS IAM or Azure AD, or GCP provide only accessID;
+      # for API Key, provide both accessID and accessKey
+      accessID: ""
+      accessKey: ""
+
+      # limit access to privileged items only for these end user access ids.
+      # if left empty, all access ids are allowed
+      allowedAccessIDs: []
+      # - p-1234
+      # - p-5678
+      
+      # Azure Object ID to use with privileged credentials of type Azure AD
+      azureObjectID: ""
+
+      # Audience to use with privileged credentials of type GCP
+      gcpAudience: "akeyless.io"
+
+    rdpRecord:
+      enabled: false
+      # automatically upload session recordings to S3 in your AWS account
+      s3:
+        region: ""
+        bucketName: ""
+        bucketPrefix: ""
+        # optional, run with explicit credentials (without AWS IAM roles)
+        awsAccessKeyId: ""
+        awsSecretAccessKey: ""
+
+      # Specifies an existing secret to be used for bastion, management AWS credentials
+      existingSecret: ""
+
+  HPA:
+    # Set the below to false in case you do not want to add Horizontal Pod AutoScaling to the Deployment
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 14
+    cpuAvgUtil: 50
+    memAvgUtil: 50
+
+#############################################
+## Default values for akeyless-ssh-bastion ##
+#############################################
+
+sshConfig:
+  replicaCount: 1
+
+  ## Statefulsets rolling update update strategy
+  ## Ref: https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#rolling-update
+  ##
+  updateStrategy: RollingUpdate
+
+  image:
+    repository: akeyless/ssh-proxy
+    pullPolicy: Always
+    tag: latest
+
+  containerName: "ssh-bastion"
+
+  service:
+    # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
+    annotations: {}
+    type: LoadBalancer
+    port: 22
+    curlProxyPort: 9900
+
+  livenessProbe:
+    initialDelaySeconds: 20
+    periodSeconds: 60
+    failureThreshold: 10
+    timeoutSeconds: 5
+
+  readinessProbe:
+    initialDelaySeconds: 20
+    periodSeconds: 10
+    timeoutSeconds: 5
+
+  # Akeyless requires data persistence to be shared within all pods in the cluster
+  # Currently only ReadWriteMany is supported
+  # accessMode: ReadWriteMany
+  # Change the below values according to your environment except for the hostPath values
+  persistence:
+    # volumes: {}
+   volumes:
+    #  - name: akeyless-data
+    #    storageClassName: efs-ssh-bastion-sc
+    #    storageClassDriver: efs.csi.aws.com
+    #    size: 2Gi
+    #    mountPath: /var/run/requests
+    #    annotations:
+    #     volume.beta.kubernetes.io/storage-class: ""
+    #    matchLabels:
+    #     usage: "ssh-bastion-pv"
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  HPA:
+    # Set the below to false in case you do not want to add Horizontal Pod AutoScaling to the StatefulSet (not recommended)
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 14
+    cpuAvgUtil: 50
+    memAvgUtil: 50
+
+  config:
+    CAPublicKey:
+    # CAPublicKey: | 
+     
+
+    # a full URL of Akeyless API Gateway
+    apiGatewayURL: https://rest.akeyless.io
+
+    # Relevant for Zero-Trust Access for non-SSH targets (e.g. DBs, K8s, AWS CLIs).
+    # If provided, it's recommended to grant minimal permissions ("List" only) to the Zero-Trust Dynamic Secrets,
+    # while the privilegedAccess will have "Read" and "List" permissions.
+    privilegedAccess:
+      accessID: "" 
+      accessKey: ""
+
+    sessionTermination:
+      enabled: false
+      apiURL: ""
+      apiToken: ""
+
+    ## SSH log forwarding enables forwarding of the recordings of SSH sessions to customer log repository.
+    ## Ref: https://docs.akeyless.io/docs/ssh-log-forwarding
+    ##
+    logForwarding:
+      enabled: false
+      settings: |

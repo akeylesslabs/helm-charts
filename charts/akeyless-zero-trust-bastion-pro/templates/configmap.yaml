@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $.Release.Name }}-cm-creds
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ $.Values.sshConfig.containerName }}
+    chart: {{ $.Chart.Name }}
+data:
+  ca.pub: |
+{{ required "A valid .Values.sshConfig.conf.CAPublicKey entry required!" .Values.sshConfig.config.CAPublicKey | indent 4 }}
+
+{{- if .Values.sshConfig.config.sessionTermination.enabled }}
+  api-url: |
+{{ .Values.sshConfig.config.sessionTermination.apiURL | indent 4  }}
+  api-token: |
+{{ .Values.sshConfig.config.sessionTermination.apiToken | indent 4  }}
+{{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $.Release.Name }}-cm-conf
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ $.Values.sshConfig.containerName }}
+    chart: {{ $.Chart.Name }}
+data:
+{{- if .Values.sshConfig.config.logForwarding.enabled }}
+  logand.conf: |
+{{ required "A valid .Values.sshConfig.config.logForwarding.logand entry required!" .Values.sshConfig.config.logForwarding.settings | indent 4 }}
+{{- end }}
+
+{{ with .Values.sshConfig.config }}
+  akeyless_config_file: |
+    {{ required "API Gateway URL is required" .apiGatewayURL }}
+    cmd=auth&access-id={{ required "Privileged credentials are required" .privilegedAccess.accessID }}&access-key={{ .privilegedAccess.accessKey }}
+{{- end}}

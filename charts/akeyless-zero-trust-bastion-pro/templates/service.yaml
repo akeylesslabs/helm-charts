@@ -1,0 +1,46 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "akeyless-ssh-proxy.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "akeyless-ssh-proxy.labels" . | nindent 4 }}
+  annotations:
+  {{- toYaml .Values.sshConfig.service.annotations | nindent 4 }}
+spec:
+  type: {{ required "A valid .Values.sshConfig.service.type entry required!" .Values.sshConfig.service.type }}
+  ports:
+    - port: {{ .Values.sshConfig.service.port }}
+      targetPort: ssh
+      protocol: TCP
+      name: ssh
+    - port: {{ .Values.sshConfig.service.curlProxyPort }}
+      targetPort: curl-proxy
+      protocol: TCP
+      name: curl-proxy
+  selector:
+    {{- include "akeyless-ssh-proxy.selectorLabels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "akeyless-zero-trust-bastion.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "akeyless-zero-trust-bastion.labels" . | nindent 4 }}
+  annotations:
+  {{- toYaml .Values.ztbConfig.service.annotations | nindent 4 }}
+spec:
+  {{- if .Values.ztbConfig.ingress.enabled }}
+  type: NodePort
+  {{- else }}
+  type: {{ required "A valid .Values.ztbConfig.service.type entry required!" .Values.sshConfig.service.type }}
+  {{- end }}
+  ports:
+    - name: api
+      port: {{ .Values.ztbConfig.service.port }}
+      targetPort: api
+      protocol: TCP
+  selector:
+    app: zero-trust-bastion

@@ -1,0 +1,55 @@
+{{- if .Values.sshConfig.HPA.enabled }}
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ssh-{{ $.Release.Name }}-hpa
+  namespace: {{ .Release.Namespace }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: StatefulSet
+    name: {{ include "akeyless-ssh-proxy.fullname" . }}
+  minReplicas: {{ $.Values.sshConfig.HPA.minReplicas | default 1 }}
+  maxReplicas: {{ $.Values.sshConfig.HPA.maxReplicas | default 14 }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ $.Values.sshConfig.HPA.cpuAvgUtil }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ $.Values.sshConfig.HPA.memAvgUtil }}
+{{- end }}
+---
+{{- if .Values.ztbConfig.HPA.enabled }}
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ztb-{{ $.Release.Name }}-hpa
+  namespace: {{ .Release.Namespace }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "akeyless-zero-trust-bastion.fullname" . }}
+  minReplicas: {{ $.Values.ztbConfig.HPA.minReplicas | default 1 }}
+  maxReplicas: {{ $.Values.ztbConfig.HPA.maxReplicas | default 14 }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ $.Values.ztbConfig.HPA.cpuAvgUtil }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ $.Values.ztbConfig.HPA.memAvgUtil }}
+{{- end }}
