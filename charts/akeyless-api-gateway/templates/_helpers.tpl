@@ -66,10 +66,10 @@ Create the name of the service account to use
 Get the Ingress TLS secret.
 */}}
 {{- define "akeyless-api-gw.ingressSecretTLSName" -}}
-    {{- if .Values.ingress.existingSecret -}}
-        {{- printf "%s" .Values.ingress.existingSecret -}}
+    {{- if .existingSecret -}}
+        {{- printf "%s" .existingSecret -}}
     {{- else -}}
-        {{- printf "%s-tls" .Values.ingress.hostname -}}
+        {{- printf "%s-tls" .hostname -}}
     {{- end -}}
 {{- end -}}
 

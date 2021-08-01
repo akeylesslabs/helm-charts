@@ -58,13 +58,13 @@ spec:
             {{- end }}
           livenessProbe:
             httpGet:
-              path: /status
-              port: 18888
+              path: /
+              port: 8080
 {{- toYaml .Values.livenessProbe | trim | nindent 12 }}
           readinessProbe:
             httpGet:
-              path: /status
-              port: 18888
+              path: /
+              port: 8080
 {{- toYaml .Values.readinessProbe | trim | nindent 12 }}
           {{- if eq (include "akeyless-api-gw.customerFragmentExist" .) "true" }}
           volumeMounts:
