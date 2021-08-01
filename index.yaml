@@ -3,6 +3,16 @@ entries:
   akeyless-api-gateway:
   - apiVersion: v2
     appVersion: 2.20.0
+    created: "2021-08-01T13:18:41.980508892Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
+    digest: c16bb31dfbd651c077939ca5b6578763a8c5ff89ecb7017bfbe295c5d9766bff
+    name: akeyless-api-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-api-gateway-1.3.1/akeyless-api-gateway-1.3.1.tgz
+    version: 1.3.1
+  - apiVersion: v2
+    appVersion: 2.20.0
     created: "2021-07-21T11:35:40.377671412Z"
     description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
     digest: 9f87148d89098b5f2b8d850e82e3370cdcccf042d90bf1ee21d594cbce57fc44
@@ -813,4 +823,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2021-07-21T11:35:40.378104209Z"
+generated: "2021-08-01T13:18:41.981279392Z"
