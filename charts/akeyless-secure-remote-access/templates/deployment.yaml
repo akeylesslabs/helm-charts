@@ -1,3 +1,4 @@
+{{- if .Values.ztbConfig.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -26,14 +27,14 @@ spec:
               name: api
           env:
             - name: BASTION_API
-              value: {{ include "akeyless-ssh-proxy.fullname" . }}:{{ .Values.sshConfig.service.curlProxyPort }}
+              value: {{ include "akeyless-ssh-proxy.fullname" . }}-ssh:{{ .Values.sshConfig.service.curlProxyPort }}
             - name: BASTION_SSH
-              value: {{ include "akeyless-ssh-proxy.fullname" . }}:{{ .Values.sshConfig.service.port }}
+              value: {{ include "akeyless-ssh-proxy.fullname" . }}-ssh:{{ .Values.sshConfig.service.port }}
 {{- if .Values.apiGatewayURL }}
             - name: AKEYLESS_URL
               value: {{ .Values.apiGatewayURL }}
 {{- end }}
-{{- with .Values.ztbConfig.config.privilegedAccess }}
+{{- with .Values.privilegedAccess }}
   {{- if .accessID }}
             - name: PRIVILEGED_ACCESS_ID
               value: {{ .accessID }}
@@ -85,3 +86,4 @@ spec:
             tcpSocket:
               port: 8888
 {{- toYaml .Values.ztbConfig.readinessProbe | trim | nindent 12 }}
+{{- end }}

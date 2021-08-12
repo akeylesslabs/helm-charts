@@ -1,3 +1,4 @@
+{{- if eq .Values.sshConfig.enabled true }}
 {{- range .Values.sshConfig.persistence.volumes }}
 ---
 apiVersion: v1
@@ -24,5 +25,6 @@ spec:
     # To make sure we match the claim with the exact volume, match the label
     matchLabels:
 {{- toYaml .matchLabels | nindent 6 }}
+{{- end }}
 {{- end }}
 {{- end }}

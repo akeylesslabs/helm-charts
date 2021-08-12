@@ -1,21 +1,47 @@
-# This values.yaml file contains the default values for akeyless-zero-trust-bastion and akeyless-ssh-bastion
+# This values.yaml file contains the default values for akeyless-secure-remote-access.
+# The chart bundles both akeyless-zero-trust-bastion and akeyless-ssh-bastion. 
 # Enter your configuration in the global and dedicated service sections
 
 ############
 ## Global ##
 ############
 
-dockerRepositoryCreds: ""
+dockerRepositoryCreds: 
 
 # a full URL of Akeyless API Gateway
 apiGatewayURL: https://rest.akeyless.io
+
+# Relevant for Zero-Trust Access for non-SSH targets (e.g. DBs, K8s, AWS CLIs).
+# If provided, it's recommended to grant minimal permissions ("List" only) to the Zero-Trust Dynamic Secrets,
+# while the privilegedAccess will have "Read" and "List" permissions.
+# optional credentials for zero-trust access: if provided, it is possible for
+# end users to only have "list" permissions on Akeyless items if privileged
+# credentials have "read" access.
+privilegedAccess:
+  # supported auth methods: AWS IAM, Azure AD, GCP and API Key;
+  # for AWS IAM or Azure AD, or GCP provide only accessID;
+  # for API Key, provide both accessID and accessKey
+  accessID: ""
+  accessKey: ""
+   # limit access to privileged items only for these end user access ids.
+   # if left empty, all access ids are allowed
+  allowedAccessIDs: []
+   # - p-1234
+   # - p-5678
+      
+  # Azure Object ID to use with privileged credentials of type Azure AD
+  azureObjectID: ""
+  # Audience to use with privileged credentials of type GCP
+  gcpAudience: "akeyless.io"
 
 ####################################################
 ## Default values for akeyless-zero-trust-bastion ##
 ####################################################
 
 ztbConfig:
-  replicaCount: 2
+  # Enable akeyless-zero-trust-bastion 
+  enabled: true
+  replicaCount: 1
 
   image:
     repository: akeyless/zero-trust-bastion
@@ -23,8 +49,8 @@ ztbConfig:
     tag: latest
     
   containerName: "zero-trust-bastion"
+  
   service:
-
     # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
     annotations: {}
     type: LoadBalancer
@@ -93,30 +119,16 @@ ztbConfig:
     # requests:
     #   cpu: 100m
     #   memory: 128Mi
+
+  HPA:
+    # Set the below to false in case you do not want to add Horizontal Pod AutoScaling to the Deployment
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 14
+    cpuAvgUtil: 50
+    memAvgUtil: 50
   
   config:
-    # optional credentials for zero-trust access: if provided, it is possible for
-    # end users to only have "list" permissions on Akeyless items if privileged
-    # credentials have "read" access.
-    privilegedAccess:
-      # supported auth methods: AWS IAM, Azure AD, GCP and API Key;
-      # for AWS IAM or Azure AD, or GCP provide only accessID;
-      # for API Key, provide both accessID and accessKey
-      accessID: ""
-      accessKey: ""
-
-      # limit access to privileged items only for these end user access ids.
-      # if left empty, all access ids are allowed
-      allowedAccessIDs: []
-      # - p-1234
-      # - p-5678
-      
-      # Azure Object ID to use with privileged credentials of type Azure AD
-      azureObjectID: ""
-
-      # Audience to use with privileged credentials of type GCP
-      gcpAudience: "akeyless.io"
-
     rdpRecord:
       enabled: false
       # automatically upload session recordings to S3 in your AWS account
@@ -131,24 +143,17 @@ ztbConfig:
       # Specifies an existing secret to be used for bastion, management AWS credentials
       existingSecret: ""
 
-  HPA:
-    # Set the below to false in case you do not want to add Horizontal Pod AutoScaling to the Deployment
-    enabled: true
-    minReplicas: 1
-    maxReplicas: 14
-    cpuAvgUtil: 50
-    memAvgUtil: 50
-
 #############################################
 ## Default values for akeyless-ssh-bastion ##
 #############################################
 
 sshConfig:
+# Enable akeyless-zero-trust-bastion
+  enabled: true
   replicaCount: 1
 
   ## Statefulsets rolling update update strategy
   ## Ref: https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#rolling-update
-  ##
   updateStrategy: RollingUpdate
 
   image:
@@ -165,29 +170,17 @@ sshConfig:
     port: 22
     curlProxyPort: 9900
 
-  livenessProbe:
-    initialDelaySeconds: 20
-    periodSeconds: 60
-    failureThreshold: 10
-    timeoutSeconds: 5
-
-  readinessProbe:
-    initialDelaySeconds: 20
-    periodSeconds: 10
-    timeoutSeconds: 5
-
   # Akeyless requires data persistence to be shared within all pods in the cluster
   # Currently only ReadWriteMany is supported
   # accessMode: ReadWriteMany
   # Change the below values according to your environment except for the hostPath values
   persistence:
-    # volumes: {}
-   volumes:
+    volumes: {}
+  #  volumes:
     #  - name: akeyless-data
     #    storageClassName: efs-ssh-bastion-sc
-    #    storageClassDriver: efs.csi.aws.com
-    #    size: 2Gi
-    #    mountPath: /var/run/requests
+    #   #  storageClassDriver: efs.csi.aws.com
+    #    size: 100Mi
     #    annotations:
     #     volume.beta.kubernetes.io/storage-class: ""
     #    matchLabels:
@@ -204,6 +197,17 @@ sshConfig:
     # requests:
     #   cpu: 100m
     #   memory: 128Mi
+  
+  livenessProbe:
+    initialDelaySeconds: 20
+    periodSeconds: 60
+    failureThreshold: 10
+    timeoutSeconds: 5
+
+  readinessProbe:
+    initialDelaySeconds: 20
+    periodSeconds: 10
+    timeoutSeconds: 5
 
   HPA:
     # Set the below to false in case you do not want to add Horizontal Pod AutoScaling to the StatefulSet (not recommended)
@@ -216,13 +220,7 @@ sshConfig:
   config:
     CAPublicKey:
     # CAPublicKey: | 
-
-    # Relevant for Zero-Trust Access for non-SSH targets (e.g. DBs, K8s, AWS CLIs).
-    # If provided, it's recommended to grant minimal permissions ("List" only) to the Zero-Trust Dynamic Secrets,
-    # while the privilegedAccess will have "Read" and "List" permissions.
-    privilegedAccess:
-      accessID: "" 
-      accessKey: ""
+      
 
     sessionTermination:
       enabled: false

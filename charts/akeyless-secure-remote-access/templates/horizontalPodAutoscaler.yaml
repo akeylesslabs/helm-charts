@@ -1,3 +1,4 @@
+{{- if eq .Values.sshConfig.enabled true }}
 {{- if .Values.sshConfig.HPA.enabled }}
 apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
@@ -25,7 +26,9 @@ spec:
           type: Utilization
           averageUtilization: {{ $.Values.sshConfig.HPA.memAvgUtil }}
 {{- end }}
+{{- end }}
 ---
+{{- if eq .Values.ztbConfig.enabled true }}
 {{- if .Values.ztbConfig.HPA.enabled }}
 apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
@@ -52,4 +55,5 @@ spec:
         target:
           type: Utilization
           averageUtilization: {{ $.Values.ztbConfig.HPA.memAvgUtil }}
+{{- end }}
 {{- end }}

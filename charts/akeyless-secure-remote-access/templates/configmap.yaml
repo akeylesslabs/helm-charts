@@ -1,3 +1,4 @@
+{{- if eq .Values.sshConfig.enabled true }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -32,6 +33,5 @@ data:
 {{- end }}
   akeyless_config_file: |
     {{ required "API Gateway URL is required" .Values.apiGatewayURL }}
-{{ with .Values.sshConfig.config }}
-    cmd=auth&access-id={{ required "Privileged credentials are required" .privilegedAccess.accessID }}&access-key={{ .privilegedAccess.accessKey }}
-{{- end}}
+    cmd=auth&access-id={{ required "Privileged access credentials are required" .Values.privilegedAccess.accessID }}&access-key={{ .Values.privilegedAccess.accessKey }}
+{{- end }}

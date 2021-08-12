@@ -1,4 +1,4 @@
-# Akeyless Zero Trust Bastion Pro
+# Akeyless Secure Remote Access
 
 Combines both Zero Trust Bastion and SSH-Bastion capabilities.
 
@@ -47,14 +47,20 @@ The `values.yaml` file holds default values, replace the values with the ones fr
 
 To install the chart run:
 ```bash
-helm install RELEASE_NAME helm-charts/akeyless-zero-trust-bastion-pro
+helm install RELEASE_NAME helm-charts/akeyless-secure-remote-access
 ```
 ## Global Parameters
 
 | Parameter                                 | Description                                                                                                          | Default                                                      |
 |-------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|                                                
-| `dockerRepositoryCreds`             | Akeyless docker repository credentials                                                                               | `nil` 
-| `apiGatewayURL`                    | API Gateway URL to use to fetch the secrets.                                                                         | `https://rest.akeyless.io`
+| `dockerRepositoryCreds`             | Akeyless docker repository credentials. Please contact Akeyless. **Required**                                                                                | `nil` 
+| `apiGatewayURL`                    | API Gateway URL to use to fetch the secrets **Required**                                                                      | `https://rest.akeyless.io`
+| `privilegedAccess`                    | Supported auth methods: AWS IAM, Azure AD, GCP and API Key.For AWS IAM or Azure AD, or GCP provide only accessID. For API Key, provide both accessID and accessKey                                                                       | ` `
+| `privilegedAccess.accessID`                    | API key accessID                                                                           | ` `
+| `privilegedAccess.accessKey`                    | API key accessKey                                                                           | ` `
+| `privilegedAccess.allowedAccessIDs`                    | limit access to privileged items only for these end user access ids. If left empty, all access ids are allowedCredentials                                                                           | `[]`
+| `privilegedAccess.azureObjectID`                    | Azure Object ID to use with privileged credentials of type Azure AD                                                                           | `nil`
+| `privilegedAccess.gcpAudience`                    | Audience to use with privileged credentials of type GCP                                                                           | `akeyless.io`
 
 ## Zero Trust Bastion Parameters
 
@@ -64,6 +70,7 @@ The following table lists the configurable parameters of the Zero Trust Bastion 
 
 | Parameter                                 | Description                                                                                                          | Default                                                      |
 |-------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
+| `ztbConfig.enabled`                        | Enable Zero Trust Bastion                                                                                         | `true`
 | `ztbConfig.image.repository`                        | Zero Trust Bastion image name                                                                                        | `akeyless/zero-trust-bastion`                                |
 | `ztbConfig.image.tag`                               | Zero Trust Bastion image tag                                                                                         | `latest`                                                     |
 | `ztbConfig.image.pullPolicy`                        | Zero Trust Bastion image pull policy                                                                                 | `Always`                                                     |                                                        |
@@ -89,7 +96,7 @@ The following table lists the configurable parameters of the Zero Trust Bastion 
 | `ztbConfig.ingress.annotations`                     | Ingress annotations                                                                                                  | `[]`                                                         |
 | `ztbConfig.ingress.tls`                             | Enable TLS configuration for the hostname defined at `ingress.hostname` parameter                                    | `false`                                                      |
 | `ztbConfig.ingress.existingSecret`                  | Existing secret for the Ingress TLS certificate                                                                      | `nil`                                                        |
-| `config.apiGatewayURL` | API Gateway URL to use to fetch the secrets. | `https://rest.akeyless.io` |
+
 
 ### configuration parameters
 
@@ -102,11 +109,6 @@ The following table lists the configurable parameters of the Zero Trust Bastion 
 | `ztbConfig.config.rdpRecord.s3.awsAccessKeyId`      | AWS Access Key ID, not required if using EC2 IAM roles                                                               | `nil`                                                        |
 | `ztbConfig.config.rdpRecord.s3.awsSecretAccessKey`  | AWS Secret Access Key, not required if using EC2 IAM roles                                                           | `nil`                                                        |
 | `ztbConfig.config.rdpRecord.existingSecret`         | Specifies an existing secret to be used for bastion, management AWS credentials                                      | `nil`                                                        |
-| `ztbConfig.config.privilegedAccess.accessID` | Access ID with "read" capability for privileged access. Supported auth methods: AWS IAM, Azure AD and API Key. | `nil` |
-| `ztbConfig.config.privilegedAccess.accessKey` | Access Key with "read" capability for privileged access. Use with privileged accessID of type API Key. | `nil` |
-| `ztbConfig.config.privilegedAccess.allowedAccessIDs` | Access will be permitted only to these access IDs. By default, any access ID is accepted. | `[]` |
-| `ztbConfig.config.privilegedAccess.azureObjectID` | Azure Object ID to use with privileged credentials of type Azure AD. | `nil` |
-| `ztbConfig.config.privilegedAccess.gcpAudience` | Audience to use with privileged credentials of type GCP. | `akeyless.io` |
 
 ### HPA parameters
 
@@ -126,6 +128,7 @@ The following table lists the configurable parameters of the SSH Bastion chart a
 
 | Parameter                                 | Description                                                                                                          | Default                                                      |
 |-------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
+| `ssgConfig.enabled`                        | Enable SSH Bastion                                                                                         | `true`
 | `sshConfig.image.repository`                        | SSH Bastion image name                                                                                               | `akeyless/ssh-bastion`                                         |
 | `sshConfig.image.tag`                               | SSH Bastion image tag                                                                                                | `latest`                                                     |      
 | `sshConfig.image.pullPolicy`                        | SSH Bastion image pull policy                                                                                        | `Always`                                                     |                                                       |
@@ -150,14 +153,12 @@ The following table lists the configurable parameters of the SSH Bastion chart a
 
 | Parameter                                 | Description                                                                                                          | Default                                                      |
 |-------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
-| `sshConfig.config.CAPublicKey`                      | CA’s public key (ca.pub) - required                                                                                  | `nil`                                                        |
+| `sshConfig.config.CAPublicKey`                      | CA’s public key (ca.pub) - **Required**                                                                                  | `nil`                                                        |
 | `sshConfig.config.sessionTermination.enabled`       | Enable session termination, ex. OKTA, Keycloak                                                                       | `false`                                                      |
 | `sshConfig.config.sessionTermination.apiURL`        | API URL                                                                                                              | `nil`                                                        |
 | `sshConfig.config.sessionTermination.apiToken`      | API Token                                                                                                            | `nil`                                                        |
 | `sshConfig.config.logForwarding.enabled`            | Enable [log forwarding](https://docs.akeyless.io/docs/ssh-log-forwarding)                                            | `false`                                                      |
 | `sshConfig.config.logForwarding.settings`           | Log forwarding configuration                                                                                         | `nil`                                                        |
-| `sshConfig.config.privilegedAccess.accessID`        | Access ID with "read" capability for privileged access.                                                              | `nil`                                                        |
-| `sshConfig.config.privilegedAccess.accessKey`       | Access Key of the provided access ID. (not required on cloud identity)                                               | `nil`                                                        |
 
 ### Persistence parameters
 

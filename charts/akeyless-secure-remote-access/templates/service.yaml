@@ -1,8 +1,9 @@
+{{- if eq .Values.sshConfig.enabled true }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: ssh-{{ include "akeyless-ssh-proxy.fullname" . }}
+  name: {{ include "akeyless-ssh-proxy.fullname" . }}-ssh
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "akeyless-ssh-proxy.labels" . | nindent 4 }}
@@ -21,11 +22,13 @@ spec:
       name: curl-proxy
   selector:
     {{- include "akeyless-ssh-proxy.selectorLabels" . | nindent 4 }}
+{{- end }}
 ---
+{{- if eq .Values.ztbConfig.enabled true }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: ztb-{{ include "akeyless-zero-trust-bastion.fullname" . }}
+  name: {{ include "akeyless-zero-trust-bastion.fullname" . }}-ztb
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "akeyless-zero-trust-bastion.labels" . | nindent 4 }}
@@ -35,7 +38,7 @@ spec:
   {{- if .Values.ztbConfig.ingress.enabled }}
   type: NodePort
   {{- else }}
-  type: {{ required "A valid .Values.ztbConfig.service.type entry required!" .Values.sshConfig.service.type }}
+  type: {{ required "A valid .Values.ztbConfig.service.type entry required!" .Values.ztbConfig.service.type }}
   {{- end }}
   ports:
     - name: api
@@ -44,3 +47,4 @@ spec:
       protocol: TCP
   selector:
     app: zero-trust-bastion
+{{- end }}

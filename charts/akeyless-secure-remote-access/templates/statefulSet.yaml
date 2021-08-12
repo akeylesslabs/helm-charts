@@ -1,3 +1,4 @@
+{{- if eq .Values.sshConfig.enabled true }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -87,7 +88,7 @@ spec:
           volumeMounts:
           {{- range .Values.sshConfig.persistence.volumes }}
             - name: {{ .name | title | lower }}
-              mountPath: {{ .mountPath | quote }}
+              mountPath: /var/run/requests 
           {{- end }}
             - name: config
               mountPath: /var/akeyless/conf
@@ -95,3 +96,4 @@ spec:
               mountPath: /var/akeyless/creds
           resources:
 {{- toYaml .Values.sshConfig.resources | nindent 12 }}
+{{- end }}
