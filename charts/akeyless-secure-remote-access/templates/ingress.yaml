@@ -3,10 +3,10 @@
 apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
-  name: {{ include "akeyless-zero-trust-bastion.fullname" . }}
+  name: {{ include "akeyless-secure-remote-access.fullname" . }}
   namespace: {{ .Release.Namespace | quote }}
   labels:
-{{- include "akeyless-zero-trust-bastion.labels" . | nindent 4 }}
+{{- include "akeyless-secure-remote-access.labels" . | nindent 4 }}
   annotations:
 {{- if .Values.ztbConfig.ingress.certManager }}
     kubernetes.io/tls-acme: "true"
@@ -22,7 +22,7 @@ spec:
       paths:
       - path: {{ .Values.ztbConfig.ingress.path }}
         backend:
-         serviceName: {{ include "akeyless-zero-trust-bastion.fullname" . }}-svc
+         serviceName: {{ include "akeyless-secure-remote-access.fullname" . }}-svc
          servicePort: api
 {{- end }}
 {{- if .Values.ztbConfig.ingress.tls }}

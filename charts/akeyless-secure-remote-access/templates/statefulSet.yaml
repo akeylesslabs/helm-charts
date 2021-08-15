@@ -2,28 +2,29 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "akeyless-ssh-proxy.fullname" . }}
+  name: {{ include "akeyless-secure-remote-access.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "akeyless-ssh-proxy.labels" . | nindent 4 }}
+    {{- include "akeyless-secure-remote-access.labels" . | nindent 4 }}
 spec:
-  serviceName: {{ include "akeyless-ssh-proxy.fullname" . }}
+  serviceName: {{ include "akeyless-secure-remote-access.fullname" . }}
   replicas: {{ .Values.sshConfig.replicaCount }}
   updateStrategy:
     type: {{ .Values.sshConfig.updateStrategy }}
   selector:
     matchLabels:
-      {{- include "akeyless-ssh-proxy.selectorLabels" . | nindent 6 }}
+      app: ssh-bastion
   template:
     metadata:
       labels:
-        {{- include "akeyless-ssh-proxy.selectorLabels" . | nindent 8 }}
+        app: ssh-bastion
     spec:
       volumes:
       - name: config
         emptyDir: {}
       - name: creds
         emptyDir: {}
+      - name: ssh
       {{- range .Values.sshConfig.persistence.volumes }}
       - name: {{ .name | title | lower }}
         persistentVolumeClaim:
@@ -89,6 +90,8 @@ spec:
           {{- range .Values.sshConfig.persistence.volumes }}
             - name: {{ .name | title | lower }}
               mountPath: /var/run/requests 
+            - name: {{ .name | title | lower }}
+              mountPath: /var/run/akeyless/ssh
           {{- end }}
             - name: config
               mountPath: /var/akeyless/conf

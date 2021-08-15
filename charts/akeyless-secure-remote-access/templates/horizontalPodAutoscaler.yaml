@@ -9,7 +9,7 @@ spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: StatefulSet
-    name: {{ include "akeyless-ssh-proxy.fullname" . }}
+    name: {{ include "akeyless-secure-remote-access.fullname" . }}
   minReplicas: {{ $.Values.sshConfig.HPA.minReplicas | default 1 }}
   maxReplicas: {{ $.Values.sshConfig.HPA.maxReplicas | default 14 }}
   metrics:
@@ -39,7 +39,7 @@ spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "akeyless-zero-trust-bastion.fullname" . }}
+    name: {{ include "akeyless-secure-remote-access.fullname" . }}
   minReplicas: {{ $.Values.ztbConfig.HPA.minReplicas | default 1 }}
   maxReplicas: {{ $.Values.ztbConfig.HPA.maxReplicas | default 14 }}
   metrics:

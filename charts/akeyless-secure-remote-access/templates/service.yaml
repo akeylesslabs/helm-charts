@@ -3,10 +3,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "akeyless-ssh-proxy.fullname" . }}-ssh
+  name: {{ include "akeyless-secure-remote-access.fullname" . }}-ssh
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "akeyless-ssh-proxy.labels" . | nindent 4 }}
+    {{- include "akeyless-secure-remote-access.labels" . | nindent 4 }}
   annotations:
   {{- toYaml .Values.sshConfig.service.annotations | nindent 4 }}
 spec:
@@ -21,17 +21,17 @@ spec:
       protocol: TCP
       name: curl-proxy
   selector:
-    {{- include "akeyless-ssh-proxy.selectorLabels" . | nindent 4 }}
+    app: ssh-bastion
 {{- end }}
 ---
 {{- if eq .Values.ztbConfig.enabled true }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "akeyless-zero-trust-bastion.fullname" . }}-ztb
+  name: {{ include "akeyless-secure-remote-access.fullname" . }}-ztb
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "akeyless-zero-trust-bastion.labels" . | nindent 4 }}
+    {{- include "akeyless-secure-remote-access.labels" . | nindent 4 }}
   annotations:
   {{- toYaml .Values.ztbConfig.service.annotations | nindent 4 }}
 spec:
