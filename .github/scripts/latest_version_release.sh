@@ -13,6 +13,8 @@ if [[ "${service}" == "akeyless-api-proxy" ]]; then
     chart_dir="akeyless-api-gateway"
 elif [[ "${service}" == "ssh-proxy" ]]; then
     chart_dir="akeyless-ssh-bastion"
+elif [[ "${service}" == "zero-trust-bastion" ]]; then
+    chart_dir="akeyless-zero-trust-bastion"
 elif [[ "${service}" == "zero-trust-web-access" ]]; then
     chart_dir="akeyless-zero-trust-web-access"
 else
@@ -29,7 +31,7 @@ pushd "$GITHUB_WORKSPACE/charts/$chart_dir"
 # edit app version
     sed -i "s/appVersion.*/appVersion: ${app_version}/g" Chart.yaml
 
-    git add -A && git commit -m "Updated helm chart to latest api-gw version ${app_version}" || die "Failed to commit changes to git"
+    git add -A && git commit -m "Updated ${service} helm chart version to latest: ${app_version}" || die "Failed to commit changes to git"
     git push origin HEAD
 popd
 
