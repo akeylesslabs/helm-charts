@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "akeyless-secure-remote-access.fullname" . }}
+  name: web-{{ include "akeyless-secure-remote-access.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
 {{- include "akeyless-secure-remote-access.labels" . | nindent 4 }}
@@ -27,9 +27,9 @@ spec:
               name: api
           env:
             - name: BASTION_API
-              value: {{ include "akeyless-secure-remote-access.fullname" . }}-ssh:{{ .Values.sshConfig.service.curlProxyPort }}
+              value: ssh-{{ include "akeyless-secure-remote-access.fullname" . }}:{{ .Values.sshConfig.service.curlProxyPort }}
             - name: BASTION_SSH
-              value: {{ include "akeyless-secure-remote-access.fullname" . }}-ssh:{{ .Values.sshConfig.service.port }}
+              value: ssh-{{ include "akeyless-secure-remote-access.fullname" . }}:{{ .Values.sshConfig.service.port }}
 {{- if .Values.apiGatewayURL }}
             - name: AKEYLESS_URL
               value: {{ .Values.apiGatewayURL }}

@@ -1,5 +1,5 @@
 apiVersion: v2
-name: akeyless-secure-remote-access
+name: akeyless-sra
 description: A Helm chart for Kubernetes that deploys akeyless-zero-trust-bastion and akeyless-ssh-bastion
 
 # A chart can be either an 'application' or a 'library' chart.
@@ -11,10 +11,9 @@ description: A Helm chart for Kubernetes that deploys akeyless-zero-trust-bastio
 # a dependency of application charts to inject those utilities and functions into the rendering
 # pipeline. Library charts do not define any templates and therefore cannot be deployed.
 type: application
-
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
-version: 0.1.0
+version: 0.9.0
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application.

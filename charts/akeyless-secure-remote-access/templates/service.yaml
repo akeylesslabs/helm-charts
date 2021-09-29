@@ -3,7 +3,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "akeyless-secure-remote-access.fullname" . }}-ssh
+  name: ssh-{{ include "akeyless-secure-remote-access.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "akeyless-secure-remote-access.labels" . | nindent 4 }}
@@ -28,7 +28,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "akeyless-secure-remote-access.fullname" . }}-ztb
+  name: web-{{ include "akeyless-secure-remote-access.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "akeyless-secure-remote-access.labels" . | nindent 4 }}

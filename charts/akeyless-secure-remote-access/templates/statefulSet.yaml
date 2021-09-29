@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "akeyless-secure-remote-access.fullname" . }}
+  name: ssh-{{ include "akeyless-secure-remote-access.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "akeyless-secure-remote-access.labels" . | nindent 4 }}
