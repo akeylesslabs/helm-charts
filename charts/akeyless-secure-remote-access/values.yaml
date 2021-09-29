@@ -221,8 +221,9 @@ sshConfig:
     CAPublicKey:
     # CAPublicKey: | 
       
-
     sessionTermination:
+    ## Session Termination is available for okta and keycloak
+    ## Ref: https://docs.akeyless.io/docs/professional-bastion
       enabled: false
       apiURL: ""
       apiToken: ""
@@ -232,4 +233,9 @@ sshConfig:
     ##
     logForwarding:
       enabled: false
-      settings: |      
+      # Syslog example
+      # settings: |
+        # target_syslog_tag="ssh-audit-export"
+        # target_log_type="syslog"
+        # target_syslog_network="udp"
+        # target_syslog_host="<host>:<port>"
