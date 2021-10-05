@@ -77,6 +77,8 @@ dispatcher:
     failureThreshold: 3
     successThreshold: 1
 
+  env: []
+
   config:
     # a full URL of Akeyless API Gateway
     apiGatewayURL: https://rest.akeyless.io
@@ -143,7 +145,12 @@ webWorker:
   livenessProbe:
     successThreshold: 1
 
+  env: []
+
   config:
+    displayWidth: 2560
+    displayHeight: 1200
+
     policies: |
         {
           "policies": {

@@ -52,19 +52,27 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            {{- range .Values.service.ports }}
-            - containerPort: {{ .port }}
-              name: {{ .name }}
-            {{- end }}
+            - name: web
+              containerPort: 18888
+            - name: configure-app
+              containerPort: 8000
+            - name: legacy-api
+              containerPort: 8080
+            - name: api
+              containerPort: 8081
+            - name: hvp
+              containerPort: 8200
+            - name: kmip
+              containerPort: 5696
           livenessProbe:
             httpGet:
-              path: /status
-              port: 18888
+              path: /
+              port: 8080
 {{- toYaml .Values.livenessProbe | trim | nindent 12 }}
           readinessProbe:
             httpGet:
-              path: /status
-              port: 18888
+              path: /
+              port: 8080
 {{- toYaml .Values.readinessProbe | trim | nindent 12 }}
           {{- if eq (include "akeyless-api-gw.customerFragmentExist" .) "true" }}
           volumeMounts:
@@ -105,6 +113,10 @@ spec:
           {{- if .Values.akeylessUserAuth.clusterName }}
             - name: CLUSTER_NAME
               value: {{ .Values.akeylessUserAuth.clusterName }}
+          {{- end }}
+          {{- if .Values.akeylessUserAuth.initialClusterDisplayName }}
+            - name: INITIAL_DISPLAY_NAME
+              value: {{ .Values.akeylessUserAuth.initialClusterDisplayName }}
           {{- end }}
           {{- if .Values.akeylessUserAuth.configProtectionKeyName }}
             - name: CONFIG_PROTECTION_KEY_NAME
