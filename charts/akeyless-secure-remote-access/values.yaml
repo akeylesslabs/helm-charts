@@ -39,7 +39,7 @@ privilegedAccess:
 ####################################################
 
 ztbConfig:
-  # Enable akeyless-zero-trust-bastion 
+  # Enable akeyless-zero-trust-bastion. Valid values: true/false.
   enabled: true
   replicaCount: 1
 
@@ -148,7 +148,7 @@ ztbConfig:
 #############################################
 
 sshConfig:
-# Enable akeyless-zero-trust-bastion
+# Enable akeyless-ssh-bastion. Valid values: true/false.
   enabled: true
   replicaCount: 1
 
