@@ -85,6 +85,10 @@ spec:
           env:
             - name: WEB_WORKER_SERVICE_DNS
               value: {{ include "akeyless-zero-web-access.fullname" . }}-discovery
+          {{- range $key, $value := .Values.dispatcher.env }}
+            - name: {{ $key }}
+              value: {{ $value }}
+          {{- end }}
           volumeMounts:
             - name: configmap-akeyless
               mountPath: /configmap_conf

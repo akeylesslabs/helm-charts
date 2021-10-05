@@ -17,28 +17,26 @@ service:
   annotations: {}
   type: LoadBalancer
 
-  # Here you can manage the list of ports you want to expose on the service:
+  # Here you can manage the list of ports you want to expose on the service (don't modify the port name):
   # 8000 - Configuration manager
   # 8080 - Akeyless Restful API
   # 8081 - Akeyless Restful API V2
   # 8200 - HVP vault proxy
+  # 5696 - KMIP
   # 18888 - Akeyless UI
   ports:
     - name: web
       port: 18888
-      protocol: TCP
     - name: configure-app
       port: 8000
-      protocol: TCP
     - name: legacy-api
       port: 8080
-      protocol: TCP
     - name: api
       port: 8081
-      protocol: TCP
     - name: hvp
       port: 8200
-      protocol: TCP
+    - name: kmip
+      port: 5696
 
 
 livenessProbe:
@@ -127,6 +125,7 @@ akeylessUserAuth:
   adminAccessKey:
   adminPassword:
   clusterName:
+  initialClusterDisplayName:
   # The key which is used to encrypt the API Gateway configuration. 
   # If left empty - the account’s default key will be used. 
   # This key can be determined on cluster bringup only and cannot be modified afterwards

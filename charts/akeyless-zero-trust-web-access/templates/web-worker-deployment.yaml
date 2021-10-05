@@ -78,6 +78,18 @@ spec:
               value: browser.startup.homepage=\"https://www.akeyless.io\"
             - name: DES_DOWNLOAD_PATH
               value: /etc/shared/download
+          {{- if .Values.webWorker.config.displayWidth }}
+            - name: DISPLAY_WIDTH
+              value: {{ .Values.webWorker.config.displayWidth | quote }}
+          {{- end }}
+          {{- if .Values.webWorker.config.displayHeight }}
+            - name: DISPLAY_HEIGHT
+              value: {{ .Values.webWorker.config.displayHeight | quote }}
+          {{- end }}
+            {{- range $key, $value := .Values.webWorker.env }}
+            - name: {{ $key }}
+              value: {{ $value }}
+            {{- end }}
           volumeMounts:
           - name: dshm
             mountPath: /dev/shm
