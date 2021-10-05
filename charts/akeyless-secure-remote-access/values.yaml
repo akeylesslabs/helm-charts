@@ -46,7 +46,7 @@ ztbConfig:
   image:
     repository: akeyless/zero-trust-bastion
     pullPolicy: Always
-    tag: latest
+    # tag: latest
     
   containerName: "zero-trust-bastion"
   
@@ -159,7 +159,7 @@ sshConfig:
   image:
     repository: akeyless/ssh-proxy
     pullPolicy: Always
-    tag: latest
+    # tag: latest
 
   containerName: "ssh-bastion"
 

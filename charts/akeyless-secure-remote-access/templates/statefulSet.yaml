@@ -63,7 +63,7 @@ spec:
         - name: akeyless-docker-hub
       containers:
         - name: {{ .Values.sshConfig.containerName }}
-          image: "{{ .Values.sshConfig.image.repository }}:{{ .Values.sshConfig.image.tag }}"
+          image: "{{ .Values.sshConfig.image.repository }}:{{ .Values.sshConfig.image.tag | default .Chart.Annotations.sshVersion }}"
           imagePullPolicy: {{ .Values.sshConfig.image.pullPolicy }}
           securityContext:
             privileged: true
