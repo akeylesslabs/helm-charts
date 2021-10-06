@@ -1,0 +1,89 @@
+{{- if .Values.ztbConfig.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-{{ include "akeyless-secure-remote-access.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{- include "akeyless-secure-remote-access.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app: zero-trust-bastion
+  replicas: {{ .Values.ztbConfig.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: zero-trust-bastion
+    spec:
+      imagePullSecrets:
+        - name: akeyless-docker-hub
+      containers:
+        - name: {{ .Values.ztbConfig.containerName }}
+          image: "{{ .Values.ztbConfig.image.repository }}:{{ .Values.ztbConfig.image.tag | default .Chart.Annotations.ztbVersion }}"
+          imagePullPolicy: {{ .Values.ztbConfig.image.pullPolicy }}
+          ports:
+            - containerPort: 8888
+              name: api
+          env:
+            - name: BASTION_API
+              value: ssh-{{ include "akeyless-secure-remote-access.fullname" . }}:{{ .Values.sshConfig.service.curlProxyPort }}
+            - name: BASTION_SSH
+              value: ssh-{{ include "akeyless-secure-remote-access.fullname" . }}:{{ .Values.sshConfig.service.port }}
+{{- if .Values.apiGatewayURL }}
+            - name: AKEYLESS_URL
+              value: {{ .Values.apiGatewayURL }}
+{{- end }}
+{{- with .Values.privilegedAccess }}
+  {{- if .accessID }}
+            - name: PRIVILEGED_ACCESS_ID
+              value: {{ .accessID }}
+  {{- end }}
+  {{- if .accessKey }}
+            - name: PRIVILEGED_ACCESS_KEY
+              value: {{ .accessKey }}
+  {{- end }}
+  {{- if .allowedAccessIDs }}
+            - name: ALLOWED_ACCESS_IDS
+              value: {{ range $index, $element := .allowedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }}
+  {{- end }}
+  {{- if .azureObjectID }}
+            - name: AZURE_OBJECT_ID
+              value: {{ .azureObjectID }}
+  {{- end }}
+  {{- if .gcpAudience }}
+            - name: GCP_AUDIENCE
+              value: {{ .gcpAudience }}
+  {{- end }}
+{{- end }}
+{{- if .Values.ztbConfig.config.rdpRecord.enabled }}
+            - name: AWS_REGION
+              value: {{ required "A valid .Values.ztbConfig.config.rdpRecording.s3.region required!" .Values.ztbConfig.config.rdpRecord.s3.region }}
+            - name: AWS_S3_BUCKET
+              value: {{ required "A valid .Values.ztbConfig.config.rdpRecording.s3.bucketName required!" .Values.ztbConfig.config.rdpRecord.s3.bucketName }}
+            - name: AWS_S3_PREFIX
+              value: {{ required "A valid .Values.ztbConfig.config.rdpRecording.s3.bucketPrefix required!" .Values.ztbConfig.config.rdpRecord.s3.bucketPrefix }}
+  {{- if or ( .Values.ztbConfig.config.rdpRecord.s3.awsAccessKeyId) ( .Values.ztbConfig.config.rdpRecord.existingSecret) }}
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "akeyless-zero-trust-bastion.secretName" . }}
+                  key: aws-access-key-id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "akeyless-zero-trust-bastion.secretName" . }}
+                  key: aws-secret-access-key
+  {{- end }}
+{{- end }}
+          resources:
+{{- toYaml .Values.ztbConfig.resources | nindent 12 }}
+          livenessProbe:
+            tcpSocket:
+              port: 8888
+{{- toYaml .Values.ztbConfig.livenessProbe | trim | nindent 12 }}
+          readinessProbe:
+            tcpSocket:
+              port: 8888
+{{- toYaml .Values.ztbConfig.readinessProbe | trim | nindent 12 }}
+{{- end }}

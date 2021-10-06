@@ -1,0 +1,35 @@
+{{- if eq .Values.ztbConfig.enabled true }}
+{{- if .Values.ztbConfig.ingress.enabled }}
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: {{ include "akeyless-secure-remote-access.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+{{- include "akeyless-secure-remote-access.labels" . | nindent 4 }}
+  annotations:
+{{- if .Values.ztbConfig.ingress.certManager }}
+    kubernetes.io/tls-acme: "true"
+{{- end }}
+{{- if .Values.ztbConfig.ingress.annotations }}
+{{ toYaml .Values.ztbConfig.ingress.annotations | indent 4 }}
+{{- end }}
+spec:
+  rules:
+{{- if .Values.ztbConfig.ingress.hostname }}
+  - host: {{ .Values.ztbConfig.ingress.hostname }}
+    http:
+      paths:
+      - path: {{ .Values.ztbConfig.ingress.path }}
+        backend:
+         serviceName: {{ include "akeyless-secure-remote-access.fullname" . }}-svc
+         servicePort: api
+{{- end }}
+{{- if .Values.ztbConfig.ingress.tls }}
+  tls:
+    - hosts:
+      - {{ .Values.ztbConfig.ingress.hostname }}
+      secretName: {{ template "akeyless-zero-trust-bastion.ingressSecretTLSName" . }}
+{{- end }}
+{{- end }}
+{{- end }}

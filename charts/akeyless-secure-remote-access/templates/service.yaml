@@ -1,0 +1,50 @@
+{{- if eq .Values.sshConfig.enabled true }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ssh-{{ include "akeyless-secure-remote-access.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "akeyless-secure-remote-access.labels" . | nindent 4 }}
+  annotations:
+  {{- toYaml .Values.sshConfig.service.annotations | nindent 4 }}
+spec:
+  type: {{ required "A valid .Values.sshConfig.service.type entry required!" .Values.sshConfig.service.type }}
+  ports:
+    - port: {{ .Values.sshConfig.service.port }}
+      targetPort: ssh
+      protocol: TCP
+      name: ssh
+    - port: {{ .Values.sshConfig.service.curlProxyPort }}
+      targetPort: curl-proxy
+      protocol: TCP
+      name: curl-proxy
+  selector:
+    app: ssh-bastion
+{{- end }}
+---
+{{- if eq .Values.ztbConfig.enabled true }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-{{ include "akeyless-secure-remote-access.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "akeyless-secure-remote-access.labels" . | nindent 4 }}
+  annotations:
+  {{- toYaml .Values.ztbConfig.service.annotations | nindent 4 }}
+spec:
+  {{- if .Values.ztbConfig.ingress.enabled }}
+  type: NodePort
+  {{- else }}
+  type: {{ required "A valid .Values.ztbConfig.service.type entry required!" .Values.ztbConfig.service.type }}
+  {{- end }}
+  ports:
+    - name: api
+      port: {{ .Values.ztbConfig.service.port }}
+      targetPort: api
+      protocol: TCP
+  selector:
+    app: zero-trust-bastion
+{{- end }}
