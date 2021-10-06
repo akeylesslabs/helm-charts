@@ -1,4 +1,4 @@
-# This values.yaml file contains the default values for akeyless-secure-remote-access.
+# This values.yaml file contains the default values for akeyless-secure-remote-access helm chart.
 # The chart bundles both akeyless-zero-trust-bastion and akeyless-ssh-bastion. 
 # Enter your configuration in the global and dedicated service sections
 
