@@ -58,7 +58,7 @@ if [[ -n "${sra_chart}" ]]; then
         # edit app version
         ztb_app_ver=$(grep appVersion ../akeyless-zero-trust-bastion/Chart.yaml | awk '{print $2}')
         ssh_app_ver=$(grep appVersion ../akeyless-ssh-bastion/Chart.yaml | awk '{print $2}')
-        sed -i "s/appVersion.*/appVersion: ${ztb_app_Ver}_${ssh_app_ver}/g" Chart.yaml
+        sed -i "s/appVersion.*/appVersion: ${ztb_app_ver}_${ssh_app_ver}/g" Chart.yaml
         
         git add -A && git commit -m "Updated ${service} helm chart version to latest: ${app_version}" || die "Failed to commit changes to git"
         git push origin HEAD
