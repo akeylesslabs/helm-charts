@@ -9,7 +9,7 @@ service=$(echo "$GITHUB_CONTEXT" | jq -r '.payload.service | select (.!=null)')
 major_minor_patch=$(echo "$GITHUB_CONTEXT" | jq -r '.payload.major_minor_patch | select (.!=null)')
 app_version=$(echo "$GITHUB_CONTEXT" | jq -r '.payload.app_version | select (.!=null)')
 
-if [[ "${service}" == "akeyless-api-proxy" ]]; then
+if [[ "${service}" == "gateway" ]]; then
     chart_dir="akeyless-api-gateway"
 elif [[ "${service}" == "ssh-proxy" ]]; then
     chart_dir="akeyless-ssh-bastion"
