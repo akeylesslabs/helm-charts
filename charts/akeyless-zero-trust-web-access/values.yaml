@@ -102,7 +102,7 @@ dispatcher:
       # - p-5678
 
    # When false, only requests with preemptive JWT auth will be accepted
-    allowedInternalAuth: "true"
+    allowedInternalAuth: "false"
    # When false, dispatcher session cookie can be send only on top off encrypted requests (HTTPS)
     disableSecureCookie: "true"
 
