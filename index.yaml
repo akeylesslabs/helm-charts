@@ -989,6 +989,16 @@ entries:
     version: 1.0.0
   akeyless-zero-trust-bastion:
   - apiVersion: v2
+    appVersion: v0.9.14
+    created: "2021-11-22T11:45:33.825543817Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-zero-trust-bastion
+    digest: 336fe10d643612606c91f7d050d75fb9c7dffd07b395de219dee7d684f1f27be
+    name: akeyless-zero-trust-bastion
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-bastion-1.2.11/akeyless-zero-trust-bastion-1.2.11.tgz
+    version: 1.2.11
+  - apiVersion: v2
     appVersion: v0.9.13
     created: "2021-11-14T15:08:25.592647652Z"
     description: A Helm chart for Kubernetes that deploys akeyless-zero-trust-bastion
@@ -1423,4 +1433,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2021-11-14T15:08:25.593404852Z"
+generated: "2021-11-22T11:45:33.826887435Z"
