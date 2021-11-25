@@ -32,9 +32,11 @@ pushd "$GITHUB_WORKSPACE/charts/$chart_dir"
 
     # edit app version
     sed -i "s/appVersion.*/appVersion: ${app_version}/g" Chart.yaml
-
-    git add -A && git commit -m "Updated ${service} helm chart version to latest: ${app_version}" || die "Failed to commit changes to git"
-    git push origin HEAD
+    
+    if [[ -z "${sra_chart}" ]]; then
+        git add -A && git commit -m "Updated ${service} helm chart version to latest: ${app_version}" || die "Failed to commit changes to git"
+        git push origin HEAD
+    fi
 popd
 
 if [[ -n "${sra_chart}" ]]; then

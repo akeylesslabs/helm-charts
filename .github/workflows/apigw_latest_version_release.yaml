@@ -3,6 +3,9 @@ name: Helm Chart Latest App Version Release
 on:
   deployment:
 
+concurrency:
+  group: Helm Chart Latest App Version Release
+
 jobs:
   update-latest-helm-chart-version:
     if: github.event.deployment.task == 'update-latest-version'
