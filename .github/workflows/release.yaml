@@ -5,6 +5,9 @@ on:
   push:
     branches:
       - main
+      
+concurrency:
+  group: Release Charts
 
 jobs:
   release:
