@@ -43,6 +43,7 @@ env:
  # AKEYLESS_SECRET_DIR_NAME: "<path>"
  # AKEYLESS_API_KEY: "<api_key>"
  # AKEYLESS_CRASH_POD_ON_ERROR: "enable"
+ # AKEYLESS_K8S_AUTH_CONF_NAME: "K8s_conf_name"
  
 
 resources:
