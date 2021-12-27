@@ -34,6 +34,10 @@ spec:
             - name: AKEYLESS_URL
               value: {{ .Values.apiGatewayURL }}
 {{- end }}
+{{- if .Values.clusterName }}
+            - name: CLUSTER_NAME
+              value: {{ .Values.clusterName }}
+{{- end }}
 {{- with .Values.privilegedAccess }}
   {{- if .accessID }}
             - name: PRIVILEGED_ACCESS_ID
