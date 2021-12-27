@@ -83,6 +83,10 @@ dispatcher:
     # a full URL of Akeyless API Gateway
     apiGatewayURL: https://rest.akeyless.io
 
+    # Secure remote access cluster name. Use a name that will help you understand
+    # the purpose of this cluster, for example, "sra-staging" or "us-west-prod"
+    clusterName: defaultCluster
+
     # For the Zero-Trust Web Access, it's recommended to grant minimal permissions ("List" only) to the Zero-Trust client,
     # while the privilegedAccess will have "Read" and "List" permissions.
     listOnlyCredentials:

@@ -85,6 +85,12 @@ spec:
           env:
             - name: WEB_WORKER_SERVICE_DNS
               value: {{ include "akeyless-zero-web-access.fullname" . }}-discovery
+            - name: VERSION
+              value: {{ .Chart.AppVersion }}
+{{- if .Values.clusterName }}
+            - name: CLUSTER_NAME
+              value: {{ .Values.clusterName }}
+{{- end }}
           {{- range $key, $value := .Values.dispatcher.env }}
             - name: {{ $key }}
               value: {{ $value }}

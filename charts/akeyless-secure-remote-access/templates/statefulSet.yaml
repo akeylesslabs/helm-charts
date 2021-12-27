@@ -74,6 +74,17 @@ spec:
             name: ssh
           - containerPort: 9900
             name: curl-proxy
+          env:
+          - name: VERSION
+            value: {{ .Chart.Annotations.sshVersion }}
+{{- if .Values.clusterName }}
+          - name: CLUSTER_NAME
+            value: {{ .Values.clusterName }}
+{{- end }}
+{{- if .Values.privilegedAccess.allowedAccessIDs }}
+          - name: ALLOWED_ACCESS_IDS
+            value: {{ range $index, $element := .Values.privilegedAccess.allowedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }}
+{{- end }}
           livenessProbe:
             exec:
               command:
