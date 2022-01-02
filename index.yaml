@@ -825,6 +825,20 @@ entries:
     version: 1.0.0
   akeyless-sra:
   - annotations:
+      sshVersion: 0.11.27
+      ztbVersion: v0.9.16
+    apiVersion: v2
+    appVersion: v0.9.16_0.11.27
+    created: "2022-01-02T15:14:23.22924116Z"
+    description: A Helm chart for Kubernetes akeyless-zero-trust-bastion and akeyless-ssh-bastion
+      deployment
+    digest: da98acbdff6aa75f9db52ec96c23499af5a2217ad99e0383ae97c8565b2d226d
+    name: akeyless-sra
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-sra-0.9.12/akeyless-sra-0.9.12.tgz
+    version: 0.9.12
+  - annotations:
       sshVersion: 0.11.26
       ztbVersion: v0.9.16
     apiVersion: v2
@@ -963,6 +977,16 @@ entries:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-sra-0.9.0/akeyless-sra-0.9.0.tgz
     version: 0.9.0
   akeyless-ssh-proxy:
+  - apiVersion: v2
+    appVersion: 0.11.27
+    created: "2022-01-02T15:14:23.350588375Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-ssh-proxy
+    digest: ae23bfd1ef936339063b6ad5f7a19f553b1c8c52558afa69838202fa47d2ce42
+    name: akeyless-ssh-proxy
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-ssh-proxy-1.2.18/akeyless-ssh-proxy-1.2.18.tgz
+    version: 1.2.18
   - apiVersion: v2
     appVersion: 0.11.26
     created: "2021-11-13T07:40:41.812197844Z"
@@ -1699,4 +1723,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2021-12-29T13:15:53.906834861Z"
+generated: "2022-01-02T15:14:23.351444386Z"
