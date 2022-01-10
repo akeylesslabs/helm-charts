@@ -22,7 +22,7 @@ spec:
       paths:
       - path: {{ .Values.ztbConfig.ingress.path }}
         backend:
-         serviceName: {{ include "akeyless-secure-remote-access.fullname" . }}-svc
+         serviceName: web-{{ include "akeyless-secure-remote-access.fullname" . }}
          servicePort: api
 {{- end }}
 {{- if .Values.ztbConfig.ingress.tls }}
