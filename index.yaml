@@ -849,6 +849,20 @@ entries:
       ztbVersion: v0.9.17
     apiVersion: v2
     appVersion: v0.9.17_0.11.30
+    created: "2022-01-13T08:03:44.649254188Z"
+    description: A Helm chart for Kubernetes akeyless-zero-trust-bastion and akeyless-ssh-bastion
+      deployment
+    digest: fc88e690959f91587a3ed3103bfbaa08c74d4109b67e8f298c7527b0c11a3f92
+    name: akeyless-sra
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-sra-0.9.18/akeyless-sra-0.9.18.tgz
+    version: 0.9.18
+  - annotations:
+      sshVersion: 0.11.30
+      ztbVersion: v0.9.17
+    apiVersion: v2
+    appVersion: v0.9.17_0.11.30
     created: "2022-01-12T13:26:55.356512643Z"
     description: A Helm chart for Kubernetes akeyless-zero-trust-bastion and akeyless-ssh-bastion
       deployment
@@ -1491,6 +1505,20 @@ entries:
   akeyless-zero-trust-web-access:
   - apiVersion: v2
     appVersion: 0.11.36
+    created: "2022-01-13T08:03:44.764201125Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-zero-trust-web-access
+    digest: e47a486edcbcb7a624c62484d2d65ac25a627f4f86d0fe9f1d08175be8d9efca
+    home: https://www.akeyless.io
+    icon: https://akeylesslabs.github.io/helm-charts/assets/logo/akl.jpeg
+    name: akeyless-zero-trust-web-access
+    sources:
+    - https://github.com/akeylesslabs/helm-charts/tree/feature/helm_repo/akeyless-zero-trust-web-access
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.1.21/akeyless-zero-trust-web-access-1.1.21.tgz
+    version: 1.1.21
+  - apiVersion: v2
+    appVersion: 0.11.36
     created: "2022-01-09T07:10:05.429564661Z"
     description: A Helm chart for Kubernetes that deploys akeyless-zero-trust-web-access
     digest: 860d4c7603f814d137a46ba25dbcfecad080397c022506dc620bc6b1cd32f056
@@ -1867,4 +1895,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2022-01-12T13:26:55.463074396Z"
+generated: "2022-01-13T08:03:44.765455332Z"
