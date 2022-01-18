@@ -39,10 +39,8 @@ spec:
               value: {{ .Values.clusterName }}
 {{- end }}
 {{- with .Values.privilegedAccess }}
-  {{- if .accessID }}
             - name: PRIVILEGED_ACCESS_ID
-              value: {{ .accessID }}
-  {{- end }}
+              value: {{ required "Privileged access ID is required" .accessID }}
   {{- if .accessKey }}
             - name: PRIVILEGED_ACCESS_KEY
               value: {{ .accessKey }}
