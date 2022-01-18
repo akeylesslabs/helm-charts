@@ -56,7 +56,7 @@ helm install RELEASE_NAME helm-charts/akeyless-secure-remote-access
 | `dockerRepositoryCreds`             | Akeyless docker repository credentials. Please contact Akeyless. **Required**                                                                                | `nil` 
 | `apiGatewayURL`                    | API Gateway URL to use to fetch the secrets **Required**                                                                      | `https://rest.akeyless.io`
 | `privilegedAccess`                    | Supported auth methods: AWS IAM, Azure AD, GCP and API Key.For AWS IAM or Azure AD, or GCP provide only accessID. For API Key, provide both accessID and accessKey                                                                       | ` `
-| `privilegedAccess.accessID`                    | API key accessID                                                                           | ` `
+| `privilegedAccess.accessID`                    | Privileged access ID (API Key, Azure AD, GCP, AWS IAM) **Required**                                                              | ` `
 | `privilegedAccess.accessKey`                    | API key accessKey                                                                           | ` `
 | `privilegedAccess.allowedAccessIDs`                    | limit access to privileged items only for these end user access ids. If left empty, all access ids are allowedCredentials                                                                           | `[]`
 | `privilegedAccess.azureObjectID`                    | Azure Object ID to use with privileged credentials of type Azure AD                                                                           | `nil`
