@@ -175,7 +175,9 @@ webWorker:
               "Mode": "none",
               "Locked": true
             },
-            "Preferences": {},
+            "Preferences": {
+              "browser.cache.disk.enable": false
+            },
             "WebsiteFilter": {
               "Block": [
                 "<all_urls>"
