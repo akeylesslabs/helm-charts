@@ -87,9 +87,9 @@ spec:
               value: {{ include "akeyless-zero-web-access.fullname" . }}-discovery
             - name: VERSION
               value: {{ .Chart.AppVersion }}
-{{- if .Values.clusterName }}
+{{- if .Values.dispatcher.config.clusterName }}
             - name: CLUSTER_NAME
-              value: {{ .Values.clusterName }}
+              value: {{ .Values.dispatcher.config.clusterName }}
 {{- end }}
           {{- range $key, $value := .Values.dispatcher.env }}
             - name: {{ $key }}
