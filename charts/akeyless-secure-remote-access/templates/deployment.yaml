@@ -10,7 +10,9 @@ spec:
   selector:
     matchLabels:
       app: zero-trust-bastion
+  {{- if not .Values.ztbConfig.HPA.enabled }}
   replicas: {{ .Values.ztbConfig.replicaCount }}
+  {{- end }}
   template:
     metadata:
       labels:

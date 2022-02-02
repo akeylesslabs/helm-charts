@@ -7,7 +7,9 @@ metadata:
     {{- include "akeyless-ssh-proxy.labels" . | nindent 4 }}
 spec:
   serviceName: {{ include "akeyless-ssh-proxy.fullname" . }}
+  {{- if not .Values.HPA.enabled }}
   replicas: {{ .Values.replicaCount }}
+  {{- end }}
   updateStrategy:
     type: {{ .Values.updateStrategy }}
   selector:

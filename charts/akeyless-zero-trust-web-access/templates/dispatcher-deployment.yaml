@@ -9,7 +9,9 @@ spec:
   selector:
     matchLabels:
       app: dispatcher
+  {{- if not .Values.HPA.enabled }}
   replicas: {{ .Values.dispatcher.replicaCount }}
+  {{- end }}
   template:
     metadata:
       labels:
