@@ -149,6 +149,33 @@ akeylessUserAuth:
 #  - customer-fragments
 existingSecret: 
 
+
+# Specifies an initial configuration for the defaults section
+defaultsConf:
+  # defaultSamlAccessId:
+  # defaultOidcAccessId:
+  # defaultEncryptionKey:
+  # defaultSecretLocation:
+
+
+# Specifies an initial configuration for the caching section
+cachingConf:
+  # cacheEnable: <true/false>
+  # cacheTTL:
+  # proActiveCacheEnable:  <true/false>
+  # proActiveCacheMinimumFetchingTime:
+  # proActiveCacheDumpInterval:
+
+
+# Specifies an initial configuration for logand (log forwarding)
+# for example:
+# 
+# logandConf: |-
+#   target_syslog_host="127.0.0.1:514"
+#   target_datadog_log_tags=""
+#   pull_interval_sec="10"
+logandConf:
+
 HPA:
   # Set the below to false in case you do not want to add Horizontal Pod AutoScaling to the StatefulSet (not recommended)
   # Note that metrics server must be installed for this to work:
