@@ -1,0 +1,12 @@
+{{- if .Values.logandConf }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logand-conf
+  namespace: {{ .Release.Namespace }}
+  labels:
+    chart: {{ $.Chart.Name }}
+data:
+  logand.conf: |-
+{{ .Values.logandConf | indent 4 }}
+{{- end }}
