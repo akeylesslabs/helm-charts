@@ -89,6 +89,13 @@ spec:
                   name: {{ include "akeyless-api-gw.secretName" . }}
                   key: admin-access-id
           {{- end }}
+          {{- if eq (include "akeyless-api-gw.adminAccessUidExist" .) "true" }}
+            - name: ADMIN_UID_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "akeyless-api-gw.secretName" . }}
+                  key: admin-uid-token
+          {{- end }}
           {{- if eq (include "akeyless-api-gw.allowedAccessIDsExist" .) "true" }}
             - name: ALLOWED_ACCESS_IDS
               valueFrom:
@@ -121,6 +128,26 @@ spec:
           {{- if .Values.akeylessUserAuth.configProtectionKeyName }}
             - name: CONFIG_PROTECTION_KEY_NAME
               value: {{ .Values.akeylessUserAuth.configProtectionKeyName }}
+          {{- end }}
+          {{- if or (.Values.clusterCache.enabled) (eq (include "akeyless-api-gw.adminAccessUidExist" .) "true")  }}
+            - name:  GATEWAY_CLUSTER_CACHE
+              value: enable
+            - name: REDIS_ADDR
+              value: {{  include "akeyless-api-gw.fullname" . }}-redis-svc:6379
+            - name: REDIS_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "akeyless-api-gw.redisSecretName" . }}
+                  key: redis-pass
+          {{- if .Values.universalIdentity.uidRotationInterval }}
+            - name: UID_ROTATE_INTERVAL
+              value: {{ .Values.universalIdentity.uidRotationInterval }}
+          {{- end }}
+          {{- if .Values.universalIdentity.uidCreateChildTokenPerPod }}
+            - name: UID_CREATE_CHILD_TOKEN_PER_POD
+              value: {{ .Values.universalIdentity.uidCreateChildTokenPerPod }}
+          {{- end }}
+            
           {{- end }}
             - name: VERSION
               value: {{ .Values.version | default .Chart.AppVersion }}

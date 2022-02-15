@@ -88,6 +88,14 @@ Generate chart secret name
     {{- end -}}
 {{- end -}}
 
+{{- define "akeyless-api-gw.redisSecretName" -}}
+    {{- if .Values.existingSecret -}}
+        {{- printf "%s" .Values.existingSecret -}}
+    {{- else -}}
+        {{ $.Release.Name }}-cache-secret
+    {{- end -}}
+{{- end -}}
+
 {{/*
 Check customer fragment
 */}}
@@ -113,6 +121,23 @@ Check admin access-id
         {{- printf "true" -}}
     {{- else if and (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)) .Values.existingSecret -}}
         {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" . )) "data") "admin-access-id" -}}
+            {{- printf "true" -}}
+        {{- else -}}
+            {{- printf "false" -}}
+        {{- end -}}
+    {{- else -}}
+        {{- printf "false" -}}
+    {{- end -}}
+{{- end -}}
+
+{{/*
+Check admin access-id 
+*/}}
+{{- define "akeyless-api-gw.adminAccessUidExist" -}}
+    {{- if .Values.akeylessUserAuth.adminUniversalIdentityToken -}}
+        {{- printf "true" -}}
+    {{- else if and (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)) .Values.existingSecret -}}
+        {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" . )) "data") "admin-uid-token" -}}
             {{- printf "true" -}}
         {{- else -}}
             {{- printf "false" -}}
