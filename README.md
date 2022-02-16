@@ -24,11 +24,9 @@ This repo holds kubernetes helm charts for Akeyless services:
 
 [Akeyless K8S Secrets Injection](https://github.com/akeylesslabs/helm-charts/tree/main/charts/akeyless-k8s-secrets-injection)
 
-[Akeyless SSH Bastion](https://github.com/akeylesslabs/helm-charts/tree/main/charts/akeyless-ssh-bastion)
+[Akeyless Secure Remote Access](https://github.com/akeylesslabs/helm-charts/tree/main/charts/akeyless-secure-remote-access)
 
 [Akeyless Zero Trust Web Access](https://github.com/akeylesslabs/helm-charts/tree/main/charts/akeyless-zero-trust-web-access)
-
-[Akeyless Zero Trust Bastion](https://github.com/akeylesslabs/helm-charts/tree/main/charts/akeyless-zero-trust-bastion)
 
 ## Monitoring
 [Akeyless Monitoring](https://github.com/akeylesslabs/helm-charts/tree/main/monitoring)

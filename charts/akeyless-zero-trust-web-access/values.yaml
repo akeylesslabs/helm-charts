@@ -51,6 +51,7 @@ dispatcher:
     annotations: {}
     type: LoadBalancer
     port: 9000
+    proxyPort: 19414
 
   resources: {}
     # We usually recommend not to specify default resources and to leave this as a conscious
