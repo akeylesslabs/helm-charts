@@ -139,6 +139,7 @@ spec:
                 secretKeyRef:
                   name: {{ include "akeyless-api-gw.redisSecretName" . }}
                   key: redis-pass
+          {{- end }}
           {{- if .Values.universalIdentity.uidRotationInterval }}
             - name: UID_ROTATE_INTERVAL
               value: {{ .Values.universalIdentity.uidRotationInterval }}
@@ -146,9 +147,7 @@ spec:
           {{- if .Values.universalIdentity.uidCreateChildTokenPerPod }}
             - name: UID_CREATE_CHILD_TOKEN_PER_POD
               value: {{ .Values.universalIdentity.uidCreateChildTokenPerPod }}
-          {{- end }}
-            
-          {{- end }}
+          {{- end }}            
             - name: VERSION
               value: {{ .Values.version | default .Chart.AppVersion }}
           {{- if .Values.env }}
