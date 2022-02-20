@@ -161,16 +161,20 @@ defaultsConf:
 # Specifies an initial configuration for the caching section
 cachingConf:
   # cacheEnable: <true/false>
-  # cacheTTL:
+  # cacheTTL: The amount of time during which a secret should be cached in minutes
   # proActiveCacheEnable:  <true/false>
-  # proActiveCacheMinimumFetchingTime:
-  # proActiveCacheDumpInterval:
+  # proActiveCacheMinimumFetchingTime: The minimum fetching interval in minutes (used to avoid fetching a secret too many times in a given timeframe)
+  # proActiveCacheDumpInterval: The interval in which the proactive cache is encrypted and save to disk, in minutes
 
 
 # Specifies an initial configuration for logand (log forwarding)
+# See https://docs.akeyless.io/docs/ssh-log-forwarding#syslog-configuration
+# for more details
+#
 # for example:
 # 
 # logandConf: |-
+#   enable="true"
 #   target_syslog_host="127.0.0.1:514"
 #   target_datadog_log_tags=""
 #   pull_interval_sec="10"
