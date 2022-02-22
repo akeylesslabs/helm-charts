@@ -134,10 +134,10 @@ Check admin access-id
 Check admin access-id 
 */}}
 {{- define "akeyless-api-gw.adminAccessUidExist" -}}
-    {{- if .Values.akeylessUserAuth.adminUniversalIdentityToken -}}
+    {{- if .Values.akeylessUserAuth.adminUIInitToken -}}
         {{- printf "true" -}}
     {{- else if and (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)) .Values.existingSecret -}}
-        {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" . )) "data") "admin-uid-token" -}}
+        {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" . )) "data") "admin-uid-init-token" -}}
             {{- printf "true" -}}
         {{- else -}}
             {{- printf "false" -}}

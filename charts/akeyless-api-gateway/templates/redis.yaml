@@ -1,4 +1,4 @@
-{{- if or (.Values.clusterCache.enabled) (eq (include "akeyless-api-gw.adminAccessUidExist" .) "true") }}
+{{- if eq (include "akeyless-api-gw.adminAccessUidExist" .) "true" }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -84,7 +84,7 @@ spec:
 
 
 ---
-{{- if or (.Values.clusterCache.enabled) (eq (include "akeyless-api-gw.adminAccessUidExist" .) "true") }}
+{{- if eq (include "akeyless-api-gw.adminAccessUidExist" .) "true" }}
 apiVersion: v1
 kind: Service
 metadata:

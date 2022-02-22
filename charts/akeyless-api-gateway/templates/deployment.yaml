@@ -94,7 +94,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ include "akeyless-api-gw.secretName" . }}
-                  key: admin-uid-token
+                  key: admin-uid-init-token
           {{- end }}
           {{- if eq (include "akeyless-api-gw.allowedAccessIDsExist" .) "true" }}
             - name: ALLOWED_ACCESS_IDS
@@ -129,7 +129,7 @@ spec:
             - name: CONFIG_PROTECTION_KEY_NAME
               value: {{ .Values.akeylessUserAuth.configProtectionKeyName }}
           {{- end }}
-          {{- if or (.Values.clusterCache.enabled) (eq (include "akeyless-api-gw.adminAccessUidExist" .) "true")  }}
+          {{- if eq (include "akeyless-api-gw.adminAccessUidExist" .) "true"  }}
             - name:  GATEWAY_CLUSTER_CACHE
               value: enable
             - name: REDIS_ADDR
@@ -147,7 +147,11 @@ spec:
           {{- if .Values.universalIdentity.uidCreateChildTokenPerPod }}
             - name: UID_CREATE_CHILD_TOKEN_PER_POD
               value: {{ .Values.universalIdentity.uidCreateChildTokenPerPod }}
-          {{- end }}            
+          {{- end }}   
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name         
             - name: VERSION
               value: {{ .Values.version | default .Chart.AppVersion }}
           {{- if .Values.env }}

@@ -40,12 +40,12 @@ service:
 
 
 livenessProbe:
-  initialDelaySeconds: 120
+  initialDelaySeconds: 60
   periodSeconds: 60
   failureThreshold: 10
 
 readinessProbe:
-  initialDelaySeconds: 120 # Startup can take time
+  initialDelaySeconds: 60 # Startup can take time
   periodSeconds: 10
   timeoutSeconds: 5
 
@@ -115,19 +115,17 @@ resources: {}
   #   memory: 128Mi
 
 # Akeyless API Gateway application version
-version: 2.37.0-test7
+version: 2.37.0-test11
 
 env: []
 
-clusterCache:
-  enabled: false
 
 akeylessUserAuth:
   # adminAccessId is required field for supported types: access_key,password or cloud identity(aws_iam/azure_ad/gcp_gce)
   adminAccessId: 
   adminAccessKey:
   adminPassword:
-  adminUniversalIdentityToken: u-AQAAADwAAABUzQRiMa3RiehxkDsaRBaqKi8mQEK+ZAMuOWMyNmQybWl1dWdk
+  adminUIInitToken: 
   clusterName: my-uid-cluster
   initialClusterDisplayName:
   # The key which is used to encrypt the API Gateway configuration. 
@@ -136,16 +134,15 @@ akeylessUserAuth:
   configProtectionKeyName:
   # list of allowed access-ids from your account that can login to the Configuration Managment WebUI
   allowedAccessIDs:
-    - p-rs65d6fe3zk9
   # - p-1234 subClimekey1=subClimeVal1
   # - p-1234 subClimekey2=subClimeVal2
   # - p-5678 subClimekey1=subClimeVal1
   # - p-5678
 
 universalIdentity:
-  # interval im minutes, if empty the token will be rotated in ttl/2 
-  uidRotationInterval: 10 
-  uidCreateChildTokenPerPod: true  
+  # interval im minutes, if empty the token will be rotated in token-ttl/3  max=10 
+  uidRotationInterval: "5m" 
+  uidCreateChildTokenPerPod: "disable"   #<disable/enable>
     
 # Customer Fragment is a critical component that allow customers to use a Zero-Knowledge Encryption.
 # For more information: https://docs.akeyless.io/docs/implement-zero-knowledge
