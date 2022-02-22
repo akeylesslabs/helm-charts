@@ -161,7 +161,7 @@ HPA:
   memAvgUtil: 50
 
 # Specifies an initial configuration for the defaults section
-defaultsConf:
+defaultsConf: {}
   # defaultSamlAccessId:
   # defaultOidcAccessId:
   # defaultEncryptionKey:
@@ -169,7 +169,7 @@ defaultsConf:
 
 
 # Specifies an initial configuration for the caching section
-cachingConf:
+cachingConf: {}
   # cacheEnable: <true/false>
   # The amount of time during which a secret should be cached in minutes
   
