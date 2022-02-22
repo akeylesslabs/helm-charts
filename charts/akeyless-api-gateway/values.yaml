@@ -150,6 +150,51 @@ akeylessUserAuth:
 existingSecret: 
 
 
+
+
+# Specifies an initial configuration for the defaults section
+defaultsConf: {}
+  ## Default SAML Access ID to be used for initial WebUI login 
+  # defaultSamlAccessId:
+  ## Default OIDC Access ID to be used for initial WebUI login
+  # defaultOidcAccessId:
+  ## This Default Encryption Key will be selected when creating the following items: Static Secrets, Dynamic Secret Producers and Secret Migration Configurations
+  # defaultEncryptionKey:
+  ## The location of the default path to save secrets
+  # defaultSecretLocation:
+
+
+# Specifies an initial configuration for the caching section
+cachingConf: {}
+    
+  # cacheEnable: true
+  ## The amount of time during which a secret should be cached in minutes
+  # cacheTTL: 60
+
+  # proActiveCacheEnable: false
+  
+  ## The minimum fetching interval in minutes (used to avoid fetching a secret too many times in a given timeframe)
+  # proActiveCacheMinimumFetchingTime: 5
+  
+  ## The interval in which the proactive cache is encrypted and save to disk, in minutes
+  # proActiveCacheDumpInterval: 1
+
+
+## Specifies an initial configuration for log forwarding
+# for more details: https://docs.akeyless.io/docs/ssh-log-forwarding
+#
+# logandConf: |
+#   enable="true"
+#   target_log_type="splunk" #splunk/syslog/logstash/elasticsearch/logz_io/aws_s3/azure_log_analytics/datadog
+#   target_splunk_sourcetype="<your_sourcetype>"
+#   target_splunk_source="<your_source>"
+#   target_splunk_index="<your_index>"
+#   target_splunk_token="<your_token>"
+#   target_splunk_url="<your_splunk_host_address>"
+
+
+
+
 HPA:
   # Set the below to false in case you do not want to add Horizontal Pod AutoScaling to the StatefulSet (not recommended)
   # Note that metrics server must be installed for this to work:
@@ -159,76 +204,3 @@ HPA:
   maxReplicas: 14
   cpuAvgUtil: 50
   memAvgUtil: 50
-
-# Specifies an initial configuration for the defaults section
-defaultsConf: {}
-  # defaultSamlAccessId:
-  # defaultOidcAccessId:
-  # defaultEncryptionKey:
-  # defaultSecretLocation:
-
-
-# Specifies an initial configuration for the caching section
-cachingConf: {}
-  # cacheEnable: <true/false>
-  # The amount of time during which a secret should be cached in minutes
-  
-  # cacheTTL: 
-  # proActiveCacheEnable:  <true/false>
-  
-  # The minimum fetching interval in minutes (used to avoid fetching a secret too many times in a given timeframe)
-  # proActiveCacheMinimumFetchingTime: 
-  
-    # The interval in which the proactive cache is encrypted and save to disk, in minutes
-  # proActiveCacheDumpInterval: 
-
-
-# Specifies an initial configuration for log forwarding
-# for more details: https://docs.akeyless.io/docs/log-forwarding
-#
-# logandConf: |-
-#   enable="true"
-#   target_log_type="" #splunk/syslog/logstash/elasticsearch/logz_io/aws_s3/azure_log_analytics/datadog
-## syslog
-#   target_syslog_tag="ssh-audit-export"
-#   target_syslog_network="udp"
-#   target_syslog_host="<host>:<port>"
-#   target_syslog_formatter="[default=text]|cef"
-## aws_s3:
-#   target_s3_folder_prefix=""  # default value "akeyless-log"
-#   target_s3_bucket_name=""
-#   target_s3_aws_access_id=""
-#   target_s3_aws_access_key=""
-#   target_s3_aws_region=""
-## splunk
-#   target_splunk_sourcetype="<your_sourcetype>"
-#   target_splunk_source="<your_source>"
-#   target_splunk_index="<your_index>"
-#   target_splunk_token="<your_token>"
-#   target_splunk_url="<your_splunk_host_address>"
-## logstash
-#   target_logstash_dns=""
-#   target_logstash_protocol=""
-## elasticsearch
-#   target_elasticsearch_index=""
-#   target_elasticsearch_nodes=""
-#   target_elasticsearch_cloud_id=""
-#   target_elasticsearch_api_key=""
-#   target_elasticsearch_user_name=""
-#   target_elasticsearch_password=""
-#   target_elasticsearch_server_type=""
-#   target_elasticsearch_auth_type=""
-## logz_io
-#   target_logz_io_token="<TOKEN>"
-#   target_logz_io_protocol="tcp" # tcp/https
-## azure_log_analytics
-#   azure_workspace_id=""
-#   azure_workspace_key="" # can be "Primary key" or "Secondary key"
-## datadog
-#   target_datadog_host=""
-#   target_datadog_api_key=""
-#   target_datadog_log_source=""
-#   target_datadog_log_tags=""
-#   target_datadog_log_service=""
-
-

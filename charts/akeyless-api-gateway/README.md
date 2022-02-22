@@ -84,4 +84,32 @@ The following table lists the configurable parameters of the API Gateway chart a
 | `akeylessUserAuth.configProtectionKeyName`  | Akeyless Protection key name                                                                                         | `nil`                                                        |
 | `akeylessUserAuth.allowedAccessIDs`         | List of allowed Access ID's to enable multiple users to be able to login and manage API GW.                          | `nil`                                                        |
 | `customerFragments`                         | API Gateway customer fragment                                                                                        | `nil`                                                        |
-| `existingSecret`                            | Specifies an existing secret to be used for API Gateway                                                              | `Check `values.yaml` file`                                   |
+| `existingSecret`                            | Specifies an existing secret to be used for API Gateway                                                              | `Check `values.yaml` file`                                   |                                  |
+
+
+### API-Gateway defaults section configuration parameters
+
+| Parameter                                   | Description                                                                                                          | Default                                                      |
+|---------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
+| `defaultsConf.defaultSamlAccessId`            | Default SAML Access ID to be used for initial WebUI login     | `nil`                                                        |
+| `defaultsConf.defaultOidcAccessId`           | Default OIDC Access ID to be used for initial WebUI login      | `nil`                                                        |
+| `defaultsConf.defaultEncryptionKey`            | This Default Encryption Key will be selected when creating the following items: Static Secrets, Dynamic Secret Producers and Secret Migration Configurations                        | `nil`                                                        |
+| `defaultsConf.defaultSecretLocation`              | The location of the default path to save secrets                   | `nil`                                                        |
+
+
+### API-Gateway caching section configuration parameters
+
+| Parameter                                   | Description                                                                                                          | Default                                                      |
+|---------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
+| `cachingConf.cacheEnable`            | Should Caching be enabled                                                                       | `nil`                                                        |
+| `cachingConf.cacheTTL`           | Stale timeout in minutes, cache entries which are not accessed within timeout will be removed from cache | `nil`                                                        |
+| `cachingConf.proActiveCacheEnable`            | Should Proactive Caching be enabled                           | `nil`                                                        |
+| `cachingConf.proActiveCacheMinimumFetchingTime`              | When using Caching or/and Proactive Caching, additional secrets will be fetched upon requesting a secret, based on the requestor's access policy. Define minimum fetching interval to avoid over fetching in a given time frame. name                                                                                                                                                                    | `nil`
+| `cachingConf.proActiveCacheDumpInterval`              | To ensure service continuity in case of power cycle and network outage secrets will be backed up periodically per backup interval.                                                                                              | `nil`                                                          |
+
+
+### API-Gatewaylogand configuration
+
+| Parameter                                   | Description                                                                                                          | Default                                                      |
+|---------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
+| `logandConf`            |  Specifies an initial configuration for log forwarding. for more details: https://docs.akeyless.io/docs/log-forwarding                                                                       |                                                         |
