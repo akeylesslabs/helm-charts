@@ -163,25 +163,25 @@ spec:
               value: {{ .Values.defaultsConf.defaultSecretLocation }}
           {{- end }}
           ## caching section
-          {{- if .Values.cachingConf.cacheEnable }}
+          {{- if .Values.cachingConf.enabled }}
             - name: CACHE_ENABLE
-              value: "{{ .Values.cachingConf.cacheEnable }}"
+              value: "{{ .Values.cachingConf.enabled }}"
           {{- end }}
           {{- if .Values.cachingConf.cacheTTL }}
             - name: CACHE_TTL
               value: "{{ .Values.cachingConf.cacheTTL }}"
           {{- end }}
-          {{- if .Values.cachingConf.proActiveCacheEnable }}
+          {{- if .Values.cachingConf.proActiveCaching.enabled }}
             - name: PROACTIVE_CACHE_ENABLE
-              value: "{{ .Values.cachingConf.proActiveCacheEnable }}"
+              value: "{{ .Values.cachingConf.proActiveCaching.enabled }}"
           {{- end }}
-          {{- if .Values.cachingConf.proActiveCacheMinimumFetchingTime }}
+          {{- if .Values.cachingConf.proActiveCaching.minimumFetchingTime }}
             - name: PROACTIVE_CACHE_MINIMUM_FETCHING_TIME
-              value: "{{ .Values.cachingConf.proActiveCacheMinimumFetchingTime }}"
+              value: "{{ .Values.cachingConf.proActiveCaching.minimumFetchingTime }}"
           {{- end }}
-          {{- if .Values.cachingConf.proActiveCacheDumpInterval }}
+          {{- if .Values.cachingConf.proActiveCaching.dumpInterval }}
             - name: PROACTIVE_CACHE_DUMP_INTERVAL
-              value: "{{ .Values.cachingConf.proActiveCacheDumpInterval }}"
+              value: "{{ .Values.cachingConf.proActiveCaching.dumpInterval }}"
           {{- end }}
           # end provision
 

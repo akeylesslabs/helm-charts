@@ -165,19 +165,19 @@ defaultsConf: {}
 
 
 # Specifies an initial configuration for the caching section
-cachingConf: {}
-    
-  # cacheEnable: true
+cachingConf:
+  enabled: false
   ## The amount of time during which a secret should be cached in minutes
   # cacheTTL: 60
 
-  # proActiveCacheEnable: false
+  proActiveCaching:
+    enabled: false
   
-  ## The minimum fetching interval in minutes (used to avoid fetching a secret too many times in a given timeframe)
-  # proActiveCacheMinimumFetchingTime: 5
-  
-  ## The interval in which the proactive cache is encrypted and save to disk, in minutes
-  # proActiveCacheDumpInterval: 1
+    ## The minimum fetching interval in minutes (used to avoid fetching a secret too many times in a given timeframe)
+    # minimumFetchingTime: 5
+    
+    ## The interval in which the proactive cache is encrypted and save to disk, in minutes
+    # dumpInterval: 1
 
 
 ## Specifies an initial configuration for log forwarding
