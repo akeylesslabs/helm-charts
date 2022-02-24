@@ -135,12 +135,12 @@ spec:
             - name:  GATEWAY_CLUSTER_CACHE
               value: enable
             - name: REDIS_ADDR
-              value: {{  include "akeyless-api-gw.fullname" . }}-redis-svc:6379
+              value: {{  include "akeyless-api-gw.fullname" . }}-cache-svc:6379
             - name: REDIS_PASS
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "akeyless-api-gw.redisSecretName" . }}
-                  key: redis-pass
+                  name: {{ include "akeyless-api-gw.cacheSecretName" . }}
+                  key: cache-pass
           {{- end }}
           {{- if .Values.universalIdentity.uidRotationInterval }}
             - name: UID_ROTATE_INTERVAL

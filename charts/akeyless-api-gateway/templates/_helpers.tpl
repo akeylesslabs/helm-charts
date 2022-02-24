@@ -88,7 +88,7 @@ Generate chart secret name
     {{- end -}}
 {{- end -}}
 
-{{- define "akeyless-api-gw.redisSecretName" -}}
+{{- define "akeyless-api-gw.cacheSecretName" -}}
     {{- if .Values.existingSecret -}}
         {{- printf "%s" .Values.existingSecret -}}
     {{- else -}}
@@ -134,7 +134,7 @@ Check admin access-id
 Check admin access-id 
 */}}
 {{- define "akeyless-api-gw.adminAccessUidExist" -}}
-    {{- if .Values.akeylessUserAuth.adminUIInitToken -}}
+    {{- if .Values.akeylessUserAuth.adminUIDInitToken -}}
         {{- printf "true" -}}
     {{- else if and (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)) .Values.existingSecret -}}
         {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" . )) "data") "admin-uid-init-token" -}}

@@ -3,32 +3,32 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    name: {{ include "akeyless-api-gw.fullname" . }}-redis
+    name: {{ include "akeyless-api-gw.fullname" . }}-cache
   namespace: {{ .Release.Namespace | quote }}
   labels:
 {{- include "akeyless-api-gw.labels" . | nindent 4 }}
-    name: {{ template "akeyless-api-gw.fullname" . }}-redis
+    name: {{ template "akeyless-api-gw.fullname" . }}-cache
     component: cache
-  name: {{ template "akeyless-api-gw.fullname" . }}-redis
+  name: {{ template "akeyless-api-gw.fullname" . }}-cache
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: {{ template "akeyless-api-gw.fullname" . }}-redis
+      name: {{ template "akeyless-api-gw.fullname" . }}-cache
   template:
     metadata:
       labels:
-        name: {{ template "akeyless-api-gw.fullname" . }}-redis
+        name: {{ template "akeyless-api-gw.fullname" . }}-cache
         component: cache
     spec:
       containers:
-      - name: {{ template "akeyless-api-gw.fullname" . }}-redis
-        image: docker.io/bitnami/redis:6.2
+      - name: {{ template "akeyless-api-gw.fullname" . }}-cache
+        image: docker.io/bitnami/redis:6.2 
         imagePullPolicy: Always
-        #args: ["--requirepass", "$(REDIS_PASS)"]
+        #args: ["--requirepass", "$(REDIS_PASSWORD)"]
         ports:
         - containerPort: 6379
-          name: redis
+          name: cache
         livenessProbe:
           exec:
             command:
@@ -78,8 +78,8 @@ spec:
         - name: REDIS_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ include "akeyless-api-gw.redisSecretName" . }}
-              key: redis-pass
+              name: {{ include "akeyless-api-gw.cacheSecretName" . }}
+              key: cache-pass
 {{- end}}
 
 
@@ -88,7 +88,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{  include "akeyless-api-gw.fullname" . }}-redis-svc
+  name: {{  include "akeyless-api-gw.fullname" . }}-cache-svc
   labels:
 {{- include "akeyless-api-gw.labels" . | nindent 4 }}
 spec:
@@ -96,6 +96,6 @@ spec:
   - port: 6379
     protocol: TCP
   selector:
-    name: {{ template "akeyless-api-gw.fullname" . }}-redis
+    name: {{ template "akeyless-api-gw.fullname" . }}-cache
   type: ClusterIP
 {{- end }}

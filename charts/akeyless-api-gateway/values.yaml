@@ -125,7 +125,7 @@ akeylessUserAuth:
   adminAccessId: 
   adminAccessKey:
   adminPassword:
-  adminUIInitToken: 
+  adminUIDInitToken: u-AQAAAA8AAADYXhZiDcsUO/SrMmR5vWRAE5Gll81A5bsuOWMyNmQybWl1dWdk
   clusterName: my-uid-cluster
   initialClusterDisplayName:
   # The key which is used to encrypt the API Gateway configuration. 
@@ -134,6 +134,7 @@ akeylessUserAuth:
   configProtectionKeyName:
   # list of allowed access-ids from your account that can login to the Configuration Managment WebUI
   allowedAccessIDs:
+    - p-rs65d6fe3zk9
   # - p-1234 subClimekey1=subClimeVal1
   # - p-1234 subClimekey2=subClimeVal2
   # - p-5678 subClimekey1=subClimeVal1
