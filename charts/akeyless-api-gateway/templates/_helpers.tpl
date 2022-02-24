@@ -197,3 +197,14 @@ Check admin password
         {{- printf "false" -}}
     {{- end -}}
 {{- end -}}
+
+{{/*
+Check logand conf
+*/}}
+{{- define "akeyless-api-gw.logandConfExist" -}}
+    {{- if .Values.logandConf -}}
+        {{- printf "true" -}}
+    {{- else -}}
+        {{- printf "false" -}}
+    {{- end -}}
+{{- end -}}
