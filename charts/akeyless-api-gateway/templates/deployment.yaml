@@ -18,18 +18,27 @@ spec:
     metadata:
       labels:
         {{- include "akeyless-api-gw.selectorLabels" . | nindent 8 }}
-    spec:
-      {{- if eq (include "akeyless-api-gw.customerFragmentExist" .) "true" }}
+    spec:    
+      {{- if or (eq (include "akeyless-api-gw.customerFragmentExist" .) "true") (eq (include "akeyless-api-gw.logandConfExist" .) "true")}}
       volumes:
       - name: akeyless-config
         emptyDir: {}
+      {{- if eq (include "akeyless-api-gw.customerFragmentExist" .) "true"}}
       - name: customer-fragments-secret
         secret:
           secretName: {{ include "akeyless-api-gw.secretName" . }}
           items:
             - key: customer-fragments
               path: customer_fragments.json
-
+      {{- end }}
+      {{- if eq (include "akeyless-api-gw.logandConfExist" .) "true"}}
+      - name: logand-conf
+        secret:
+          secretName: logand-conf
+          items:
+            - key: logand-conf
+              path: logand.conf
+      {{- end }}
       initContainers:
         # Since k8s 1.9.4, config maps mount read-only volumes. Since the Docker image also writes to the config file,
         # the file must be mounted as read-write. We use init containers to copy from the config map read-only
@@ -42,13 +51,24 @@ spec:
             - "-c"
             - |
               set -ex
+            {{- if eq (include "akeyless-api-gw.customerFragmentExist" .) "true"}}
               [ "$(ls /customer_fragments)" ] && cp /customer_fragments/* /root/.akeyless
+            {{- end }}
+            {{- if eq (include "akeyless-api-gw.logandConfExist" .) "true"}}
+              cp /logand_conf/logand.conf /root/.akeyless/logand.conf
+            {{- end }} 
           volumeMounts:
+          {{- if eq (include "akeyless-api-gw.customerFragmentExist" .) "true"}}
             - name: customer-fragments-secret
               mountPath: /customer_fragments
+          {{- end }}
             - name: akeyless-config
               mountPath: /root/.akeyless
-      {{- end }}
+          {{- if eq (include "akeyless-api-gw.logandConfExist" .) "true"}}
+            - name: logand-conf
+              mountPath: /logand_conf
+          {{- end}}
+      {{- end }} #spec
       containers:
         - name: {{ .Values.containerName }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -76,11 +96,11 @@ spec:
               path: /
               port: 8080
 {{- toYaml .Values.readinessProbe | trim | nindent 12 }}
-          {{- if eq (include "akeyless-api-gw.customerFragmentExist" .) "true" }}
+         {{- if or (eq (include "akeyless-api-gw.customerFragmentExist" .) "true") (eq (include "akeyless-api-gw.logandConfExist" .) "true")}}
           volumeMounts:
             - name: akeyless-config
               mountPath: /root/.akeyless
-          {{- end }}
+          {{- end}}
           resources:
 {{- toYaml .Values.resources | nindent 12 }}
           env:
@@ -124,6 +144,47 @@ spec:
             - name: CONFIG_PROTECTION_KEY_NAME
               value: {{ .Values.akeylessUserAuth.configProtectionKeyName }}
           {{- end }}
+          # provision initial configuration
+          ## Defaults section
+          {{- if .Values.defaultsConf.defaultSamlAccessId }}
+            - name: DEFAULT_SAML_ACCESS_ID
+              value: {{ .Values.defaultsConf.defaultSamlAccessId }}
+          {{- end }}
+          {{- if .Values.defaultsConf.defaultOidcAccessId }}
+            - name: DEFAULT_OIDC_ACCESS_ID
+              value: {{ .Values.defaultsConf.defaultOidcAccessId }}
+          {{- end }}
+          {{- if .Values.defaultsConf.defaultEncryptionKey }}
+            - name: DEFAULT_ENCRYPTION_KEY
+              value: {{ .Values.defaultsConf.defaultEncryptionKey }}
+          {{- end }}
+           {{- if .Values.defaultsConf.defaultSecretLocation }}
+            - name: DEFAULT_SECRET_LOCATION
+              value: {{ .Values.defaultsConf.defaultSecretLocation }}
+          {{- end }}
+          ## caching section
+          {{- if .Values.cachingConf.enabled }}
+            - name: CACHE_ENABLE
+              value: "{{ .Values.cachingConf.enabled }}"
+          {{- end }}
+          {{- if .Values.cachingConf.cacheTTL }}
+            - name: CACHE_TTL
+              value: "{{ .Values.cachingConf.cacheTTL }}"
+          {{- end }}
+          {{- if .Values.cachingConf.proActiveCaching.enabled }}
+            - name: PROACTIVE_CACHE_ENABLE
+              value: "{{ .Values.cachingConf.proActiveCaching.enabled }}"
+          {{- end }}
+          {{- if .Values.cachingConf.proActiveCaching.minimumFetchingTime }}
+            - name: PROACTIVE_CACHE_MINIMUM_FETCHING_TIME
+              value: "{{ .Values.cachingConf.proActiveCaching.minimumFetchingTime }}"
+          {{- end }}
+          {{- if .Values.cachingConf.proActiveCaching.dumpInterval }}
+            - name: PROACTIVE_CACHE_DUMP_INTERVAL
+              value: "{{ .Values.cachingConf.proActiveCaching.dumpInterval }}"
+          {{- end }}
+          # end provision
+
             - name: VERSION
               value: {{ .Values.version | default .Chart.AppVersion }}
           {{- if .Values.env }}

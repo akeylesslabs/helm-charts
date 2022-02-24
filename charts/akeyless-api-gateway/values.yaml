@@ -149,6 +149,52 @@ akeylessUserAuth:
 #  - customer-fragments
 existingSecret: 
 
+
+
+
+# Specifies an initial configuration for the defaults section
+defaultsConf: {}
+  ## Default SAML Access ID to be used for initial WebUI login 
+  # defaultSamlAccessId:
+  ## Default OIDC Access ID to be used for initial WebUI login
+  # defaultOidcAccessId:
+  ## This Default Encryption Key will be selected when creating the following items: Static Secrets, Dynamic Secret Producers and Secret Migration Configurations
+  # defaultEncryptionKey:
+  ## The location of the default path to save secrets
+  # defaultSecretLocation:
+
+
+# Specifies an initial configuration for the caching section
+cachingConf:
+  enabled: false
+  ## The amount of time during which a secret should be cached in minutes
+  # cacheTTL: 60
+
+  proActiveCaching:
+    enabled: false
+  
+    ## The minimum fetching interval in minutes (used to avoid fetching a secret too many times in a given timeframe)
+    # minimumFetchingTime: 5
+    
+    ## The interval in which the proactive cache is encrypted and save to disk, in minutes
+    # dumpInterval: 1
+
+
+## Specifies an initial configuration for log forwarding
+# for more details: https://docs.akeyless.io/docs/ssh-log-forwarding
+#
+# logandConf: |
+#   enable="true"
+#   target_log_type="splunk" #splunk/syslog/logstash/elasticsearch/logz_io/aws_s3/azure_log_analytics/datadog
+#   target_splunk_sourcetype="<your_sourcetype>"
+#   target_splunk_source="<your_source>"
+#   target_splunk_index="<your_index>"
+#   target_splunk_token="<your_token>"
+#   target_splunk_url="<your_splunk_host_address>"
+
+
+
+
 HPA:
   # Set the below to false in case you do not want to add Horizontal Pod AutoScaling to the StatefulSet (not recommended)
   # Note that metrics server must be installed for this to work:
