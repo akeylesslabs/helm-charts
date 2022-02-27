@@ -122,7 +122,7 @@ env: []
 
 akeylessUserAuth:
   # adminAccessId is required field for supported types: access_key,password or cloud identity(aws_iam/azure_ad/gcp_gce)
-  adminAccessId: 
+  adminAccessId:
   adminAccessKey:
   adminPassword:
   adminUIDInitToken:
@@ -133,7 +133,7 @@ akeylessUserAuth:
   # This key can be determined on cluster bringup only and cannot be modified afterwards
   configProtectionKeyName:
   # list of allowed access-ids from your account that can login to the Configuration Managment WebUI
-  allowedAccessIDs:
+  allowedAccessIDs: []
   # - p-1234 subClimekey1=subClimeVal1
   # - p-1234 subClimekey2=subClimeVal2
   # - p-5678 subClimekey1=subClimeVal1
