@@ -19,5 +19,9 @@ spec:
       port: {{ .Values.dispatcher.service.port }}
       targetPort: web
       protocol: TCP
+    - name: proxy
+      port: {{ .Values.dispatcher.service.proxyPort }}
+      targetPort: proxy
+      protocol: TCP
   selector:
     app: dispatcher
