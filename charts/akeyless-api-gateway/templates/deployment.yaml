@@ -71,7 +71,6 @@ spec:
       {{- end }} #spec
       containers:
         - name: {{ .Values.containerName }}
-#(eq (include "akeyless-api-gw.logandConfExist" .) "true")
           {{- if .Values.akeylessStrictMode  }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}-akeyless"
           {{else}}
