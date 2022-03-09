@@ -111,13 +111,6 @@ spec:
                   name: {{ include "akeyless-api-gw.secretName" . }}
                   key: admin-access-id
           {{- end }}
-          {{- if eq (include "akeyless-api-gw.adminAccessUidExist" .) "true" }}
-            - name: ADMIN_UID_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "akeyless-api-gw.secretName" . }}
-                  key: admin-uid-init-token
-          {{- end }}
           {{- if eq (include "akeyless-api-gw.allowedAccessIDsExist" .) "true" }}
             - name: ALLOWED_ACCESS_IDS
               valueFrom:
@@ -152,6 +145,11 @@ spec:
               value: {{ .Values.akeylessUserAuth.configProtectionKeyName }}
           {{- end }}
           {{- if eq (include "akeyless-api-gw.adminAccessUidExist" .) "true"  }}
+            - name: ADMIN_UID_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "akeyless-api-gw.secretName" . }}
+                  key: admin-uid-init-token
             - name:  GATEWAY_CLUSTER_CACHE
               value: enable
             - name: REDIS_ADDR

@@ -51,7 +51,6 @@ spec:
                   echo "$response"
                   exit 1
                 fi               
-
           initialDelaySeconds: 5
           periodSeconds: 5
         readinessProbe:
@@ -80,11 +79,8 @@ spec:
             secretKeyRef:
               name: {{ include "akeyless-api-gw.cacheSecretName" . }}
               key: cache-pass
-{{- end}}
-
-
 ---
-{{- if eq (include "akeyless-api-gw.adminAccessUidExist" .) "true" }}
+
 apiVersion: v1
 kind: Service
 metadata:
