@@ -80,6 +80,8 @@ spec:
           ports:
             - containerPort: 9000
               name: web
+            - containerPort: 19414
+              name: proxy
             - containerPort: 12411
               name: akl
             - containerPort: 2000

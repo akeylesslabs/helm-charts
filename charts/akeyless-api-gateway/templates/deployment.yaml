@@ -71,7 +71,11 @@ spec:
       {{- end }} #spec
       containers:
         - name: {{ .Values.containerName }}
+          {{- if .Values.akeylessStrictMode  }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}-akeyless"
+          {{else}}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          {{end}}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: web
