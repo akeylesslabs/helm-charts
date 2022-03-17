@@ -1,0 +1,97 @@
+{{- if eq (include "akeyless-api-gw.adminAccessUidExist" .) "true" }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    name: {{ include "akeyless-api-gw.fullname" . }}-cache
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+{{- include "akeyless-api-gw.labels" . | nindent 4 }}
+    name: {{ template "akeyless-api-gw.fullname" . }}-cache
+    component: cache
+  name: {{ template "akeyless-api-gw.fullname" . }}-cache
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: {{ template "akeyless-api-gw.fullname" . }}-cache
+  template:
+    metadata:
+      labels:
+        name: {{ template "akeyless-api-gw.fullname" . }}-cache
+        component: cache
+    spec:
+      containers:
+      - name: {{ template "akeyless-api-gw.fullname" . }}-cache
+        image: docker.io/bitnami/redis:6.2 
+        imagePullPolicy: Always
+        #args: ["--requirepass", "$(REDIS_PASSWORD)"]
+        ports:
+        - containerPort: 6379
+          name: cache
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - |            
+                #!/usr/bin/env bash -e
+                export REDISCLI_AUTH="$REDIS_PASSWORD"
+                set_response=$(
+                  redis-cli set liveness_test_key "SUCCESS"
+                )
+                response=$(
+                  redis-cli get liveness_test_key
+                )
+                del_response=$(
+                    redis-cli del liveness_test_key
+                )
+                if [ "$response" != "SUCCESS" ] ; then
+                  echo "Unable to get keys, something is wrong"
+                  echo "$response"
+                  exit 1
+                fi               
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        readinessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - |            
+              #!/usr/bin/env bash -e
+              export REDISCLI_AUTH="$REDIS_PASSWORD"
+              response=$(
+                  redis-cli ping
+              )
+              if [ "$response" != "PONG" ] ; then
+                  echo "Unable to get keys, something is wrong"
+                  echo "$response"
+                  exit 1
+                fi
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        env:
+        - name: REDIS_DISABLE_COMMANDS
+          value: "FLUSHDB,FLUSHALL"
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "akeyless-api-gw.cacheSecretName" . }}
+              key: cache-pass
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{  include "akeyless-api-gw.fullname" . }}-cache-svc
+  labels:
+{{- include "akeyless-api-gw.labels" . | nindent 4 }}
+spec:
+  ports:
+  - port: 6379
+    protocol: TCP
+  selector:
+    name: {{ template "akeyless-api-gw.fullname" . }}-cache
+  type: ClusterIP
+{{- end }}

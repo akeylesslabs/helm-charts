@@ -119,11 +119,13 @@ resources: {}
 
 env: []
 
+
 akeylessUserAuth:
   # adminAccessId is required field, supported types: access_key,password or cloud identity(aws_iam/azure_ad/gcp_gce)
-  adminAccessId:
+  adminAccessId: 
   adminAccessKey:
   adminPassword:
+  adminUIDInitToken:
   clusterName:
   initialClusterDisplayName:
   # The key which is used to encrypt the API Gateway configuration. 
@@ -137,6 +139,11 @@ akeylessUserAuth:
   # - p-5678 subClimekey1=subClimeVal1
   # - p-5678
 
+universalIdentity:
+  # interval im minutes, if empty the token will be rotated in token-ttl/3  max=10 
+  uidRotationInterval: "5m" 
+  uidCreateChildTokenPerPod: "disable"   #<disable/enable>
+    
 # Customer Fragment is a critical component that allow customers to use a Zero-Knowledge Encryption.
 # For more information: https://docs.akeyless.io/docs/implement-zero-knowledge
 #customerFragments: |
