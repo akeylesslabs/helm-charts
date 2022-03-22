@@ -12,7 +12,7 @@ tlsCertsSecretName: vault-secrets-webhook-tls-certs
 image:
   repository: akeyless/k8s-webhook-server
   pullPolicy: Always
-  tag: 0.20.9
+  tag: 0.20.10
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -33,7 +33,7 @@ service:
 
 env:
   AKEYLESS_URL: "https://vault.akeyless.io"
-  AKEYLESS_AGENT_IMAGE:  "akeyless/k8s-secrets-sidecar:0.20.9"
+  AKEYLESS_AGENT_IMAGE:  "akeyless/k8s-secrets-sidecar:0.20.10"
   AKEYLESS_ACCESS_ID: "" 
   AKEYLESS_ACCESS_TYPE: ""  # azure_ad/aws_iam/api_key/k8s
 
@@ -44,6 +44,11 @@ env:
  # AKEYLESS_API_KEY: "<api_key>"
  # AKEYLESS_CRASH_POD_ON_ERROR: "enable"
  # AKEYLESS_K8S_AUTH_CONF_NAME: "K8s_conf_name"
+
+  AKEYLESS_AGENT_LIMITS_CPU: "500m"
+  AKEYLESS_AGENT_REQUESTS_CPU: "250m"
+  AKEYLESS_AGENT_LIMITS_MEM: "128Mi"
+  AKEYLESS_AGENT_REQUESTS_MEM: "64Mi"
  
 
 resources:
