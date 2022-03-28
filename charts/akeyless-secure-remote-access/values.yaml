@@ -214,8 +214,8 @@ sshConfig:
     timeoutSeconds: 5
 
   HPA:
-    # Set the below to false in case you do not want to add Horizontal Pod AutoScaling to the StatefulSet (not recommended)
-    enabled: true
+    # Set the below to true only when using a shared persistent storage (defined at .persistence.volumes) 
+    enabled: false
     minReplicas: 1
     maxReplicas: 14
     cpuAvgUtil: 50

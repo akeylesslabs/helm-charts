@@ -1,5 +1,8 @@
 {{- if eq .Values.sshConfig.enabled true }}
 {{- if .Values.sshConfig.HPA.enabled }}
+{{- if ne (include "checkPersistenceVolume" .) "true" }}
+  {{ fail "ERROR - Cannot enable HPA without defining a shared persistent storage volume" }}
+{{- end }}
 apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
 metadata:
