@@ -973,6 +973,18 @@ entries:
   akeyless-csi-provider:
   - apiVersion: v2
     appVersion: 1.0.0
+    created: "2022-03-29T08:58:15.822787393Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-csi-provider
+    digest: 489c6f351a66a7449b28019184fb20e1fc150508c882c3cd5bd0c93637e6a70b
+    kubeVersion: '>= 1.14.0-0'
+    name: akeyless-csi-provider
+    sources:
+    - https://github.com/akeylesslabs/akeyless-csi-provider
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-csi-provider-1.0.1/akeyless-csi-provider-1.0.1.tgz
+    version: 1.0.1
+  - apiVersion: v2
+    appVersion: 1.0.0
     created: "2022-02-20T13:26:17.80058966Z"
     description: A Helm chart for Kubernetes that deploys akeyless-csi-provider
     digest: 5b241cb28a6cb52495dc6c6f09db0e0e875eb526e169063219289b8a9ffbbed8
@@ -2720,4 +2732,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2022-03-29T07:19:41.15348158Z"
+generated: "2022-03-29T08:58:15.825266523Z"
