@@ -168,6 +168,7 @@ The following table lists the configurable parameters of the SSH Bastion chart a
 
 
 ### HPA parameters
+#### Enable only when using a shared persistent storage!
 
 | Parameter                                 | Description                                                                                                          | Default                                                      |
 |-------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|

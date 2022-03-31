@@ -8,9 +8,7 @@ metadata:
     {{- include "akeyless-secure-remote-access.labels" . | nindent 4 }}
 spec:
   serviceName: {{ include "akeyless-secure-remote-access.fullname" . }}
-  {{- if not .Values.sshConfig.HPA.enabled }}
-  replicas: {{ .Values.sshConfig.replicaCount }}
-  {{- end }}
+  replicas: 1
   updateStrategy:
     type: {{ .Values.sshConfig.updateStrategy }}
   selector:
