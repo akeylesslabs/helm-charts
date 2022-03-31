@@ -14,8 +14,8 @@ type: application
 
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
-version: 1.1.41
-appVersion: 0.11.53
+version: 1.1.42
+appVersion: 0.11.54
 icon: https://akeylesslabs.github.io/helm-charts/assets/logo/akl.jpeg
 home: https://www.akeyless.io
 sources:
