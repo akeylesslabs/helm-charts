@@ -38,7 +38,7 @@ spec:
           image: "{{ .Values.csi.image.repository }}:{{ .Values.csi.image.tag }}"
           imagePullPolicy: {{ .Values.csi.image.pullPolicy }}
           args:
-            - --endpoint=/provider/akeyless.vault.sock
+            - --endpoint=/provider/akeyless.sock
             {{- if .Values.csi.extraArgs }}
               {{- toYaml .Values.csi.extraArgs | nindent 12 }}
             {{- end }}
