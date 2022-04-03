@@ -39,6 +39,16 @@ spec:
             - key: logand-conf
               path: logand.conf
       {{- end }}
+      {{- if eq (include "akeyless-api-gw.tlsCertificateExist" .) "true" }}
+      - name: tls-conf
+        secret:
+          secretName: {{ include "akeyless-api-gw.tlsSecretName" . }}
+          items:
+            - key: tls.crt
+              path: tls.crt
+            - key: tls.key
+              path: tls.key
+      {{- end }}
       initContainers:
         # Since k8s 1.9.4, config maps mount read-only volumes. Since the Docker image also writes to the config file,
         # the file must be mounted as read-write. We use init containers to copy from the config map read-only
@@ -56,6 +66,12 @@ spec:
             {{- end }}
             {{- if eq (include "akeyless-api-gw.logandConfExist" .) "true"}}
               cp /logand_conf/logand.conf /root/.akeyless/logand.conf
+            {{- end }} 
+            {{- if eq (include "akeyless-api-gw.tlsCertificateExist" .) "true"}}
+              cp /tls.crt /var/akeyless/conf/api-proxy/akeyless-api-cert.crt
+            {{- end }} 
+            {{- if eq (include "akeyless-api-gw.tlsPrivateKeyExist" .) "true"}}
+              cp /tls.key /var/akeyless/conf/api-proxy/akeyless-api-cert.key
             {{- end }} 
           volumeMounts:
           {{- if eq (include "akeyless-api-gw.customerFragmentExist" .) "true"}}
@@ -193,6 +209,37 @@ spec:
            {{- if .Values.defaultsConf.defaultSecretLocation }}
             - name: DEFAULT_SECRET_LOCATION
               value: {{ .Values.defaultsConf.defaultSecretLocation }}
+          {{- end }}
+          ## tls config
+          {{- if .Values.TLSConf.akeylessWebUI }}
+            - name: ENABLE_TLS
+              value: "{{ .Values.TLSConf.akeylessWebUI }}"
+          {{- end }}
+          {{- if .Values.TLSConf.vaultProxy }}
+            - name: ENABLE_TLS_HVP
+              value: "{{ .Values.TLSConf.vaultProxy }}"
+          {{- end }}
+          {{- if .Values.TLSConf.akeylessAPIServices }}
+            - name: ENABLE_TLS_CURL
+              value: "{{ .Values.TLSConf.akeylessAPIServices }}"
+          {{- end }}
+          {{- if .Values.TLSConf.configurationManager }}
+            - name: ENABLE_TLS_CONFIGURE
+              value: "{{ .Values.TLSConf.configurationManager }}"
+          {{- end }}
+          {{- if eq (include "akeyless-api-gw.tlsCertificateExist" .) "true" }}
+            - name: TLS_CERT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "akeyless-api-gw.tlsSecretName" . }}
+                  key: tls.crt
+          {{- end }}
+          {{- if eq (include "akeyless-api-gw.tlsPrivateKeyExist" .) "true" }}
+            - name: TLS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "akeyless-api-gw.tlsSecretName" . }}
+                  key: tls.key
           {{- end }}
           ## caching section
           {{- if .Values.cachingConf.enabled }}

@@ -88,12 +88,12 @@ Generate chart secret name
     {{- end -}}
 {{- end -}}
 
+{{- define "akeyless-api-gw.tlsSecretName" -}}
+        {{ $.Release.Name }}-conf-tls
+{{- end -}}
+
 {{- define "akeyless-api-gw.cacheSecretName" -}}
-    {{- if .Values.existingSecret -}}
-        {{- printf "%s" .Values.existingSecret -}}
-    {{- else -}}
         {{ $.Release.Name }}-cache-secret
-    {{- end -}}
 {{- end -}}
 
 {{/*
@@ -204,6 +204,40 @@ Check logand conf
 {{- define "akeyless-api-gw.logandConfExist" -}}
     {{- if .Values.logandConf -}}
         {{- printf "true" -}}
+    {{- else -}}
+        {{- printf "false" -}}
+    {{- end -}}
+{{- end -}}
+
+{{/*
+Check tlsCertificate
+*/}}
+{{- define "akeyless-api-gw.tlsCertificateExist" -}}
+    {{- if .Values.TLSConf.tlsCertificate -}}
+        {{- printf "true" -}}
+    {{- else if and (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)) .Values.existingSecret -}}
+        {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" . )) "data") "tls-certificate" -}}
+            {{- printf "true" -}}
+        {{- else -}}
+            {{- printf "false" -}}
+        {{- end -}}
+    {{- else -}}
+        {{- printf "false" -}}
+    {{- end -}}
+{{- end -}}
+
+{{/*
+Check tlsPrivateKey
+*/}}
+{{- define "akeyless-api-gw.tlsPrivateKeyExist" -}}
+    {{- if .Values.TLSConf.tlsPrivateKey -}}
+        {{- printf "true" -}}
+    {{- else if and (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)) .Values.existingSecret -}}
+        {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" . )) "data") "tls-private-key" -}}
+            {{- printf "true" -}}
+        {{- else -}}
+            {{- printf "false" -}}
+        {{- end -}}
     {{- else -}}
         {{- printf "false" -}}
     {{- end -}}
