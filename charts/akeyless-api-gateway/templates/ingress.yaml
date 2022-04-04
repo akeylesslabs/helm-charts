@@ -1,5 +1,5 @@
 {{- if .Values.ingress.enabled }}
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: {{ include "checkIngressVersion.ingress.apiVersion" . }}
 kind: Ingress
 metadata:
   name: {{ include "akeyless-api-gw.fullname" . }}
@@ -20,11 +20,19 @@ spec:
     http:
       paths:
       - path: {{ $.Values.ingress.path }}
+{{- if eq (include "checkIngressVersion.ingress.apiVersion" $ ) "networking.k8s.io/v1" }}
+        pathType: ImplementationSpecific
+        backend:
+         service:
+          name: {{ include "akeyless-api-gw.fullname" $ }}
+          port:
+            name: {{ .servicePort }}
+{{- else }}
         backend:
          serviceName: {{ include "akeyless-api-gw.fullname" $ }}
          servicePort: {{ .servicePort }}
 {{- end }}
-
+{{- end }}
 {{- if $.Values.ingress.tls }}
   tls:
     {{- range .Values.ingress.rules }}
