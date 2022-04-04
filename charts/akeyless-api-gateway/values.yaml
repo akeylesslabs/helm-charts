@@ -160,7 +160,7 @@ existingSecret:
 TLSConf:
   akeylessWebUI: false
   vaultProxy: false
-  akeylessAPIServices: true
+  akeylessAPIServices:  false
   configurationManager: false
   # Specifies an existing secret for tls-certificate must include:
   # - akeyless-api-cert.crt (base64)
