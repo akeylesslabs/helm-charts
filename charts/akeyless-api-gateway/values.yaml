@@ -115,7 +115,7 @@ resources: {}
   #   memory: 128Mi
 
 # Akeyless API Gateway application version
-#version:
+# version: 
 
 env: []
 
@@ -126,7 +126,7 @@ akeylessUserAuth:
   adminAccessKey:
   adminPassword:
   adminUIDInitToken:
-  clusterName:
+  clusterName: 
   initialClusterDisplayName:
   # The key which is used to encrypt the API Gateway configuration. 
   # If left empty - the account’s default key will be used. 
@@ -156,8 +156,25 @@ universalIdentity:
 #  - customer-fragments
 existingSecret: 
 
-
-
+# Specifies an initial configuration for the general section
+TLSConf:
+  akeylessWebUI: false
+  vaultProxy: false
+  akeylessAPIServices: true
+  configurationManager: false
+  # Specifies an existing secret for tls-certificate must include:
+  # - akeyless-api-cert.crt (base64)
+  # - akeyless-api-cert.key (base64)
+  tlsExistingSecretName: 
+  # 
+  # tlsCertificate: |-
+  #   -----BEGIN CERTIFICATE-----
+  #   <cert>
+  #   -----END CERTIFICATE-----
+  # tlsPrivateKey: |-
+  #   -----BEGIN RSA PRIVATE KEY-----
+  #   <key>
+  #   -----END RSA PRIVATE KEY-----
 
 # Specifies an initial configuration for the defaults section
 defaultsConf: {}

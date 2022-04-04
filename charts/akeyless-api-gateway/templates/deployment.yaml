@@ -19,7 +19,7 @@ spec:
       labels:
         {{- include "akeyless-api-gw.selectorLabels" . | nindent 8 }}
     spec:    
-      {{- if or (eq (include "akeyless-api-gw.customerFragmentExist" .) "true") (eq (include "akeyless-api-gw.logandConfExist" .) "true")}}
+      {{- if or (eq (include "akeyless-api-gw.customerFragmentExist" .) "true") (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true" )}}
       volumes:
       - name: akeyless-config
         emptyDir: {}
@@ -43,11 +43,7 @@ spec:
       - name: tls-conf
         secret:
           secretName: {{ include "akeyless-api-gw.tlsSecretName" . }}
-          items:
-            - key: tls.crt
-              path: tls.crt
-            - key: tls.key
-              path: tls.key
+          defaultMode: 420
       {{- end }}
       initContainers:
         # Since k8s 1.9.4, config maps mount read-only volumes. Since the Docker image also writes to the config file,
@@ -68,10 +64,10 @@ spec:
               cp /logand_conf/logand.conf /root/.akeyless/logand.conf
             {{- end }} 
             {{- if eq (include "akeyless-api-gw.tlsCertificateExist" .) "true"}}
-              cp /tls.crt /var/akeyless/conf/api-proxy/akeyless-api-cert.crt
+              cp /tls_conf/akeyless-api-cert.crt /root/.akeyless/akeyless-api-cert.crt
             {{- end }} 
             {{- if eq (include "akeyless-api-gw.tlsPrivateKeyExist" .) "true"}}
-              cp /tls.key /var/akeyless/conf/api-proxy/akeyless-api-cert.key
+              cp /tls_conf/akeyless-api-cert.key /root/.akeyless/akeyless-api-cert.key
             {{- end }} 
           volumeMounts:
           {{- if eq (include "akeyless-api-gw.customerFragmentExist" .) "true"}}
@@ -83,6 +79,10 @@ spec:
           {{- if eq (include "akeyless-api-gw.logandConfExist" .) "true"}}
             - name: logand-conf
               mountPath: /logand_conf
+          {{- end}}
+          {{- if eq (include "akeyless-api-gw.tlsCertificateExist" .) "true"}}
+            - name: tls-conf
+              mountPath: /tls_conf
           {{- end}}
       {{- end }} #spec
       containers:
@@ -116,7 +116,7 @@ spec:
               path: /
               port: 8080
 {{- toYaml .Values.readinessProbe | trim | nindent 12 }}
-         {{- if or (eq (include "akeyless-api-gw.customerFragmentExist" .) "true") (eq (include "akeyless-api-gw.logandConfExist" .) "true")}}
+         {{- if or (eq (include "akeyless-api-gw.customerFragmentExist" .) "true") (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true")}}
           volumeMounts:
             - name: akeyless-config
               mountPath: /root/.akeyless
@@ -226,20 +226,6 @@ spec:
           {{- if .Values.TLSConf.configurationManager }}
             - name: ENABLE_TLS_CONFIGURE
               value: "{{ .Values.TLSConf.configurationManager }}"
-          {{- end }}
-          {{- if eq (include "akeyless-api-gw.tlsCertificateExist" .) "true" }}
-            - name: TLS_CERT
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "akeyless-api-gw.tlsSecretName" . }}
-                  key: tls.crt
-          {{- end }}
-          {{- if eq (include "akeyless-api-gw.tlsPrivateKeyExist" .) "true" }}
-            - name: TLS_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "akeyless-api-gw.tlsSecretName" . }}
-                  key: tls.key
           {{- end }}
           ## caching section
           {{- if .Values.cachingConf.enabled }}
