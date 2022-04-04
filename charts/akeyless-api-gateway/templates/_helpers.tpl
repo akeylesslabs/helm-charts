@@ -88,12 +88,16 @@ Generate chart secret name
     {{- end -}}
 {{- end -}}
 
-{{- define "akeyless-api-gw.cacheSecretName" -}}
-    {{- if .Values.existingSecret -}}
-        {{- printf "%s" .Values.existingSecret -}}
+{{- define "akeyless-api-gw.tlsSecretName" -}}
+    {{- if .Values.TLSConf.tlsExistingSecretName -}}
+        {{- printf "%s" .Values.TLSConf.tlsExistingSecretName -}}
     {{- else -}}
-        {{ $.Release.Name }}-cache-secret
+        {{ $.Release.Name }}-conf-tls
     {{- end -}}
+{{- end -}}
+
+{{- define "akeyless-api-gw.cacheSecretName" -}}
+        {{ $.Release.Name }}-cache-secret
 {{- end -}}
 
 {{/*
@@ -208,6 +212,40 @@ Check logand conf
         {{- printf "false" -}}
     {{- end -}}
 {{- end -}}
+
+{{/*
+Check tlsCertificate
+*/}}
+{{- define "akeyless-api-gw.tlsCertificateExist" -}}
+    {{- if .Values.TLSConf.tlsCertificate -}}
+        {{- printf "true" -}}
+    {{- else if and (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.tlsSecretName" .)) .Values.TLSConf.tlsExistingSecretName -}}
+        {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.tlsSecretName" . )) "data") "akeyless-api-cert.crt" -}}
+            {{- printf "true" -}}
+        {{- else -}}
+            {{- printf "false" -}}
+        {{- end -}}
+    {{- else -}}
+        {{- printf "false" -}}
+    {{- end -}}
+{{- end -}}
+
+{{/*
+Check tlsPrivateKey
+*/}}
+{{- define "akeyless-api-gw.tlsPrivateKeyExist" -}}
+    {{- if .Values.TLSConf.tlsPrivateKey -}}
+        {{- printf "true" -}}
+    {{- else if and (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.tlsSecretName" .)) .Values.TLSConf.tlsExistingSecretName -}}
+        {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.tlsSecretName" . )) "data") "akeyless-api-cert.key" -}}
+            {{- printf "true" -}}
+        {{- else -}}
+            {{- printf "false" -}}
+        {{- end -}}
+    {{- else -}}
+        {{- printf "false" -}}
+    {{- end -}}
+{{- end -}} 
 
 {{/*
 Checks kubernetes API version support for ingress BC
