@@ -98,9 +98,9 @@ The following table lists the configurable parameters of the Zero Trust Web Acce
 | `dispatcher.ingress.annotations`          | Ingress annotations                                                                                                  | `[]`                                                         |
 | `dispatcher.ingress.tls`                  | Enable TLS configuration for the hostname defined at `ingress.hostname` parameter                                    | `false`                                                      |
 | `dispatcher.ingress.existingSecret`       | Existing secret for the Ingress TLS certificate                                                                      | `nil`                                                        |  
-| `httpProxySettings.http_proxy`            | ...                                                                      | `nil`                                                        |  
-| `httpProxySettings.https_proxy`           | ...                                                                      | `nil`                                                        |  
-| `httpProxySettings.no_proxy`              | ...                                                                      | `nil`                                                        |  
+| `httpProxySettings.http_proxy`            | Standard linux HTTP Proxy, should contain the URLs of the proxies for HTTP                                           | `nil`                                                        |  
+| `httpProxySettings.https_proxy`           | Standard linux HTTP Proxy, should contain the URLs of the proxies for HTTPS                                          | `nil`                                                        |  
+| `httpProxySettings.no_proxy`              | Standard linux HTTP Proxy, should contain a comma-separated list of domain extensions proxy should not be used for   | `nil`                                                        |  
 
 ### HPA parameters
 
