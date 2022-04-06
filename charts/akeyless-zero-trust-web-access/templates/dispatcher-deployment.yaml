@@ -95,17 +95,17 @@ spec:
             - name: CLUSTER_NAME
               value: {{ .Values.dispatcher.config.clusterName }}
 {{- end }}
-{{- if .Values.proxy.http_proxy }}
+{{- if .Values.httpProxySettings.http_proxy }}
             - name: HTTP_PROXY
-              value: {{ .Values.proxy.http_proxy }}
+              value: {{ .Values.httpProxySettings.http_proxy }}
 {{- end }}
-{{- if .Values.proxy.https_proxy }}
+{{- if .Values.httpProxySettings.https_proxy }}
             - name: HTTPS_PROXY
-              value: {{ .Values.proxy.https_proxy }}
+              value: {{ .Values.httpProxySettings.https_proxy }}
 {{- end }}
-{{- if .Values.proxy.no_proxy }}
+{{- if .Values.httpProxySettings.no_proxy }}
             - name: NO_PROXY
-              value: {{ .Values.proxy.no_proxy }}
+              value: {{ .Values.httpProxySettings.no_proxy }}
 {{- end }}
             {{- range $key, $value := .Values.dispatcher.env }}
             - name: {{ $key }}

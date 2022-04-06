@@ -3,7 +3,7 @@
 image:
   dockerRepositoryCreds:
 
-proxy:
+httpProxySettings:
   http_proxy: ""
   https_proxy: ""
   no_proxy: ""
