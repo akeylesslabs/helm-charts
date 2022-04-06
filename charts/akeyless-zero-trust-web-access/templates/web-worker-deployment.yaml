@@ -80,6 +80,18 @@ spec:
               value: browser.startup.homepage=\"https://www.akeyless.io\"
             - name: DES_DOWNLOAD_PATH
               value: /etc/shared/download
+{{- if .Values.proxy.http_proxy }}
+            - name: HTTP_PROXY
+              value: {{ .Values.proxy.http_proxy }}
+{{- end }}
+{{- if .Values.proxy.https_proxy }}
+            - name: HTTPS_PROXY
+              value: {{ .Values.proxy.https_proxy }}
+{{- end }}
+{{- if .Values.proxy.no_proxy }}
+            - name: NO_PROXY
+              value: {{ .Values.proxy.no_proxy }}
+{{- end }}
           {{- if .Values.webWorker.config.displayWidth }}
             - name: DISPLAY_WIDTH
               value: {{ .Values.webWorker.config.displayWidth | quote }}

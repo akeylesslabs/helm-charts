@@ -3,6 +3,11 @@
 image:
   dockerRepositoryCreds:
 
+proxy:
+  http_proxy: ""
+  https_proxy: ""
+  no_proxy: ""
+
 dispatcher:
   replicaCount: 1
   image:

@@ -98,6 +98,9 @@ The following table lists the configurable parameters of the Zero Trust Web Acce
 | `dispatcher.ingress.annotations`          | Ingress annotations                                                                                                  | `[]`                                                         |
 | `dispatcher.ingress.tls`                  | Enable TLS configuration for the hostname defined at `ingress.hostname` parameter                                    | `false`                                                      |
 | `dispatcher.ingress.existingSecret`       | Existing secret for the Ingress TLS certificate                                                                      | `nil`                                                        |  
+| `proxy.http_proxy`                        | ...                                                                      | `nil`                                                        |  
+| `proxy.https_proxy`                       | ...                                                                      | `nil`                                                        |  
+| `proxy.no_proxy`                          | ...                                                                      | `nil`                                                        |  
 
 ### HPA parameters
 
