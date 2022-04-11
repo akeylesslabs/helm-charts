@@ -9,6 +9,12 @@ image:
 
 containerName: "api-gateway"
 
+# Linux system HTTP Proxy
+httpProxySettings:
+  http_proxy: ""
+  https_proxy: ""
+  no_proxy: ""
+
 deployment:
   annotations: {}
 

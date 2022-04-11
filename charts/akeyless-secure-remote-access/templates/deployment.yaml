@@ -79,6 +79,15 @@ spec:
                   name: {{ template "akeyless-zero-trust-bastion.secretName" . }}
                   key: aws-secret-access-key
   {{- end }}
+  {{- if .Values.httpProxySettings.https_proxy }}
+            - name: HTTPS_PROXY
+              value: {{ .Values.httpProxySettings.https_proxy }}
+  {{- end }}
+  {{- if .Values.httpProxySettings.no_proxy }}
+            - name: NO_PROXY
+              value: {{ .Values.httpProxySettings.no_proxy }}
+  {{- end }}
+
 {{- end }}
           resources:
 {{- toYaml .Values.ztbConfig.resources | nindent 12 }}

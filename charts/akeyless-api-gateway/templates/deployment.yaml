@@ -252,6 +252,14 @@ spec:
 
             - name: VERSION
               value: {{ .Values.version | default .Chart.AppVersion }}
+          {{- if .Values.httpProxySettings.https_proxy }}
+            - name: HTTPS_PROXY
+              value: {{ .Values.httpProxySettings.https_proxy }}
+          {{- end }}
+          {{- if .Values.httpProxySettings.no_proxy }}
+            - name: NO_PROXY
+              value: {{ .Values.httpProxySettings.no_proxy }}
+          {{- end }}
           {{- if .Values.env }}
   {{- toYaml .Values.env | nindent 12 }}
           {{- end }}

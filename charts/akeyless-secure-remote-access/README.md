@@ -61,6 +61,10 @@ helm install RELEASE_NAME helm-charts/akeyless-secure-remote-access
 | `privilegedAccess.allowedAccessIDs`                    | limit access to privileged items only for these end user access ids. If left empty, all access ids are allowedCredentials                                                                           | `[]`
 | `privilegedAccess.azureObjectID`                    | Azure Object ID to use with privileged credentials of type Azure AD                                                                           | `nil`
 | `privilegedAccess.gcpAudience`                    | Audience to use with privileged credentials of type GCP                                                                           | `akeyless.io`
+| `httpProxySettings.http_proxy`            | Standard linux HTTP Proxy, should contain the URLs of the proxies for HTTP                                           | `nil`                                                        |  
+| `httpProxySettings.https_proxy`           | Standard linux HTTP Proxy, should contain the URLs of the proxies for HTTPS                                          | `nil`                                                        |  
+| `httpProxySettings.no_proxy`              | Standard linux HTTP Proxy, should contain a comma-separated list of domain extensions proxy should not be used for   | `nil`                                                        |
+
 
 ## Zero Trust Bastion Parameters
 
