@@ -85,6 +85,10 @@ spec:
           - name: ALLOWED_ACCESS_IDS
             value: {{ range $index, $element := .Values.privilegedAccess.allowedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }}
 {{- end }}
+{{- if .Values.httpProxySettings.http_proxy }}
+          - name: HTTP_PROXY
+            value: {{ .Values.httpProxySettings.http_proxy }}
+{{- end }}
 {{- if .Values.httpProxySettings.https_proxy }}
           - name: HTTPS_PROXY
             value: {{ .Values.httpProxySettings.https_proxy }}
