@@ -38,6 +38,12 @@ privilegedAccess:
   # Audience to use with privileged credentials of type GCP
   gcpAudience: "akeyless.io"
 
+# Linux system HTTP Proxy
+httpProxySettings:
+  http_proxy: ""
+  https_proxy: ""
+  no_proxy: ""
+
 ####################################################
 ## Default values for akeyless-zero-trust-bastion ##
 ####################################################
