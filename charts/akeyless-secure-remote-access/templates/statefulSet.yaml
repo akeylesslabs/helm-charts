@@ -86,15 +86,15 @@ spec:
             value: {{ range $index, $element := .Values.privilegedAccess.allowedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }}
 {{- end }}
 {{- if .Values.httpProxySettings.http_proxy }}
-          - name: HTTP_PROXY
+          - name: http_proxy
             value: {{ .Values.httpProxySettings.http_proxy }}
 {{- end }}
 {{- if .Values.httpProxySettings.https_proxy }}
-          - name: HTTPS_PROXY
+          - name: https_proxy
             value: {{ .Values.httpProxySettings.https_proxy }}
 {{- end }}
 {{- if .Values.httpProxySettings.no_proxy }}
-          - name: NO_PROXY
+          - name: no_proxy
             value: {{ .Values.httpProxySettings.no_proxy }}
 {{- end }}
           livenessProbe:
