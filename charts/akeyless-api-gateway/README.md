@@ -47,6 +47,9 @@ The following table lists the configurable parameters of the API Gateway chart a
 | `readinessProbe`                          | Readiness probe configuration for API Gateway                                                                        | Check `values.yaml` file                                     |         
 | `resources.limits`                        | The resources limits for API Gateway (If HPA is enabled these must be set)                                           | `{}`                                                         |
 | `resources.requests`                      | The requested resources for API Gateway (If HPA is enabled these must be set)                                        | `{}`                                                         |
+| `httpProxySettings.http_proxy`            | Standard linux HTTP Proxy, should contain the URLs of the proxies for HTTP                                           | `nil`                                                        |  
+| `httpProxySettings.https_proxy`           | Standard linux HTTP Proxy, should contain the URLs of the proxies for HTTPS                                          | `nil`                                                        |  
+| `httpProxySettings.no_proxy`              | Standard linux HTTP Proxy, should contain a comma-separated list of domain extensions proxy should not be used for   | `nil`                                                        |
 
 ### Exposure parameters
 

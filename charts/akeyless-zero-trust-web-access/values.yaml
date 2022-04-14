@@ -3,6 +3,12 @@
 image:
   dockerRepositoryCreds:
 
+# Linux system HTTP Proxy
+httpProxySettings:
+  http_proxy: ""
+  https_proxy: ""
+  no_proxy: ""
+
 dispatcher:
   replicaCount: 1
   image:
