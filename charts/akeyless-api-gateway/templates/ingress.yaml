@@ -21,7 +21,7 @@ spec:
       paths:
       - path: {{ $.Values.ingress.path }}
 {{- if eq (include "checkIngressVersion.ingress.apiVersion" $ ) "networking.k8s.io/v1" }}
-        pathType: ImplementationSpecific
+        pathType: {{ $.Values.ingress.pathType }}
         backend:
          service:
           name: {{ include "akeyless-api-gw.fullname" $ }}
