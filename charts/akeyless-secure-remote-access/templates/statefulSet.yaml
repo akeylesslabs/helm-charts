@@ -19,14 +19,15 @@ spec:
       labels:
         app: ssh-bastion
     spec:
-      {{- with .Values.sshConfig.service_account }}
-      {{- if .enabled }}
+      {{ - with .Values.sshConfig.service_account }}
+      {{ - if .enabled }}
       serviceAccountName: {{ .serviceAccountName }}
-      {{- if .nodeSelector }}
+      {{ - if .nodeSelector }}
       nodeSelector:
       {{ toYaml .nodeSelector | indent 2 }}
-      {{- end }}
-      {{- end }}
+      {{ - end }}
+      {{ - end }}
+      {{ - end }}
       volumes:
       - name: config
         emptyDir: {}
