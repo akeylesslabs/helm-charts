@@ -109,6 +109,10 @@ ingress:
   ##
   path: /
 
+  ## Ingress Path type the value can be ImplementationSpecific, Exact or Prefix
+  ##
+  pathType: ImplementationSpecific
+
   ## Enable TLS configuration for the hostname defined at ingress.hostname parameter
   ## TLS certificates will be retrieved from a TLS secret with name: {{- printf "%s-tls" .Values.ingress.hostname }}
   ## or a custom one if you use the tls.existingSecret parameter
