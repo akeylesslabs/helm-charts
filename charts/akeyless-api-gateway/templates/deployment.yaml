@@ -8,6 +8,14 @@ metadata:
   annotations:
   {{- toYaml .Values.deployment.annotations | nindent 4 }}
 spec:
+  { { - with .Values.sshConfig.service_account } }
+  { { - if .enabled } }
+  serviceAccountName: { { .serviceAccountName } }
+  { { - if .nodeSelector } }
+  nodeSelector:
+  { { toYaml .nodeSelector | indent 2 } }
+  { { - end } }
+  { { - end } }
   {{- if not .Values.HPA.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}

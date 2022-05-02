@@ -27,7 +27,6 @@ spec:
       {{ toYaml .nodeSelector | indent 2 }}
       {{- end }}
       {{- end }}
-      {{- end }}
       volumes:
       - name: config
         emptyDir: {}
