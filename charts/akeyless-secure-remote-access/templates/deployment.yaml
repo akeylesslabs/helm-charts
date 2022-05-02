@@ -18,15 +18,15 @@ spec:
       labels:
         app: zero-trust-bastion
     spec:
-      {{ - with .Values.sshConfig.service_account }}
-      {{ - if .enabled }}
+      {{ with .Values.sshConfig.service_account }}
+      {{- if .enabled }}
       serviceAccountName: {{ .serviceAccountName }}
-      {{ - if .nodeSelector }}
+      {{- if .nodeSelector }}
       nodeSelector:
-      {{ toYaml .nodeSelector | indent 2 }}
-      {{ - end }}
-      {{ - end }}
-      {{ - end }}
+      {{ toYaml .nodeSelector | indent 4 }}
+      {{- end }}
+      {{- end }}
+      {{- end }}
       imagePullSecrets:
         - name: akeyless-docker-hub
       containers:

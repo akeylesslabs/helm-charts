@@ -8,15 +8,7 @@ metadata:
   annotations:
   {{- toYaml .Values.deployment.annotations | nindent 4 }}
 spec:
-  {{ - with .Values.deployment.service_account }}
-  {{ - if .enabled }}
-  serviceAccountName: {{ .serviceAccountName }}
-  {{ - if .nodeSelector }}
-  nodeSelector:
-  {{ toYaml .nodeSelector | indent 2 }}
-  {{ - end }}
-  {{ - end }}
-  {{ - end }}
+
   {{- if not .Values.HPA.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
@@ -27,7 +19,16 @@ spec:
     metadata:
       labels:
         {{- include "akeyless-api-gw.selectorLabels" . | nindent 8 }}
-    spec:    
+    spec:
+      {{ with .Values.deployment.service_account }}
+      {{- if .enabled }}
+      serviceAccountName: {{ .serviceAccountName }}
+      {{- if .nodeSelector }}
+      nodeSelector:
+      {{ toYaml .nodeSelector | indent 4 }}
+      {{- end }}
+      {{- end }}
+      {{- end }}
       {{- if or (eq (include "akeyless-api-gw.customerFragmentExist" .) "true") (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true" )}}
       volumes:
       - name: akeyless-config
