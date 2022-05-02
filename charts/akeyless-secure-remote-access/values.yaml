@@ -71,6 +71,8 @@ ztbConfig:
   ## ref: http://kubernetes.io/docs/user-guide/ingress/
   ##
   ingress:
+    ## From nginx ingress-controller version xxxx the annotation is no longer supported use ingressClass instead
+    # ingressClass: nginx
     ## Set to true to enable ingress record generation
     ##
     # enabled: true
@@ -164,6 +166,19 @@ sshConfig:
   ## Statefulsets rolling update update strategy
   ## Ref: https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#rolling-update
   updateStrategy: RollingUpdate
+
+
+## Enable to use gke workload identity
+## ref: https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity
+  service_account:
+    enabled: true
+    serviceAccountName: change_me
+    nodeSelector:
+      iam.gke.io/gke-metadata-server-enabled: "true"
+    annotations:
+      # TODO figure out a way to generate annotations on the fly
+      iam.gke.io/gcp-service-account: change_me_to_gcp_service_account
+
 
   image:
     repository: akeyless/ssh-proxy
