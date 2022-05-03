@@ -6,7 +6,7 @@
 ## Global ##
 ############
 
-dockerRepositoryCreds: 
+dockerRepositoryCreds:
 
 # a full URL of Akeyless API Gateway
 apiGatewayURL: https://rest.akeyless.io
@@ -71,6 +71,8 @@ ztbConfig:
   ## ref: http://kubernetes.io/docs/user-guide/ingress/
   ##
   ingress:
+    ## From nginx ingress-controller version xxxx the annotation is no longer supported use ingressClass instead
+    # ingressClass: nginx
     ## Set to true to enable ingress record generation
     ##
     # enabled: true
@@ -165,6 +167,19 @@ sshConfig:
   ## Ref: https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#rolling-update
   updateStrategy: RollingUpdate
 
+
+  service_account:
+    enabled: true
+    serviceAccountName: akeyless
+    ## For google workload identity have a look in the following link for the use of nodeSelector.
+    ## ref: https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity
+    nodeSelector:
+#      iam.gke.io/gke-metadata-server-enabled: "true"
+    annotations:
+#      - iam.gke.io/gc p-service-account: change_me_to_gcp_service_account
+#      - eks.amazonaws.com/role-arn: arn:aws:iam::40XXXXXXXX75:role/eksctl-Role1-XXXXXXXX
+
+
   image:
     repository: akeyless/ssh-proxy
     pullPolicy: Always
@@ -228,7 +243,7 @@ sshConfig:
 
   config:
     CAPublicKey:
-    # CAPublicKey: | 
+    # CAPublicKey: |
       
     sessionTermination:
     ## Session Termination is available for okta and keycloak
