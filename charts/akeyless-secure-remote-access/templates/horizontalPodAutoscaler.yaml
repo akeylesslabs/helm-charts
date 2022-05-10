@@ -1,7 +1,7 @@
 {{- if eq .Values.sshConfig.enabled true }}
 {{- if .Values.sshConfig.HPA.enabled }}
 {{- if ne (include "checkPersistenceVolume" .) "true" }}
-  {{ - printf "WARNING - HPA without defining a shared persistent storage volume can cause unexpected behavior with multiple pods" }}
+  {{ printf "WARNING - HPA without defining a shared persistent storage volume can cause unexpected behavior with multiple pods" }}
 {{- end }}
 apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
