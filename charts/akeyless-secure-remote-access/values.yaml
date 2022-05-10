@@ -169,7 +169,7 @@ sshConfig:
 
 
   service_account:
-    enabled: true
+    enabled: false
     serviceAccountName: akeyless
     ## For google workload identity have a look in the following link for the use of nodeSelector.
     ## ref: https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity
