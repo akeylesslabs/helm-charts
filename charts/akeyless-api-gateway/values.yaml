@@ -108,7 +108,7 @@ ingress:
 # Example for ingress external rule, mainly for overriding specific paths
 #    - servicePort: web
 #      hostname: "ui.gateway.local"
-#      serviceName: redirect-to-docs
+#      serviceName: redirect-to
 #      path: "/path-to-block/*"
 
   ## Path for the default host
