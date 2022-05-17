@@ -25,7 +25,7 @@ deployment:
     nodeSelector:
     #      iam.gke.io/gke-metadata-server-enabled: "true"
     annotations:
-  #      - iam.gke.io/gc p-service-account: change_me_to_gcp_service_account
+  #      - iam.gke.io/gcp-service-account: change_me_to_gcp_service_account
   #      - eks.amazonaws.com/role-arn: arn:aws:iam::40XXXXXXXX75:role/eksctl-Role1-XXXXXXXX
 
 
