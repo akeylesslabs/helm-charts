@@ -105,7 +105,7 @@ ingress:
     - servicePort: configure-app
       hostname: "conf.gateway.local"
 
-# Example for ingress external rule, mainly for overriding specific paths
+# Example for ingress external rule in AWS, mainly for overriding specific paths
 #    - servicePort: web
 #      hostname: "ui.gateway.local"
 #      serviceName: redirect-to
