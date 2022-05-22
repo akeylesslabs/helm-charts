@@ -107,17 +107,19 @@ spec:
             value: {{ .Values.httpProxySettings.no_proxy }}
 {{- end }}
           livenessProbe:
-            exec:
-              command:
-              - sh
-              - /usr/local/bin/health.sh
-{{- toYaml .Values.sshConfig.livenessProbe | trim | nindent 12 }}
+            httpGet:
+              path: /status
+              port: 9900
+            periodSeconds: 30
+            failureThreshold: 5
+            timeoutSeconds: 5
           readinessProbe:
-            exec:
-              command:
-              - sh
-              - /usr/local/bin/health.sh
-{{- toYaml .Values.sshConfig.readinessProbe | trim | nindent 12 }}
+            httpGet:
+              path: /status
+              port: 9900
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
           volumeMounts:
           {{- range .Values.sshConfig.persistence.volumes }}
             - name: {{ .name | title | lower }}

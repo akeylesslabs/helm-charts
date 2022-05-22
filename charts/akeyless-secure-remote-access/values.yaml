@@ -221,17 +221,6 @@ sshConfig:
     # requests:
     #   cpu: 100m
     #   memory: 128Mi
-  
-  livenessProbe:
-    initialDelaySeconds: 20
-    periodSeconds: 60
-    failureThreshold: 10
-    timeoutSeconds: 5
-
-  readinessProbe:
-    initialDelaySeconds: 20
-    periodSeconds: 10
-    timeoutSeconds: 5
 
   HPA:
     # Set the below to true only when using a shared persistent storage (defined at .persistence.volumes) 
