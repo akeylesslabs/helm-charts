@@ -18,8 +18,8 @@ spec:
       labels:
         app: zero-trust-bastion
     spec:
-      {{ with .Values.sshConfig.service_account }}
-      {{- if .enabled }}
+      {{- with .Values.sshConfig.service_account }}
+      {{- if  or (.enabled) (.use_existing) }}
       serviceAccountName: {{ .serviceAccountName }}
       {{- if .nodeSelector }}
       nodeSelector:
@@ -38,9 +38,9 @@ spec:
               name: api
           env:
             - name: BASTION_API
-              value: ssh-{{ include "akeyless-secure-remote-access.fullname" . }}:{{ .Values.sshConfig.service.curlProxyPort }}
+              value: "ssh-{{ include "akeyless-secure-remote-access.fullname" . }}:{{ .Values.sshConfig.service.curlProxyPort }}"
             - name: BASTION_SSH
-              value: ssh-{{ include "akeyless-secure-remote-access.fullname" . }}:{{ .Values.sshConfig.service.port }}
+              value: "ssh-{{ include "akeyless-secure-remote-access.fullname" . }}:{{ .Values.sshConfig.service.port }}"
 {{- if .Values.apiGatewayURL }}
             - name: AKEYLESS_URL
               value: {{ .Values.apiGatewayURL }}

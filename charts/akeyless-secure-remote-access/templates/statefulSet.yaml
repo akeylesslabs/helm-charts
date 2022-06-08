@@ -19,8 +19,8 @@ spec:
       labels:
         app: ssh-bastion
     spec:
-      {{ with .Values.sshConfig.service_account }}
-      {{- if .enabled }}
+      {{- with .Values.sshConfig.service_account }}
+      {{- if or (.enabled) (.use_existing)}}
       serviceAccountName: {{ .serviceAccountName }}
       {{- if .nodeSelector }}
       nodeSelector:
