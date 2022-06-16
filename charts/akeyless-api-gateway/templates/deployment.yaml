@@ -20,14 +20,10 @@ spec:
       labels:
         {{- include "akeyless-api-gw.selectorLabels" . | nindent 8 }}
     spec:
-      {{ with .Values.deployment.service_account }}
-      {{- if .enabled }}
-      serviceAccountName: {{ .serviceAccountName }}
-      {{- if .nodeSelector }}
+      serviceAccountName: {{ template "akeyless-api-gw.getServiceAccountName" . }}
+      {{- if .Values.deployment.nodeSelector }}
       nodeSelector:
-      {{ toYaml .nodeSelector | indent 4 }}
-      {{- end }}
-      {{- end }}
+      {{ toYaml .Values.deployment.nodeSelector | indent 4 }}
       {{- end }}
       {{- if or (eq (include "akeyless-api-gw.customerFragmentExist" .) "true") (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true" )}}
       volumes:

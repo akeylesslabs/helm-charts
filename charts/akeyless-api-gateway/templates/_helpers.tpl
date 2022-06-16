@@ -259,3 +259,16 @@ Checks kubernetes API version support for ingress BC
     {{- print "extensions/v1beta1" -}}
   {{- end -}}
 {{- end -}}
+
+{{/*
+Get serviceAccountName
+*/}}
+{{- define "akeyless-api-gw.getServiceAccountName" -}}
+    {{- if and (not .Values.deployment.service_account.serviceAccountName) ( not .Values.deployment.service_account.create )  }}
+        {{- printf "default" -}}
+    {{- else if not .Values.deployment.service_account.serviceAccountName }}
+        {{.Release.Name}}-akeyless-gateway
+    {{- else -}}
+        {{$.Values.deployment.service_account.serviceAccountName}}
+    {{- end -}}
+{{- end -}}

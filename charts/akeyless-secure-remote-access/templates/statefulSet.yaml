@@ -19,14 +19,10 @@ spec:
       labels:
         app: ssh-bastion
     spec:
-      {{ with .Values.sshConfig.service_account }}
-      {{- if .enabled }}
-      serviceAccountName: {{ .serviceAccountName }}
-      {{- if .nodeSelector }}
+      serviceAccountName: {{ template "akeyless-api-gw.getServiceAccountName" . }}
+      {{- if .Values.sshConfig.nodeSelector }}
       nodeSelector:
-      {{ toYaml .nodeSelector | indent 4 }}
-      {{- end }}
-      {{- end }}
+      {{ toYaml .Values.sshConfig.nodeSelector | indent 4 }}
       {{- end }}
       volumes:
       - name: config
