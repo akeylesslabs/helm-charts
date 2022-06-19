@@ -18,10 +18,12 @@ spec:
       labels:
         app: zero-trust-bastion
     spec:
-      {{- if .Values.sshConfig.securityContext.enabled }}
+      {{- if .Values.sshConfig.securityContext }}
+        {{- if .Values.sshConfig.securityContext.enabled }}
       securityContext:
         runAsUser: {{ .Values.sshConfig.securityContext.runAsUser }}
         fsGroup: {{ .Values.sshConfig.securityContext.fsGroup }}
+        {{- end }}
       {{- end }}
       serviceAccountName: {{ template "akeyless-api-gw.getServiceAccountName" . }}
       {{- if .Values.sshConfig.nodeSelector }}
