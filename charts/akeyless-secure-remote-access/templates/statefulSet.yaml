@@ -19,6 +19,11 @@ spec:
       labels:
         app: ssh-bastion
     spec:
+      {{- if .Values.sshConfig.securityContext.enabled }}
+      securityContext:
+        runAsUser: {{ .Values.sshConfig.securityContext.runAsUser }}
+        fsGroup: {{ .Values.sshConfig.securityContext.fsGroup }}
+      {{- end }}
       serviceAccountName: {{ template "akeyless-api-gw.getServiceAccountName" . }}
       {{- if .Values.sshConfig.nodeSelector }}
       nodeSelector:

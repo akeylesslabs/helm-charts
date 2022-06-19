@@ -183,7 +183,10 @@ sshConfig:
   #      eks.amazonaws.com/role-arn: arn:aws:iam::40XXXXXXXX75:role/eksctl-Role1-XXXXXXXX
   nodeSelector:
   #     iam.gke.io/gke-metadata-server-enabled: "true"
-
+  securityContext:
+    enabled: false
+    fsGroup: 1001
+    runAsUser: 1001
 
 
   image:

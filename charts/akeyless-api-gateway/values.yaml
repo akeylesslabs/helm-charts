@@ -33,7 +33,10 @@ deployment:
   nodeSelector:
     #     iam.gke.io/gke-metadata-server-enabled: "true"
 
-
+  securityContext:
+    enabled: false
+    fsGroup: 1001
+    runAsUser: 1001
 service:
   # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
   annotations: {}

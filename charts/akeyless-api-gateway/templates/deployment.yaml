@@ -20,6 +20,11 @@ spec:
       labels:
         {{- include "akeyless-api-gw.selectorLabels" . | nindent 8 }}
     spec:
+      {{- if .Values.deployment.securityContext.enabled }}
+      securityContext:
+         runAsUser: {{ .Values.deployment.securityContext.runAsUser }}
+         fsGroup: {{ .Values.deployment.securityContext.fsGroup }}
+      {{- end }}
       serviceAccountName: {{ template "akeyless-api-gw.getServiceAccountName" . }}
       {{- if .Values.deployment.nodeSelector }}
       nodeSelector:
