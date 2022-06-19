@@ -35,8 +35,8 @@ deployment:
 
   securityContext:
     enabled: false
-    fsGroup: 1001
-    runAsUser: 1001
+    fsGroup: 0
+    runAsUser: 0
 service:
   # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
   annotations: {}
