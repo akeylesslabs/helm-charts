@@ -23,8 +23,8 @@ spec:
       securityContext:
         runAsUser: {{ .Values.sshConfig.securityContext.runAsUser }}
         fsGroup: {{ .Values.sshConfig.securityContext.fsGroup }}
-      {{- end }}
         {{- end }}
+      {{- end }}
       serviceAccountName: {{ template "akeyless-api-gw.getServiceAccountName" . }}
       {{- if .Values.sshConfig.nodeSelector }}
       nodeSelector:

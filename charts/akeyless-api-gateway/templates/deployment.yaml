@@ -25,8 +25,8 @@ spec:
       securityContext:
          runAsUser: {{ .Values.deployment.securityContext.runAsUser }}
          fsGroup: {{ .Values.deployment.securityContext.fsGroup }}
-      {{- end }}
         {{- end }}
+      {{- end }}
       serviceAccountName: {{ template "akeyless-api-gw.getServiceAccountName" . }}
       {{- if .Values.deployment.nodeSelector }}
       nodeSelector:
