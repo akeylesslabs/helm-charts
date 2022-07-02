@@ -109,6 +109,9 @@ spec:
           - name: no_proxy
             value: {{ .Values.httpProxySettings.no_proxy }}
 {{- end }}
+{{- if .Values.sshConfig.env }}
+          {{- toYaml .Values.sshConfig.env | nindent 10 }}
+{{- end }}
           livenessProbe:
             httpGet:
               path: /status
