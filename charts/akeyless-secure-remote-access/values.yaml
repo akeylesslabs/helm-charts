@@ -188,6 +188,7 @@ sshConfig:
     fsGroup: 0
     runAsUser: 0
 
+  env: []
 
   image:
     repository: akeyless/ssh-proxy
