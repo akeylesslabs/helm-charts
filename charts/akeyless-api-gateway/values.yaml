@@ -2,6 +2,9 @@
 
 replicaCount: 2
 
+# akeylessStrictMode need to be enabled when using Redhat Openshift
+akeylessStrictMode: false
+
 image:
   repository: akeyless/base
   pullPolicy: IfNotPresent
