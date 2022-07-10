@@ -75,17 +75,19 @@ spec:
           - containerPort: 9900
             name: curl-proxy
           livenessProbe:
-            exec:
-              command:
-              - sh
-              - /usr/local/bin/health.sh
-{{- toYaml .Values.livenessProbe | trim | nindent 12 }}
+            httpGet:
+              path: /status
+              port: 9900
+            periodSeconds: 30
+            failureThreshold: 5
+            timeoutSeconds: 5
           readinessProbe:
-            exec:
-              command:
-              - sh
-              - /usr/local/bin/health.sh
-{{- toYaml .Values.readinessProbe | trim | nindent 12 }}
+            httpGet:
+              path: /status
+              port: 9900
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
           volumeMounts:
           {{- range .Values.persistence.volumes }}
             - name: {{ .name | title | lower }}

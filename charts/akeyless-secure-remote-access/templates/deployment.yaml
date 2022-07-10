@@ -18,6 +18,18 @@ spec:
       labels:
         app: zero-trust-bastion
     spec:
+      {{- if .Values.sshConfig.securityContext }}
+        {{- if .Values.sshConfig.securityContext.enabled }}
+      securityContext:
+        runAsUser: {{ .Values.sshConfig.securityContext.runAsUser }}
+        fsGroup: {{ .Values.sshConfig.securityContext.fsGroup }}
+        {{- end }}
+      {{- end }}
+      serviceAccountName: {{ template "akeyless-api-gw.getServiceAccountName" . }}
+      {{- if .Values.sshConfig.nodeSelector }}
+      nodeSelector:
+      {{ toYaml .Values.sshConfig.nodeSelector | indent 4 }}
+      {{- end }}
       imagePullSecrets:
         - name: akeyless-docker-hub
       containers:
@@ -29,9 +41,9 @@ spec:
               name: api
           env:
             - name: BASTION_API
-              value: ssh-{{ include "akeyless-secure-remote-access.fullname" . }}:{{ .Values.sshConfig.service.curlProxyPort }}
+              value: "ssh-{{ include "akeyless-secure-remote-access.fullname" . }}:{{ .Values.sshConfig.service.curlProxyPort }}"
             - name: BASTION_SSH
-              value: ssh-{{ include "akeyless-secure-remote-access.fullname" . }}:{{ .Values.sshConfig.service.port }}
+              value: "ssh-{{ include "akeyless-secure-remote-access.fullname" . }}:{{ .Values.sshConfig.service.port }}"
 {{- if .Values.apiGatewayURL }}
             - name: AKEYLESS_URL
               value: {{ .Values.apiGatewayURL }}

@@ -2,6 +2,9 @@
 
 replicaCount: 2
 
+# akeylessStrictMode need to be enabled when using Redhat Openshift
+akeylessStrictMode: false
+
 image:
   repository: akeyless/base
   pullPolicy: IfNotPresent
@@ -17,7 +20,26 @@ httpProxySettings:
 
 deployment:
   annotations: {}
+  service_account:
+    create: false
+    ## serviceAccountName :
+    ##   1. create=false and serviceAccountName empty - default service account will be used
+    ##   2. create=false and serviceAccountName not empty - will use an already existing service account called serviceAccountName
+    ##   3. create=true and serviceAccountName empty - will create a new service account called <release name>-akeyless-gateway
+    ##   4  create=true and serviceAccountName not empty - will create a new service account called as specified
+    serviceAccountName:
+    ## For google workload identity have a look in the following link for the use of nodeSelector.
+    ## ref: https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity
+    annotations:
+  #      iam.gke.io/gcp-service-account: change_me_to_gcp_service_account
+  #      eks.amazonaws.com/role-arn: arn:aws:iam::40XXXXXXXX75:role/eksctl-Role1-XXXXXXXX
+  nodeSelector:
+    #     iam.gke.io/gke-metadata-server-enabled: "true"
 
+  securityContext:
+    enabled: false
+    fsGroup: 0
+    runAsUser: 0
 service:
   # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
   annotations: {}
@@ -43,6 +65,8 @@ service:
       port: 8200
     - name: kmip
       port: 5696
+
+
 
 
 livenessProbe:
@@ -92,9 +116,19 @@ ingress:
     - servicePort: configure-app
       hostname: "conf.gateway.local"
 
+# Example for ingress external rule in AWS, mainly for overriding specific paths
+#    - servicePort: web
+#      hostname: "ui.gateway.local"
+#      serviceName: redirect-to
+#      path: "/path-to-block/*"
+
   ## Path for the default host
   ##
   path: /
+
+  ## Ingress Path type the value can be ImplementationSpecific, Exact or Prefix
+  ##
+  pathType: ImplementationSpecific
 
   ## Enable TLS configuration for the hostname defined at ingress.hostname parameter
   ## TLS certificates will be retrieved from a TLS secret with name: {{- printf "%s-tls" .Values.ingress.hostname }}

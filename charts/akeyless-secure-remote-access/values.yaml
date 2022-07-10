@@ -6,7 +6,7 @@
 ## Global ##
 ############
 
-dockerRepositoryCreds: 
+dockerRepositoryCreds:
 
 # a full URL of Akeyless API Gateway
 apiGatewayURL: https://rest.akeyless.io
@@ -71,6 +71,8 @@ ztbConfig:
   ## ref: http://kubernetes.io/docs/user-guide/ingress/
   ##
   ingress:
+    ## From nginx ingress-controller version xxxx the annotation is no longer supported use ingressClass instead
+    # ingressClass: nginx
     ## Set to true to enable ingress record generation
     ##
     # enabled: true
@@ -165,6 +167,29 @@ sshConfig:
   ## Ref: https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#rolling-update
   updateStrategy: RollingUpdate
 
+
+  service_account:
+    create: false
+    ## serviceAccountName :
+    ##   1. create=false and serviceAccountName empty - default service account will be used
+    ##   2. create=false and serviceAccountName not empty - will use an already existing service account called serviceAccountName
+    ##   3. create=true and serviceAccountName empty - will create a new service account called <release name>-akeyless-gateway
+    ##   4  create=true and serviceAccountName not empty - will create a new service account called as specified
+    serviceAccountName:
+    ## For google workload identity have a look in the following link for the use of nodeSelector.
+    ## ref: https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity
+    annotations:
+  #      iam.gke.io/gcp-service-account: change_me_to_gcp_service_account
+  #      eks.amazonaws.com/role-arn: arn:aws:iam::40XXXXXXXX75:role/eksctl-Role1-XXXXXXXX
+  nodeSelector:
+  #     iam.gke.io/gke-metadata-server-enabled: "true"
+  securityContext:
+    enabled: false
+    fsGroup: 0
+    runAsUser: 0
+
+  env: []
+
   image:
     repository: akeyless/ssh-proxy
     pullPolicy: Always
@@ -206,17 +231,6 @@ sshConfig:
     # requests:
     #   cpu: 100m
     #   memory: 128Mi
-  
-  livenessProbe:
-    initialDelaySeconds: 20
-    periodSeconds: 60
-    failureThreshold: 10
-    timeoutSeconds: 5
-
-  readinessProbe:
-    initialDelaySeconds: 20
-    periodSeconds: 10
-    timeoutSeconds: 5
 
   HPA:
     # Set the below to true only when using a shared persistent storage (defined at .persistence.volumes) 
@@ -228,7 +242,7 @@ sshConfig:
 
   config:
     CAPublicKey:
-    # CAPublicKey: | 
+    # CAPublicKey: |
       
     sessionTermination:
     ## Session Termination is available for okta and keycloak
