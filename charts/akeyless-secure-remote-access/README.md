@@ -47,7 +47,7 @@ The `values.yaml` file holds default values, replace the values with the ones fr
 
 To install the chart run:
 ```bash
-helm install RELEASE_NAME helm-charts/akeyless-secure-remote-access
+helm install RELEASE_NAME akeyless/akeyless-sra -f values.yaml
 ```
 ## Global Parameters
 

@@ -22,17 +22,6 @@ service:
   port: 22
   curlProxyPort: 9900
 
-livenessProbe:
-  initialDelaySeconds: 20
-  periodSeconds: 60
-  failureThreshold: 10
-  timeoutSeconds: 5
-
-readinessProbe:
-  initialDelaySeconds: 20
-  periodSeconds: 10
-  timeoutSeconds: 5
-
 # Akeyless requires data persistence to be shared within all pods in the cluster
 # Currently only ReadWriteMany is supported
 # accessMode: ReadWriteMany

@@ -97,3 +97,18 @@ Checks persistent volume
     {{- end }}  
   {{- end }}
 {{- end }}
+
+
+
+{{/*
+Get serviceAccountName
+*/}}
+{{- define "akeyless-api-gw.getServiceAccountName" -}}
+    {{- if and (not .Values.sshConfig.service_account.serviceAccountName) ( not .Values.sshConfig.service_account.create )  }}
+        {{- printf "default" -}}
+    {{- else if not .Values.sshConfig.service_account.serviceAccountName }}
+        {{.Release.Name}}-secure-remote-access
+    {{- else -}}
+        {{$.Values.sshConfig.service_account.serviceAccountName}}
+    {{- end -}}
+{{- end -}}

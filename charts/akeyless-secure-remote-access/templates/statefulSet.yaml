@@ -19,6 +19,18 @@ spec:
       labels:
         app: ssh-bastion
     spec:
+      {{- if .Values.sshConfig.securityContext }}
+        {{- if .Values.sshConfig.securityContext.enabled }}
+      securityContext:
+        runAsUser: {{ .Values.sshConfig.securityContext.runAsUser }}
+        fsGroup: {{ .Values.sshConfig.securityContext.fsGroup }}
+        {{- end }}
+      {{- end }}
+      serviceAccountName: {{ template "akeyless-api-gw.getServiceAccountName" . }}
+      {{- if .Values.sshConfig.nodeSelector }}
+      nodeSelector:
+      {{ toYaml .Values.sshConfig.nodeSelector | indent 4 }}
+      {{- end }}
       volumes:
       - name: config
         emptyDir: {}
@@ -97,18 +109,23 @@ spec:
           - name: no_proxy
             value: {{ .Values.httpProxySettings.no_proxy }}
 {{- end }}
+{{- if .Values.sshConfig.env }}
+          {{- toYaml .Values.sshConfig.env | nindent 10 }}
+{{- end }}
           livenessProbe:
-            exec:
-              command:
-              - sh
-              - /usr/local/bin/health.sh
-{{- toYaml .Values.sshConfig.livenessProbe | trim | nindent 12 }}
+            httpGet:
+              path: /status
+              port: 9900
+            periodSeconds: 30
+            failureThreshold: 5
+            timeoutSeconds: 5
           readinessProbe:
-            exec:
-              command:
-              - sh
-              - /usr/local/bin/health.sh
-{{- toYaml .Values.sshConfig.readinessProbe | trim | nindent 12 }}
+            httpGet:
+              path: /status
+              port: 9900
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
           volumeMounts:
           {{- range .Values.sshConfig.persistence.volumes }}
             - name: {{ .name | title | lower }}

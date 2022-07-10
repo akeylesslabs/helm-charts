@@ -19,17 +19,25 @@ spec:
   - host: {{ .hostname }}
     http:
       paths:
-      - path: {{ $.Values.ingress.path }}
+      - path: {{ .path | default $.Values.ingress.path }}
 {{- if eq (include "checkIngressVersion.ingress.apiVersion" $ ) "networking.k8s.io/v1" }}
-        pathType: ImplementationSpecific
+        pathType: {{ $.Values.ingress.pathType | default "ImplementationSpecific" }}
         backend:
          service:
+  {{- if .serviceName }}
+          name: {{ .serviceName }}
+  {{- else }}
           name: {{ include "akeyless-api-gw.fullname" $ }}
+  {{- end }}
           port:
             name: {{ .servicePort }}
 {{- else }}
         backend:
+  {{- if .serviceName }}
+         serviceName: {{ .serviceName }}
+  {{- else }}
          serviceName: {{ include "akeyless-api-gw.fullname" $ }}
+  {{- end }}
          servicePort: {{ .servicePort }}
 {{- end }}
 {{- end }}
