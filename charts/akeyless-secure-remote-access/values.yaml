@@ -15,6 +15,9 @@ apiGatewayURL: https://rest.akeyless.io
 # the purpose of this cluster, for example, "sra-staging" or "us-west-prod"
 clusterName: defaultCluster
 
+# When set to "true", will sign ssh certificates using the legacy 'ssh-rsa-cert-v01@openssh.com' signing algorithm name in the certificate.
+legacySigningAlg: "false"
+
 # Relevant for Zero-Trust Access for non-SSH targets (e.g. DBs, K8s, AWS CLIs).
 # If provided, it's recommended to grant minimal permissions ("List" only) to the Zero-Trust Dynamic Secrets,
 # while the privilegedAccess will have "Read" and "List" permissions.
