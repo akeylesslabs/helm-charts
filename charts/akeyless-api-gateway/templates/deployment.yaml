@@ -22,6 +22,9 @@ spec:
     metadata:
       labels:
         {{- include "akeyless-api-gw.selectorLabels" . | nindent 8 }}
+        {{- if .Values.deployment.labels }}
+          {{- toYaml .Values.deployment.labels | nindent 8 }}
+        {{- end }}
     spec:
       {{- if .Values.deployment.securityContext }}
         {{- if .Values.deployment.securityContext.enabled }}
