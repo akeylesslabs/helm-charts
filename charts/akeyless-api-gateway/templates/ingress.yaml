@@ -6,6 +6,9 @@ metadata:
   namespace: {{ .Release.Namespace | quote }}
   labels:
 {{- include "akeyless-api-gw.labels" . | nindent 4 }}
+  {{- if .Values.ingress.labels }}
+    {{- toYaml .Values.ingress.labels | nindent 4 }}
+  {{- end }}
   annotations:
 {{- if .Values.ingress.certManager }}
     kubernetes.io/tls-acme: "true"

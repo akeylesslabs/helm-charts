@@ -6,6 +6,9 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "akeyless-api-gw.labels" . | nindent 4 }}
+  {{- if .Values.service.labels }}
+    {{- toYaml .Values.service.labels | nindent 4 }}
+  {{- end }}
   annotations:
   {{- toYaml .Values.service.annotations | nindent 4 }}
 spec:
