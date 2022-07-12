@@ -44,6 +44,8 @@ spec:
             value: "{{ .Values.service.internalPort }}"
           - name: DEBUG
             value: {{ .Values.debug | quote }}
+          - name: AKEYLESS_AGENT_IMAGE
+            value: "{{ .Values.image.agentImage }}:{{ .Values.image.tag | default .Chart.AppVersion  }}"
           {{- range $key, $value := .Values.env }}
           - name: {{ $key }}
             value: {{ $value }}
