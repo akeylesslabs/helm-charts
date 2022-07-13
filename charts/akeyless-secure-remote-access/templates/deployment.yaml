@@ -52,6 +52,10 @@ spec:
             - name: CLUSTER_NAME
               value: {{ .Values.clusterName }}
 {{- end }}
+{{- if .Values.legacySigningAlg }}
+            - name: LEGACY_SIGNING_ALG
+              value: {{ .Values.legacySigningAlg }}
+{{- end }}
 {{- with .Values.privilegedAccess }}
             - name: PRIVILEGED_ACCESS_ID
               value: {{ required "Privileged access ID is required" .accessID }}
