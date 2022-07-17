@@ -77,7 +77,7 @@ Get the Ingress TLS secret.
 Checks kubernetes API version support for ingress BC
 */}}
 {{- define "checkIngressVersion.ingress.apiVersion" -}}
-  {{- if and (.Capabilities.APIVersions.Has "networking.k8s.io/v1") (semverCompare ">= 1.19.x" .Capabilities.KubeVersion.Version) -}}
+  {{- if .Capabilities.APIVersions.Has "networking.k8s.io/v1" -}}
       {{- print "networking.k8s.io/v1" -}}
   {{- else if .Capabilities.APIVersions.Has "networking.k8s.io/v1beta1" -}}
     {{- print "networking.k8s.io/v1beta1" -}}
