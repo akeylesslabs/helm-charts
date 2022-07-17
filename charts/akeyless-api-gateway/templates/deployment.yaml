@@ -5,6 +5,9 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "akeyless-api-gw.labels" . | nindent 4 }}
+  {{- if .Values.deployment.labels }}
+    {{- toYaml .Values.deployment.labels | nindent 4 }}
+  {{- end }}
   annotations:
   {{- toYaml .Values.deployment.annotations | nindent 4 }}
 spec:
@@ -19,6 +22,9 @@ spec:
     metadata:
       labels:
         {{- include "akeyless-api-gw.selectorLabels" . | nindent 8 }}
+        {{- if .Values.deployment.labels }}
+          {{- toYaml .Values.deployment.labels | nindent 8 }}
+        {{- end }}
     spec:
       {{- if .Values.deployment.securityContext }}
         {{- if .Values.deployment.securityContext.enabled }}
