@@ -54,7 +54,7 @@ spec:
 {{- end }}
 {{- if .Values.legacySigningAlg }}
             - name: LEGACY_SIGNING_ALG
-              value: {{ .Values.legacySigningAlg }}
+              value: {{ .Values.legacySigningAlg | quote }}
 {{- end }}
 {{- with .Values.privilegedAccess }}
             - name: PRIVILEGED_ACCESS_ID
