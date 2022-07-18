@@ -129,11 +129,17 @@ spec:
             httpGet:
               path: /
               port: 8080
+              {{- if .Values.TLSConf.akeylessAPIServices }}
+              scheme: HTTPS
+              {{- end }}
 {{- toYaml .Values.livenessProbe | trim | nindent 12 }}
           readinessProbe:
             httpGet:
               path: /
               port: 8080
+              {{- if .Values.TLSConf.akeylessAPIServices }}
+              scheme: HTTPS
+              {{- end }}
 {{- toYaml .Values.readinessProbe | trim | nindent 12 }}
          {{- if or (eq (include "akeyless-api-gw.customerFragmentExist" .) "true") (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true")}}
           volumeMounts:
