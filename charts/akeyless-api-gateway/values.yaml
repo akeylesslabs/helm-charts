@@ -20,6 +20,7 @@ httpProxySettings:
 
 deployment:
   annotations: {}
+  labels: {}
   service_account:
     create: false
     ## serviceAccountName :
@@ -43,6 +44,7 @@ deployment:
 service:
   # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
   annotations: {}
+  labels: {}
   type: LoadBalancer
 
   # Here you can manage the list of ports you want to expose on the service (don't modify the port name):
@@ -89,6 +91,7 @@ ingress:
   enabled: false
 
   annotations: {}
+  labels: {}
   # Example for Nginx ingress
   #    annotations:
   #      kubernetes.io/ingress.class: nginx
