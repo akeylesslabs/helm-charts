@@ -1,0 +1,729 @@
+{
+    "title": "Akeyless GW",
+    "description": "The [Akeyless Vault Platform](www.akeyless.io) is a unified secrets management system that enables you to store, protect, rotate, and dynamically create credentials, certificates, and encryption keys.\n\n### [Official Akeyless docs](https://docs.akeyless.io/)\n### [Monitoring Akeyless With Datadog](https://docs.akeyless.io/)",
+    "widgets": [
+        {
+            "id": 15,
+            "definition": {
+                "type": "image",
+                "url": "https://camo.githubusercontent.com/bc81eb17df70339e2c7ce70ae7d13a13abebf182cc9a3f672b1d43161f79e1ec/68747470733a2f2f7777772e616b65796c6573732e696f2f77702d636f6e74656e742f75706c6f6164732f323032312f30332f616b65796c6573732d6c6f676f2d626c61636b2d7472616e73706172656e742e706e67",
+                "sizing": "scale-down",
+                "margin": "lg",
+                "has_background": true,
+                "has_border": true,
+                "vertical_align": "center",
+                "horizontal_align": "center"
+            }
+        },
+        {
+            "id": 7543139320471660,
+            "definition": {
+                "type": "note",
+                "content": "The [Akeyless Vault Platform](www.akeyless.io) is a unified secrets management system that enables you to store, protect, rotate, and dynamically create credentials, certificates, and encryption keys.\n\n### [Official Akeyless docs](https://docs.akeyless.io/)\n### [Monitoring Akeyless With Datadog](https://docs.akeyless.io/)",
+                "background_color": "vivid_blue",
+                "font_size": "14",
+                "text_align": "left",
+                "vertical_align": "center",
+                "show_tick": true,
+                "tick_pos": "50%",
+                "tick_edge": "left",
+                "has_padding": true
+            }
+        },
+        {
+            "id": 4,
+            "definition": {
+                "title": "Running containers",
+                "title_size": "16",
+                "title_align": "center",
+                "time": {
+                    "live_span": "1m"
+                },
+                "type": "query_value",
+                "requests": [
+                    {
+                        "formulas": [
+                            {
+                                "formula": "query1"
+                            }
+                        ],
+                        "conditional_formats": [
+                            {
+                                "comparator": ">=",
+                                "palette": "white_on_green",
+                                "value": 1
+                            },
+                            {
+                                "comparator": "<",
+                                "palette": "white_on_red",
+                                "value": 1
+                            }
+                        ],
+                        "response_format": "scalar",
+                        "queries": [
+                            {
+                                "query": "max:otel.datadog_exporter.metrics.running{*}",
+                                "data_source": "metrics",
+                                "name": "query1",
+                                "aggregator": "sum"
+                            }
+                        ]
+                    }
+                ],
+                "autoscale": true,
+                "precision": 0,
+                "timeseries_background": {
+                    "type": "area",
+                    "yaxis": {
+                        "include_zero": false
+                    }
+                }
+            }
+        },
+        {
+            "id": 11,
+            "definition": {
+                "title": "Running container change",
+                "title_size": "16",
+                "title_align": "center",
+                "time": {
+                    "live_span": "5m"
+                },
+                "type": "query_value",
+                "requests": [
+                    {
+                        "formulas": [
+                            {
+                                "formula": "100 * (count_not_null(query2) / hour_before(count_not_null(query1)))"
+                            }
+                        ],
+                        "conditional_formats": [
+                            {
+                                "comparator": ">=",
+                                "palette": "white_on_green",
+                                "value": 80
+                            },
+                            {
+                                "comparator": ">",
+                                "palette": "white_on_yellow",
+                                "value": 50
+                            },
+                            {
+                                "comparator": ">=",
+                                "palette": "white_on_red",
+                                "value": 0
+                            }
+                        ],
+                        "response_format": "scalar",
+                        "queries": [
+                            {
+                                "query": "sum:otel.datadog_exporter.metrics.running{*} by {aklhostname}",
+                                "data_source": "metrics",
+                                "name": "query2",
+                                "aggregator": "last"
+                            },
+                            {
+                                "query": "sum:otel.datadog_exporter.metrics.running{*} by {aklhostname}",
+                                "data_source": "metrics",
+                                "name": "query1",
+                                "aggregator": "last"
+                            }
+                        ]
+                    }
+                ],
+                "autoscale": false,
+                "custom_unit": "%",
+                "text_align": "center",
+                "custom_links": [],
+                "precision": 0
+            }
+        },
+        {
+            "id": 453428519921274,
+            "definition": {
+                "title": "CPU",
+                "type": "group",
+                "background_color": "vivid_purple",
+                "show_title": true,
+                "layout_type": "ordered",
+                "widgets": [
+                    {
+                        "id": 7,
+                        "definition": {
+                            "title": "CPU time user",
+                            "title_size": "16",
+                            "title_align": "left",
+                            "show_legend": false,
+                            "legend_layout": "auto",
+                            "legend_columns": [
+                                "avg",
+                                "min",
+                                "max",
+                                "value",
+                                "sum"
+                            ],
+                            "time": {
+                                "live_span": "1h"
+                            },
+                            "type": "timeseries",
+                            "requests": [
+                                {
+                                    "formulas": [
+                                        {
+                                            "formula": "query1"
+                                        }
+                                    ],
+                                    "response_format": "timeseries",
+                                    "queries": [
+                                        {
+                                            "query": "avg:akeyless.gw.system.cpu.time{state:user,$host} by {aklhostname}.as_count()",
+                                            "data_source": "metrics",
+                                            "name": "query1"
+                                        }
+                                    ],
+                                    "style": {
+                                        "palette": "cool"
+                                    },
+                                    "display_type": "bars"
+                                }
+                            ],
+                            "custom_links": []
+                        }
+                    },
+                    {
+                        "id": 1160737955361246,
+                        "definition": {
+                            "title": "CPU time system",
+                            "title_size": "16",
+                            "title_align": "left",
+                            "show_legend": false,
+                            "legend_layout": "auto",
+                            "legend_columns": [
+                                "avg",
+                                "min",
+                                "max",
+                                "value",
+                                "sum"
+                            ],
+                            "time": {
+                                "live_span": "1h"
+                            },
+                            "type": "timeseries",
+                            "requests": [
+                                {
+                                    "formulas": [
+                                        {
+                                            "formula": "query1"
+                                        }
+                                    ],
+                                    "response_format": "timeseries",
+                                    "queries": [
+                                        {
+                                            "query": "avg:akeyless.gw.system.cpu.time{state:system,$host} by {aklhostname}.as_count()",
+                                            "data_source": "metrics",
+                                            "name": "query1"
+                                        }
+                                    ],
+                                    "style": {
+                                        "palette": "dog_classic"
+                                    },
+                                    "display_type": "bars"
+                                }
+                            ],
+                            "custom_links": []
+                        }
+                    },
+                    {
+                        "id": 6800648352823160,
+                        "definition": {
+                            "title": "CPU Load Average 5m",
+                            "title_size": "16",
+                            "title_align": "left",
+                            "show_legend": false,
+                            "legend_layout": "auto",
+                            "legend_columns": [
+                                "avg",
+                                "min",
+                                "max",
+                                "value",
+                                "sum"
+                            ],
+                            "time": {
+                                "live_span": "1h"
+                            },
+                            "type": "timeseries",
+                            "requests": [
+                                {
+                                    "formulas": [
+                                        {
+                                            "formula": "query1"
+                                        }
+                                    ],
+                                    "response_format": "timeseries",
+                                    "queries": [
+                                        {
+                                            "query": "avg:akeyless.gw.system.cpu.load_average.5m{$host} by {aklhostname}",
+                                            "data_source": "metrics",
+                                            "name": "query1"
+                                        }
+                                    ],
+                                    "style": {
+                                        "palette": "cool"
+                                    },
+                                    "display_type": "line"
+                                }
+                            ],
+                            "markers": [],
+                            "custom_links": []
+                        }
+                    },
+                    {
+                        "id": 6923204193042790,
+                        "definition": {
+                            "title": "CPU time user",
+                            "title_size": "16",
+                            "title_align": "left",
+                            "show_legend": false,
+                            "legend_layout": "auto",
+                            "legend_columns": [
+                                "avg",
+                                "min",
+                                "max",
+                                "value",
+                                "sum"
+                            ],
+                            "time": {
+                                "live_span": "1h"
+                            },
+                            "type": "timeseries",
+                            "requests": [
+                                {
+                                    "formulas": [
+                                        {
+                                            "formula": "query1"
+                                        }
+                                    ],
+                                    "response_format": "timeseries",
+                                    "queries": [
+                                        {
+                                            "query": "avg:akeyless.gw.system.cpu.time{state:user,$host} by {aklhostname}.as_count()",
+                                            "data_source": "metrics",
+                                            "name": "query1"
+                                        }
+                                    ],
+                                    "style": {
+                                        "palette": "cool"
+                                    },
+                                    "display_type": "bars"
+                                }
+                            ],
+                            "custom_links": []
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "id": 8252210704917802,
+            "definition": {
+                "title": "Memory",
+                "type": "group",
+                "background_color": "vivid_purple",
+                "show_title": true,
+                "layout_type": "ordered",
+                "widgets": [
+                    {
+                        "id": 8,
+                        "definition": {
+                            "title": "Memory usage from host %",
+                            "title_size": "16",
+                            "title_align": "left",
+                            "show_legend": false,
+                            "legend_layout": "auto",
+                            "legend_columns": [
+                                "avg",
+                                "min",
+                                "max",
+                                "value",
+                                "sum"
+                            ],
+                            "time": {
+                                "live_span": "1h"
+                            },
+                            "type": "timeseries",
+                            "requests": [
+                                {
+                                    "formulas": [
+                                        {
+                                            "formula": "query2 / (query1 - query2) * 100"
+                                        }
+                                    ],
+                                    "response_format": "timeseries",
+                                    "queries": [
+                                        {
+                                            "query": "avg:akeyless.gw.process.memory.virtual_usage{$host} by {aklhostname}",
+                                            "data_source": "metrics",
+                                            "name": "query2"
+                                        },
+                                        {
+                                            "query": "sum:akeyless.gw.system.memory.usage{$host} by {aklhostname}",
+                                            "data_source": "metrics",
+                                            "name": "query1"
+                                        }
+                                    ],
+                                    "style": {
+                                        "palette": "dog_classic",
+                                        "line_type": "solid",
+                                        "line_width": "normal"
+                                    },
+                                    "display_type": "line"
+                                }
+                            ],
+                            "custom_links": []
+                        }
+                    },
+                    {
+                        "id": 1,
+                        "definition": {
+                            "title": "Most RAM-intensive containers",
+                            "title_size": "16",
+                            "title_align": "left",
+                            "time": {
+                                "live_span": "1h"
+                            },
+                            "type": "toplist",
+                            "requests": [
+                                {
+                                    "formulas": [
+                                        {
+                                            "formula": "query2"
+                                        }
+                                    ],
+                                    "style": {
+                                        "palette": "dog_classic"
+                                    },
+                                    "response_format": "scalar",
+                                    "queries": [
+                                        {
+                                            "query": "avg:akeyless.gw.process.memory.virtual_usage{*} by {aklhostname}",
+                                            "data_source": "metrics",
+                                            "name": "query2",
+                                            "aggregator": "max"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "custom_links": []
+                        }
+                    },
+                    {
+                        "id": 2755232833464270,
+                        "definition": {
+                            "title": "Memory by container",
+                            "title_size": "16",
+                            "title_align": "left",
+                            "show_legend": false,
+                            "time": {
+                                "live_span": "1h"
+                            },
+                            "type": "heatmap",
+                            "custom_links": [],
+                            "requests": [
+                                {
+                                    "q": "avg:akeyless.gw.process.memory.virtual_usage{*} by {aklhostname}",
+                                    "style": {
+                                        "palette": "dog_classic"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "id": 7236584796897802,
+            "definition": {
+                "title": "Network",
+                "type": "group",
+                "background_color": "vivid_purple",
+                "show_title": true,
+                "layout_type": "ordered",
+                "widgets": [
+                    {
+                        "id": 23,
+                        "definition": {
+                            "title": "Avg. rx bytes by container",
+                            "title_size": "16",
+                            "title_align": "left",
+                            "show_legend": false,
+                            "legend_layout": "auto",
+                            "legend_columns": [
+                                "avg",
+                                "min",
+                                "max",
+                                "value",
+                                "sum"
+                            ],
+                            "time": {
+                                "live_span": "1h"
+                            },
+                            "type": "timeseries",
+                            "requests": [
+                                {
+                                    "formulas": [
+                                        {
+                                            "formula": "query1"
+                                        }
+                                    ],
+                                    "response_format": "timeseries",
+                                    "queries": [
+                                        {
+                                            "query": "avg:akeyless.gw.system.network.io{$host,direction:receive} by {aklhostname}.as_count()",
+                                            "data_source": "metrics",
+                                            "name": "query1"
+                                        }
+                                    ],
+                                    "style": {
+                                        "palette": "cool"
+                                    },
+                                    "display_type": "bars"
+                                }
+                            ],
+                            "custom_links": []
+                        }
+                    },
+                    {
+                        "id": 24,
+                        "definition": {
+                            "title": "Avg. tx bytes by container",
+                            "title_size": "16",
+                            "title_align": "left",
+                            "show_legend": false,
+                            "legend_layout": "auto",
+                            "legend_columns": [
+                                "avg",
+                                "min",
+                                "max",
+                                "value",
+                                "sum"
+                            ],
+                            "time": {
+                                "live_span": "1h"
+                            },
+                            "type": "timeseries",
+                            "requests": [
+                                {
+                                    "formulas": [
+                                        {
+                                            "formula": "query1"
+                                        }
+                                    ],
+                                    "response_format": "timeseries",
+                                    "queries": [
+                                        {
+                                            "query": "sum:akeyless.gw.system.network.io{$host,direction:transmit} by {aklhostname}.as_count()",
+                                            "data_source": "metrics",
+                                            "name": "query1"
+                                        }
+                                    ],
+                                    "style": {
+                                        "palette": "purple"
+                                    },
+                                    "display_type": "bars"
+                                }
+                            ],
+                            "custom_links": []
+                        }
+                    },
+                    {
+                        "id": 25,
+                        "definition": {
+                            "title": "Most tx-intensive containers",
+                            "title_size": "16",
+                            "title_align": "left",
+                            "time": {
+                                "live_span": "1h"
+                            },
+                            "type": "toplist",
+                            "requests": [
+                                {
+                                    "formulas": [
+                                        {
+                                            "formula": "query1",
+                                            "limit": {
+                                                "count": 500,
+                                                "order": "desc"
+                                            }
+                                        }
+                                    ],
+                                    "style": {
+                                        "palette": "purple"
+                                    },
+                                    "response_format": "scalar",
+                                    "queries": [
+                                        {
+                                            "query": "sum:akeyless.gw.system.network.io{direction:transmit} by {aklhostname}.as_count()",
+                                            "data_source": "metrics",
+                                            "name": "query1",
+                                            "aggregator": "sum"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "custom_links": []
+                        }
+                    },
+                    {
+                        "id": 26,
+                        "definition": {
+                            "title": "Container connection count",
+                            "title_size": "16",
+                            "title_align": "left",
+                            "show_legend": true,
+                            "legend_layout": "auto",
+                            "time": {
+                                "live_span": "1h"
+                            },
+                            "type": "timeseries",
+                            "requests": [
+                                {
+                                    "formulas": [
+                                        {
+                                            "formula": "query1"
+                                        }
+                                    ],
+                                    "response_format": "timeseries",
+                                    "queries": [
+                                        {
+                                            "query": "sum:akeyless.gw.system.network.connections{$host} by {aklhostname}",
+                                            "data_source": "metrics",
+                                            "name": "query1"
+                                        }
+                                    ],
+                                    "style": {
+                                        "palette": "cool",
+                                        "line_type": "solid",
+                                        "line_width": "normal"
+                                    },
+                                    "display_type": "line"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "id": 6635117687051768,
+            "definition": {
+                "title": "IO",
+                "type": "group",
+                "background_color": "vivid_purple",
+                "show_title": true,
+                "layout_type": "ordered",
+                "widgets": [
+                    {
+                        "id": 20,
+                        "definition": {
+                            "title": "Avg. I/O bytes read by conainer",
+                            "title_size": "16",
+                            "title_align": "left",
+                            "show_legend": false,
+                            "legend_layout": "auto",
+                            "legend_columns": [
+                                "avg",
+                                "min",
+                                "max",
+                                "value",
+                                "sum"
+                            ],
+                            "time": {
+                                "live_span": "1h"
+                            },
+                            "type": "timeseries",
+                            "requests": [
+                                {
+                                    "formulas": [
+                                        {
+                                            "formula": "query1"
+                                        }
+                                    ],
+                                    "response_format": "timeseries",
+                                    "queries": [
+                                        {
+                                            "query": "avg:akeyless.gw.system.disk.io{$host,direction:read} by {aklhostname}.as_rate()",
+                                            "data_source": "metrics",
+                                            "name": "query1"
+                                        }
+                                    ],
+                                    "style": {
+                                        "palette": "dog_classic"
+                                    },
+                                    "display_type": "area"
+                                }
+                            ],
+                            "custom_links": []
+                        }
+                    },
+                    {
+                        "id": 21,
+                        "definition": {
+                            "title": "Avg. I/O bytes written by container",
+                            "title_size": "16",
+                            "title_align": "left",
+                            "show_legend": false,
+                            "legend_layout": "auto",
+                            "legend_columns": [
+                                "avg",
+                                "min",
+                                "max",
+                                "value",
+                                "sum"
+                            ],
+                            "time": {
+                                "live_span": "1h"
+                            },
+                            "type": "timeseries",
+                            "requests": [
+                                {
+                                    "formulas": [
+                                        {
+                                            "formula": "query1"
+                                        }
+                                    ],
+                                    "response_format": "timeseries",
+                                    "queries": [
+                                        {
+                                            "query": "avg:akeyless.gw.system.disk.io{$host,direction:write} by {aklhostname}.as_rate()",
+                                            "data_source": "metrics",
+                                            "name": "query1"
+                                        }
+                                    ],
+                                    "style": {
+                                        "palette": "orange"
+                                    },
+                                    "display_type": "area"
+                                }
+                            ],
+                            "custom_links": []
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "template_variables": [
+        {
+            "name": "host",
+            "default": "*",
+            "prefix": "aklhostname",
+            "available_values": []
+        }
+    ],
+    "layout_type": "ordered",
+    "is_read_only": false,
+    "notify_list": [],
+    "reflow_type": "auto",
+    "id": "par-rxv-ary"
+}
