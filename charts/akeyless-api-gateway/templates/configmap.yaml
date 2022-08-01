@@ -1,0 +1,13 @@
+{{- if .Values.metrics.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-otelcol-metrics-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ $.Values.containerName }}
+    chart: {{ $.Chart.Name }}
+data:
+  otel-config.yaml: |
+{{ required "A valid metrics config .Values.metrics.config in YAML format is required!" .Values.metrics.config | indent 4 }}
+{{- end }}

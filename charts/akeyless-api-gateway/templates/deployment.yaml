@@ -38,10 +38,15 @@ spec:
       nodeSelector:
       {{ toYaml .Values.deployment.nodeSelector | indent 4 }}
       {{- end }}
-      {{- if or (eq (include "akeyless-api-gw.customerFragmentExist" .) "true") (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true" )}}
+      {{- if or (eq (include "akeyless-api-gw.customerFragmentExist" .) "true") (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true" ) (.Values.metrics.enabled)}}
       volumes:
       - name: akeyless-config
         emptyDir: {}
+      {{ if .Values.metrics.enabled }}
+      - name: otelcol-metrics-config
+        configMap:
+          name:  {{ .Release.Name }}-otelcol-metrics-config
+      {{- end }}
       {{- if eq (include "akeyless-api-gw.customerFragmentExist" .) "true"}}
       - name: customer-fragments-secret
         secret:
@@ -141,10 +146,15 @@ spec:
               scheme: HTTPS
               {{- end }}
 {{- toYaml .Values.readinessProbe | trim | nindent 12 }}
-         {{- if or (eq (include "akeyless-api-gw.customerFragmentExist" .) "true") (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true")}}
+         {{- if or (eq (include "akeyless-api-gw.customerFragmentExist" .) "true") (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true") ( .Values.metrics.enabled)}}
           volumeMounts:
             - name: akeyless-config
               mountPath: /root/.akeyless
+          {{- if .Values.metrics.enabled }}
+            - name: otelcol-metrics-config
+              mountPath: /akeyless_shared_vol/akeyless-api-proxy/otel-config.yaml
+              subPath: otel-config.yaml
+          {{- end}}
           {{- end}}
           resources:
 {{- toYaml .Values.resources | nindent 12 }}
@@ -212,6 +222,10 @@ spec:
           {{- if .Values.universalIdentity.uidCreateChildTokenPerPod }}
             - name: UID_CREATE_CHILD_TOKEN_PER_POD
               value: {{ .Values.universalIdentity.uidCreateChildTokenPerPod }}
+          {{- end }}
+          {{- if .Values.metrics.enabled }}
+            - name: ENABLE_METRICS
+              value: {{ .Values.metrics.enabled | quote }}
           {{- end }}   
             - name: POD_NAME
               valueFrom:
@@ -274,7 +288,6 @@ spec:
               value: "{{ .Values.cachingConf.proActiveCaching.dumpInterval }}"
           {{- end }}
           # end provision
-
             - name: VERSION
               value: {{ .Values.version | default .Chart.AppVersion }}
           {{- if .Values.httpProxySettings.http_proxy }}

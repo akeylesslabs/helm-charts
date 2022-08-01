@@ -246,6 +246,21 @@ cachingConf:
     ## The interval in which the proactive cache is encrypted and save to disk, in minutes
     # dumpInterval: 1
 
+metrics:
+  enabled: false
+  # Syntax must be in YAML format
+  # An example for metrics streaming configuration for datadog exporter
+  # config: |
+  #   exporters:
+    
+  #     datadog:
+  #       api:
+  #         key: <api-key>
+          
+  #   service:
+  #     pipelines:
+  #       metrics:
+  #         exporters: [datadog]
 
 ## Specifies an initial configuration for log forwarding
 # for more details: https://docs.akeyless.io/docs/ssh-log-forwarding
