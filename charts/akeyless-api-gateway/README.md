@@ -111,8 +111,15 @@ The following table lists the configurable parameters of the API Gateway chart a
 | `cachingConf.proActiveCaching.dumpInterval`              | To ensure service continuity in case of power cycle and network outage secrets will be backed up periodically per backup interval.                                                                                              | `nil`                                                          |
 
 
-### API-Gatewaylogand configuration
+### API-Gateway logand configuration
 
 | Parameter                                   | Description                                                                                                          | Default                                                      |
 |---------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
 | `logandConf`            |  Specifies an initial configuration for log forwarding. for more details: https://docs.akeyless.io/docs/log-forwarding                                                                       |                                                         |
+
+### API-Gateway Metrics configuration
+
+| Parameter                                   | Description                                                                                                          | Default                                                      |
+|---------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
+| `metrics.enabled`            | Enable metrics streaming                                                                         | `false`                                                        |
+| `metrics.config`           | Configure the metrics streaming exporter(backend). Must be in YAML foramt. For more details: docs-ref | `nil`
