@@ -18,7 +18,7 @@ clusterName: defaultCluster
 # When set to "true", will sign ssh certificates using the legacy 'ssh-rsa-cert-v01@openssh.com' signing algorithm name in the certificate.
 legacySigningAlg: "false"
 
-# When set, will override the name of the claim in the jwt for the rdp & ssh username 
+# When set, it will extract the username from the provided claim key-name, and use it to authenticated to the remote target (RDP or SSH)
 usernameSubClaim:
 
 # Relevant for Zero-Trust Access for non-SSH targets (e.g. DBs, K8s, AWS CLIs).
