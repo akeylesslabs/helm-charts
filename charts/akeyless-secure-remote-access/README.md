@@ -57,6 +57,7 @@ helm install RELEASE_NAME akeyless/akeyless-sra -f values.yaml
 | `apiGatewayURL`                    | API Gateway URL to use to fetch the secrets **Required**                                                                      | `https://rest.akeyless.io`
 | `privilegedAccess`                    | Supported auth methods: AWS IAM, Azure AD, GCP and API Key.For AWS IAM or Azure AD, or GCP provide only accessID. For API Key, provide both accessID and accessKey                                                                       | ` `
 | `legacySigningAlg`                 | When set to "true", will sign ssh certificates using the legacy 'ssh-rsa-cert-v01@openssh.com' signing algorithm name in the certificate. | `"false"`
+| `usernameSubClaim`                 | When set, will override the name of the claim in the jwt for the rdp & ssh username | ` `
 | `privilegedAccess.accessID`                    | Privileged access ID (API Key, Azure AD, GCP, AWS IAM) **Required**                                                              | ` `
 | `privilegedAccess.accessKey`                    | API key accessKey                                                                           | ` `
 | `privilegedAccess.allowedAccessIDs`                    | limit access to privileged items only for these end user access ids. If left empty, all access ids are allowedCredentials                                                                           | `[]`
