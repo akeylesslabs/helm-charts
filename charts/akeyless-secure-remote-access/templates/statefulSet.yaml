@@ -137,9 +137,11 @@ spec:
           volumeMounts:
           {{- range .Values.sshConfig.persistence.volumes }}
             - name: {{ .name | title | lower }}
-              mountPath: /var/run/requests 
+              mountPath: /var/run/requests
+              subPath: requests 
             - name: {{ .name | title | lower }}
               mountPath: /var/run/akeyless/ssh
+              subPath: ssh
           {{- end }}
             - name: config
               mountPath: /var/akeyless/conf
