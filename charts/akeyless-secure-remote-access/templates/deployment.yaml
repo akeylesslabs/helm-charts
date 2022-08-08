@@ -56,6 +56,10 @@ spec:
             - name: LEGACY_SIGNING_ALG
               value: {{ .Values.legacySigningAlg | quote }}
 {{- end }}
+{{- if .Values.usernameSubClaim }}
+            - name: USERNAME_SUB_CLAIM
+              value: {{ .Values.usernameSubClaim }}
+{{- end }}
 {{- with .Values.privilegedAccess }}
             - name: PRIVILEGED_ACCESS_ID
               value: {{ required "Privileged access ID is required" .accessID }}
