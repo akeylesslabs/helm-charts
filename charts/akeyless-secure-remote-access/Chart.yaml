@@ -13,11 +13,11 @@ description: A Helm chart for Kubernetes akeyless-zero-trust-bastion and akeyles
 type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
-version: 0.12.22
+version: 0.12.23
 
-appVersion: v0.13.4_0.11.41
+appVersion: v0.13.5_0.11.41
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application.
 annotations:
-  ztbVersion: v0.13.4
+  ztbVersion: v0.13.5
   sshVersion: 0.11.41
