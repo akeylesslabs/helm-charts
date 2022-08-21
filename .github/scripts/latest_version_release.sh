@@ -26,7 +26,7 @@ pushd "$GITHUB_WORKSPACE/charts/$chart_dir"
     chart_version=$(grep '^version:[[:space:]][[:digit:]]' Chart.yaml | awk '{print $2}') || die "Failed to retrieve current chart version"
     bump_version "${chart_version}" "${major_minor_patch}"
     new_chart_version=$new_version && echo "The new Chart version is: ${new_chart_version}"
-    sed  -i "s/version:.*/version: ${new_chart_version}/g" Chart.yaml
+    sed -i "s/version:.*/version: ${new_chart_version}/g" Chart.yaml
 
     # edit app version
     if [[ "${chart_dir}" == "akeyless-secure-remote-access" ]]; then
@@ -45,23 +45,16 @@ pushd "$GITHUB_WORKSPACE/charts/$chart_dir"
       ssh_app_ver=$(grep 'sshVersion' Chart.yaml | awk '{print $2}')
       sed -i "s/appVersion.*/appVersion: ${ztb_app_ver}_${ssh_app_ver}/g" Chart.yaml
 
-      git add -A && git commit -m "Updated ${service} helm chart version to latest: ${app_version}" || die "Failed to commit changes to git"
-      git push origin HEAD
-
-      echo "$chart_dir - ${service} app version was successfully updated to latest: ${app_version}"
-      echo "$chart_dir Helm chart version was updated to: ${new_chart_version}"
-
     else
         sed -i "s/appVersion.*/appVersion: ${app_version}/g" Chart.yaml
     fi
 
-    if [[ "${chart_dir}" != "akeyless-secure-remote-access"  ]]; then
-        git add -A && git commit -m "Updated ${service} helm chart version to latest: ${app_version}" || die "Failed to commit changes to git"
-        git push origin HEAD
-    fi
+    git add -A && git commit -m "Updated ${service} helm chart version to latest: ${app_version}" || die "Failed to commit changes to git"
+    git push origin HEAD
+
+    echo "$chart_dir app version was successfully updated to latest: ${app_version}"
+    echo "$chart_dir Helm chart version was updated to: ${new_chart_version}"
 popd
 
-echo "$chart_dir app version was successfully updated to latest: ${app_version}"
-echo "$chart_dir Helm chart version was updated to: ${new_chart_version}"
 
 
