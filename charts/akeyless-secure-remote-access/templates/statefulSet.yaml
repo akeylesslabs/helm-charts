@@ -97,6 +97,10 @@ spec:
           - name: LEGACY_SIGNING_ALG
             value: {{ .Values.legacySigningAlg | quote }}
 {{- end }}
+{{- if .Values.usernameSubClaim }}
+            - name: USERNAME_SUB_CLAIM
+              value: {{ .Values.usernameSubClaim }}
+{{- end }}
 {{- if .Values.privilegedAccess.allowedAccessIDs }}
           - name: ALLOWED_ACCESS_IDS
             value: {{ range $index, $element := .Values.privilegedAccess.allowedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }}
@@ -133,9 +137,11 @@ spec:
           volumeMounts:
           {{- range .Values.sshConfig.persistence.volumes }}
             - name: {{ .name | title | lower }}
-              mountPath: /var/run/requests 
+              mountPath: /var/run/requests
+              subPath: requests 
             - name: {{ .name | title | lower }}
               mountPath: /var/run/akeyless/ssh
+              subPath: ssh
           {{- end }}
             - name: config
               mountPath: /var/akeyless/conf
