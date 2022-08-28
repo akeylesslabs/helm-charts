@@ -87,7 +87,7 @@ The following table lists the configurable parameters of the API Gateway chart a
 | `akeylessUserAuth.configProtectionKeyName`  | Akeyless Protection key name                                                                                         | `nil`                                                        |
 | `akeylessUserAuth.allowedAccessIDs`         | List of allowed Access ID's to enable multiple users to be able to login and manage API GW.                          | `nil`                                                        |
 | `customerFragments`                         | API Gateway customer fragment                                                                                        | `nil`                                                        |
-| `existingSecret`                            | Specifies an existing secret to be used for API Gateway                                                              | `Check `values.yaml` file`                                   |                                  |
+| `existingSecret`                            | Specifies an existing secret to be used for API Gateway                                                              | Check `values.yaml` file                                   |                                  |
 
 
 ### API-Gateway defaults section configuration parameters
@@ -123,3 +123,4 @@ The following table lists the configurable parameters of the API Gateway chart a
 |---------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
 | `metrics.enabled`            | Enable metrics streaming                                                                         | `false`                                                        |
 | `metrics.config`           | Configure the metrics streaming exporter(backend). Must be in YAML foramt. For more details: docs-ref | `nil`
+| `metrics.existingSecretName`                            | Specifies an existing secret to be used for Metrics streaming configuration, instead of using `metrics.config`                                                              | Check `values.yaml` file                                  |
