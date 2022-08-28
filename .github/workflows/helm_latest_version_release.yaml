@@ -87,6 +87,8 @@ jobs:
       (always() &&
       contains(needs.*.result, 'failure') &&
       (github.event.deployment.task == 'update-latest-version')
+    env:
+      chart_name: ${{ needs.update-latest-helm-chart-version.chart_name }}
     steps:
       - name: Prepare Slack Message On Failure
         id: slack-message-failure-creator
@@ -94,6 +96,7 @@ jobs:
           SLACK_MESSAGE="*Service:* $service
           *Bump version:* $major_minor_patch
           *App Version:* $app_version
+          *Chart:* $chart_name
           *Status:* Failure
           :terminator:"
           echo "::set-output name=slack-message::${SLACK_MESSAGE//$'\n'/'%0A'}"
