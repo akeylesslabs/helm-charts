@@ -272,3 +272,31 @@ Get serviceAccountName
         {{$.Values.deployment.service_account.serviceAccountName}}
     {{- end -}}
 {{- end -}}
+
+{{/*
+Get metrics secret name 
+*/}}
+{{- define "akeyless-api-gw.metricsSecretName" -}}
+    {{- if .Values.metrics.existingSecretName -}}
+        {{- printf "%s" .Values.metrics.existingSecretName -}}
+    {{- else -}}
+        {{ $.Release.Name }}-metrics-conf
+    {{- end -}}
+{{- end -}}
+
+{{/*
+Check metrics configuration Secret
+*/}}
+{{- define "akeyless-api-gw.metricsSecretExist" -}}
+    {{- if .Values.metrics.config -}}
+        {{- printf "true" -}}
+    {{- else if and (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.metricsSecretName" .)) .Values.metrics.existingSecretName -}}  
+        {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.metricsSecretName" . )) "data") "otel-config.yaml" -}}
+            {{- printf "true" -}}
+        {{- else -}}
+            {{- printf "false" -}}
+        {{- end -}}
+    {{- else -}}
+        {{- printf "false" -}}
+    {{- end -}}
+{{- end -}}
