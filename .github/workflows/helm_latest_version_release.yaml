@@ -1,0 +1,111 @@
+name: Helm Chart Latest App Version Release
+
+on:
+  deployment:
+
+concurrency:
+  group: Helm Chart Latest App Version Release
+
+env:
+  service: ${{ github.event.deployment.service }}
+  major_minor_patch: ${{ github.event.deployment.payload.major_minor_patch }}
+  app_version: ${{ github.event.deployment.app_version }}
+
+jobs:
+  update-latest-helm-chart-version:
+    if: github.event.deployment.task == 'update-latest-version'
+    runs-on: ubuntu-20.04
+    outputs:
+      new_chart_version: ${{ steps.vars.outputs.new_chart_version }}
+      chart_name: ${{ steps.vars.outputs.chart_dir }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with: 
+          token: ${{ secrets.TOKEN_GITHUB }}
+
+      - name: Fetch history
+        run: git fetch --prune --unshallow
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Update latest helm chart version
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github.event.deployment) }}
+        run: .github/scripts/latest_version_release.sh
+
+      - name: Set Change Variables
+        id: vars
+        run: |
+          echo ::set-output name=new_chart_version::${{ env.new_chart_version }}
+          echo ::set-output name=chart_dir::${{ env.chart_dir }}
+
+  Slack-Notification-on-success:
+    name: Slack-On-Success-Notification
+    runs-on: ubuntu-20.04
+    needs: [ update-latest-helm-chart-version ]
+    if: |
+      (always() &&
+      contains(needs.*.result, 'success') &&
+      (github.event.deployment.task == 'update-latest-version')
+    env:
+      new_chart_version: ${{ needs.update-latest-helm-chart-version.new_chart_version }}
+      chart_name: ${{ needs.update-latest-helm-chart-version.chart_name }}
+    steps:
+      - name: Prepare Slack Message On Success
+        id: slack-message-success-creator
+        run: |
+          SLACK_MESSAGE="*Service:* $service
+          *Bump version:* $major_minor_patch
+          *App Version:* $app_version
+          *Chart:* $chart_name
+          *New Chart Version:* $new_chart_version
+          :helm:"
+          echo "::set-output name=slack-message::${SLACK_MESSAGE//$'\n'/'%0A'}"
+
+      - name: Slack Success Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: 'operations'
+          SLACK_COLOR: ${{ job.status }}
+          SLACK_ICON: https://github.com/rtCamp.png?size=48
+          SLACK_TITLE: Helm Chart Latest Version Release Updated
+          SLACK_MESSAGE: '${{ steps.slack-message-success-creator.outputs.slack-message }}'
+          SLACK_USERNAME: githubBot
+          SLACK_WEBHOOK: ${{ secrets.SLACK_OPERATIONS_WEBHOOK }}
+          MSG_MINIMAL: true
+          SLACK_FOOTER: Akeyless.io Helm Chart Latest Version Release
+
+  Slack-Notification-on-failure:
+    name: Slack-On-Failure-Notification
+    runs-on: ubuntu-20.04
+    needs: [ update-latest-helm-chart-version ]
+    if: |
+      (always() &&
+      contains(needs.*.result, 'failure') &&
+      (github.event.deployment.task == 'update-latest-version')
+    steps:
+      - name: Prepare Slack Message On Failure
+        id: slack-message-failure-creator
+        run: |
+          SLACK_MESSAGE="*Service:* $service
+          *Bump version:* $major_minor_patch
+          *App Version:* $app_version
+          *Status:* Failure
+          :terminator:"
+          echo "::set-output name=slack-message::${SLACK_MESSAGE//$'\n'/'%0A'}"
+
+      - name: Slack Failure Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: 'operations'
+          SLACK_COLOR: '#bd3232'
+          SLACK_ICON: https://github.com/rtCamp.png?size=48
+          SLACK_TITLE: Helm Chart Latest Version Release Failed!
+          SLACK_MESSAGE: '${{ steps.slack-message-failure-creator.outputs.slack-message }}'
+          SLACK_USERNAME: githubBot
+          SLACK_WEBHOOK: ${{ secrets.SLACK_OPERATIONS_WEBHOOK }}
+          SLACK_FOOTER: Akeyless.io Helm Chart Latest Version Release
