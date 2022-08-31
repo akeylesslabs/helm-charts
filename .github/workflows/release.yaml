@@ -43,7 +43,7 @@ jobs:
     needs: [ release ]
     if: |
       (always() &&
-      contains(needs.*.result, 'failure')
+      contains(needs.*.result, 'failure'))
     steps:
       - name: Prepare Slack Message On Failure
         id: slack-message-failure-creator
