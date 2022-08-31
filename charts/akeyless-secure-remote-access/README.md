@@ -59,6 +59,8 @@ helm install RELEASE_NAME akeyless/akeyless-sra -f values.yaml
 | `legacySigningAlg`                 | When set to "true", will sign ssh certificates using the legacy 'ssh-rsa-cert-v01@openssh.com' signing algorithm name in the certificate. | `"false"`
 | `usernameSubClaim`                 | Optional, provide a key-name to extract the username (value) of that key in sub-claims. The extracted username will be used to authenticated to the remote target (RDP or SSH).
 | ` `
+| `allowedBastionUrls`                 | Comma separated list of the URLs that will be considered valid for redirection to this bastion (security measure to prevent Open Redirect)
+| ` `
 | `privilegedAccess.accessID`                    | Privileged access ID (API Key, Azure AD, GCP, AWS IAM) **Required**                                                              | ` `
 | `privilegedAccess.accessKey`                    | API key accessKey                                                                           | ` `
 | `privilegedAccess.allowedAccessIDs`                    | limit access to privileged items only for these end user access ids. If left empty, all access ids are allowedCredentials                                                                           | `[]`

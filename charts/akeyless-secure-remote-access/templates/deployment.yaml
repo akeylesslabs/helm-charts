@@ -60,6 +60,10 @@ spec:
             - name: USERNAME_SUB_CLAIM
               value: {{ .Values.usernameSubClaim }}
 {{- end }}
+{{- if .Values.allowedBastionUrls }}
+            - name: ALLOWED_BASTION_URLS
+              value: {{ .Values.allowedBastionUrls }}
+{{- end }}
 {{- with .Values.privilegedAccess }}
             - name: PRIVILEGED_ACCESS_ID
               value: {{ required "Privileged access ID is required" .accessID }}
