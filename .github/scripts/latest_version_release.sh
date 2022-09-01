@@ -54,6 +54,8 @@ pushd "$GITHUB_WORKSPACE/charts/$chart_dir"
 
     echo "$chart_dir app version was successfully updated to latest: ${app_version}"
     echo "$chart_dir Helm chart version was updated to: ${new_chart_version}"
+    echo "new_chart_version=$new_chart_version" >> $GITHUB_ENV
+    echo "chart_dir=$chart_dir" >> $GITHUB_ENV
 popd
 
 
