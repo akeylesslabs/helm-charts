@@ -159,6 +159,10 @@ spec:
           resources:
 {{- toYaml .Values.resources | nindent 12 }}
           env:
+          {{- if .Values.deployment.fips.enabled }}
+            - name: FIPS
+              value: {{ .Values.deployment.fips.enabled }}
+          {{- end }}
           {{- if eq (include "akeyless-api-gw.adminAccessIdExist" .) "true" }}
             - name: ADMIN_ACCESS_ID
               valueFrom:

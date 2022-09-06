@@ -37,6 +37,10 @@ deployment:
   nodeSelector:
     #     iam.gke.io/gke-metadata-server-enabled: "true"
 
+  # Enabling fips will pull the fips api-gateway binary
+  fips:
+    enabled: false
+
   securityContext:
     enabled: false
     fsGroup: 0
