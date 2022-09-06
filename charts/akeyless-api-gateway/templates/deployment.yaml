@@ -226,7 +226,12 @@ spec:
           {{- if .Values.metrics.enabled }}
             - name: ENABLE_METRICS
               value: {{ .Values.metrics.enabled | quote }}
-          {{- end }}   
+            - name: MEM_LIMIT
+              valueFrom:
+                resourceFieldRef:
+                  containerName: {{ .Values.containerName }}
+                  resource: limits.memory
+          {{- end }}
             - name: POD_NAME
               valueFrom:
                 fieldRef:
