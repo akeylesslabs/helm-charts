@@ -86,7 +86,7 @@ jobs:
     if: |
       (always() &&
       contains(needs.*.result, 'failure') &&
-      (github.event.deployment.task == 'update-latest-version')
+      (github.event.deployment.task == 'update-latest-version'))
     env:
       chart_name: ${{ needs.update-latest-helm-chart-version.chart_name }}
     steps:
