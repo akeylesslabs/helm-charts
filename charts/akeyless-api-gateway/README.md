@@ -53,17 +53,18 @@ The following table lists the configurable parameters of the API Gateway chart a
 
 ### Exposure parameters
 
-| Parameter                                 | Description                                                                                                          | Default                                                      |
-|-------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
-| `service.type`                            | Kubernetes service type                                                                                              | `LoadBalancer`                                               |
-| `service.ports`                           | Service ports object, look at the comments for examples                                                              | Check `values.yaml` file                                     |
-| `service.annotations`                     | Service extra annotations                                                                                            | `{}`                                                         |
-| `ingress.enabled`                         | Enable ingress resource                                                                                              | `false`                                                      |
-| `ingress.annotations`                     | Ingress annotations                                                                                                  | `[]`                                                         |
-| `ingress.rules`                           | Ingress rules object, look at the comments for examples                                                              | Check `values.yaml` file                                     |
-| `ingress.path`                            | Path for the default host                                                                                            | `/`                                                          |
-| `ingress.tls`                             | Enable TLS configuration for the hostname                                                                            | `false`                                                      |
-| `ingress.certManager`                     | Add annotations for cert-manager                                                                                     | `false`                                                      |
+| Parameter                                 | Description                                                                                                          | Default                  |
+|-------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------|
+| `service.type`                            | Kubernetes service type                                                                                              | `LoadBalancer`           |
+| `service.ports`                           | Service ports object, look at the comments for examples                                                              | Check `values.yaml` file |
+| `service.annotations`                     | Service extra annotations                                                                                            | `{}`                     |
+| `ingress.enabled`                         | Enable ingress resource                                                                                              | `false`                  |
+| `ingress.ingressClassName`                | A reference to an IngressClass resource                                                                              | `nil`                    |
+| `ingress.annotations`                     | Ingress annotations                                                                                                  | `[]`                     |
+| `ingress.rules`                           | Ingress rules object, look at the comments for examples                                                              | Check `values.yaml` file |
+| `ingress.path`                            | Path for the default host                                                                                            | `/`                      |
+| `ingress.tls`                             | Enable TLS configuration for the hostname                                                                            | `false`                  |
+| `ingress.certManager`                     | Add annotations for cert-manager                                                                                     | `false`                  |
 
 ### HPA parameters
 

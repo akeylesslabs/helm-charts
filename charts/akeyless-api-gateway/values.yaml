@@ -94,8 +94,13 @@ ingress:
   ##
   enabled: false
 
-  annotations: {}
+  ## A reference to an IngressClass resource
+  ## ref: https://kubernetes.io/docs/concepts/services-networking/ingress/#deprecated-annotation
+
+#  ingressClassName:
+
   labels: {}
+
   # Example for Nginx ingress
   #    annotations:
   #      kubernetes.io/ingress.class: nginx
@@ -110,6 +115,8 @@ ingress:
   #    annotations:
   #      kubernetes.io/ingress.class: alb
   #      alb.ingress.kubernetes.io/scheme: internet-facing
+  annotations: {}
+
 
   rules:
     - servicePort: web
