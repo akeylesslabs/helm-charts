@@ -259,7 +259,7 @@ cachingConf:
 
   # Configure metrics exporter (backend) (such as Datadog,Prometheus, etc..)
   # Provide an existing secret with the metrics configuration or use the config section
-  # Docs ref:
+  # For more details: https://docs.akeyless.io/docs/telemetry-metrics-k8s
 metrics:
   enabled: false  
   # Specifies an existing secret for metrics must include:
