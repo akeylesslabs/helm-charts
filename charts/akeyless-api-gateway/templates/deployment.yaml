@@ -38,7 +38,7 @@ spec:
       nodeSelector:
       {{ toYaml .Values.deployment.nodeSelector | indent 4 }}
       {{- end }}
-      {{- if or (eq (include "akeyless-api-gw.customerFragmentExist" .) "true") (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true" )}}
+      {{- if or (eq (include "akeyless-api-gw.customerFragmentExist" .) "true") (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true" ) (.Values.metrics.enabled)}}
       volumes:
       - name: akeyless-config
         emptyDir: {}
@@ -63,6 +63,11 @@ spec:
         secret:
           secretName: {{ include "akeyless-api-gw.tlsSecretName" . }}
           defaultMode: 420
+      {{- end }}
+      {{- if and (.Values.metrics.enabled) (eq (include "akeyless-api-gw.metricsSecretExist" .) "true") }}
+      - name: otelcol-metrics-config
+        secret:
+          secretName: {{ include "akeyless-api-gw.metricsSecretName" . }}
       {{- end }}
       initContainers:
         # Since k8s 1.9.4, config maps mount read-only volumes. Since the Docker image also writes to the config file,
@@ -141,10 +146,15 @@ spec:
               scheme: HTTPS
               {{- end }}
 {{- toYaml .Values.readinessProbe | trim | nindent 12 }}
-         {{- if or (eq (include "akeyless-api-gw.customerFragmentExist" .) "true") (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true")}}
+         {{- if or (eq (include "akeyless-api-gw.customerFragmentExist" .) "true") (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true") ( .Values.metrics.enabled)}}
           volumeMounts:
             - name: akeyless-config
               mountPath: /root/.akeyless
+          {{- if and (.Values.metrics.enabled) (eq (include "akeyless-api-gw.metricsSecretExist" .) "true") }}
+            - name: otelcol-metrics-config
+              mountPath: /akeyless/otel-config.yaml
+              subPath: otel-config.yaml
+          {{- end}}
           {{- end}}
           resources:
 {{- toYaml .Values.resources | nindent 12 }}
@@ -216,7 +226,16 @@ spec:
           {{- if .Values.universalIdentity.uidCreateChildTokenPerPod }}
             - name: UID_CREATE_CHILD_TOKEN_PER_POD
               value: {{ .Values.universalIdentity.uidCreateChildTokenPerPod }}
-          {{- end }}   
+          {{- end }}
+          {{- if .Values.metrics.enabled }}
+            - name: ENABLE_METRICS
+              value: {{ .Values.metrics.enabled | quote }}
+            - name: MEM_LIMIT
+              valueFrom:
+                resourceFieldRef:
+                  containerName: {{ .Values.containerName }}
+                  resource: limits.memory
+          {{- end }}
             - name: POD_NAME
               valueFrom:
                 fieldRef:
@@ -278,7 +297,6 @@ spec:
               value: "{{ .Values.cachingConf.proActiveCaching.dumpInterval }}"
           {{- end }}
           # end provision
-
             - name: VERSION
               value: {{ .Values.version | default .Chart.AppVersion }}
           {{- if .Values.httpProxySettings.http_proxy }}

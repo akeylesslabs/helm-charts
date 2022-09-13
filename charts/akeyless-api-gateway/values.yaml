@@ -257,6 +257,28 @@ cachingConf:
     ## The interval in which the proactive cache is encrypted and save to disk, in minutes
     # dumpInterval: 1
 
+  # Configure metrics exporter (backend) (such as Datadog,Prometheus, etc..)
+  # Provide an existing secret with the metrics configuration or use the config section
+  # For more details: https://docs.akeyless.io/docs/telemetry-metrics-k8s
+metrics:
+  enabled: false  
+  # Specifies an existing secret for metrics must include:
+  # - otel-config.yaml (base64) secret
+  # - Syntax must be in YAML format
+  existingSecretName:
+  # An example for metrics configuration for datadog exporter
+
+  # config: |
+  #   exporters:
+    
+  #     datadog:
+  #       api:
+  #         key: <api-key>
+          
+  #   service:
+  #     pipelines:
+  #       metrics:
+  #         exporters: [datadog]
 
 ## Specifies an initial configuration for log forwarding
 # for more details: https://docs.akeyless.io/docs/ssh-log-forwarding
