@@ -109,6 +109,10 @@ spec:
               mountPath: /tls_conf
           {{- end}}
       {{- end }} #spec
+      {{- if .Values.deployment.affinety }}
+      affinity:
+      {{ toYaml .Values.deployment.affinety | indent 4 }}
+      {{- end }}
       containers:
         - name: {{ .Values.containerName }}
           {{- if .Values.akeylessStrictMode  }}
