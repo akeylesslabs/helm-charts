@@ -26,6 +26,10 @@ spec:
           {{- toYaml .Values.deployment.labels | nindent 8 }}
         {{- end }}
     spec:
+      {{- if .Values.deployment.affinity.enabled }}
+      affinity:
+      {{- toYaml .Values.deployment.affinity.data | nindent 8 }}
+      {{- end }}
       {{- if .Values.deployment.securityContext }}
         {{- if .Values.deployment.securityContext.enabled }}
       securityContext:

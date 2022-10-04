@@ -34,6 +34,18 @@ deployment:
     annotations:
   #      iam.gke.io/gcp-service-account: change_me_to_gcp_service_account
   #      eks.amazonaws.com/role-arn: arn:aws:iam::40XXXXXXXX75:role/eksctl-Role1-XXXXXXXX
+  affinity:
+    enabled: false
+    data:
+  #    nodeAffinity:
+  #      requiredDuringSchedulingIgnoredDuringExecution:
+  #        nodeSelectorTerms:
+  #          - matchExpressions:
+  #              - key: kubernetes.io/arch
+  #                operator: In
+  #                values:
+  #                  - amd64
+  # ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
   nodeSelector:
     #     iam.gke.io/gke-metadata-server-enabled: "true"
 
