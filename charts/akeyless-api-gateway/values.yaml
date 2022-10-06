@@ -7,7 +7,7 @@ akeylessStrictMode: false
 
 image:
   repository: akeyless/base
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   tag: latest
 
 containerName: "api-gateway"
