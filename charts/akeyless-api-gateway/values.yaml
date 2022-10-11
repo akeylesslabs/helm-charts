@@ -295,15 +295,19 @@ metrics:
 ## Specifies an initial configuration for log forwarding
 # for more details: https://docs.akeyless.io/docs/ssh-log-forwarding
 #
-# logandConf: |
-#   enable="true"
-#   target_log_type="splunk" #splunk/syslog/logstash/elasticsearch/logz_io/aws_s3/azure_log_analytics/datadog
-#   target_splunk_sourcetype="<your_sourcetype>"
-#   target_splunk_source="<your_source>"
-#   target_splunk_index="<your_index>"
-#   target_splunk_token="<your_token>"
-#   target_splunk_url="<your_splunk_host_address>"
+#logandConf: |
+# enable="true"
+# target_log_type="splunk" #splunk/syslog/logstash/elasticsearch/logz_io/aws_s3/azure_log_analytics/datadog
+# target_splunk_sourcetype="<your_sourcetype>"
+# target_splunk_source="<your_source>"
+# target_splunk_index="<your_index>"
+# target_splunk_token="<your_token>"
+# target_splunk_url="<your_splunk_host_address>"
 
+
+# Specifies an existing secret for logand should be in yaml syntax, and include:
+# - logand-conf field (base64). The content the same as above.
+logandExistingSecretName:
 
 
 
