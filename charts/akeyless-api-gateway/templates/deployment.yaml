@@ -57,7 +57,7 @@ spec:
       {{- if eq (include "akeyless-api-gw.logandConfExist" .) "true"}}
       - name: logand-conf
         secret:
-          secretName: logand-conf
+          secretName: {{ include "akeyless-api-gw.logandSecretName" . }}
           items:
             - key: logand-conf
               path: logand.conf

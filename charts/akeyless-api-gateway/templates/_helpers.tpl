@@ -96,6 +96,14 @@ Generate chart secret name
     {{- end -}}
 {{- end -}}
 
+{{- define "akeyless-api-gw.logandSecretName" -}}
+    {{- if .Values.logandExistingSecretName -}}
+        {{- printf "%s" .Values.logandExistingSecretName -}}
+    {{- else -}}
+        logand-conf
+    {{- end -}}
+{{- end -}}
+
 {{- define "akeyless-api-gw.cacheSecretName" -}}
         {{ $.Release.Name }}-cache-secret
 {{- end -}}
@@ -206,7 +214,7 @@ Check admin password
 Check logand conf
 */}}
 {{- define "akeyless-api-gw.logandConfExist" -}}
-    {{- if .Values.logandConf -}}
+    {{- if  or .Values.logandConf .Values.logandExistingSecretName -}}
         {{- printf "true" -}}
     {{- else -}}
         {{- printf "false" -}}
