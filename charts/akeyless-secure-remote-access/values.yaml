@@ -42,14 +42,14 @@ privilegedAccess:
   allowedAccessIDs: []
    # - p-1234
    # - p-5678
-  service_account:
+  serviceAccount:
     ## ref: https://docs.akeyless.io/docs/secure-remote-access-bastion
     create: false
     serviceAccountName:
     ## For google workload identity have a look in the following link for the use of nodeSelector.
     ## ref: https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity
     annotations:
-    #      iam.gke.io/gcp-service-account: change_me_to_gcp_service_account
+    #      iam.gke.io/gcp-service-account: change_me_to_gcp_serviceAccount
     #       eks.amazonaws.com/role-arn: arn:aws:iam::40XXXXXXXX75:role/eksctl-Role1-XXXXXXXX
       
   # Azure Object ID to use with privileged credentials of type Azure AD
