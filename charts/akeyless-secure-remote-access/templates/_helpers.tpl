@@ -104,11 +104,11 @@ Checks persistent volume
 Get serviceAccountName
 */}}
 {{- define "akeyless-api-gw.getServiceAccountName" -}}
-    {{- if and (not .Values.privilegedAccess.service_account.serviceAccountName) ( not .Values.privilegedAccess.service_account.create )  }}
+    {{- if and (not .Values.privilegedAccess.serviceAccount.serviceAccountName) ( not .Values.privilegedAccess.serviceAccount.create )  }}
         {{- printf "default" -}}
-    {{- else if not .Values.privilegedAccess.service_account.serviceAccountName }}
+    {{- else if not .Values.privilegedAccess.serviceAccount.serviceAccountName }}
         {{.Release.Name}}-secure-remote-access
     {{- else -}}
-        {{$.Values.privilegedAccess.service_account.serviceAccountName}}
+        {{$.Values.privilegedAccess.serviceAccount.serviceAccountName}}
     {{- end -}}
 {{- end -}}
