@@ -58,9 +58,6 @@ helm install RELEASE_NAME akeyless/akeyless-sra -f values.yaml
 | `privilegedAccess`                    | Supported auth methods: AWS IAM, Azure AD, GCP and API Key.For AWS IAM or Azure AD, or GCP provide only accessID. For API Key, provide both accessID and accessKey                                                                       | ` `
 | `legacySigningAlg`                 | When set to "true", will sign ssh certificates using the legacy 'ssh-rsa-cert-v01@openssh.com' signing algorithm name in the certificate. | `"false"`
 | `usernameSubClaim`                 | Optional, provide a key-name to extract the username (value) of that key in sub-claims. The extracted username will be used to authenticated to the remote target (RDP or SSH).
-| ` `
-| `allowedBastionUrls`                 | Comma separated list of the URLs that will be considered valid for redirection to this bastion (security measure to prevent Open Redirect)
-| ` `
 | `privilegedAccess.accessID`                    | Privileged access ID (API Key, Azure AD, GCP, AWS IAM) **Required**                                                              | ` `
 | `privilegedAccess.accessKey`                    | API key accessKey                                                                           | ` `
 | `privilegedAccess.allowedAccessIDs`                    | limit access to privileged items only for these end user access ids. If left empty, all access ids are allowedCredentials                                                                           | `[]`
@@ -77,20 +74,20 @@ The following table lists the configurable parameters of the Zero Trust Bastion 
 
 ### Deployment parameters
 
-| Parameter                                 | Description                                                                                                          | Default                                                      |
-|-------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
-| `ztbConfig.enabled`                        | Enable Zero Trust Bastion                                                                                         | `true`
-| `ztbConfig.image.repository`                        | Zero Trust Bastion image name                                                                                        | `akeyless/zero-trust-bastion`                                |
-| `ztbConfig.image.tag`                               | Zero Trust Bastion image tag                                                                                         | `latest`                                                     |
-| `ztbConfig.image.pullPolicy`                        | Zero Trust Bastion image pull policy                                                                                 | `Always`                                                     |                                                        |
-| `ztbConfig.updateStrategy`                          | Updating statefulset strategy                                                                                        | `ztbConfig.RollingUpdate`                                              |
-| `ztbConfig.containerName`                           | Zero Trust Bastion container name                                                                                    | `zero-trust-bastion`                                         |
-| `ztbConfig.replicaCount`                            | Number of Zero Trust Bastion nodes                                                                                   | `1`                                                          |
-| `ztbConfig.livenessProbe`                           | Liveness probe configuration for Zero Trust Bastion                                                                  | Check `values.yaml` file                                     |
-| `ztbConfig.readinessProbe`                          | Readiness probe configuration for Zero Trust Bastion                                                                 | Check `values.yaml` file                                     |
-| `ztbConfig.resources.limits`                        | The resources limits for Zero Trust Bastion containers                                                               | `{}`                                                         |
-| `ztbConfig.resources.requests`                      | The requested resources for Zero Trust Bastion containers                                                            | `{}`                                                         |
-
+| Parameter                      | Description                                                                                                                                | Default                       |
+|--------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------|
+| `ztbConfig.enabled`            | Enable Zero Trust Bastion                                                                                                                  | `true`                        |
+| `ztbConfig.image.repository`   | Zero Trust Bastion image name                                                                                                              | `akeyless/zero-trust-bastion` |
+| `ztbConfig.image.tag`          | Zero Trust Bastion image tag                                                                                                               | `latest`                      |
+| `ztbConfig.image.pullPolicy`   | Zero Trust Bastion image pull policy                                                                                                       | `Always`                      |                                                        |
+| `ztbConfig.updateStrategy`     | Updating statefulset strategy                                                                                                              | `ztbConfig.RollingUpdate`     |
+| `ztbConfig.containerName`      | Zero Trust Bastion container name                                                                                                          | `zero-trust-bastion`          |
+| `ztbConfig.replicaCount`       | Number of Zero Trust Bastion nodes                                                                                                         | `1`                           |
+| `ztbConfig.livenessProbe`      | Liveness probe configuration for Zero Trust Bastion                                                                                        | Check `values.yaml` file      |
+| `ztbConfig.readinessProbe`     | Readiness probe configuration for Zero Trust Bastion                                                                                       | Check `values.yaml` file      |
+| `ztbConfig.resources.limits`   | The resources limits for Zero Trust Bastion containers                                                                                     | `{}`                          |
+| `ztbConfig.resources.requests` | The requested resources for Zero Trust Bastion containers                                                                                  | `{}`                          |
+| `ztbConfig.allowedBastionUrls` | Comma separated list of the URLs that will be considered valid for redirection to this bastion (security measure to prevent Open Redirect) | `[]`                          |
 
 ### Exposure parameters
 

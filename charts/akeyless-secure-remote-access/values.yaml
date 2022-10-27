@@ -21,10 +21,6 @@ legacySigningAlg: "false"
 # Optional, provide a key-name to extract the username (value) of that key in sub-claims. The extracted username will be used to authenticated to the remote target (RDP or SSH).
 usernameSubClaim:
 
-# Comma separated list of the URLs that will be considered valid for redirection to this bastion (security measure to prevent Open Redirect)
-# for example, "https://bastion.my.org:8888,https://basion.other.org:8888"
-allowedBastionUrls:
-
 # Relevant for Zero-Trust Access for non-SSH targets (e.g. DBs, K8s, AWS CLIs).
 # If provided, it's recommended to grant minimal permissions ("List" only) to the Zero-Trust Dynamic Secrets,
 # while the privilegedAccess will have "Read" and "List" permissions.
@@ -117,6 +113,11 @@ ztbConfig:
     ## Set this to true in order to add the corresponding annotations for cert-manager
     ##
     certManager: false
+
+  # Comma separated list of the URLs that will be considered valid for redirection to this bastion (security measure to prevent Open Redirect)
+  # for example, "https://bastion.my.org:8888,https://basion.other.org:8888"
+  allowedBastionUrls: []
+
 
     ## existingSecret: name-of-existing-secret
 

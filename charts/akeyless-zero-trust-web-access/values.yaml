@@ -99,6 +99,11 @@ dispatcher:
     listOnlyCredentials:
       samlAccessID: ""
 
+    # Comma separated list of the URLs that will be considered valid for redirection to this bastion (security measure to prevent Open Redirect)
+    # for example, "https://bastion.my.org:8888,https://basion.other.org:8888"
+    allowedBastionUrls: []
+
+
     # The privilegedAccess should have "Read" and "List" permissions to the relevant secrets.
     # If accessKey field is left empty, the accessID will be used as a Cloud Provider IAM Auth Method (e.g. AWS-IAM, AzureAD, GCP-GCE)
     privilegedAccess:
