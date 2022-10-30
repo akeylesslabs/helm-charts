@@ -253,7 +253,7 @@ sshConfig:
     memAvgUtil: 50
 
   config:
-    CAPublicKey: sdsdsdsdsdsd
+    CAPublicKey:
     # CAPublicKey: |
       
     sessionTermination:
