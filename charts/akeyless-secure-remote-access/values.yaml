@@ -114,10 +114,11 @@ ztbConfig:
     ##
     certManager: false
 
-  # Comma separated list of the URLs that will be considered valid for redirection to this bastion (security measure to prevent Open Redirect)
-  # for example, "https://bastion.my.org:8888,https://basion.other.org:8888"
+  # List of the URLs that will be considered valid for redirection to this bastion (security measure to prevent Open Redirect)
+  # for example,
   allowedBastionUrls: []
-
+    #- "https://bastion.my.org:8888"
+    #- "https://basion.other.org:8888"
 
     ## existingSecret: name-of-existing-secret
 
@@ -252,7 +253,7 @@ sshConfig:
     memAvgUtil: 50
 
   config:
-    CAPublicKey:
+    CAPublicKey: sdsdsdsdsdsd
     # CAPublicKey: |
       
     sessionTermination:
