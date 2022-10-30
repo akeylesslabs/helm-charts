@@ -99,7 +99,7 @@ dispatcher:
     listOnlyCredentials:
       samlAccessID: ""
 
-    # List of the URLs that will be considered valid for redirection to this bastion (security measure to prevent Open Redirect)
+    # List of URLs that will be considered valid for redirection from the Portal back to the bastion
     allowedBastionUrls: []
       # - "https://bastion.my.org:8888"
       # - "https://basion.other.org:8888"
