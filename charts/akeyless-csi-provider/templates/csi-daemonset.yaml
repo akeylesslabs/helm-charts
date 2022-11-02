@@ -8,7 +8,10 @@ metadata:
     app.kubernetes.io/name: {{ include "akeyless.name" . }}-csi-provider
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
+    {{- if .Values.csi.daemonSet.labels }}
+      {{- toYaml .Values.csi.daemonSet.labels | nindent 4 }}
   {{ template "csi.daemonSet.annotations" . }}
+  {{- end }}
 spec:
   updateStrategy:
     type: {{ .Values.csi.daemonSet.updateStrategy.type }}

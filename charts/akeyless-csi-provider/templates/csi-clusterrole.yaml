@@ -7,6 +7,9 @@ metadata:
     app.kubernetes.io/name: {{ include "akeyless.name" . }}-csi-provider
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
+    {{- if .Values.csi.clusterrole.labels }}
+      {{- toYaml .Values.csi.clusterrole.labels | nindent 4 }}
+    {{- end }}
 rules:
 - apiGroups:
   - ""

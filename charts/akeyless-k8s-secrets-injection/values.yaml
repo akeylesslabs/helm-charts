@@ -27,6 +27,7 @@ serviceAccount:
   # annotations: {}
   # Automount API credentials for a Service Account.
   automountServiceAccountToken: true
+  labels: {}
 
 service:
   name: secrets-webhook
