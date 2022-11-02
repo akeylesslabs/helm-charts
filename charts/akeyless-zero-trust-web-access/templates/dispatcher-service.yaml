@@ -6,6 +6,9 @@ metadata:
   labels:
     app: dispatcher-svc
 {{- include "akeyless-zero-web-access.labels" . | nindent 4 }}
+  {{- if .Values.dispatcher.service.labels }}
+    {{- toYaml .Values.dispatcher.service.labels | nindent 4 }}
+  {{- end }}
   annotations:
 {{- toYaml .Values.dispatcher.service.annotations | nindent 4 }}
 spec:

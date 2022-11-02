@@ -5,6 +5,9 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
         {{- include "akeyless-zero-web-access.labels" . | nindent 4 }}
+      {{- if .Values.deployment.labels }}
+        {{- toYaml .Values.deployment.labels | nindent 4 }}
+      {{- end }}
 spec:
   selector:
     matchLabels:

@@ -9,6 +9,9 @@ httpProxySettings:
   https_proxy: ""
   no_proxy: ""
 
+deployment:
+  labels: {}
+
 dispatcher:
   replicaCount: 1
   image:
@@ -28,6 +31,7 @@ dispatcher:
     enabled: false
 
     annotations: {}
+    labels: {}
 # Example for Nginx ingress
 #    annotations:
 #      kubernetes.io/ingress.class: nginx
@@ -55,6 +59,7 @@ dispatcher:
   service:
     # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
     annotations: {}
+    labels: {}
     type: LoadBalancer
     port: 9000
     proxyPort: 19414
@@ -145,6 +150,8 @@ webWorker:
   service:
     # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
     annotations: {}
+    labels: {}
+
     port: 5800
 
   resources: {}
