@@ -131,8 +131,8 @@ csi:
   # Pass arbitrary additional arguments to akeyless-csi-provider.
   extraArgs: []
 
-  clusterrole:
+  clusterRole:
     labels: {}
 
-  clusterrolebinding:
+  clusterRoleBinding:
     labels: {}
