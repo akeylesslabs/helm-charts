@@ -1543,6 +1543,18 @@ entries:
   akeyless-csi-provider:
   - apiVersion: v2
     appVersion: 1.0.0
+    created: "2022-11-02T11:56:31.271170315Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-csi-provider
+    digest: 31c89cb7ca4217aae37f304eace8ef2a7433d0c575b22ac0b225e40d5e390e98
+    kubeVersion: '>= 1.14.0-0'
+    name: akeyless-csi-provider
+    sources:
+    - https://github.com/akeylesslabs/akeyless-csi-provider
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-csi-provider-1.0.2/akeyless-csi-provider-1.0.2.tgz
+    version: 1.0.2
+  - apiVersion: v2
+    appVersion: 1.0.0
     created: "2022-03-29T08:58:15.822787393Z"
     description: A Helm chart for Kubernetes that deploys akeyless-csi-provider
     digest: 489c6f351a66a7449b28019184fb20e1fc150508c882c3cd5bd0c93637e6a70b
@@ -1566,6 +1578,17 @@ entries:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-csi-provider-1.0.0/akeyless-csi-provider-1.0.0.tgz
     version: 1.0.0
   akeyless-secrets-injection:
+  - apiVersion: v2
+    appVersion: 0.20.20
+    created: "2022-11-02T11:56:31.504132614Z"
+    description: A Helm chart that deploys a mutating admission webhook that configures
+      applications to request env vars from Akeyless Vault Secrets
+    digest: 84531e5e6e5a61b728c9c8c2f736e0c0c8947c53783813f774f4d17ade47b878
+    name: akeyless-secrets-injection
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-secrets-injection-1.2.24/akeyless-secrets-injection-1.2.24.tgz
+    version: 1.2.24
   - apiVersion: v2
     appVersion: 0.20.20
     created: "2022-10-18T15:50:48.823759828Z"
@@ -1842,6 +1865,20 @@ entries:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-secrets-injection-1.0.0/akeyless-secrets-injection-1.0.0.tgz
     version: 1.0.0
   akeyless-sra:
+  - annotations:
+      sshVersion: 0.11.45
+      ztbVersion: v0.14.1
+    apiVersion: v2
+    appVersion: v0.14.1_0.11.45
+    created: "2022-11-02T11:56:31.744892915Z"
+    description: A Helm chart for Kubernetes akeyless-zero-trust-bastion and akeyless-ssh-bastion
+      deployment
+    digest: 233e6d994ff8a59617832085a6fc9725063702e59c73f4b08dc9f26747f62f4a
+    name: akeyless-sra
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-sra-0.13.3/akeyless-sra-0.13.3.tgz
+    version: 0.13.3
   - annotations:
       sshVersion: 0.11.45
       ztbVersion: v0.14.1
@@ -3449,6 +3486,20 @@ entries:
   akeyless-zero-trust-web-access:
   - apiVersion: v2
     appVersion: 0.13.0
+    created: "2022-11-02T11:56:31.985875317Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-zero-trust-web-access
+    digest: 9fa22c0b0b889a2569dbe7c7c98954b9d1c2172ca6d965b7c23e8ac706327daf
+    home: https://www.akeyless.io
+    icon: https://akeylesslabs.github.io/helm-charts/assets/logo/akl.jpeg
+    name: akeyless-zero-trust-web-access
+    sources:
+    - https://github.com/akeylesslabs/helm-charts/tree/feature/helm_repo/akeyless-zero-trust-web-access
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.4.2/akeyless-zero-trust-web-access-1.4.2.tgz
+    version: 1.4.2
+  - apiVersion: v2
+    appVersion: 0.13.0
     created: "2022-10-31T14:34:51.052009889Z"
     description: A Helm chart for Kubernetes that deploys akeyless-zero-trust-web-access
     digest: 85b985e541781a277d0a7d915265c43fa986dcbece0d90dc03ef025cf76fc045
@@ -4371,4 +4422,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2022-10-31T14:34:51.056065517Z"
+generated: "2022-11-02T11:56:31.989892619Z"
