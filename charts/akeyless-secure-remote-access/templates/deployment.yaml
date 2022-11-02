@@ -6,6 +6,9 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
 {{- include "akeyless-secure-remote-access.labels" . | nindent 4 }}
+  {{- if .Values.deployment.labels }}
+    {{- toYaml .Values.deployment.labels | nindent 4 }}
+  {{- end }}
 spec:
   selector:
     matchLabels:
@@ -60,9 +63,9 @@ spec:
             - name: USERNAME_SUB_CLAIM
               value: {{ .Values.usernameSubClaim }}
 {{- end }}
-{{- if .Values.allowedBastionUrls }}
+{{- if .Values.ztbConfig.allowedBastionUrls }}
             - name: ALLOWED_BASTION_URLS
-              value: {{ .Values.allowedBastionUrls }}
+              value: {{ range $index, $element := .Values.ztbConfig.allowedBastionUrls -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }}
 {{- end }}
 {{- with .Values.privilegedAccess }}
             - name: PRIVILEGED_ACCESS_ID

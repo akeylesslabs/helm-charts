@@ -21,10 +21,6 @@ legacySigningAlg: "false"
 # Optional, provide a key-name to extract the username (value) of that key in sub-claims. The extracted username will be used to authenticated to the remote target (RDP or SSH).
 usernameSubClaim:
 
-# Comma separated list of the URLs that will be considered valid for redirection to this bastion (security measure to prevent Open Redirect)
-# for example, "https://bastion.my.org:8888,https://basion.other.org:8888"
-allowedBastionUrls:
-
 # Relevant for Zero-Trust Access for non-SSH targets (e.g. DBs, K8s, AWS CLIs).
 # If provided, it's recommended to grant minimal permissions ("List" only) to the Zero-Trust Dynamic Secrets,
 # while the privilegedAccess will have "Read" and "List" permissions.
@@ -51,7 +47,7 @@ privilegedAccess:
     annotations:
     #      iam.gke.io/gcp-service-account: change_me_to_gcp_serviceAccount
     #       eks.amazonaws.com/role-arn: arn:aws:iam::40XXXXXXXX75:role/eksctl-Role1-XXXXXXXX
-      
+
   # Azure Object ID to use with privileged credentials of type Azure AD
   azureObjectID: ""
   # Audience to use with privileged credentials of type GCP
@@ -62,6 +58,9 @@ httpProxySettings:
   http_proxy: ""
   https_proxy: ""
   no_proxy: ""
+
+deployment:
+  labels: {}
 
 ####################################################
 ## Default values for akeyless-zero-trust-bastion ##
@@ -82,6 +81,7 @@ ztbConfig:
   service:
     # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
     annotations: {}
+    labels: {}
     type: LoadBalancer
     port: 8888
 
@@ -96,6 +96,7 @@ ztbConfig:
     ##
     # enabled: true
     annotations: {}
+    labels: {}
   # Example for Nginx ingress
     #  annotations:
       #  kubernetes.io/ingress.class: nginx
@@ -126,6 +127,11 @@ ztbConfig:
     ## Set this to true in order to add the corresponding annotations for cert-manager
     ##
     certManager: false
+
+  # List of URLs that will be considered valid for redirection from the Portal back to the bastion
+  allowedBastionUrls: []
+    #- "https://bastion.my.org:8888"
+    #- "https://basion.other.org:8888"
 
     ## existingSecret: name-of-existing-secret
 
@@ -186,6 +192,8 @@ sshConfig:
   ## Ref: https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#rolling-update
   updateStrategy: RollingUpdate
 
+  labels: { }
+
   nodeSelector:
   #     iam.gke.io/gke-metadata-server-enabled: "true"
   securityContext:
@@ -205,6 +213,7 @@ sshConfig:
   service:
     # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
     annotations: {}
+    labels: {}
     type: LoadBalancer
     port: 22
     curlProxyPort: 9900

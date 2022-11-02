@@ -15,4 +15,7 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
     component: mutating-webhook
+    {{- if .Values.serviceAccount.labels }}
+      {{- toYaml .Values.serviceAccount.labels | nindent 4 }}
+    {{- end }}
 {{- end }}

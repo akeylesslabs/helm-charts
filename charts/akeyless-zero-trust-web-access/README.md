@@ -118,13 +118,14 @@ The following table lists the configurable parameters of the Zero Trust Web Acce
 
 ### Zero Trust Web Access configuration parameters
 
-| Parameter                                             | Description                                                                                                          | Default                                                      |
-|-------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
-| `dispatcher.config.privilegedAccess.accessID`         | Access ID with "read" capability for privileged access.                                                              | `nil`                                                        |
-| `dispatcher.config.privilegedAccess.accessKey`        | Access Key of the provided access ID. (not required on cloud identity)                                               | `nil`                                                        |
-| `dispatcher.config.privilegedAccess.allowedAccessIDs` | Access will be permitted only to these access IDs. By default, any access ID is accepted.                            | `[]`                                                         |
-| `config.listOnlyCredentials.samlAccessID`             | Non-privileged SAML credentials with "list" only access.                                                             | `nil`                                                        |
-| `dispatcher.config.apiGatewayURL`                     | API Gateway URL to use to fetch the secrets.                                                                         | `https://rest.akeyless.io`                                   |
-| `dispatcher.config.disableSecureCookie`               | Use browser secure cookie only (HTTPS)                                                                               | `true`                                                       |
-| `webWorker.config.displayWidth`                       | Web worker display Width (in pixels) of the application's window.                                                    | `2560`                                                       |
-| `webWorker.config.displayHeight`                      | Web worker display Height (in pixels) of the application's window.                                                   | `1200`                                                       |
+| Parameter                                             | Description                                                                                    | Default                    |
+|-------------------------------------------------------|------------------------------------------------------------------------------------------------|----------------------------|
+| `dispatcher.config.privilegedAccess.accessID`         | Access ID with "read" capability for privileged access.                                        | `nil`                      |
+| `dispatcher.config.privilegedAccess.accessKey`        | Access Key of the provided access ID. (not required on cloud identity)                         | `nil`                      |
+| `dispatcher.config.privilegedAccess.allowedAccessIDs` | Access will be permitted only to these access IDs. By default, any access ID is accepted.      | `[]`                       |
+| `config.listOnlyCredentials.samlAccessID`             | Non-privileged SAML credentials with "list" only access.                                       | `nil`                      |
+| `dispatcher.config.apiGatewayURL`                     | API Gateway URL to use to fetch the secrets.                                                   | `https://rest.akeyless.io` |
+| `dispatcher.config.disableSecureCookie`               | Use browser secure cookie only (HTTPS)                                                         | `true`                     |
+| `webWorker.config.displayWidth`                       | Web worker display Width (in pixels) of the application's window.                              | `2560`                     |
+| `webWorker.config.displayHeight`                      | Web worker display Height (in pixels) of the application's window.                             | `1200`                     |
+| `dispatcher.config.allowedBastionUrls`                | List of URLs that will be considered valid for redirection from the Portal back to the bastion | `[]`                       |

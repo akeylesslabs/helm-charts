@@ -5,6 +5,9 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
         {{- include "akeyless-zero-web-access.labels" . | nindent 4 }}
+    {{- if .Values.deployment.labels }}
+      {{- toYaml .Values.deployment.labels | nindent 4 }}
+    {{- end }}
 spec:
   selector:
     matchLabels:
@@ -61,6 +64,9 @@ spec:
               echo {{ .Values.dispatcher.config.disableSecureCookie }} > /etc/akeyless/disable_secure_cookie
 {{- if .Values.dispatcher.config.privilegedAccess.allowedAccessIDs }}
               echo {{ range $index, $element := .Values.dispatcher.config.privilegedAccess.allowedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_access_ids
+{{- end }}
+{{- if .Values.dispatcher.config.allowedBastionUrls }}
+              echo {{ range $index, $element := .Values.dispatcher.config.allowedBastionUrls -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_bastion_urls
 {{- end }}
           volumeMounts:
             - name: configmap-akeyless
