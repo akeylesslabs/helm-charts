@@ -50,6 +50,9 @@ httpProxySettings:
   https_proxy: ""
   no_proxy: ""
 
+deployment:
+  labels: {}
+
 ####################################################
 ## Default values for akeyless-zero-trust-bastion ##
 ####################################################
@@ -69,6 +72,7 @@ ztbConfig:
   service:
     # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
     annotations: {}
+    labels: {}
     type: LoadBalancer
     port: 8888
 
@@ -83,6 +87,7 @@ ztbConfig:
     ##
     # enabled: true
     annotations: {}
+    labels: {}
   # Example for Nginx ingress
     #  annotations:
       #  kubernetes.io/ingress.class: nginx
@@ -178,7 +183,7 @@ sshConfig:
   ## Ref: https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#rolling-update
   updateStrategy: RollingUpdate
 
-
+  labels: {}
   service_account:
     create: false
     ## serviceAccountName :
@@ -211,6 +216,7 @@ sshConfig:
   service:
     # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
     annotations: {}
+    labels: {}
     type: LoadBalancer
     port: 22
     curlProxyPort: 9900

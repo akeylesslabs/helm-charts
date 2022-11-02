@@ -7,6 +7,9 @@ metadata:
   namespace: {{ .Release.Namespace | quote }}
   labels:
 {{- include "akeyless-secure-remote-access.labels" . | nindent 4 }}
+  {{- if .Values.ztbConfig.ingress.labels }}
+    {{- toYaml .Values.ztbConfig.ingress.labels | nindent 4 }}
+  {{- end }}
   annotations:
 {{- if .Values.ztbConfig.ingress.certManager }}
     kubernetes.io/tls-acme: "true"

@@ -7,6 +7,9 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "akeyless-secure-remote-access.labels" . | nindent 4 }}
+  {{- if .Values.sshConfig.service.labels }}
+    {{- toYaml .Values.sshConfig.service.labels | nindent 4 }}
+  {{- end }}
   annotations:
   {{- toYaml .Values.sshConfig.service.annotations | nindent 4 }}
 spec:
@@ -32,6 +35,9 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "akeyless-secure-remote-access.labels" . | nindent 4 }}
+  {{- if .Values.ztbConfig.service.labels }}
+    {{- toYaml .Values.ztbConfig.service.labels | nindent 4 }}
+  {{- end }}
   annotations:
   {{- toYaml .Values.ztbConfig.service.annotations | nindent 4 }}
 spec:
