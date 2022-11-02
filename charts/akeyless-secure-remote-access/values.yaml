@@ -183,7 +183,7 @@ sshConfig:
   ## Ref: https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#rolling-update
   updateStrategy: RollingUpdate
 
-
+  labels: {}
   service_account:
     create: false
     ## serviceAccountName :

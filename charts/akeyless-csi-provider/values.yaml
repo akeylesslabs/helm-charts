@@ -132,7 +132,7 @@ csi:
   extraArgs: []
 
   clusterrole:
-    labels: { }
+    labels: {}
 
   clusterrolebinding:
     labels: {}

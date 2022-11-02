@@ -6,6 +6,9 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "akeyless-secure-remote-access.labels" . | nindent 4 }}
+  {{- if .Values.sshConfig.labels }}
+    {{- toYaml .Values.sshConfig.labels | nindent 4 }}
+  {{- end }}
 spec:
   serviceName: {{ include "akeyless-secure-remote-access.fullname" . }}
   replicas: 1
