@@ -6,6 +6,9 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
 {{- include "akeyless-zero-web-access.labels" . | nindent 4 }}
+  {{- if .Values.webWorker.service.labels }}
+    {{- toYaml .Values.webWorker.service.labels | nindent 4 }}
+  {{- end }}
   annotations:
 {{- toYaml .Values.webWorker.service.annotations | nindent 4 }}
 spec:
