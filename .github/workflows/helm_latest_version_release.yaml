@@ -7,9 +7,9 @@ concurrency:
   group: Helm Chart Latest App Version Release
 
 env:
-  service: ${{ github.event.deployment.service }}
+  service: ${{ github.event.deployment.payload.service }}
   major_minor_patch: ${{ github.event.deployment.payload.major_minor_patch }}
-  app_version: ${{ github.event.deployment.app_version }}
+  app_version: ${{ github.event.deployment.payload.app_version }}
 
 jobs:
   update-latest-helm-chart-version:
@@ -17,12 +17,12 @@ jobs:
     runs-on: ubuntu-20.04
     outputs:
       new_chart_version: ${{ steps.vars.outputs.new_chart_version }}
-      chart_name: ${{ steps.vars.outputs.chart_dir }}
+      chart_name: ${{ steps.vars.outputs.chart_name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
         with: 
-          token: ${{ secrets.TOKEN_GITHUB }}
+          token: ${{ secrets.AKEYLESS_CI_COMMIT_PUSH_TOKEN }}
 
       - name: Fetch history
         run: git fetch --prune --unshallow
@@ -41,7 +41,7 @@ jobs:
         id: vars
         run: |
           echo ::set-output name=new_chart_version::${{ env.new_chart_version }}
-          echo ::set-output name=chart_dir::${{ env.chart_dir }}
+          echo ::set-output name=chart_name::${{ env.chart_name }}
 
   Slack-Notification-on-success:
     name: Slack-On-Success-Notification
@@ -52,8 +52,8 @@ jobs:
       contains(needs.*.result, 'success') &&
       (github.event.deployment.task == 'update-latest-version'))
     env:
-      new_chart_version: ${{ needs.update-latest-helm-chart-version.new_chart_version }}
-      chart_name: ${{ needs.update-latest-helm-chart-version.chart_name }}
+      new_chart_version: ${{ needs.update-latest-helm-chart-version.outputs.new_chart_version }}
+      chart_name: ${{ needs.update-latest-helm-chart-version.outputs.chart_name }}
     steps:
       - name: Prepare Slack Message On Success
         id: slack-message-success-creator
