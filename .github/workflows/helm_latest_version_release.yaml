@@ -99,7 +99,7 @@ jobs:
       contains(needs.*.result, 'failure') &&
       (github.event.deployment.task == 'update-latest-version'))
     env:
-      chart_name: ${{ needs.update-latest-helm-chart-version.chart_name }}
+      chart_name: ${{ needs.update-latest-helm-chart-version.outputs.chart_name }}
     steps:
       - name: Prepare Slack Message On Failure
         id: slack-message-failure-creator
