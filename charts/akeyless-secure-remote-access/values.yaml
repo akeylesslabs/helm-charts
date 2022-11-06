@@ -38,7 +38,16 @@ privilegedAccess:
   allowedAccessIDs: []
    # - p-1234
    # - p-5678
-      
+  serviceAccount:
+    ## ref: https://docs.akeyless.io/docs/secure-remote-access-bastion
+    create: false
+    serviceAccountName:
+    ## For google workload identity have a look in the following link for the use of nodeSelector.
+    ## ref: https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity
+    annotations:
+    #      iam.gke.io/gcp-service-account: change_me_to_gcp_serviceAccount
+    #       eks.amazonaws.com/role-arn: arn:aws:iam::40XXXXXXXX75:role/eksctl-Role1-XXXXXXXX
+
   # Azure Object ID to use with privileged credentials of type Azure AD
   azureObjectID: ""
   # Audience to use with privileged credentials of type GCP
@@ -184,19 +193,7 @@ sshConfig:
   updateStrategy: RollingUpdate
 
   labels: {}
-  service_account:
-    create: false
-    ## serviceAccountName :
-    ##   1. create=false and serviceAccountName empty - default service account will be used
-    ##   2. create=false and serviceAccountName not empty - will use an already existing service account called serviceAccountName
-    ##   3. create=true and serviceAccountName empty - will create a new service account called <release name>-akeyless-gateway
-    ##   4  create=true and serviceAccountName not empty - will create a new service account called as specified
-    serviceAccountName:
-    ## For google workload identity have a look in the following link for the use of nodeSelector.
-    ## ref: https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity
-    annotations:
-  #      iam.gke.io/gcp-service-account: change_me_to_gcp_service_account
-  #      eks.amazonaws.com/role-arn: arn:aws:iam::40XXXXXXXX75:role/eksctl-Role1-XXXXXXXX
+
   nodeSelector:
   #     iam.gke.io/gke-metadata-server-enabled: "true"
   securityContext:
