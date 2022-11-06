@@ -52,10 +52,11 @@ pushd "$GITHUB_WORKSPACE/charts/$chart_dir"
     git add -A && git commit -m "Updated ${service} helm chart version to latest: ${app_version}" || die "Failed to commit changes to git"
     git push origin HEAD
 
-    echo "$chart_dir app version was successfully updated to latest: ${app_version}"
-    echo "$chart_dir Helm chart version was updated to: ${new_chart_version}"
+    chart_name="$chart_dir"
+    echo "$chart_name app version was successfully updated to latest: ${app_version}"
+    echo "$chart_name Helm chart version was updated to: ${new_chart_version}"
     echo "new_chart_version=$new_chart_version" >> $GITHUB_ENV
-    echo "chart_dir=$chart_dir" >> $GITHUB_ENV
+    echo "chart_name=$chart_name" >> $GITHUB_ENV
 popd
 
 
