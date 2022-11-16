@@ -205,6 +205,13 @@ akeylessUserAuth:
   # - p-5678 subClimekey1=subClimeVal1
   # - p-5678
 
+  # restricted access to specific access-ids (comma separated list)
+  # restrictServiceToAccessIds: "p-1234,p-5678"
+  restrictServiceToAccessIds:
+
+  # restricted access to account
+  restrictAccessToAdminAccount: true
+
 universalIdentity:
   # interval im minutes, if empty the token will be rotated in token-ttl/3  max=10 
   uidRotationInterval: "5m" 
