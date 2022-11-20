@@ -201,11 +201,11 @@ spec:
           {{- end }}
           {{- if .Values.akeylessUserAuth.restrictServiceToAccessIds }}
             - name: RESTRICT_SERVICE_TO_ACCESS_IDS
-              value: {{ .Values.akeylessUserAuth.restrictServiceToAccessIds }}
+              value: {{ .Values.akeylessUserAuth.restrictServiceToAccessIds | quote }}
           {{- end }}
           {{- if .Values.akeylessUserAuth.restrictAccessToAdminAccount }}
             - name: RESTRICT_ACCESS_TO_ADMIN_ACCOUNT
-              value: {{ .Values.akeylessUserAuth.restrictAccessToAdminAccount }}
+              value: {{ .Values.akeylessUserAuth.restrictAccessToAdminAccount | quote }}
           {{- end }}
           {{- if .Values.akeylessUserAuth.initialClusterDisplayName }}
             - name: INITIAL_DISPLAY_NAME
