@@ -1,0 +1,38 @@
+name: Update Manifests
+
+on: 
+  workflow_dispatch:
+
+jobs:
+  update_manifests:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      # The below permission gives the workflow permission to commit directly to the repo
+      contents: write
+    name: Update All Generated Manifests
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Checkout Manifests Repo
+      uses: actions/checkout@v2
+      with:
+        repository: akeylesslabs/akeyless-k8s-manifests
+        token: ${{ secrets.AKEYLESS_CI_COMMIT_PUSH_TOKEN }}
+        path: manifest_work_dir
+
+    # The below step will pull in generated manifests from the last helm chart release and store them within the repo
+    - name: Process Manifests (akeyless-secrets-injection)
+      run: |
+        mkdir -p ${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection
+        cp ${GITHUB_WORKSPACE}/manifest_work_dir/akeyless-secrets-injection/manifests/* ${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection/
+        cp ${GITHUB_WORKSPACE}/manifest_work_dir/akeyless-secrets-injection/README.md ${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection/
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git add ${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection/*
+        git commit -m "update generated manifests"
+        git push
+
+    - name: After Checker
+      run: tree -p ${GITHUB_WORKSPACE}/manifests

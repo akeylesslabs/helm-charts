@@ -5,3 +5,6 @@
 .vscode/launch.json
 .vscode/c_cpp_properties.json
 .vscode/settings.json
+
+#Ignore manifest work directory
+manifest_work_dir/
