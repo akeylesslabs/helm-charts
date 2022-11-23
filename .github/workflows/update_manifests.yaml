@@ -32,7 +32,7 @@ jobs:
         git config user.email github-actions@github.com
         git add ${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection/*
         git commit -m "update generated manifests"
-        git push
+        git push origin HEAD
 
     - name: After Checker
       run: tree -p ${GITHUB_WORKSPACE}/manifests
