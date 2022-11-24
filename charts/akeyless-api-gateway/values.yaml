@@ -235,6 +235,8 @@ TLSConf:
   vaultProxy: false
   akeylessAPIServices:  false
   configurationManager: false
+  # minimumTlsVersion can be one of the following <TLSv1/TLSv1.1/TLSv1.2/TLSv1.3> 
+  minimumTlsVersion: ""
   # Specifies an existing secret for tls-certificate must include:
   # - akeyless-api-cert.crt (base64)
   # - akeyless-api-cert.key (base64)

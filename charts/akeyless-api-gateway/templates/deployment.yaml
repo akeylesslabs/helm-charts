@@ -287,6 +287,10 @@ spec:
             - name: ENABLE_TLS_CONFIGURE
               value: "{{ .Values.TLSConf.configurationManager }}"
           {{- end }}
+          {{- if .Values.TLSConf.minimumTlsVersion }}
+            - name: MIN_TLS_VERSION
+              value: "{{ .Values.TLSConf.minimumTlsVersion }}"
+          {{- end }}
           ## caching section
           {{- if .Values.cachingConf.enabled }}
             - name: CACHE_ENABLE
