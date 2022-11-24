@@ -289,7 +289,7 @@ spec:
           {{- end }}
           {{- if .Values.TLSConf.minimumTlsVersion }}
             - name: MIN_TLS_VERSION
-              value: "{{ .Values.TLSConf.minimumTlsVersion }}"
+              value: "{{ .Values.TLSConf.minimumTlsVersion | quote }}"
           {{- end }}
           ## caching section
           {{- if .Values.cachingConf.enabled }}
