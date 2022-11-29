@@ -1,0 +1,30 @@
+{
+  "policies": {
+    "BlockAboutConfig": true,
+    "BlockAboutAddons": true,
+    "BlockAboutProfiles": true,
+    "BlockAboutSupport": true,
+    "DisableDeveloperTools": true,
+    "DisableFirefoxAccounts": true,
+    "DisablePasswordReveal": true,
+    "DisablePrivateBrowsing": true,
+    "DisableProfileImport": true,
+    "DisableSafeMode": true,
+    "OfferToSaveLogins": false,
+    "OfferToSaveLoginsDefault": false,
+    "PasswordManagerEnabled": false,
+    "Proxy": {
+      "Mode": "none",
+      "Locked": true
+    },
+    "Preferences": {},
+    "WebsiteFilter": {
+      "Block": [
+        "<all_urls>"
+      ],
+      "Exceptions": [
+        "https://*.akeyless.io/*"
+      ]
+    }
+  }
+}
