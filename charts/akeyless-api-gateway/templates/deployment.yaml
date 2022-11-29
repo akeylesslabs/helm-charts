@@ -195,6 +195,20 @@ spec:
                   name: {{ include "akeyless-api-gw.secretName" . }}
                   key: admin-password
           {{- end }}
+          {{- if eq (include "akeyless-api-gw.adminAccessCertExist" .) "true" }}
+            - name: ADMIN_CERTIFICATE 
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "akeyless-api-gw.secretName" . }}
+                  key: admin-certificate 
+          {{- end }}
+          {{- if eq (include "akeyless-api-gw.adminAccessCertKeyExist" .) "true" }}
+            - name: ADMIN_CERTIFICATE_KEY 
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "akeyless-api-gw.secretName" . }}
+                  key: admin-certificate-key
+          {{- end }}
           {{- if .Values.akeylessUserAuth.clusterName }}
             - name: CLUSTER_NAME
               value: {{ .Values.akeylessUserAuth.clusterName }}
@@ -289,7 +303,7 @@ spec:
           {{- end }}
           {{- if .Values.TLSConf.minimumTlsVersion }}
             - name: MIN_TLS_VERSION
-              value: "{{ .Values.TLSConf.minimumTlsVersion | quote }}"
+              value: "{{ .Values.TLSConf.minimumTlsVersion }}"
           {{- end }}
           ## caching section
           {{- if .Values.cachingConf.enabled }}

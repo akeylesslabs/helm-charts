@@ -211,6 +211,40 @@ Check admin password
 {{- end -}}
 
 {{/*
+Check admin cert
+*/}}
+{{- define "akeyless-api-gw.adminAccessCertExist" -}}
+    {{- if .Values.akeylessUserAuth.adminBase64Certificate -}}
+        {{- printf "true" -}}
+    {{- else if and (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)) .Values.existingSecret -}}
+        {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" . )) "data") "admin-certificate" -}}
+            {{- printf "true" -}}
+        {{- else -}}
+            {{- printf "false" -}}
+        {{- end -}}
+    {{- else -}}
+        {{- printf "false" -}}
+    {{- end -}}
+{{- end -}}
+
+{{/*
+Check admin cert-key
+*/}}
+{{- define "akeyless-api-gw.adminAccessCertKeyExist" -}}
+    {{- if .Values.akeylessUserAuth.adminBase64CertificateKey -}}
+        {{- printf "true" -}}
+    {{- else if and (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)) .Values.existingSecret -}}
+        {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" . )) "data") "admin-certificate-key" -}}
+            {{- printf "true" -}}
+        {{- else -}}
+            {{- printf "false" -}}
+        {{- end -}}
+    {{- else -}}
+        {{- printf "false" -}}
+    {{- end -}}
+{{- end -}}
+
+{{/*
 Check logand conf
 */}}
 {{- define "akeyless-api-gw.logandConfExist" -}}
