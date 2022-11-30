@@ -181,18 +181,21 @@ resources: {}
   #   memory: 128Mi
 
 # Akeyless API Gateway application version
-# version: 
+# version:
 
 env: []
 
 
 akeylessUserAuth:
-  # adminAccessId is required field, supported types: access_key,password or cloud identity(aws_iam/azure_ad/gcp_gce)
-  adminAccessId: 
+  # adminAccessId is required field, supported types: access_key,password,certificate or cloud identity(aws_iam/azure_ad/gcp_gce)
+  adminAccessId:
   adminAccessKey:
   adminPassword:
+  adminBase64Certificate:
+  adminBase64CertificateKey:
   adminUIDInitToken:
-  clusterName: 
+
+  clusterName:
   initialClusterDisplayName:
   # The key which is used to encrypt the API Gateway configuration. 
   # If left empty - the account’s default key will be used. 
@@ -225,6 +228,8 @@ universalIdentity:
 #  - admin-access-id,
 #  - admin-access-key
 #  - admin-password
+#  - admin-certificate (base64)
+#  - admin-certificate-key (base64)
 #  - allowed-access-ids
 #  - customer-fragments
 existingSecret: 
@@ -235,6 +240,8 @@ TLSConf:
   vaultProxy: false
   akeylessAPIServices:  false
   configurationManager: false
+  # minimumTlsVersion can be one of the following <TLSv1/TLSv1.1/TLSv1.2/TLSv1.3> 
+  minimumTlsVersion:
   # Specifies an existing secret for tls-certificate must include:
   # - akeyless-api-cert.crt (base64)
   # - akeyless-api-cert.key (base64)
