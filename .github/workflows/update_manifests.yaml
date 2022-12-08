@@ -5,7 +5,7 @@ on:
 
 jobs:
   update_manifests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     permissions:
       id-token: write
       # The below permission gives the workflow permission to commit directly to the repo
@@ -13,26 +13,30 @@ jobs:
     name: Update All Generated Manifests
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Checkout Manifests Repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         repository: akeylesslabs/akeyless-k8s-manifests
         token: ${{ secrets.AKEYLESS_CI_COMMIT_PUSH_TOKEN }}
         path: manifest_work_dir
 
-    # The below step will pull in generated manifests from the last helm chart release and store them within the repo
-    - name: Process Manifests (akeyless-secrets-injection)
+    - name: generate manifests
       run: |
-        mkdir -p ${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection
-        cp ${GITHUB_WORKSPACE}/manifest_work_dir/akeyless-secrets-injection/manifests/* ${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection/
-        cp ${GITHUB_WORKSPACE}/manifest_work_dir/akeyless-secrets-injection/README.md ${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection/
-        git config user.name github-actions
-        git config user.email github-actions@github.com
-        git add ${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection/*
-        git commit -m "update generated manifests"
-        git push origin HEAD
+        .github/scripts/generate_manifests.sh
+
+    # The below step will pull in generated manifests from the last helm chart release and store them within the repo
+#    - name: Process Manifests (akeyless-secrets-injection)
+#      run: |
+#        mkdir -p ${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection
+#        cp ${GITHUB_WORKSPACE}/manifest_work_dir/akeyless-secrets-injection/manifests/* ${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection/
+#        cp ${GITHUB_WORKSPACE}/manifest_work_dir/akeyless-secrets-injection/README.md ${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection/
+#        git config --local user.name "$GITHUB_ACTOR"
+#        git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
+#        git add ${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection/*
+#        git commit -m "update generated manifests"
+#        git push origin HEAD
 
     - name: After Checker
       run: tree -p ${GITHUB_WORKSPACE}/manifests
