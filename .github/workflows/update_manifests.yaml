@@ -30,7 +30,7 @@ jobs:
       uses: peter-evans/create-pull-request@v4
       with:
         token: ${{ secrets.AKEYLESS_CI_COMMIT_PUSH_TOKEN }}
-        branch: generate-manifest-${GITHUB_SHA:0:8}
+        branch: generate-manifest-$GITHUB_SHA
         commit-message: generated new manifest
         title: 'Auto Generate new manifest'
         body: >
@@ -54,9 +54,9 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "$GITHUB_ACTOR"
         git pull
-        git merge origin/generate-manifest-${GITHUB_SHA:0:8}
+        git merge origin/generate-manifest-$GITHUB_SHA
         git push -u
-        git push --delete origin generate-manifest-${GITHUB_SHA:0:8}
+        git push --delete origin generate-manifest-$GITHUB_SHA
 
     - name: After Checker
       run: tree -p ${GITHUB_WORKSPACE}/manifests
