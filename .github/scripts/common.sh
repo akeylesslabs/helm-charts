@@ -70,7 +70,7 @@ function commit_and_push_to_git() {
   git config --local user.name "$GITHUB_ACTOR"
 
   (git add ${path_to_file} && git commit -m "${message}" ${path_to_file}) || die "Failed to commit changes to git"
-  git push -u origin HEAD
+  git push origin HEAD
 }
 
 function die() {

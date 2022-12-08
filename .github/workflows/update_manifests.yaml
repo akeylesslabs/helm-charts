@@ -1,7 +1,6 @@
 name: Update Manifests
 
 on:
-  deployment:
   workflow_dispatch:
 
 jobs:
