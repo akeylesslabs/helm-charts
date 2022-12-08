@@ -6,10 +6,6 @@ on:
 jobs:
   update_manifests:
     runs-on: ubuntu-20.04
-    permissions:
-      id-token: write
-      # The below permission gives the workflow permission to commit directly to the repo
-      contents: write
     name: Update All Generated Manifests
     steps:
     - name: Checkout
