@@ -28,7 +28,6 @@ jobs:
       uses: peter-evans/create-pull-request@v4
       with:
         token: ${{ secrets.AKEYLESS_CI_COMMIT_PUSH_TOKEN }}
-        path: ${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection/*
         branch: generate manifest
         branch-suffix: short-commit-hash
         commit-message: generated new manifest
