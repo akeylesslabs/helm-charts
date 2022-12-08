@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -ex
+set -e
 
 dir_path="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 source "${dir_path}/common.sh"
@@ -17,9 +17,3 @@ path="${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection/*"
 
 commit_and_push_to_git "${message}" "${path}"
 
-
-#git config --local user.name "$GITHUB_ACTOR"
-#git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
-#git add ${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection/*
-#git commit -m "update generated manifests"
-#git push origin HEAD

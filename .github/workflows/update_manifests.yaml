@@ -1,6 +1,7 @@
 name: Update Manifests
 
-on: 
+on:
+  deployment:
   workflow_dispatch:
 
 jobs:
@@ -22,21 +23,11 @@ jobs:
         token: ${{ secrets.AKEYLESS_CI_COMMIT_PUSH_TOKEN }}
         path: manifest_work_dir
 
-    - name: generate manifests
+      # The below step will pull in generated manifests from the last helm chart release and store them within the repo
+    - name: Process Manifests (akeyless-secrets-injection)
       run: |
         .github/scripts/generate_manifests.sh
 
-    # The below step will pull in generated manifests from the last helm chart release and store them within the repo
-#    - name: Process Manifests (akeyless-secrets-injection)
-#      run: |
-#        mkdir -p ${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection
-#        cp ${GITHUB_WORKSPACE}/manifest_work_dir/akeyless-secrets-injection/manifests/* ${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection/
-#        cp ${GITHUB_WORKSPACE}/manifest_work_dir/akeyless-secrets-injection/README.md ${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection/
-#        git config --local user.name "$GITHUB_ACTOR"
-#        git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
-#        git add ${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection/*
-#        git commit -m "update generated manifests"
-#        git push origin HEAD
 
     - name: After Checker
       run: tree -p ${GITHUB_WORKSPACE}/manifests
