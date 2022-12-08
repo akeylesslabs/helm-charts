@@ -15,5 +15,5 @@ cp ${GITHUB_WORKSPACE}/manifest_work_dir/akeyless-secrets-injection/README.md ${
 message="update generated manifests"
 path="${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection/*"
 
-commit_and_push_to_git "${message}" "${path}"
+#commit_and_push_to_git "${message}" "${path}"
 
