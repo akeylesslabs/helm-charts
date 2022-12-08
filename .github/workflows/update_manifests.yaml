@@ -26,8 +26,19 @@ jobs:
       # The below step will pull in generated manifests from the last helm chart release and store them within the repo
     - name: Process Manifests (akeyless-secrets-injection)
       run: |
+<<<<<<< update-manifests
         .github/scripts/generate_manifests.sh
 
+=======
+        mkdir -p ${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection
+        cp ${GITHUB_WORKSPACE}/manifest_work_dir/akeyless-secrets-injection/manifests/* ${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection/
+        cp ${GITHUB_WORKSPACE}/manifest_work_dir/akeyless-secrets-injection/README.md ${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection/
+        git config --local user.email "action@github.com"
+        git config --local user.name "$GITHUB_ACTOR"
+        git add ${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection/*
+        git commit -m "update generated manifests"
+        git push origin HEAD
+>>>>>>> main
 
     - name: After Checker
       run: tree -p ${GITHUB_WORKSPACE}/manifests
