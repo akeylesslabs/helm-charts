@@ -12,8 +12,4 @@ mkdir -p ${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection
 cp ${GITHUB_WORKSPACE}/manifest_work_dir/akeyless-secrets-injection/manifests/* ${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection/
 cp ${GITHUB_WORKSPACE}/manifest_work_dir/akeyless-secrets-injection/README.md ${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection/
 
-message="update generated manifests"
-path="${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection/*"
-
-commit_and_push_to_git "${message}" "${path}"
 

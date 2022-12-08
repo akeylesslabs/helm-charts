@@ -6,10 +6,6 @@ on:
 jobs:
   update_manifests:
     runs-on: ubuntu-20.04
-    permissions:
-      id-token: write
-      # The below permission gives the workflow permission to commit directly to the repo
-      contents: write
     name: Update All Generated Manifests
     steps:
     - name: Checkout
@@ -19,7 +15,7 @@ jobs:
       uses: actions/checkout@v3
       with:
         repository: akeylesslabs/akeyless-k8s-manifests
-        token: ${{ secrets.TOKEN_GITHUB }}
+        token: ${{ secrets.AKEYLESS_CI_COMMIT_PUSH_TOKEN }}
         path: manifest_work_dir
 
       # The below step will pull in generated manifests from the last helm chart release and store them within the repo
@@ -27,5 +23,37 @@ jobs:
       run: |
         .github/scripts/generate_manifests.sh
 
+    - name: Create Pull Request
+      id: cpr
+      uses: peter-evans/create-pull-request@v4
+      with:
+        token: ${{ secrets.AKEYLESS_CI_COMMIT_PUSH_TOKEN }}
+        branch: generate-manifest-${{ env.GITHUB_SHA }}
+        commit-message: generated new manifest
+        title: 'Auto Generate new manifest'
+        body: >
+          This PR is auto-generated for
+          Generated New Manifest
+        labels: Generate Manifest ,Auto PR
+
+    - name: Check outputs
+      run: |
+        echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
+        echo "Pull Request Head SHA - ${{ steps.cpr.outputs.pull-request-head-sha }}"
+        echo "COMMIT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+    - name: Checkout akeyless-environments code after PR
+      uses: actions/checkout@v3
+
+    - name: Run commands for merge & push & delete branch
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "$GITHUB_ACTOR"
+        git pull
+        git merge origin/generate-manifest-${{ env.GITHUB_SHA }}
+        git push -u
+        git push --delete origin generate-manifest-${{ env.GITHUB_SHA }}
+
     - name: After Checker
       run: tree -p ${GITHUB_WORKSPACE}/manifests
+
