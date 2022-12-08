@@ -30,19 +30,13 @@ jobs:
       uses: peter-evans/create-pull-request@v4
       with:
         token: ${{ secrets.AKEYLESS_CI_COMMIT_PUSH_TOKEN }}
-        branch: generate-manifest-$GITHUB_SHA
+        branch: ${{ env.branch_name }}
         commit-message: generated new manifest
         title: 'Auto Generate new manifest'
         body: >
           This PR is auto-generated for
           Generated New Manifest
         labels: Generate Manifest ,Auto PR
-
-    - name: Check outputs
-      run: |
-        echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
-        echo "Pull Request Head SHA - ${{ steps.cpr.outputs.pull-request-head-sha }}"
-        echo "COMMIT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
     - name: Checkout akeyless-environments code after PR
       uses: actions/checkout@v3
@@ -54,9 +48,9 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "$GITHUB_ACTOR"
         git pull
-        git merge origin/generate-manifest-$GITHUB_SHA
+        git merge origin/${{ env.branch_name }}
         git push -u
-        git push --delete origin generate-manifest-$GITHUB_SHA
+        git push --delete origin ${{ env.branch_name }}
 
     - name: After Checker
       run: tree -p ${GITHUB_WORKSPACE}/manifests
