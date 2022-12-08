@@ -15,7 +15,7 @@ jobs:
       uses: actions/checkout@v3
       with:
         repository: akeylesslabs/akeyless-k8s-manifests
-        token: ${{ secrets.AKEYLESS_CI_GITHUB_TOKEN }}
+        token: ${{ secrets.AKEYLESS_CI_COMMIT_PUSH_TOKEN }}
         path: manifest_work_dir
 
       # The below step will pull in generated manifests from the last helm chart release and store them within the repo
@@ -27,7 +27,7 @@ jobs:
       id: cpr
       uses: peter-evans/create-pull-request@v4
       with:
-        token: ${{ secrets.AKEYLESS_CI_GITHUB_TOKEN }}
+        token: ${{ secrets.AKEYLESS_CI_COMMIT_PUSH_TOKEN }}
         add-path: "${GITHUB_WORKSPACE}/manifests/akeyless-secrets-injection/*"
         branch: generate manifest
         branch-suffix: short-commit-hash
