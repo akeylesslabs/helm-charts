@@ -8,8 +8,10 @@ metadata:
   {{- if .Values.deployment.labels }}
     {{- toYaml .Values.deployment.labels | nindent 4 }}
   {{- end }}
+  {{- if .Values.deployment.annotations }}
   annotations:
   {{- toYaml .Values.deployment.annotations | nindent 4 }}
+  {{- end }}
 spec:
 
   {{- if not .Values.HPA.enabled }}
@@ -20,6 +22,10 @@ spec:
       {{- include "akeyless-api-gw.selectorLabels" . | nindent 6 }}
   template:
     metadata:
+      {{- if .Values.deployment.pod.annotations }}
+      annotations:
+          {{- toYaml .Values.deployment.pod.annotations | nindent 8 }}
+      {{- end }}
       labels:
         {{- include "akeyless-api-gw.selectorLabels" . | nindent 8 }}
         {{- if .Values.deployment.labels }}
