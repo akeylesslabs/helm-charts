@@ -103,10 +103,9 @@ spec:
             - name: DISPLAY_HEIGHT
               value: {{ .Values.webWorker.config.displayHeight | quote }}
           {{- end }}
-            {{- range $key, $value := .Values.webWorker.env }}
-            - name: {{ $key }}
-              value: {{ $value }}
-            {{- end }}
+{{- if .Values.webWorker.env }}
+          {{- toYaml .Values.webWorker.env | nindent 12 }}
+{{- end }}
           volumeMounts:
           - name: dshm
             mountPath: /dev/shm
