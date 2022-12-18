@@ -113,10 +113,9 @@ spec:
             - name: no_proxy
               value: {{ .Values.httpProxySettings.no_proxy }}
 {{- end }}
-            {{- range $key, $value := .Values.dispatcher.env }}
-            - name: {{ $key }}
-              value: {{ $value }}
-          {{- end }}
+{{- if .Values.dispatcher.env }}
+          {{- toYaml .Values.dispatcher.env | nindent 12 }}
+{{- end }}
           volumeMounts:
             - name: configmap-akeyless
               mountPath: /configmap_conf

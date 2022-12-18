@@ -61,3 +61,19 @@ lookup_changed_charts() {
 
   cut -d '/' -f "$fields" <<< "$changed_files" | uniq
 }
+
+function commit_and_push_to_git() {
+  message="$1"
+  path_to_file=$2
+
+  git config user.name "$GITHUB_ACTOR"
+  git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+  (git add ${path_to_file} && git commit -m "${message}" ${path_to_file}) || die "Failed to commit changes to git"
+  git push origin HEAD
+}
+
+function die() {
+  echo -e $*
+  exit 1
+}

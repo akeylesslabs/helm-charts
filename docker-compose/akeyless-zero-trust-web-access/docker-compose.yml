@@ -1,0 +1,73 @@
+version: "3.9"
+services:
+  dispatcher:
+    image: "akeyless/zero-trust-web-dispatcher"
+    ports:
+      - "9000:9000"
+      - "19414:19414"
+    volumes:
+      - $PWD/shared:/etc/shared
+    environment:
+      - CLUSTER_NAME=compose-ztwa
+      - SERVICE_DNS=worker
+      - AKEYLESS_GW_URL=https://rest.akeyless.io
+      - PRIVILEGED_ACCESS_ID=<MUST_BE_PROVIDED>
+      - PRIVILEGED_ACCESS_KEY= # When using Cloud Identity (recommended), can be left empty
+      - ALLOWED_ACCESS_IDS=<MUST_BE_PROVIDED>
+      - ALLOW_INTERNAL_AUTH=false
+      - DISABLE_SECURE_COOKIE=true
+      - LOG_FORWARDING=
+      - ALLOWED_BASTION_URLS=
+      #- http_proxy=
+      #- https_proxy=
+      #- no_proxy=
+    restart: unless-stopped
+    networks:
+      vpcbr:
+        ipv4_address: 10.5.0.2
+
+  worker:
+    image: "akeyless/zero-trust-web-worker"
+    security_opt:
+      - seccomp=unconfined
+    shm_size: '2gb'
+    volumes:
+      - $PWD/policies.json:/usr/lib/firefox/distribution/policies.json:ro
+      - $PWD/shared:/etc/shared
+    environment:
+      - INTERNAL_DISPATCHER_IP=10.5.0.2
+      - DISPLAY_WIDTH=2560
+      - DISPLAY_HEIGHT=1200
+      - DLP_CONF=
+      - LOG_FORWARDING=
+      #- http_proxy=
+      #- https_proxy=
+      #- no_proxy=
+    healthcheck:
+      test: curl -f http://localhost:9090/healthy
+      interval: 1s
+      retries: 3
+      timeout: 3s
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - vpcbr
+    depends_on:
+     - dispatcher
+
+  autoheal:
+    restart: unless-stopped
+    image: willfarrell/autoheal
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=all
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+networks:
+  vpcbr:
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 10.5.0.0/24
+         gateway: 10.5.0.1
+
