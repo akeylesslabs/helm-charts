@@ -33,20 +33,17 @@ privilegedAccess:
   # for API Key, provide both accessID and accessKey
   accessID: ""
   accessKey: ""
-   # limit access to privileged items only for these end user access ids.
-   # if left empty, all access ids are allowed
+   ## ref: https://docs.akeyless.io/docs/gateway-k8s#gateway-admins
   allowedAccessIDs: []
    # - p-1234
    # - p-5678
+
+  ## AWS ref: https://docs.akeyless.io/docs/secure-remote-access-bastion#aws-iam
+  ## GCP ref: https://docs.akeyless.io/docs/secure-remote-access-bastion#gcp-gce
   serviceAccount:
-    ## ref: https://docs.akeyless.io/docs/secure-remote-access-bastion
     create: false
     serviceAccountName:
-    ## For google workload identity have a look in the following link for the use of nodeSelector.
-    ## ref: https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity
     annotations:
-    #      iam.gke.io/gcp-service-account: change_me_to_gcp_serviceAccount
-    #       eks.amazonaws.com/role-arn: arn:aws:iam::40XXXXXXXX75:role/eksctl-Role1-XXXXXXXX
 
   # Azure Object ID to use with privileged credentials of type Azure AD
   azureObjectID: ""
