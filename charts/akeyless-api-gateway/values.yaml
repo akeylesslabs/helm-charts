@@ -224,6 +224,12 @@ universalIdentity:
 # For more information: https://docs.akeyless.io/docs/implement-zero-knowledge
 #customerFragments: |
 
+# Customer Fragment that will be in use instead of the regular value, in base64 because of formatting issues.
+# Use this in case you deploy the chart using Terraform.
+#
+# Use only one of the values!
+#customerFragmentsEncoded: "BASE64 String"
+
 # Specifies an existing secret to be used for API Gateway, must include:
 #  - admin-access-id,
 #  - admin-access-key
