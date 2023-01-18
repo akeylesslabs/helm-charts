@@ -114,6 +114,8 @@ Check customer fragment
 {{- define "akeyless-api-gw.customerFragmentExist" -}}
     {{- if .Values.customerFragments -}}
         {{- printf "true" -}}
+    {{- else if .Values.customerFragmentsEncoded -}}
+        {{- printf "true" -}}
     {{- else if and (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)) .Values.existingSecret -}}
         {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" . )) "data") "customer-fragments" -}}
             {{- printf "true" -}}
