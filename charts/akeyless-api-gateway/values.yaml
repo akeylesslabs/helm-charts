@@ -317,12 +317,14 @@ metrics:
 #
 #logandConf: |
 # enable="true"
+# logan_json_output="<false/true>"
 # target_log_type="splunk" #splunk/syslog/logstash/elasticsearch/logz_io/aws_s3/azure_log_analytics/datadog
 # target_splunk_sourcetype="<your_sourcetype>"
 # target_splunk_source="<your_source>"
 # target_splunk_index="<your_index>"
 # target_splunk_token="<your_token>"
 # target_splunk_url="<your_splunk_host_address>"
+
 
 
 # Specifies an existing secret for logand should be in yaml syntax, and include:
