@@ -43,16 +43,16 @@ jobs:
           echo ::set-output name=new_chart_version::${{ env.new_chart_version }}
           echo ::set-output name=chart_name::${{ env.chart_name }}
 
-      - uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.AKEYLESS_CI_COMMIT_PUSH_TOKEN }}
-          script: |
-            await github.rest.actions.createWorkflowDispatch({
-              owner: 'akeylesslabs',
-              repo: 'akeyless-k8s-manifests',
-              workflow_id: 'update-chart.yml',
-              ref: 'main'
-            })
+#      - uses: actions/github-script@v6
+#        with:
+#          github-token: ${{ secrets.AKEYLESS_CI_COMMIT_PUSH_TOKEN }}
+#          script: |
+#            await github.rest.actions.createWorkflowDispatch({
+#              owner: 'akeylesslabs',
+#              repo: 'akeyless-k8s-manifests',
+#              workflow_id: 'update-chart.yml',
+#              ref: 'main'
+#            })
 
 #  Slack-Notification-on-success:
 #    name: Slack-On-Success-Notification
