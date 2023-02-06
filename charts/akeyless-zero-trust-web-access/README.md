@@ -104,17 +104,14 @@ The following table lists the configurable parameters of the Zero Trust Web Acce
 
 ### HPA parameters
 
-| Parameter                                 | Description                                                                                                          | Default                                                      |
-|-------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
-| `HPA.enabled`                             | Enable Zero Trust Web Access Horizontal Pod Autoscaler                                                               | `false`                                                      |
-| `HPA.dispatcher.minReplicas`              | Dispatcher Minimum desired number of replicas                                                                        | `1`                                                          |
-| `HPA.dispatcher.maxReplicas`              | Dispatcher Minimum desired number of replicas                                                                        | `14`                                                         |
-| `HPA.dispatcher.cpuAvgUtil`               | Dispatcher CPU average utilization                                                                                   | `50`                                                         |
-| `HPA.dispatcher.memAvgUtil`               | Dispatcher Memory average utilization                                                                                | `50`                                                         |
-| `HPA.webWorker.minReplicas`               | Web Worker Minimum desired number of replicas                                                                        | `5`                                                          |
-| `HPA.webWorker.maxReplicas`               | Web Worker Minimum desired number of replicas                                                                        | `14`                                                         |
-| `HPA.webWorker.cpuAvgUtil`                | Web Worker CPU average utilization                                                                                   | `50`                                                         |
-| `HPA.webWorker.memAvgUtil`                | Web Worker Memory average utilization                                                                                | `50`                                                         |                                                                                        
+| Parameter                                 | Description                                            | Default |
+|-------------------------------------------|--------------------------------------------------------|---------|
+| `HPA.enabled`                             | Enable Zero Trust Web Access Horizontal Pod Autoscaler | `false` |
+| `HPA.dispatcher.minReplicas`              | Dispatcher Minimum desired number of replicas          | `1`     |
+| `HPA.dispatcher.maxReplicas`              | Dispatcher Minimum desired number of replicas          | `14`    |
+| `HPA.dispatcher.cpuAvgUtil`               | Dispatcher CPU average utilization                     | `50`    |
+| `HPA.dispatcher.memAvgUtil`               | Dispatcher Memory average utilization                  | `50`    |
+| `HPA.webWorker.busyWorkersPercentage`     | Busy Workers utilization percentage                    | `50`    |
 
 ### Zero Trust Web Access configuration parameters
 

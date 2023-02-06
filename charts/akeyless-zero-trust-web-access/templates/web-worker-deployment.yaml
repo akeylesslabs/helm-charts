@@ -67,6 +67,7 @@ spec:
               mountPath: /configmap_policy_conf
       imagePullSecrets:
         - name: akeyless-docker-hub-web-access
+      terminationGracePeriodSeconds: 3600
       containers:
         - name: {{ .Values.webWorker.containerName }}
           image: "{{ .Values.webWorker.image.repository }}:{{ .Values.webWorker.image.tag  | default .Chart.AppVersion }}"
@@ -127,3 +128,7 @@ spec:
             periodSeconds: 10
             failureThreshold: 3
 {{- toYaml .Values.webWorker.livenessProbe | trim | nindent 12 }}
+          lifecycle:
+            preStop:
+              exec:
+                command: [ "/bin/sh", "-c", "/var/akeyless/scripts/safe_shutdown.sh" ]

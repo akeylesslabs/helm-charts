@@ -267,10 +267,7 @@ HPA:
     cpuAvgUtil: 50
     memAvgUtil: 50
   webWorker:
-    minReplicas: 3
-    maxReplicas: 14
-    cpuAvgUtil: 50
-    memAvgUtil: 50
+    busyWorkersPercentage: 50
 
 metrics:
   enabled: false
