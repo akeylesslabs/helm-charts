@@ -23,8 +23,8 @@ spec:
     spec:
       containers:
       - name: {{ template "akeyless-api-gw.fullname" . }}-cache
-        image: docker.io/bitnami/redis:6.2 
-        imagePullPolicy: Always
+        image: "{{ .Values.cache.image.repository }}:{{ .Values.cache.image.tag }}"
+        imagePullPolicy: {{ .Values.cache.image.pullPolicy }}
         #args: ["--requirepass", "$(REDIS_PASSWORD)"]
         ports:
         - containerPort: 6379

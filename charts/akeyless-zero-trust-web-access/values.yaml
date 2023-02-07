@@ -12,8 +12,20 @@ httpProxySettings:
 deployment:
   labels: {}
 
+validator:
+  image:
+    repository: apteno/alpine-jq
+    pullPolicy: IfNotPresent
+    tag: 2021-04-04
+
+
 dispatcher:
   replicaCount: 1
+  initContainer:
+    image:
+      repository: busybox
+      tag: 1.30.1
+      pullPolicy: IfNotPresent
   image:
     repository: akeyless/zero-trust-web-dispatcher
     pullPolicy: Always
@@ -140,6 +152,11 @@ dispatcher:
 
 webWorker:
   replicaCount: 5
+  initContainer:
+    image:
+      repository: apteno/alpine-jq
+      tag: 2021-04-04
+      pullPolicy: IfNotPresent
   image:
     repository: akeyless/zero-trust-web-worker
     pullPolicy: Always
