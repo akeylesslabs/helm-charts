@@ -101,8 +101,8 @@ spec:
             value: {{ .Values.legacySigningAlg | quote }}
 {{- end }}
 {{- if .Values.usernameSubClaim }}
-            - name: USERNAME_SUB_CLAIM
-              value: {{ .Values.usernameSubClaim }}
+          - name: USERNAME_SUB_CLAIM
+            value: {{ .Values.usernameSubClaim }}
 {{- end }}
 {{- if .Values.privilegedAccess.allowedAccessIDs }}
           - name: ALLOWED_ACCESS_IDS
@@ -141,7 +141,7 @@ spec:
           {{- range .Values.sshConfig.persistence.volumes }}
             - name: {{ .name | title | lower }}
               mountPath: /var/run/requests
-              subPath: requests 
+              subPath: requests
             - name: {{ .name | title | lower }}
               mountPath: /var/run/akeyless/ssh
               subPath: ssh
