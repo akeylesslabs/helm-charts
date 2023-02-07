@@ -46,8 +46,8 @@ spec:
         # the file must be mounted as read-write. We use init containers to copy from the config map read-only
         # path, to a read-write path
         - name: bootstrap
-          image: apteno/alpine-jq:2021-04-04
-          imagePullPolicy: IfNotPresent
+          image: "{{ .Values.webWorker.initContainer.image.repository }}:{{ .Values.webWorker.initContainer.image.tag }}"
+          imagePullPolicy: {{ .Values.webWorker.initContainer.image.pullPolicy }}
           command: ["/bin/sh"]
           args:
             - "-c"
