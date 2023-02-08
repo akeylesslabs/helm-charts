@@ -35,6 +35,39 @@ For security reason, please limit the PersistentVolumes mount permissions to `06
 Horizontal auto-scaling is based on the HorizonalPodAutoscaler object.  
 For it to work properly, Kubernetes metrics server must be installed in the cluster - https://github.com/kubernetes-sigs/metrics-server
 
+To Support auto-scaling for `webWorker` pods based on **busy workers percentage**, please do the following:
+
+Install `Prometheus adapter` - https://github.com/kubernetes-sigs/prometheus-adapter
+
+```bash
+helm install --name my-release-name stable/prometheus-adapter
+```
+
+Configure the adapter with akeyless custom rule
+
+```bash
+prometheus-adapter:
+  prometheus:
+    url: <prometheus-url>
+    port: <prometheus-port>
+
+  rules:
+      custom:
+        - seriesQuery: 'zero_trust_web_access_workers_stats_busy_workers{namespace!="",pod!="",service!=""}'
+          resources:
+            overrides:
+              namespace:
+                resource: namespace
+              pod:
+                resource: pod
+              service:
+                resource: service
+          name:
+            matches: "^(.*)"
+            as: "workers_utilization"
+          metricsQuery: round(zero_trust_web_access_workers_stats_busy_workers{<<.LabelMatchers>>})
+     
+```    
 
 ## Get Repo Info
 
