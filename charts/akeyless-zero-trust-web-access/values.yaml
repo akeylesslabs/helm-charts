@@ -259,13 +259,14 @@ persistence: {}
 
 
 HPA:
-  # Set the below to false in case you do not want to add Horizontal Pod AutoScaling to the StatefulSet (not recommended)
+  # Set the below to false in case you do not want to add Horizontal Pod AutoScaling (not recommended)
   enabled: true
   dispatcher:
     minReplicas: 1
     maxReplicas: 14
     cpuAvgUtil: 50
     memAvgUtil: 50
+  # Will only work with metrics enabled
   webWorker:
     busyWorkersPercentage: 50
 

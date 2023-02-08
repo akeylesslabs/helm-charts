@@ -24,6 +24,9 @@ spec:
         target:
           type: Utilization
           averageUtilization: {{ $.Values.HPA.dispatcher.memAvgUtil }}
+
+
+{{-if .Values.metrics.enabled }}
 ---
 apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
@@ -50,4 +53,5 @@ spec:
           type: Value
           value: {{ $.Values.HPA.webWorker.busyWorkersPercentage }}
 
+{{- end }}
 {{- end }}
