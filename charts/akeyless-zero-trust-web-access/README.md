@@ -35,6 +35,39 @@ For security reason, please limit the PersistentVolumes mount permissions to `06
 Horizontal auto-scaling is based on the HorizonalPodAutoscaler object.  
 For it to work properly, Kubernetes metrics server must be installed in the cluster - https://github.com/kubernetes-sigs/metrics-server
 
+To Support auto-scaling for `webWorker` pods based on **busy workers percentage**, please do the following:
+
+Install `Prometheus adapter` - https://github.com/kubernetes-sigs/prometheus-adapter
+
+```bash
+helm install --name my-release-name stable/prometheus-adapter
+```
+
+Configure the adapter with akeyless custom rule
+
+```bash
+prometheus-adapter:
+  prometheus:
+    url: <prometheus-url>
+    port: <prometheus-port>
+
+  rules:
+      custom:
+        - seriesQuery: 'zero_trust_web_access_workers_stats_busy_workers{namespace!="",pod!="",service!=""}'
+          resources:
+            overrides:
+              namespace:
+                resource: namespace
+              pod:
+                resource: pod
+              service:
+                resource: service
+          name:
+            matches: "^(.*)"
+            as: "workers_utilization"
+          metricsQuery: round(zero_trust_web_access_workers_stats_busy_workers{<<.LabelMatchers>>})
+     
+```    
 
 ## Get Repo Info
 
@@ -104,17 +137,14 @@ The following table lists the configurable parameters of the Zero Trust Web Acce
 
 ### HPA parameters
 
-| Parameter                                 | Description                                                                                                          | Default                                                      |
-|-------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
-| `HPA.enabled`                             | Enable Zero Trust Web Access Horizontal Pod Autoscaler                                                               | `false`                                                      |
-| `HPA.dispatcher.minReplicas`              | Dispatcher Minimum desired number of replicas                                                                        | `1`                                                          |
-| `HPA.dispatcher.maxReplicas`              | Dispatcher Minimum desired number of replicas                                                                        | `14`                                                         |
-| `HPA.dispatcher.cpuAvgUtil`               | Dispatcher CPU average utilization                                                                                   | `50`                                                         |
-| `HPA.dispatcher.memAvgUtil`               | Dispatcher Memory average utilization                                                                                | `50`                                                         |
-| `HPA.webWorker.minReplicas`               | Web Worker Minimum desired number of replicas                                                                        | `5`                                                          |
-| `HPA.webWorker.maxReplicas`               | Web Worker Minimum desired number of replicas                                                                        | `14`                                                         |
-| `HPA.webWorker.cpuAvgUtil`                | Web Worker CPU average utilization                                                                                   | `50`                                                         |
-| `HPA.webWorker.memAvgUtil`                | Web Worker Memory average utilization                                                                                | `50`                                                         |                                                                                        
+| Parameter                                 | Description                                            | Default |
+|-------------------------------------------|--------------------------------------------------------|---------|
+| `HPA.enabled`                             | Enable Zero Trust Web Access Horizontal Pod Autoscaler | `false` |
+| `HPA.dispatcher.minReplicas`              | Dispatcher Minimum desired number of replicas          | `1`     |
+| `HPA.dispatcher.maxReplicas`              | Dispatcher Minimum desired number of replicas          | `14`    |
+| `HPA.dispatcher.cpuAvgUtil`               | Dispatcher CPU average utilization                     | `50`    |
+| `HPA.dispatcher.memAvgUtil`               | Dispatcher Memory average utilization                  | `50`    |
+| `HPA.webWorker.busyWorkersPercentage`     | Busy Workers utilization percentage                    | `50`    |
 
 ### Zero Trust Web Access configuration parameters
 

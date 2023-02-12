@@ -24,6 +24,9 @@ spec:
         target:
           type: Utilization
           averageUtilization: {{ $.Values.HPA.dispatcher.memAvgUtil }}
+
+
+{{- if .Values.metrics.enabled }}
 ---
 apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
@@ -38,17 +41,17 @@ spec:
   minReplicas: {{ $.Values.HPA.webWorker.minReplicas | default 3 }}
   maxReplicas: {{ $.Values.HPA.webWorker.maxReplicas | default 14 }}
   metrics:
-    - type: Resource
-      resource:
-        name: cpu
+    - type: Object
+      object:
+        metric:
+          name: workers_utilization
+        describedObject:
+          apiVersion: v1
+          kind: Service
+          name: {{ include "akeyless-zero-web-access.fullname" . }}-metric-svc
         target:
-          type: Utilization
-          averageUtilization: {{ $.Values.HPA.webWorker.cpuAvgUtil }}
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: {{ $.Values.HPA.webWorker.memAvgUtil }}
+          type: Value
+          value: {{ $.Values.HPA.webWorker.busyWorkersPercentage }}
 
+{{- end }}
 {{- end }}
