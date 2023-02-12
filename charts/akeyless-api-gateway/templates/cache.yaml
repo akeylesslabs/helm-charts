@@ -2,14 +2,12 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  labels:
-    name: {{ include "akeyless-api-gw.fullname" . }}-cache
+  name: {{ template "akeyless-api-gw.fullname" . }}-cache
   namespace: {{ .Release.Namespace | quote }}
   labels:
-{{- include "akeyless-api-gw.labels" . | nindent 4 }}
     name: {{ template "akeyless-api-gw.fullname" . }}-cache
     component: cache
-  name: {{ template "akeyless-api-gw.fullname" . }}-cache
+{{- include "akeyless-api-gw.labels" . | nindent 4 }}
 spec:
   replicas: 1
   selector:
@@ -23,8 +21,8 @@ spec:
     spec:
       containers:
       - name: {{ template "akeyless-api-gw.fullname" . }}-cache
-        image: docker.io/bitnami/redis:6.2 
-        imagePullPolicy: Always
+        image: "{{ .Values.cache.image.repository }}:{{ .Values.cache.image.tag }}"
+        imagePullPolicy: {{ .Values.cache.image.pullPolicy }}
         #args: ["--requirepass", "$(REDIS_PASSWORD)"]
         ports:
         - containerPort: 6379

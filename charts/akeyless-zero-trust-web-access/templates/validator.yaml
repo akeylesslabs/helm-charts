@@ -13,8 +13,8 @@ metadata:
 spec:
   containers:
     - name: post-install-job
-      image: apteno/alpine-jq:2021-04-04
-      imagePullPolicy: IfNotPresent
+      image: "{{ .Values.validator.image.repository}}:{{ .Values.validator.image.tag }}"
+      imagePullPolicy: {{ .Values.validator.image.pullPolicy }}
       command: ["/bin/sh"]
       args:
           - "-c"

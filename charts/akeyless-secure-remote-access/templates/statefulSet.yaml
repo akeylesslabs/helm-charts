@@ -56,8 +56,8 @@ spec:
         # the file must be mounted as read-write. We use init containers to copy from the config map read-only
         # path, to a read-write path
         - name: bootstrap
-          image: busybox:1.30.1
-          imagePullPolicy: IfNotPresent
+          image: "{{ .Values.sshConfig.initContainer.image.repository }}:{{ .Values.sshConfig.initContainer.image.tag }}"
+          imagePullPolicy: {{ .Values.sshConfig.initContainer.image.pullPolicy }}
           command: ['sh']
           args:
             - "-c"
@@ -101,8 +101,8 @@ spec:
             value: {{ .Values.legacySigningAlg | quote }}
 {{- end }}
 {{- if .Values.usernameSubClaim }}
-            - name: USERNAME_SUB_CLAIM
-              value: {{ .Values.usernameSubClaim }}
+          - name: USERNAME_SUB_CLAIM
+            value: {{ .Values.usernameSubClaim }}
 {{- end }}
 {{- if .Values.privilegedAccess.allowedAccessIDs }}
           - name: ALLOWED_ACCESS_IDS
@@ -141,7 +141,7 @@ spec:
           {{- range .Values.sshConfig.persistence.volumes }}
             - name: {{ .name | title | lower }}
               mountPath: /var/run/requests
-              subPath: requests 
+              subPath: requests
             - name: {{ .name | title | lower }}
               mountPath: /var/run/akeyless/ssh
               subPath: ssh
