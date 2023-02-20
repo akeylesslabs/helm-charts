@@ -13,7 +13,9 @@ debug: false
 tlsCertsSecretName: vault-secrets-webhook-tls-certs
 
 image:
-  gcp_registry: us-docker.pkg.dev/global-production-332815/dockerhub
+  gcp_artifact_registry:
+    enabled: false
+    repository: us-docker.pkg.dev/global-production-332815/dockerhub
   server: akeyless/k8s-webhook-server
   agent: akeyless/k8s-secrets-sidecar
   pullPolicy: Always

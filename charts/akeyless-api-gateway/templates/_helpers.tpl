@@ -346,8 +346,8 @@ Check metrics configuration Secret
 {{- end -}}
 
 {{- define "gcp_artifacts_registry" -}}
-    {{- if .Values.image.gcp_registry }}
-        {{- printf "%s/" (.Values.image.gcp_registry | trimSuffix "/") }}
+    {{- if .Values.image.gcp_artifact_registry.enabled }}
+        {{- printf "%s/" (.Values.image.gcp_artifact_registry.repository | trimSuffix "/") }}
     {{- else -}}
         {{- print ""}}
     {{- end -}}

@@ -2,7 +2,9 @@
 
 image:
   dockerRepositoryCreds:
-  gcp_registry: us-docker.pkg.dev/global-production-332815/dockerhub
+  gcp_artifact_registry:
+    enabled: false
+    repository: us-docker.pkg.dev/global-production-332815/dockerhub
 
 # Linux system HTTP Proxy
 httpProxySettings:
