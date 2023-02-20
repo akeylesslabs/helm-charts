@@ -85,3 +85,11 @@ Checks kubernetes API version support for ingress BC
     {{- print "extensions/v1beta1" -}}
   {{- end -}}
 {{- end -}}
+
+{{- define "gcp_artifacts_registry" -}}
+    {{- if .Values.image.gcp_registry }}
+        {{- printf "%s/" (.Values.image.gcp_registry | trimSuffix "/") }}
+    {{- else -}}
+        {{- print ""}}
+    {{- end -}}
+{{- end -}}

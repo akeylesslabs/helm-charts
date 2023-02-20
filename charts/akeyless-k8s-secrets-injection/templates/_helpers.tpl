@@ -41,3 +41,11 @@ Create the name of the service account to use
     {{ default "default" .Values.serviceAccount.name }}
 {{- end -}}
 {{- end -}}
+
+{{- define "gcp_artifacts_registry" -}}
+    {{- if .Values.image.gcp_registry }}
+        {{- printf "%s/" (.Values.image.gcp_registry | trimSuffix "/") }}
+    {{- else -}}
+        {{- print ""}}
+    {{- end -}}
+{{- end -}}

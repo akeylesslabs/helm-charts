@@ -344,3 +344,11 @@ Check metrics configuration Secret
         {{- printf "false" -}}
     {{- end -}}
 {{- end -}}
+
+{{- define "gcp_artifacts_registry" -}}
+    {{- if .Values.image.gcp_registry }}
+        {{- printf "%s/" (.Values.image.gcp_registry | trimSuffix "/") }}
+    {{- else -}}
+        {{- print ""}}
+    {{- end -}}
+{{- end -}}

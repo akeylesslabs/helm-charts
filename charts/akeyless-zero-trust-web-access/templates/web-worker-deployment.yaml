@@ -70,7 +70,7 @@ spec:
       terminationGracePeriodSeconds: 3600
       containers:
         - name: {{ .Values.webWorker.containerName }}
-          image: "{{ .Values.webWorker.image.repository }}:{{ .Values.webWorker.image.tag  | default .Chart.AppVersion }}"
+          image: "{{template "gcp_artifacts_registry" .}}{{ .Values.webWorker.image.repository }}:{{ .Values.webWorker.image.tag  | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.webWorker.image.pullPolicy }}
           ports:
             - containerPort: 5800

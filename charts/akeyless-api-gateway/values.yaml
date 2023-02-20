@@ -17,6 +17,7 @@ cache:
     pullPolicy: Always
 
 image:
+  gcp_registry: us-docker.pkg.dev/global-production-332815/dockerhub
   repository: akeyless/base
   pullPolicy: Always
   tag: latest

@@ -37,7 +37,7 @@ spec:
       {{- end }}
       containers:
         - name: {{ .Chart.Name }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: "{{ template "gcp_artifacts_registry". }}{{ .Values.image.server }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           env:
           - name: TLS_CERT_FILE
             value: /var/serving-cert/servingCert
@@ -48,7 +48,7 @@ spec:
           - name: DEBUG
             value: {{ .Values.debug | quote }}
           - name: AKEYLESS_AGENT_IMAGE
-            value: "{{ .Values.image.agentImage }}:{{ .Values.image.tag | default .Chart.AppVersion  }}"
+            value: "{{ template "gcp_artifacts_registry". }}{{ .Values.image.agent }}:{{ .Values.image.tag | default .Chart.AppVersion  }}"
           {{- range $key, $value := .Values.env }}
           - name: {{ $key }}
             value: {{ $value }}
