@@ -122,9 +122,9 @@ spec:
       containers:
         - name: {{ .Values.containerName }}
           {{- if .Values.akeylessStrictMode  }}
-          image: "{{ template "gcp_artifacts_registry" . }}{{ .Values.image.repository }}:{{ .Values.image.tag }}-akeyless"
+          image: "{{ template "docker_repository" . }}:{{ .Values.image.tag }}-akeyless"
           {{else}}
-          image: "{{ template "gcp_artifacts_registry" . }}{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ template "docker_repository" . }}:{{ .Values.image.tag }}"
           {{end}}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:

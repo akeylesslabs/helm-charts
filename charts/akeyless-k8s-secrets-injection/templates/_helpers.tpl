@@ -42,10 +42,17 @@ Create the name of the service account to use
 {{- end -}}
 {{- end -}}
 
-{{- define "gcp_artifacts_registry" -}}
-    {{- if .Values.image.gcp_artifact_registry.enabled }}
-        {{- printf "%s/" (.Values.image.gcp_artifact_registry.repository | trimSuffix "/") }}
+{{- define "docker_repository_server" -}}
+    {{- if .Values.image.dockerhub_cache.enabled }}
+        {{- printf "%s/%s" (.Values.image.dockerhub_cache.repository | trimSuffix "/") (.Values.image.server | trimPrefix "akeyless/")}}
     {{- else -}}
-        {{- print ""}}
+        {{ .Values.image.server }}
+    {{- end -}}
+{{- end -}}
+{{- define "docker_repository_agent" -}}
+    {{- if .Values.image.dockerhub_cache.enabled }}
+        {{- printf "%s/%s" (.Values.image.dockerhub_cache.repository | trimSuffix "/") (.Values.image.agent | trimPrefix "akeyless/")}}
+    {{- else -}}
+        {{ .Values.image.agent }}
     {{- end -}}
 {{- end -}}

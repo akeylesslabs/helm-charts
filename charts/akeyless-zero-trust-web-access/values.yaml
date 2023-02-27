@@ -2,9 +2,9 @@
 
 image:
   dockerRepositoryCreds:
-  gcp_artifact_registry:
+  dockerhub_cache:
     enabled: false
-    repository: us-docker.pkg.dev/global-production-332815/dockerhub
+    repository: docker.akeyless.io
 
 # Linux system HTTP Proxy
 httpProxySettings:

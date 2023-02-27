@@ -345,10 +345,10 @@ Check metrics configuration Secret
     {{- end -}}
 {{- end -}}
 
-{{- define "gcp_artifacts_registry" -}}
-    {{- if .Values.image.gcp_artifact_registry.enabled }}
-        {{- printf "%s/" (.Values.image.gcp_artifact_registry.repository | trimSuffix "/") }}
+{{- define "docker_repository" -}}
+    {{- if .Values.image.dockerhub_cache.enabled }}
+        {{- printf "%s/%s" (.Values.image.dockerhub_cache.repository | trimSuffix "/") (.Values.image.repository | trimPrefix "akeyless/")}}
     {{- else -}}
-        {{- print ""}}
+        {{ .Values.image.repository }}
     {{- end -}}
 {{- end -}}
