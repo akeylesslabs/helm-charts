@@ -16,8 +16,10 @@ image:
   dockerhub_cache:
     enabled: false
     repository: docker.akeyless.io
-  server: akeyless/k8s-webhook-server
-  agent: akeyless/k8s-secrets-sidecar
+  server:
+    image: akeyless/k8s-webhook-server
+  agent:
+    image: akeyless/k8s-secrets-sidecar
   pullPolicy: Always
 
 serviceAccount:

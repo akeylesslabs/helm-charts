@@ -42,17 +42,10 @@ Create the name of the service account to use
 {{- end -}}
 {{- end -}}
 
-{{- define "docker_repository_server" -}}
-    {{- if .Values.image.dockerhub_cache.enabled }}
-        {{- printf "%s/%s" (.Values.image.dockerhub_cache.repository | trimSuffix "/") (.Values.image.server | trimPrefix "akeyless/")}}
+{{- define "docker_repository" -}}
+    {{- if .dockerhub_cache.enabled }}
+        {{- printf "%s/%s" (.dockerhub_cache.repository | trimSuffix "/") (.image | trimPrefix "akeyless/")}}
     {{- else -}}
-        {{ .Values.image.server }}
-    {{- end -}}
-{{- end -}}
-{{- define "docker_repository_agent" -}}
-    {{- if .Values.image.dockerhub_cache.enabled }}
-        {{- printf "%s/%s" (.Values.image.dockerhub_cache.repository | trimSuffix "/") (.Values.image.agent | trimPrefix "akeyless/")}}
-    {{- else -}}
-        {{ .Values.image.agent }}
+        {{ .image }}
     {{- end -}}
 {{- end -}}
