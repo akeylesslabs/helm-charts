@@ -28,6 +28,7 @@ services:
 
   worker:
     image: "docker.registry-2.akeyless.io/zero-trust-web-worker"
+##   Alternative mirror registry
 #    image: "akeyless/zero-trust-web-worker"
     security_opt:
       - seccomp=unconfined
