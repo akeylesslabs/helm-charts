@@ -159,6 +159,8 @@ webWorker:
       pullPolicy: IfNotPresent
   image:
     repository: docker.registry-2.akeyless.io/zero-trust-web-worker
+
+##   Alternative mirror registry
 #    repository: akeyless/zero-trust-web-worker
     pullPolicy: Always
 #    tag: latest
