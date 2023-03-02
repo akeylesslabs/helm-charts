@@ -14,16 +14,16 @@ spec:
   metrics:
     - type: Resource
       resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: {{ $.Values.HPA.dispatcher.cpuAvgUtil }}
-    - type: Resource
-      resource:
         name: memory
         target:
           type: Utilization
           averageUtilization: {{ $.Values.HPA.dispatcher.memAvgUtil }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ $.Values.HPA.dispatcher.cpuAvgUtil }}
 
 
 {{- if .Values.metrics.enabled }}
