@@ -48,19 +48,22 @@ helm delete RELEASE_NAME --namespace "${WEBHOOK_NS}"
 
 The following tables lists configurable parameters of the vault-secrets-webhook chart and their default values.
 
-|               Parameter             |                    Description                    |                  Default                 |
-| ----------------------------------- | ------------------------------------------------- | -----------------------------------------|
-|affinity                             |affinities to use                                  |{}                                        |
-|debug                                |debug logs for webhook                             |false                                     |
-|image.pullPolicy                     |image pull policy                                  |Always                                    |
-|image.repository                     |image repo that contains the admission server      |akeyless/k8s-webhook-server               |
-|image.tag                            |image tag                                          |latest                                    |
-|namespaceSelector                    |namespace selector to use, will limit webhook scope|{}                                        |
-|nodeSelector                         |node selector to use                               |{}                                        |
-|replicaCount                         |number of replicas                                 |1                                         |
-|resources                            |resources to request                               |{}                                        |
-|service.externalPort                 |webhook service external port                      |443                                       |
-|service.internalPort                 |webhook service external port                      |8443                                      |
-|service.name                         |webhook service name                               |secrets-webhook                           |
-|service.type                         |webhook service type                               |ClusterIP                                 |
-|tolerations                          |tolerations to add                                 |[]                                        |
+|               Parameter                                |                    Description                         |                  Default                 |
+| ------------------------------------------------------ | ------------------------------------------------------ | -----------------------------------------|
+|affinity                                                |affinities to use                                       |{}                                        |
+|debug                                                   |debug logs for webhook                                  |false                                     |
+|image.pullPolicy                                        |image pull policy                                       |Always                                    |
+|image.repository                                        |image repo that contains the admission server           |akeyless/k8s-webhook-server               |
+|image.tag                                               |image tag                                               |latest                                    |
+|namespaceSelector                                       |namespace selector to use, will limit webhook scope     |{}                                        |
+|nodeSelector                                            |node selector to use                                    |{}                                        |
+|replicaCount                                            |number of replicas                                      |1                                         |
+|resources                                               |resources to request                                    |{}                                        |
+|service.externalPort                                    |webhook service external port                           |443                                       |
+|service.internalPort                                    |webhook service external port                           |8443                                      |
+|service.name                                            |webhook service name                                    |secrets-webhook                           |
+|service.type                                            |webhook service type                                    |ClusterIP                                 |
+|tolerations                                             |tolerations to add                                      |[]                                        |
+|webhookConfiguration.failurePolicy                      |webhook failure policy                                  |Ignore                                    |
+|webhookConfiguration.namespaceSelector.matchExpressions |additional webhook namespace selector match expressions |{}                                        |
+|webhookConfiguration.objectSelector.matchExpressions    |additional webhook object selector match expressions    |{}                                        |
