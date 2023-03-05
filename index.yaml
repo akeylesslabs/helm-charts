@@ -1890,6 +1890,17 @@ entries:
   akeyless-secrets-injection:
   - apiVersion: v2
     appVersion: 0.20.24
+    created: "2023-03-05T09:55:59.827205664Z"
+    description: A Helm chart that deploys a mutating admission webhook that configures
+      applications to request env vars from Akeyless Vault Secrets
+    digest: d4ab7bf4ed94d1c6fdedb78684868776e481f735b1665388a8f9f3f4e15283e3
+    name: akeyless-secrets-injection
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-secrets-injection-1.2.29/akeyless-secrets-injection-1.2.29.tgz
+    version: 1.2.29
+  - apiVersion: v2
+    appVersion: 0.20.24
     created: "2023-02-26T17:25:44.858616118Z"
     description: A Helm chart that deploys a mutating admission webhook that configures
       applications to request env vars from Akeyless Vault Secrets
@@ -4120,6 +4131,20 @@ entries:
   akeyless-zero-trust-web-access:
   - apiVersion: v2
     appVersion: 0.14.5
+    created: "2023-03-05T09:55:59.944488691Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-zero-trust-web-access
+    digest: 50f657d1e2261598c1c03b62bfbef319a920c5961576c3c53d356b033b13da58
+    home: https://www.akeyless.io
+    icon: https://akeylesslabs.github.io/helm-charts/assets/logo/akl.jpeg
+    name: akeyless-zero-trust-web-access
+    sources:
+    - https://github.com/akeylesslabs/helm-charts/tree/feature/helm_repo/akeyless-zero-trust-web-access
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.6.3/akeyless-zero-trust-web-access-1.6.3.tgz
+    version: 1.6.3
+  - apiVersion: v2
+    appVersion: 0.14.5
     created: "2023-03-02T11:34:13.33284905Z"
     description: A Helm chart for Kubernetes that deploys akeyless-zero-trust-web-access
     digest: 94c5f125d53d5adf4b40e713ab75cc233c90cd35e063604974762f1f886cd49b
@@ -5350,4 +5375,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2023-03-02T18:46:00.733742021Z"
+generated: "2023-03-05T09:55:59.950566227Z"
