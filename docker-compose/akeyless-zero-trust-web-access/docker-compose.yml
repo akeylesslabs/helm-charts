@@ -27,7 +27,9 @@ services:
         ipv4_address: 10.5.0.2
 
   worker:
-    image: "akeyless/zero-trust-web-worker"
+    image: "docker.registry-2.akeyless.io/zero-trust-web-worker"
+##   Alternative mirror registry
+#    image: "akeyless/zero-trust-web-worker"
     security_opt:
       - seccomp=unconfined
     shm_size: '2gb'

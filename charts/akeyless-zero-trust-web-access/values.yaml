@@ -158,7 +158,10 @@ webWorker:
       tag: 2021-04-04
       pullPolicy: IfNotPresent
   image:
-    repository: akeyless/zero-trust-web-worker
+    repository: docker.registry-2.akeyless.io/zero-trust-web-worker
+
+##   Alternative mirror registry
+#    repository: akeyless/zero-trust-web-worker
     pullPolicy: Always
 #    tag: latest
 
