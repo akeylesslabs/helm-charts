@@ -257,6 +257,7 @@ TLSConf:
   vaultProxy: false
   akeylessAPIServices:  false
   configurationManager: false
+  enableSniProxy: false
   # minimumTlsVersion can be one of the following <TLSv1/TLSv1.1/TLSv1.2/TLSv1.3> 
   minimumTlsVersion:
   # Specifies an existing secret for tls-certificate must include:
@@ -272,6 +273,7 @@ TLSConf:
   #   -----BEGIN RSA PRIVATE KEY-----
   #   <key>
   #   -----END RSA PRIVATE KEY-----
+  
 
 # Specifies an initial configuration for the defaults section
 defaultsConf: {}

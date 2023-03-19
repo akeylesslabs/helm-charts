@@ -294,6 +294,11 @@ spec:
             - name: DEFAULT_SECRET_LOCATION
               value: {{ .Values.defaultsConf.defaultSecretLocation }}
           {{- end }}
+          ## sni proxy
+           {{- if .Values.TLSConf.enableSniProxy }}
+            - name: ENABLE_SNI_PROXY
+              value: "{{ .Values.TLSConf.enableSniProxy }}"
+          {{- end }}
           ## tls config
           {{- if .Values.TLSConf.akeylessWebUI }}
             - name: ENABLE_TLS
