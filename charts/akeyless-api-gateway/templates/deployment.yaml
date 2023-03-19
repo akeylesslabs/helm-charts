@@ -282,6 +282,10 @@ spec:
             - name: DEFAULT_OIDC_ACCESS_ID
               value: {{ .Values.defaultsConf.defaultOidcAccessId }}
           {{- end }}
+          {{- if .Values.defaultsConf.defaultCertificateAccessId }}
+            - name: DEFAULT_CERTIFICATE_ACCESS_ID
+              value: {{ .Values.defaultsConf.defaultCertificateAccessId }}
+          {{- end }}
           {{- if .Values.defaultsConf.defaultEncryptionKey }}
             - name: DEFAULT_ENCRYPTION_KEY
               value: {{ .Values.defaultsConf.defaultEncryptionKey }}

@@ -97,6 +97,7 @@ The following table lists the configurable parameters of the API Gateway chart a
 |---------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
 | `defaultsConf.defaultSamlAccessId`            | Default SAML Access ID to be used for initial WebUI login     | `nil`                                                        |
 | `defaultsConf.defaultOidcAccessId`           | Default OIDC Access ID to be used for initial WebUI login      | `nil`                                                        |
+| `defaultsConf.defaultCertificateAccessId`    | Default Certificate Access ID to be used for initial WebUI login | `nil`                                                        |
 | `defaultsConf.defaultEncryptionKey`            | This Default Encryption Key will be selected when creating the following items: Static Secrets, Dynamic Secret Producers and Secret Migration Configurations                        | `nil`                                                        |
 | `defaultsConf.defaultSecretLocation`              | The location of the default path to save secrets                   | `nil`                                                        |
 

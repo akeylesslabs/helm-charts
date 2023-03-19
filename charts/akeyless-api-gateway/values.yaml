@@ -279,6 +279,8 @@ defaultsConf: {}
   # defaultSamlAccessId:
   ## Default OIDC Access ID to be used for initial WebUI login
   # defaultOidcAccessId:
+  ## Default Certificate Access ID to be used for initial WebUI login
+  # defaultCertificateAccessId:
   ## This Default Encryption Key will be selected when creating the following items: Static Secrets, Dynamic Secret Producers and Secret Migration Configurations
   # defaultEncryptionKey:
   ## The location of the default path to save secrets
