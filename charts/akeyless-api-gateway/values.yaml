@@ -13,7 +13,7 @@ initContainer:
 cache:
   image:
     repository: docker.io/bitnami/redis
-    tag: 6.3
+    tag: 6.2
     pullPolicy: Always
 
 image:
