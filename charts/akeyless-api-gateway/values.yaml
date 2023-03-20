@@ -257,6 +257,7 @@ TLSConf:
   vaultProxy: false
   akeylessAPIServices:  false
   configurationManager: false
+  enableSniProxy: false
   # minimumTlsVersion can be one of the following <TLSv1/TLSv1.1/TLSv1.2/TLSv1.3> 
   minimumTlsVersion:
   # Specifies an existing secret for tls-certificate must include:
@@ -272,6 +273,7 @@ TLSConf:
   #   -----BEGIN RSA PRIVATE KEY-----
   #   <key>
   #   -----END RSA PRIVATE KEY-----
+  
 
 # Specifies an initial configuration for the defaults section
 defaultsConf: {}
@@ -279,6 +281,8 @@ defaultsConf: {}
   # defaultSamlAccessId:
   ## Default OIDC Access ID to be used for initial WebUI login
   # defaultOidcAccessId:
+  ## Default Certificate Access ID to be used for initial WebUI login
+  # defaultCertificateAccessId:
   ## This Default Encryption Key will be selected when creating the following items: Static Secrets, Dynamic Secret Producers and Secret Migration Configurations
   # defaultEncryptionKey:
   ## The location of the default path to save secrets
