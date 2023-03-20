@@ -88,13 +88,15 @@ spec:
   {{- end }}
 {{- end }}
 {{- if .Values.ztbConfig.config.rdpRecord.enabled }}
-            - name: AWS_REGION
-              value: {{ required "A valid .Values.ztbConfig.config.rdpRecording.s3.region required!" .Values.ztbConfig.config.rdpRecord.s3.region }}
-            - name: AWS_S3_BUCKET
-              value: {{ required "A valid .Values.ztbConfig.config.rdpRecording.s3.bucketName required!" .Values.ztbConfig.config.rdpRecord.s3.bucketName }}
-            - name: AWS_S3_PREFIX
-              value: {{ required "A valid .Values.ztbConfig.config.rdpRecording.s3.bucketPrefix required!" .Values.ztbConfig.config.rdpRecord.s3.bucketPrefix }}
-  {{- if or ( .Values.ztbConfig.config.rdpRecord.s3.awsAccessKeyId) ( .Values.ztbConfig.config.rdpRecord.existingSecret) }}
+  {{- if .Values.ztbConfig.config.rdpRecord.s3.bucketName }}
+      - name: AWS_REGION
+       value: {{ required "A valid .Values.ztbConfig.config.rdpRecording.s3.region required!" .Values.ztbConfig.config.rdpRecord.s3.region }}
+      - name: AWS_S3_BUCKET
+        value: {{ required "A valid .Values.ztbConfig.config.rdpRecording.s3.bucketName required!" .Values.ztbConfig.config.rdpRecord.s3.bucketName }}
+      - name: AWS_S3_PREFIX
+        value: {{ required "A valid .Values.ztbConfig.config.rdpRecording.s3.bucketPrefix required!" .Values.ztbConfig.config.rdpRecord.s3.bucketPrefix }}
+
+      {{- if or ( .Values.ztbConfig.config.rdpRecord.s3.awsAccessKeyId) ( .Values.ztbConfig.config.rdpRecord.existingSecret) }}
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
@@ -105,8 +107,34 @@ spec:
                 secretKeyRef:
                   name: {{ template "akeyless-zero-trust-bastion.secretName" . }}
                   key: aws-secret-access-key
+      {{- end }}
   {{- end }}
-  {{- if .Values.httpProxySettings.http_proxy }}
+
+  {{- if .Values.ztbConfig.config.rdpRecord.azure.storageAccountName }}
+      - name: AZURE_STORAGE_ACCOUNT
+       value: {{ required "A valid .Values.ztbConfig.config.rdpRecording.azure.storageAccountName required!" .Values.ztbConfig.config.rdpRecord.azure.storageAccountName }}
+      - name: AZURE_STORAGE_CONTAINER_NAME
+        value: {{ required "A valid .Values.ztbConfig.config.rdpRecording.azure.storageContainerName required!" .Values.ztbConfig.config.rdpRecord.azure.storageContainerName }}
+      
+      {{- if or ( .Values.ztbConfig.config.rdpRecord.azure.secretId) ( .Values.ztbConfig.config.rdpRecord.existingSecret) }}
+            - name: AZURE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "akeyless-zero-trust-bastion.secretName" . }}
+                  key: azure-client-secret
+            - name: AZURE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "akeyless-zero-trust-bastion.secretName" . }}
+                  key: azure-client-id
+            - name: AZURE_TENANT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "akeyless-zero-trust-bastion.secretName" . }}
+                  key: azure-tenant-id
+      {{- end }}
+  {{- end }}
+{{- if .Values.httpProxySettings.http_proxy }}
             - name: http_proxy
               value: {{ .Values.httpProxySettings.http_proxy }}
   {{- end }}
@@ -118,7 +146,6 @@ spec:
             - name: no_proxy
               value: {{ .Values.httpProxySettings.no_proxy }}
   {{- end }}
-
 {{- end }}
           resources:
 {{- toYaml .Values.ztbConfig.resources | nindent 12 }}
