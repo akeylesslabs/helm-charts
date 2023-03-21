@@ -169,6 +169,10 @@ spec:
           resources:
 {{- toYaml .Values.resources | nindent 12 }}
           env:
+          {{- if .Values.fixedArtifactRepository }}
+            - name: ARTIFACTS_REPO
+              value: {{ .Values.fixedArtifactRepository  }}
+          {{- end }}
           {{- if .Values.deployment.fips.enabled }}
             - name: FIPS
               value: {{ .Values.deployment.fips.enabled }}
