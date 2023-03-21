@@ -21,6 +21,10 @@ image:
   pullPolicy: Always
   tag: latest
 
+# Uncomment for downloading Akeyless artifacts from fixed repository
+# ref: https://docs.akeyless.io/docs/advanced-k8s-gateway-configuration#fixed-artifact-repository
+# fixedArtifactRepository: "artifacts.site2.akeyless.io"
+
 containerName: "api-gateway"
 
 # Linux system HTTP Proxy
