@@ -173,8 +173,16 @@ ztbConfig:
         # optional, run with explicit credentials (without AWS IAM roles)
         awsAccessKeyId: ""
         awsSecretAccessKey: ""
+      # automatically upload session recordings to Blob storage in your Azure account
+      azure:
+        storageAccountName: ""
+        storageContainerName: ""
+        # optional, run with explicit credentials (without Azure IAM roles)
+        tenantId: ""
+        clientId: ""
+        secretId: ""
 
-      # Specifies an existing secret to be used for bastion, management AWS credentials
+      # Specifies an existing secret to be used for bastion, management AWS/Azure credentials
       existingSecret: ""
 
 #############################################
