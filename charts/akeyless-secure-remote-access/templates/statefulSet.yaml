@@ -108,6 +108,10 @@ spec:
           - name: ALLOWED_ACCESS_IDS
             value: {{ range $index, $element := .Values.privilegedAccess.allowedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }}
 {{- end }}
+{{- if .Values.sshConfig.allowedBastionUrls }}
+            - name: ALLOWED_BASTION_URLS
+              value: {{ range $index, $element := .Values.sshConfig.allowedBastionUrls -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }}
+{{- end }}
 {{- if .Values.httpProxySettings.http_proxy }}
           - name: http_proxy
             value: {{ .Values.httpProxySettings.http_proxy }}

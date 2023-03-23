@@ -159,3 +159,4 @@ The following table lists the configurable parameters of the Zero Trust Web Acce
 | `webWorker.config.displayWidth`                       | Web worker display Width (in pixels) of the application's window.                              | `2560`                     |
 | `webWorker.config.displayHeight`                      | Web worker display Height (in pixels) of the application's window.                             | `1200`                     |
 | `dispatcher.config.allowedBastionUrls`                | List of URLs that will be considered valid for redirection from the Portal back to the bastion | `[]`                       |
+| `dispatcher.config.allowedProxyUrls`                |  List of URLs that will be considered valid for redirection from the Portal back to the web proxy service  | `[]`                       |

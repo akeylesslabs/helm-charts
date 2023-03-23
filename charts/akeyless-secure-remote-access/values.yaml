@@ -286,3 +286,8 @@ sshConfig:
         # target_log_type="syslog"
         # target_syslog_network="udp"
         # target_syslog_host="<host>:<port>"
+
+  # List of URLs that will be considered valid for redirection from the Portal back to the bastion
+  allowedBastionUrls: []
+    #- "bastion.my.org:2222"
+    #- "basion.other.org:2222"
