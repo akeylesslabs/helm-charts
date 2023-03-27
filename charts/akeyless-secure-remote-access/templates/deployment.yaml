@@ -148,6 +148,9 @@ spec:
               value: {{ .Values.httpProxySettings.no_proxy }}
   {{- end }}
 {{- end }}
+{{- if .Values.ztbConfig.env }}
+{{- toYaml .Values.ztbConfig.env | nindent 12 }}
+{{- end }}
           resources:
 {{- toYaml .Values.ztbConfig.resources | nindent 12 }}
           livenessProbe:

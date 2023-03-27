@@ -74,7 +74,8 @@ ztbConfig:
     # tag: latest
     
   containerName: "zero-trust-bastion"
-  
+  env: []
+
   service:
     # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
     annotations: {}
