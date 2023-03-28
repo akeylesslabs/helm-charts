@@ -90,11 +90,11 @@ spec:
 {{- if .Values.ztbConfig.config.rdpRecord.enabled }}
   {{- if .Values.ztbConfig.config.rdpRecord.s3.bucketName }}
             - name: AWS_REGION
-              value: {{ required "A valid .Values.ztbConfig.config.rdpRecording.s3.region required!" .Values.ztbConfig.config.rdpRecord.s3.region }}
+              value: {{ required "A valid .Values.ztbConfig.config.rdpRecord.s3.region required!" .Values.ztbConfig.config.rdpRecord.s3.region }}
             - name: AWS_S3_BUCKET
-              value: {{ required "A valid .Values.ztbConfig.config.rdpRecording.s3.bucketName required!" .Values.ztbConfig.config.rdpRecord.s3.bucketName }}
+              value: {{ required "A valid .Values.ztbConfig.config.rdpRecord.s3.bucketName required!" .Values.ztbConfig.config.rdpRecord.s3.bucketName }}
             - name: AWS_S3_PREFIX
-              value: {{ required "A valid .Values.ztbConfig.config.rdpRecording.s3.bucketPrefix required!" .Values.ztbConfig.config.rdpRecord.s3.bucketPrefix }}
+              value: {{ required "A valid .Values.ztbConfig.config.rdpRecord.s3.bucketPrefix required!" .Values.ztbConfig.config.rdpRecord.s3.bucketPrefix }}
   {{- end }}
   {{- if or ( .Values.ztbConfig.config.rdpRecord.s3.awsAccessKeyId) ( .Values.ztbConfig.config.rdpRecord.existingSecret) }}
         {{- if .Values.ztbConfig.config.rdpRecord.s3.bucketName }}
@@ -114,20 +114,20 @@ spec:
             - name: AZURE_STORAGE_ACCOUNT
               value: {{ required "A valid .Values.ztbConfig.config.rdpRecord.azure.storageAccountName required!" .Values.ztbConfig.config.rdpRecord.azure.storageAccountName }}
             - name: AZURE_STORAGE_CONTAINER_NAME
-              value: {{ required "A valid .Values.ztbConfig.config.rdpRecording.azure.storageContainerName required!" .Values.ztbConfig.config.rdpRecord.azure.storageContainerName }}
+              value: {{ required "A valid .Values.ztbConfig.config.rdpRecord.azure.storageContainerName required!" .Values.ztbConfig.config.rdpRecord.azure.storageContainerName }}
   {{- end }}
-  {{- if or ( .Values.ztbConfig.config.rdpRecord.azure.secretId) ( .Values.ztbConfig.config.rdpRecord.existingSecret) }}
+  {{- if or ( .Values.ztbConfig.config.rdpRecord.azure.azureClientId) ( .Values.ztbConfig.config.rdpRecord.existingSecret) }}
         {{- if .Values.ztbConfig.config.rdpRecord.azure.storageAccountName }}
-            - name: AZURE_CLIENT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: {{ template "akeyless-zero-trust-bastion.secretName" . }}
-                  key: azure-client-secret
             - name: AZURE_CLIENT_ID
               valueFrom:
                 secretKeyRef:
                   name: {{ template "akeyless-zero-trust-bastion.secretName" . }}
                   key: azure-client-id
+            - name: AZURE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "akeyless-zero-trust-bastion.secretName" . }}
+                  key: azure-client-secret
             - name: AZURE_TENANT_ID
               valueFrom:
                 secretKeyRef:

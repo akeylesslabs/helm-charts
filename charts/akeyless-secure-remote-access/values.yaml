@@ -179,10 +179,9 @@ ztbConfig:
         storageAccountName: ""
         storageContainerName: ""
         # optional, run with explicit credentials (without Azure IAM roles)
-        tenantId: ""
-        clientId: ""
-        secretId: ""
-
+        azureClientId: ""
+        azureClientSecret: ""
+        azureTenantId: ""
       # Specifies an existing secret to be used for bastion, management AWS/Azure credentials
       existingSecret: ""
 
