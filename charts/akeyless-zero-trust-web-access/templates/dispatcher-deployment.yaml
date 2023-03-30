@@ -68,6 +68,9 @@ spec:
 {{- if .Values.dispatcher.config.allowedBastionUrls }}
               echo {{ range $index, $element := .Values.dispatcher.config.allowedBastionUrls -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_bastion_urls
 {{- end }}
+{{- if .Values.dispatcher.config.allowedProxyUrls }}
+              echo {{ range $index, $element := .Values.dispatcher.config.allowedProxyUrls -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_bastion_urls
+{{- end }}
           volumeMounts:
             - name: configmap-akeyless
               mountPath: /configmap_akeyless

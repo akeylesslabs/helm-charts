@@ -121,6 +121,11 @@ dispatcher:
       # - "https://bastion.my.org:8888"
       # - "https://basion.other.org:8888"
 
+    # List of URLs that will be considered valid for redirection from the Portal back to the web proxy service
+    allowedProxyUrls: []
+    # - "https://bastion.my.org:19414"
+    # - "https://basion.other.org:19414"
+
     # The privilegedAccess should have "Read" and "List" permissions to the relevant secrets.
     # If accessKey field is left empty, the accessID will be used as a Cloud Provider IAM Auth Method (e.g. AWS-IAM, AzureAD, GCP-GCE)
     privilegedAccess:

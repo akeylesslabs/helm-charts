@@ -145,6 +145,7 @@ The following table lists the configurable parameters of the SSH Bastion chart a
 | `sshConfig.readinessProbe`                          | Readiness probe configuration for SSH Bastion                                                                        | Check `values.yaml` file                                     |         
 | `sshConfig.resources.limits`                        | The resources limits for SSH Bastion containers  (If HPA is enabled these must be set)                               | `{}`                                                         |
 | `sshConfig.resources.requests`                      | The requested resources for SSH-Bastion containers (If HPA is enabled these must be set)                             | `{}`                                                         |
+| `sshConfig.allowedBastionUrls` | List of URLs that will be considered valid for redirection from the Portal back to the bastion | `[]`                          |
 
 
 ### Exposure parameters
