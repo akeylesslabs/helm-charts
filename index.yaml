@@ -2305,6 +2305,20 @@ entries:
       ztbVersion: v0.16.0
     apiVersion: v2
     appVersion: v0.16.0_0.13.2
+    created: "2023-03-30T13:46:54.566786217Z"
+    description: A Helm chart for Kubernetes akeyless-zero-trust-bastion and akeyless-ssh-bastion
+      deployment
+    digest: 099f951a191f6c010e3d74721ff544cdfd8edae0e2e65960b6fbad118cb382c8
+    name: akeyless-sra
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-sra-0.16.1/akeyless-sra-0.16.1.tgz
+    version: 0.16.1
+  - annotations:
+      sshVersion: 0.13.2
+      ztbVersion: v0.16.0
+    apiVersion: v2
+    appVersion: v0.16.0_0.13.2
     created: "2023-03-30T13:34:55.289546741Z"
     description: A Helm chart for Kubernetes akeyless-zero-trust-bastion and akeyless-ssh-bastion
       deployment
@@ -4369,6 +4383,20 @@ entries:
   akeyless-zero-trust-web-access:
   - apiVersion: v2
     appVersion: 0.15.1
+    created: "2023-03-30T13:46:54.730572828Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-zero-trust-web-access
+    digest: 313f6dda546af0effa607b8103844fb6d38a40eef2f9fe0cf773042e935bb599
+    home: https://www.akeyless.io
+    icon: https://akeylesslabs.github.io/helm-charts/assets/logo/akl.jpeg
+    name: akeyless-zero-trust-web-access
+    sources:
+    - https://github.com/akeylesslabs/helm-charts/tree/feature/helm_repo/akeyless-zero-trust-web-access
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.6.6/akeyless-zero-trust-web-access-1.6.6.tgz
+    version: 1.6.6
+  - apiVersion: v2
+    appVersion: 0.15.1
     created: "2023-03-27T07:47:29.806232544Z"
     description: A Helm chart for Kubernetes that deploys akeyless-zero-trust-web-access
     digest: ecd8386aea37234b40aedc351717e5259483122faf66074d8c5407dddc6b7c3e
@@ -5641,4 +5669,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2023-03-30T13:34:55.295470094Z"
+generated: "2023-03-30T13:46:54.73575415Z"
