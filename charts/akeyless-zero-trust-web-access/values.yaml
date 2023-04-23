@@ -282,7 +282,7 @@ persistence: {}
 
 HPA:
   # Set the below to false in case you do not want to add Horizontal Pod AutoScaling (not recommended)
-  enabled: true
+  enabled: false
   dispatcher:
     minReplicas: 1
     maxReplicas: 14
