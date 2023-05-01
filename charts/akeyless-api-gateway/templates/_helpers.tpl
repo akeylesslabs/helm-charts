@@ -111,6 +111,14 @@ Generate chart secret name
 {{/*
 Check customer fragment
 */}}
+
+{{- define "akeyless-api-gw.root.config.path" -}}
+{{- if .Values.akeylessStrictMode }}
+     {{- printf "/home/akeyless" -}}
+{{- else }}
+     {{- printf "/root" -}}
+{{- end -}}
+{{- end -}}
 {{- define "akeyless-api-gw.customerFragmentExist" -}}
     {{- if .Values.customerFragments -}}
         {{- printf "true" -}}
