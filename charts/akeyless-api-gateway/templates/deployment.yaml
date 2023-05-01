@@ -92,16 +92,16 @@ spec:
             - |
               set -ex
             {{- if eq (include "akeyless-api-gw.customerFragmentExist" .) "true"}}
-              [ "$(ls /customer_fragments)" ] && cp /customer_fragments/* /root/.akeyless
+              [ "$(ls /customer_fragments)" ] && cp /customer_fragments/* {{include "akeyless-api-gw.root.config.path" $}}/.akeyless
             {{- end }}
             {{- if eq (include "akeyless-api-gw.logandConfExist" .) "true"}}
-              cp /logand_conf/logand.conf /root/.akeyless/logand.conf
+              cp /logand_conf/logand.conf {{include "akeyless-api-gw.root.config.path" $}}/.akeyless/logand.conf
             {{- end }} 
             {{- if eq (include "akeyless-api-gw.tlsCertificateExist" .) "true"}}
-              cp /tls_conf/akeyless-api-cert.crt /root/.akeyless/akeyless-api-cert.crt
+              cp /tls_conf/akeyless-api-cert.crt {{include "akeyless-api-gw.root.config.path" $}}/.akeyless/akeyless-api-cert.crt
             {{- end }} 
             {{- if eq (include "akeyless-api-gw.tlsPrivateKeyExist" .) "true"}}
-              cp /tls_conf/akeyless-api-cert.key /root/.akeyless/akeyless-api-cert.key
+              cp /tls_conf/akeyless-api-cert.key {{include "akeyless-api-gw.root.config.path" $}}/.akeyless/akeyless-api-cert.key
             {{- end }} 
           volumeMounts:
           {{- if eq (include "akeyless-api-gw.customerFragmentExist" .) "true"}}
@@ -109,7 +109,7 @@ spec:
               mountPath: /customer_fragments
           {{- end }}
             - name: akeyless-config
-              mountPath: /root/.akeyless
+              mountPath: {{include "akeyless-api-gw.root.config.path" $}}/.akeyless
           {{- if eq (include "akeyless-api-gw.logandConfExist" .) "true"}}
             - name: logand-conf
               mountPath: /logand_conf
@@ -159,7 +159,7 @@ spec:
          {{- if or (eq (include "akeyless-api-gw.customerFragmentExist" .) "true") (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true") ( .Values.metrics.enabled)}}
           volumeMounts:
             - name: akeyless-config
-              mountPath: /root/.akeyless
+              mountPath: {{include "akeyless-api-gw.root.config.path" $}}/.akeyless
           {{- if and (.Values.metrics.enabled) (eq (include "akeyless-api-gw.metricsSecretExist" .) "true") }}
             - name: otelcol-metrics-config
               mountPath: /akeyless/otel-config.yaml
