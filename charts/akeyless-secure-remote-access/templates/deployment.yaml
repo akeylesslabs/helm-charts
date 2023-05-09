@@ -35,6 +35,12 @@ spec:
       {{- end }}
       imagePullSecrets:
         - name: akeyless-docker-hub
+      volumes:
+          {{- range .Values.ztbConfig.persistence.volumes }}
+        - name: {{ .name | title | lower }}
+          persistentVolumeClaim:
+            claimName: {{ printf "%s-%s" $.Release.Name .name | title | lower }}
+          {{- end }}
       containers:
         - name: {{ .Values.ztbConfig.containerName }}
           image: "{{ .Values.ztbConfig.image.repository }}:{{ .Values.ztbConfig.image.tag | default .Chart.Annotations.ztbVersion }}"
@@ -161,4 +167,10 @@ spec:
             tcpSocket:
               port: 8888
 {{- toYaml .Values.ztbConfig.readinessProbe | trim | nindent 12 }}
+          volumeMounts:
+          {{- range .Values.ztbConfig.persistence.volumes }}
+            - name: {{ .name | title | lower }}
+              mountPath: /home/akeyless/recordings
+              subPath: recordings
+          {{- end }}
 {{- end }}

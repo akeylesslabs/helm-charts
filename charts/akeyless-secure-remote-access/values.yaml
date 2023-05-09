@@ -133,6 +133,22 @@ ztbConfig:
 
     ## existingSecret: name-of-existing-secret
 
+  # Akeyless requires data persistence to be shared within all pods in the cluster
+  # Currently only ReadWriteMany is supported
+  # accessMode: ReadWriteMany
+  # Change the below values according to your environment except for the hostPath values
+  persistence:
+    volumes: { }
+    #  volumes:
+    #  - name: akeyless-data
+    #    storageClassName: efs-zero-trust-bastion-sc
+    #   #  storageClassDriver: efs.csi.aws.com
+    #    size: 100Mi
+    #    annotations:
+    #     volume.beta.kubernetes.io/storage-class: ""
+    #    matchLabels:
+    #     usage: "zero-trust-bastion-pv"
+
   livenessProbe:
     initialDelaySeconds: 15
     periodSeconds: 30
