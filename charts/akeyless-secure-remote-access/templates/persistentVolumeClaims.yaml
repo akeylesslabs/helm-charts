@@ -1,3 +1,34 @@
+{{- if eq .Values.ztbConfig.enabled true }}
+{{- range .Values.ztbConfig.persistence.volumes }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ printf "%s-%s" $.Release.Name .name | title | lower }}
+  namespace: {{ $.Release.Namespace }}
+{{- if .annotations }}
+  annotations:
+  {{- toYaml .annotations | nindent 4 }}
+{{- end }}
+  labels:
+    app: {{ $.Values.ztbConfig.containerName }}
+    chart: {{ $.Chart.Name }}
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: {{ required "A valid .Values.ztbConfig.persistence.volumes.storageClassName entry required!" .storageClassName }}
+  resources:
+    requests:
+      storage: {{ required "A valid .Values.ztbConfig.persistence.volumes.size entry required!" .size }}
+{{- if .matchLabels }}
+  selector:
+    # To make sure we match the claim with the exact volume, match the label
+    matchLabels:
+{{- toYaml .matchLabels | nindent 6 }}
+{{- end }}
+{{- end }}
+{{- end }}
+
 {{- if eq .Values.sshConfig.enabled true }}
 {{- range .Values.sshConfig.persistence.volumes }}
 ---

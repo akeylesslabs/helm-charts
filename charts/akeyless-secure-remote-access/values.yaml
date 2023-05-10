@@ -146,8 +146,6 @@ ztbConfig:
     #    size: 100Mi
     #    annotations:
     #     volume.beta.kubernetes.io/storage-class: ""
-    #    matchLabels:
-    #     usage: "zero-trust-bastion-pv"
 
   livenessProbe:
     initialDelaySeconds: 15
