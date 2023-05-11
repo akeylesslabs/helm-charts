@@ -15,9 +15,9 @@ type: application
 # to the chart and its templates, including the app version.
 version: 0.21.0
 
-appVersion: v0.17.2_0.15.0
+appVersion: v0.18.0_0.15.0
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application.
 annotations:
-  ztbVersion: v0.17.2
+  ztbVersion: v0.18.0
   sshVersion: 0.15.0
