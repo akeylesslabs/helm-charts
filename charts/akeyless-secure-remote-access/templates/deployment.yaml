@@ -153,6 +153,10 @@ spec:
             - name: no_proxy
               value: {{ .Values.httpProxySettings.no_proxy }}
   {{- end }}
+  {{- if .Values.ztbConfig.config.rdpRecord.keepLocalRecording }}
+            - name: KEEP_LOCAL_RECORDINGS
+              value: "true"
+  {{- end }}
 {{- end }}
 {{- if .Values.ztbConfig.env }}
 {{- toYaml .Values.ztbConfig.env | nindent 12 }}
