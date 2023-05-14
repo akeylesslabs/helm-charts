@@ -67,7 +67,7 @@ spec:
               mountPath: /configmap_policy_conf
       imagePullSecrets:
         - name: akeyless-docker-hub-web-access
-      terminationGracePeriodSeconds: 3600
+      terminationGracePeriodSeconds: {{ .Values.HPA.webWorker.sessionTerminationGracePeriodSeconds | default 3600 }}
       containers:
         - name: {{ .Values.webWorker.containerName }}
           image: "{{ .Values.webWorker.image.repository }}:{{ .Values.webWorker.image.tag  | default .Chart.AppVersion }}"
