@@ -35,6 +35,12 @@ spec:
       {{- end }}
       imagePullSecrets:
         - name: akeyless-docker-hub
+      volumes:
+          {{- range .Values.ztbConfig.persistence.volumes }}
+        - name: {{ .name | title | lower }}
+          persistentVolumeClaim:
+            claimName: {{ printf "%s-%s" $.Release.Name .name | title | lower }}
+          {{- end }}
       containers:
         - name: {{ .Values.ztbConfig.containerName }}
           image: "{{ .Values.ztbConfig.image.repository }}:{{ .Values.ztbConfig.image.tag | default .Chart.Annotations.ztbVersion }}"
@@ -147,6 +153,10 @@ spec:
             - name: no_proxy
               value: {{ .Values.httpProxySettings.no_proxy }}
   {{- end }}
+  {{- if .Values.ztbConfig.config.rdpRecord.keepLocalRecording }}
+            - name: KEEP_LOCAL_RECORDINGS
+              value: "true"
+  {{- end }}
 {{- end }}
 {{- if .Values.ztbConfig.env }}
 {{- toYaml .Values.ztbConfig.env | nindent 12 }}
@@ -161,4 +171,10 @@ spec:
             tcpSocket:
               port: 8888
 {{- toYaml .Values.ztbConfig.readinessProbe | trim | nindent 12 }}
+          volumeMounts:
+          {{- range .Values.ztbConfig.persistence.volumes }}
+            - name: {{ .name | title | lower }}
+              mountPath: /home/akeyless/recordings
+              subPath: recordings
+          {{- end }}
 {{- end }}

@@ -14,9 +14,9 @@ This chart bootstraps a Akeyless Zero Trust Bastion deployment and a Akeyless SS
 ### Storage
 Currently, the Akeyless SSH bastion requires a storage class with ReadWriteMany access modes.  
 Since a storage class is more environment specific, you will need to provide one before proceeding.
-In addition, please provide 2 PersistentVolumes with `persistentVolumeReclaimPolicy: retain` and reference those PVs in the `values.yaml` file
+In addition, please provide 1 PersistentVolumes with `persistentVolumeReclaimPolicy: retain` and reference those PVs in the `values.yaml` file
 
-e.g when running on AWS with EKS:
+e.g. when running on AWS with EKS:
 https://docs.aws.amazon.com/eks/latest/userguide/efs-csi.html
 
 ### Network
