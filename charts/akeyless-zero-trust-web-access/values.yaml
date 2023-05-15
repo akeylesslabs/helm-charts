@@ -291,6 +291,8 @@ HPA:
   # Will only work with metrics enabled
   webWorker:
     busyWorkersPercentage: 50
+  # HPA can potentially terminate (scale down) a pod with a live session. This value is the time period to postpone the termination
+    sessionTerminationGracePeriodSeconds: 3600
 
 metrics:
   enabled: false
