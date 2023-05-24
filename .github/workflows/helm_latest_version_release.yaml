@@ -20,7 +20,7 @@ jobs:
       chart_name: ${{ steps.vars.outputs.chart_name }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with: 
           token: ${{ secrets.AKEYLESS_CI_COMMIT_PUSH_TOKEN }}
 
@@ -40,8 +40,8 @@ jobs:
       - name: Set Change Variables
         id: vars
         run: |
-          echo ::set-output name=new_chart_version::${{ env.new_chart_version }}
-          echo ::set-output name=chart_name::${{ env.chart_name }}
+          echo new_chart_version=${{ env.new_chart_version }} >> $GITHUB_OUTPUT
+          echo chart_name=${{ env.chart_name }} >> $GITHUB_OUTPUT
 
       - uses: actions/github-script@v6
         with:
@@ -58,10 +58,7 @@ jobs:
     name: Slack-On-Success-Notification
     runs-on: ubuntu-20.04
     needs: [ update-latest-helm-chart-version ]
-    if: |
-      (always() &&
-      contains(needs.*.result, 'success') &&
-      (github.event.deployment.task == 'update-latest-version'))
+    if: (github.event.deployment.task == 'update-latest-version'))
     env:
       new_chart_version: ${{ needs.update-latest-helm-chart-version.outputs.new_chart_version }}
       chart_name: ${{ needs.update-latest-helm-chart-version.outputs.chart_name }}
@@ -75,7 +72,10 @@ jobs:
           *Chart:* $chart_name
           *New Chart Version:* $new_chart_version
           :helm:"
-          echo "::set-output name=slack-message::${SLACK_MESSAGE//$'\n'/'%0A'}"
+          delimiter="$(openssl rand -hex 8)"
+          echo "slack-message<<${delimiter}" >> $GITHUB_ENV
+          echo "${SLACK_MESSAGE//$/%0A}" >> $GITHUB_ENV
+          echo "${delimiter}" >> $GITHUB_ENV
 
       - name: Slack Success Notification
         uses: rtCamp/action-slack-notify@v2
@@ -84,7 +84,7 @@ jobs:
           SLACK_COLOR: ${{ job.status }}
           SLACK_ICON: https://github.com/rtCamp.png?size=48
           SLACK_TITLE: Helm Chart Latest Version Release Updated
-          SLACK_MESSAGE: '${{ steps.slack-message-success-creator.outputs.slack-message }}'
+          SLACK_MESSAGE: '${{ env.slack-message }}'
           SLACK_USERNAME: githubBot
           SLACK_WEBHOOK: ${{ secrets.SLACK_OPERATIONS_WEBHOOK }}
           MSG_MINIMAL: true
@@ -94,10 +94,7 @@ jobs:
     name: Slack-On-Failure-Notification
     runs-on: ubuntu-20.04
     needs: [ update-latest-helm-chart-version ]
-    if: |
-      (always() &&
-      contains(needs.*.result, 'failure') &&
-      (github.event.deployment.task == 'update-latest-version'))
+    if: (failure() && needs.*.result != 'success') && (github.event.deployment.task == 'update-latest-version'))
     env:
       chart_name: ${{ needs.update-latest-helm-chart-version.outputs.chart_name }}
     steps:
@@ -110,7 +107,10 @@ jobs:
           *Chart:* $chart_name
           *Status:* Failure
           :terminator:"
-          echo "::set-output name=slack-message::${SLACK_MESSAGE//$'\n'/'%0A'}"
+          delimiter="$(openssl rand -hex 8)"
+          echo "slack-message<<${delimiter}" >> $GITHUB_ENV
+          echo "${SLACK_MESSAGE//$/%0A}" >> $GITHUB_ENV
+          echo "${delimiter}" >> $GITHUB_ENV
 
       - name: Slack Failure Notification
         uses: rtCamp/action-slack-notify@v2
@@ -119,7 +119,7 @@ jobs:
           SLACK_COLOR: '#bd3232'
           SLACK_ICON: https://github.com/rtCamp.png?size=48
           SLACK_TITLE: Helm Chart Latest Version Release Failed!
-          SLACK_MESSAGE: '${{ steps.slack-message-failure-creator.outputs.slack-message }}'
+          SLACK_MESSAGE: '${{ env.slack-message }}'
           SLACK_USERNAME: githubBot
           SLACK_WEBHOOK: ${{ secrets.SLACK_OPERATIONS_WEBHOOK }}
           SLACK_FOOTER: Akeyless.io Helm Chart Latest Version Release

@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Fetch history
         run: git fetch --prune --unshallow
@@ -33,7 +33,7 @@ jobs:
         run: |
           helm repo add stable https://charts.helm.sh/stable
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.2.0
+        uses: helm/chart-releaser-action@v1.5.0
         env:
           CR_TOKEN: "${{ secrets.TOKEN_GITHUB }}"
 
@@ -41,9 +41,7 @@ jobs:
     name: Slack-On-Failure-Notification
     runs-on: ubuntu-20.04
     needs: [ release ]
-    if: |
-      (always() &&
-      contains(needs.*.result, 'failure'))
+    if: (failure() && needs.*.result != 'success')
     steps:
       - name: Prepare Slack Message On Failure
         id: slack-message-failure-creator
@@ -51,7 +49,10 @@ jobs:
           SLACK_MESSAGE="
           *Status:* Failure
           :terminator:"
-          echo "::set-output name=slack-message::${SLACK_MESSAGE//$'\n'/'%0A'}"
+          delimiter="$(openssl rand -hex 8)"
+          echo "slack-message<<${delimiter}" >> $GITHUB_ENV
+          echo "${SLACK_MESSAGE//$/%0A}" >> $GITHUB_ENV
+          echo "${delimiter}" >> $GITHUB_ENV
 
       - name: Slack Failure Notification
         uses: rtCamp/action-slack-notify@v2
@@ -60,7 +61,7 @@ jobs:
           SLACK_COLOR: '#bd3232'
           SLACK_ICON: https://github.com/rtCamp.png?size=48
           SLACK_TITLE: Helm Chart Release Failed!
-          SLACK_MESSAGE: '${{ steps.slack-message-failure-creator.outputs.slack-message }}'
+          SLACK_MESSAGE: '${{ env.slack-message }}'
           SLACK_USERNAME: githubBot
           SLACK_WEBHOOK: ${{ secrets.SLACK_OPERATIONS_WEBHOOK }}
           SLACK_FOOTER: Akeyless.io Helm Chart Release
