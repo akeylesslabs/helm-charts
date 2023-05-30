@@ -58,7 +58,7 @@ jobs:
     name: Slack-On-Success-Notification
     runs-on: ubuntu-20.04
     needs: [ update-latest-helm-chart-version ]
-    if: (github.event.deployment.task == 'update-latest-version'))
+    if: (github.event.deployment.task == 'update-latest-version')
     env:
       new_chart_version: ${{ needs.update-latest-helm-chart-version.outputs.new_chart_version }}
       chart_name: ${{ needs.update-latest-helm-chart-version.outputs.chart_name }}
@@ -94,7 +94,7 @@ jobs:
     name: Slack-On-Failure-Notification
     runs-on: ubuntu-20.04
     needs: [ update-latest-helm-chart-version ]
-    if: (failure() && needs.*.result != 'success') && (github.event.deployment.task == 'update-latest-version'))
+    if: (failure() && needs.*.result != 'success') && (github.event.deployment.task == 'update-latest-version')
     env:
       chart_name: ${{ needs.update-latest-helm-chart-version.outputs.chart_name }}
     steps:
