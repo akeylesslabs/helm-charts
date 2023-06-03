@@ -191,6 +191,13 @@ spec:
                   name: {{ include "akeyless-api-gw.secretName" . }}
                   key: allowed-access-ids
           {{- end }}
+          {{- if eq (include "akeyless-api-gw.allowedAccessesExist" .) "true" }}
+            - name: ALLOWED_ACCESSES
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "akeyless-api-gw.secretName" . }}
+                  key: allowed-accesses
+          {{- end }}
           {{- if eq (include "akeyless-api-gw.adminAccessKeyExist" .) "true" }}
             - name: ADMIN_ACCESS_KEY 
               valueFrom:
