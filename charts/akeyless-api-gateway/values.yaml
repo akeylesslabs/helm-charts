@@ -281,8 +281,9 @@ universalIdentity:
 #  - admin-certificate (base64)
 #  - admin-certificate-key (base64)
 #  - allowed-access-ids
+#  - allowed-accesses
 #  - customer-fragments
-existingSecret: 
+existingSecret:
 
 # Specifies an initial configuration for the general section
 TLSConf:
