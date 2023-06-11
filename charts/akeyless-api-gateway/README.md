@@ -78,17 +78,18 @@ The following table lists the configurable parameters of the API Gateway chart a
 
 ### API-Gateway configuration parameters
 
-| Parameter                                   | Description                                                                                                          | Default                                                      |
-|---------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
-| `akeylessUserAuth.adminAccessId`            | Akeyless Access ID (can used as email address)                                                                       | `nil`                                                        |
-| `akeylessUserAuth.adminAccessKey`           | Akeyless Access Key                                                                                                  | `nil`                                                        |
-| `akeylessUserAuth.adminPassword`            | Akeyless Access Password (should be used only when `akeylessUserAuth.adminAccessId` is email)                        | `nil`                                                        |
-| `akeylessUserAuth.clusterName`              | API Gateway cluster name                                                                                             | `nil`                                                        |
-| `akeylessUserAuth.initialClusterDisplayName`| API Gateway cluster display name                                                                                     | `nil`                                                        |
-| `akeylessUserAuth.configProtectionKeyName`  | Akeyless Protection key name                                                                                         | `nil`                                                        |
-| `akeylessUserAuth.allowedAccessIDs`         | List of allowed Access ID's to enable multiple users to be able to login and manage API GW.                          | `nil`                                                        |
-| `customerFragments`                         | API Gateway customer fragment                                                                                        | `nil`                                                        |
-| `existingSecret`                            | Specifies an existing secret to be used for API Gateway                                                              | Check `values.yaml` file                                   |                                  |
+| Parameter                                    | Description                                                                                                                                                                     | Default                  |
+|----------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------|
+| `akeylessUserAuth.adminAccessId`             | Akeyless Access ID (can used as email address)                                                                                                                                  | `nil`                    |
+| `akeylessUserAuth.adminAccessKey`            | Akeyless Access Key                                                                                                                                                             | `nil`                    |
+| `akeylessUserAuth.adminPassword`             | Akeyless Access Password (should be used only when `akeylessUserAuth.adminAccessId` is email)                                                                                   | `nil`                    |
+| `akeylessUserAuth.clusterName`               | API Gateway cluster name                                                                                                                                                        | `nil`                    |
+| `akeylessUserAuth.initialClusterDisplayName` | API Gateway cluster display name                                                                                                                                                | `nil`                    |
+| `akeylessUserAuth.configProtectionKeyName`   | Akeyless Protection key name                                                                                                                                                    | `nil`                    |
+| `akeylessUserAuth.allowedAccessIDs`          | List of allowed Access ID's to enable multiple users to be able to login and manage API GW.                                                                                     | `nil`                    |
+| `akeylessUserAuth.allowedAccessPermissions`  | List of allowed accesses to enable multiple users to be able to login and manage the Gateway with specific permissions and sub claims. See `values.yaml` file for more details. | `nil`                    |
+| `customerFragments`                          | API Gateway customer fragment                                                                                                                                                   | `nil`                    |
+| `existingSecret`                             | Specifies an existing secret to be used for API Gateway                                                                                                                         | Check `values.yaml` file |                                  |
 
 
 ### API-Gateway defaults section configuration parameters

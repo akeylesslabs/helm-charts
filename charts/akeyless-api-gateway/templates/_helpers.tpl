@@ -186,6 +186,20 @@ Check allowed Access IDs
     {{- end -}}
 {{- end -}}
 
+{{- define "akeyless-api-gw.allowedAccessPermissionsExist" -}}
+    {{- if .Values.akeylessUserAuth.allowedAccessPermissions -}}
+        {{- printf "true" -}}
+    {{- else if and (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)) .Values.existingSecret -}}
+        {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" . )) "data") "allowed-access-permissions" -}}
+            {{- printf "true" -}}
+        {{- else -}}
+            {{- printf "false" -}}
+        {{- end -}}
+    {{- else -}}
+        {{- printf "false" -}}
+    {{- end -}}
+{{- end -}}
+
 {{/*
 Check admin access-key
 */}}

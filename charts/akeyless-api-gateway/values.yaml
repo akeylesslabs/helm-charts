@@ -217,11 +217,40 @@ akeylessUserAuth:
   configProtectionKeyName:
 
   ## ref: https://docs.akeyless.io/docs/secure-remote-access-bastion#configuration
+  # This variable is deprecated, please use allowedAccessPermissions
   allowedAccessIDs: []
   # - p-1234 subClimekey1=subClimeVal1
   # - p-1234 subClimekey2=subClimeVal2
   # - p-5678 subClimekey1=subClimeVal1
   # - p-5678
+
+  # Configure this list to add one or more allowed access to this GW, with the specified permissions and sub-claims.
+  # Name must be unique.
+  # Empty permissions will implicitly give the access admin permission.
+  allowedAccessPermissions: {}
+#    - name: access1
+#      access_id: p-1234
+#      sub_claims:
+#        username:
+#          - username1
+#          - username2
+#        group:
+#          - IT
+#      permissions:
+#        - admin
+#    - name: access2
+#      access_id: p-1234
+#      sub_claims:
+#        group:
+#          - group1
+#      permissions:
+#        - targets
+#        - defaults
+#    - name: access3
+#      access_id: p-5678
+#      permissions:
+#        - targets
+#        - defaults
 
   # restrict access to specific access-ids (comma separated list)
   # restrictServiceToAccessIds: "p-1234,p-5678"
@@ -252,8 +281,9 @@ universalIdentity:
 #  - admin-certificate (base64)
 #  - admin-certificate-key (base64)
 #  - allowed-access-ids
+#  - allowed-access-permissions
 #  - customer-fragments
-existingSecret: 
+existingSecret:
 
 # Specifies an initial configuration for the general section
 TLSConf:
