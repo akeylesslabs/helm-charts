@@ -297,10 +297,10 @@ TLSConf:
   # Specifies an existing secret for tls-certificate:
   tlsExistingSecretName: 
   # Alter this property of you need to use a different input file name for the certificate, like from an existing secret
-  # Default value is 'akeyless-api-cert.crt' or change to your override file name and this proptery is required
+  # Default value is 'akeyless-api-cert.crt' or change to your override file name (this proptery is required)
   certFileName: 'akeyless-api-cert.crt'
   # Alter this property of you need to use a different input file name for the key, like from an existing secret
-  # Default value should be 'akeyless-api-cert.key' or change to your override file name and this proptery is required
+  # Default value should be 'akeyless-api-cert.key' or change to your override file name (this proptery is required)
   keyFileName: 'akeyless-api-cert.key'
   # 
   # tlsCertificate: |-
