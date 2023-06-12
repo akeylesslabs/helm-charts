@@ -38,18 +38,24 @@ items:
       - "*"
       resources:
       - pods
-    failurePolicy: Ignore
+    failurePolicy: {{ .Values.webhookConfiguration.failurePolicy | default "Ignore" }}
     namespaceSelector:
       matchExpressions:
       - key: name
         operator: NotIn
         values:
         - {{ .Release.Namespace }}
+      {{- with .Values.webhookConfiguration.namespaceSelector.matchExpressions }}
+        {{- toYaml . | nindent 6 }}
+      {{- end }}
     objectSelector:
       matchExpressions:
       - key: release
         operator: NotIn
         values: 
         - {{ .Release.Name }}
+      {{- with .Values.webhookConfiguration.objectSelector.matchExpressions }}
+        {{- toYaml . | nindent 6 }}
+      {{- end }}
     admissionReviewVersions: ["v1beta1"]
     sideEffects: None #Unknown
