@@ -31,10 +31,6 @@ spec:
         secret:
           defaultMode: 420
           secretName: {{ template "vault-secrets-webhook.fullname" . }}
-      {{- if .Values.minikube }}
-      imagePullSecrets:
-        - name: awsecr-cred
-      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -47,6 +43,13 @@ spec:
             value: "{{ .Values.service.internalPort }}"
           - name: DEBUG
             value: {{ .Values.debug | quote }}
+{{- if .Values.gatewayCert.tlsCertsSecretName }}
+          - name: AKEYLESS_GW_CERTIFICATE
+            valueFrom:
+              secretKeyRef:
+                name: {{.Values.gatewayCert.tlsCertsSecretName | quote  }}
+                key: tls.crt
+{{- end }}
           - name: AKEYLESS_AGENT_IMAGE
             value: "{{ .Values.image.agentImage }}:{{ .Values.image.tag | default .Chart.AppVersion  }}"
           {{- range $key, $value := .Values.env }}
