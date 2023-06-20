@@ -98,10 +98,10 @@ spec:
               cp /logand_conf/logand.conf {{include "akeyless-api-gw.root.config.path" $}}/.akeyless/logand.conf
             {{- end }} 
             {{- if eq (include "akeyless-api-gw.tlsCertificateExist" .) "true"}}
-              cp /tls_conf/{{ required "TLSConf.certFileName is required" .Values.TLSConf.certFileName }} {{include "akeyless-api-gw.root.config.path" $}}/.akeyless/akeyless-api-cert.crt
+              cp /tls_conf/{{ include "akeyless-api-gw.certFileName" . }} {{include "akeyless-api-gw.root.config.path" $}}/.akeyless/akeyless-api-cert.crt
             {{- end }} 
             {{- if eq (include "akeyless-api-gw.tlsPrivateKeyExist" .) "true"}}
-              cp /tls_conf/{{ required "TLSConf.keyFileName is required" .Values.TLSConf.keyFileName }} {{include "akeyless-api-gw.root.config.path" $}}/.akeyless/akeyless-api-cert.key
+              cp /tls_conf/{{ include "akeyless-api-gw.keyFileName" . }} {{include "akeyless-api-gw.root.config.path" $}}/.akeyless/akeyless-api-cert.key
             {{- end }} 
           volumeMounts:
           {{- if eq (include "akeyless-api-gw.customerFragmentExist" .) "true"}}

@@ -63,6 +63,17 @@ Create the name of the service account to use
 {{- end -}}
 
 {{/*
+Set the default values of existing certificate files if not provided
+*/}}
+{{- define "akeyless-api-gw.certFileName" -}}
+{{- default "akeyless-api-cert.crt" .Values.TLSConf.overrideCertFileName -}}
+{{- end -}}
+
+{{- define "akeyless-api-gw.keyFileName" -}}
+{{- default "akeyless-api-cert.key" .Values.TLSConf.overrideKeyFileName -}}
+{{- end -}}
+
+{{/*
 Get the Ingress TLS secret.
 */}}
 {{- define "akeyless-api-gw.ingressSecretTLSName" -}}
