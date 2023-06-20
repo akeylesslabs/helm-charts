@@ -6,11 +6,13 @@ deployment:
   labels: {}
 
 replicaCount: 1
-minikube: false
 openshiftEnabled: false
 debug: false
 
-tlsCertsSecretName: vault-secrets-webhook-tls-certs
+gatewayCert:
+  #  Specifies an existing secret for gateway tls certificate must include:
+  # - tls.crt (base64)
+  tlsCertsSecretName:
 
 image:
   repository: docker.registry-2.akeyless.io/k8s-webhook-server
@@ -20,7 +22,7 @@ image:
 #  repository: akeyless/k8s-webhook-server
 #  agentImage: akeyless/k8s-secrets-sidecar
 
-  pullPolicy: Always
+  pullPolicy: IfNotPresent
 
 serviceAccount:
   # Specifies whether a service account should be created
