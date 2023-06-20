@@ -10,6 +10,8 @@ openshiftEnabled: false
 debug: false
 
 gatewayCert:
+  #  Specifies an existing secret for gateway tls certificate must include:
+  # - tls.crt (base64)
   tlsCertsSecretName:
 
 image:
