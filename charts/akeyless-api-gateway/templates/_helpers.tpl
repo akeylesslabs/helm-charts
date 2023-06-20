@@ -124,7 +124,7 @@ Check customer fragment
 */}}
 
 {{- define "akeyless-api-gw.root.config.path" -}}
-{{- if .Values.akeylessStrictMode }}
+{{- if or (.Values.akeylessStrictMode) (hasSuffix "-akeyless" .Values.image.tag)   }}
      {{- printf "/home/akeyless" -}}
 {{- else }}
      {{- printf "/root" -}}
