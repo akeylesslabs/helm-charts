@@ -30,7 +30,7 @@ jobs:
       - name: Generate Git Issue Event Description For Jira
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: .github/scripts/issues/generate_jira_issue_data.sh
+        run: .github/scripts/git_issues/generate_jira_issue_data.sh
 
       - name: Find Existing Jira issue
         if: env.jira_issue_exist == 'true'

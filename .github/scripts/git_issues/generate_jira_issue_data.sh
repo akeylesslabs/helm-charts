@@ -50,32 +50,13 @@ if [[ "${git_issue_event_name}" == "issues" ]]; then
     *Git Issue URL:* ${git_issue_url}"
   fi
 elif [[ ${git_issue_event_name} == "issue_comment" ]]; then
-  if [[ ${git_issue_event_action} == "created" && "${jira_issue_exist}" == "true" ]]; then
-    echo "Generation new comment on jira issue ${akeyless_jira_issue}"
-    JIRA_EVENT_DESCRIPTION="*Git Issue has new comment*
-    *Git User:* ${git_user}
-    *Git issue comment:*
-    ${git_issue_comment_body}
-    *Git Issue Comment Creation Time:* ${git_issue_comment_created_at}
-    *Git Issue Comment URL:* ${git_issue_comment_url}"
-  else
-    echo "Generation new jira issue"
-    JIRA_EVENT_DESCRIPTION="*Issue Title:* ${git_issue_title}
-    *Repository:* ${repository}
-    *Git Issue id:* ${git_issue_id}
-    *Git User:* ${git_user}
-    *Git issue Description:*
-    ${git_issue_body}
-    *Git Issue Creation Time:* ${git_issue_created_at}
-    *Git Issue URL:* ${git_issue_url}
-
-    *Git Issue has new comment*
-    *Git User:* ${git_user}
-    *Git issue comment:*
-    ${git_issue_comment_body}
-    *Git Issue Comment Creation Time:* ${git_issue_comment_created_at}
-    *Git Issue Comment URL:* ${git_issue_comment_url}"
-  fi
+  echo "Generation new comment on jira issue ${akeyless_jira_issue}"
+  JIRA_EVENT_DESCRIPTION="*Git Issue has new comment*
+  *Git User:* ${git_user}
+  *Git issue comment:*
+  ${git_issue_comment_body}
+  *Git Issue Comment Creation Time:* ${git_issue_comment_created_at}
+  *Git Issue Comment URL:* ${git_issue_comment_url}"
 fi
 
 delimiter="$(openssl rand -hex 8)"
