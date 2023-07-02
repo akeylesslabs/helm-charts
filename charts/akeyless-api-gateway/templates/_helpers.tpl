@@ -366,3 +366,11 @@ Check metrics configuration Secret
         {{- printf "false" -}}
     {{- end -}}
 {{- end -}}
+
+{{- define "hpa.api.version" }}
+    {{- if .Capabilities.APIVersions.Has "autoscaling/v2beta2" }}
+        {{- printf "autoscaling/v2beta2" }}
+    {{- else }}
+        {{- printf "autoscaling/v2" }}
+    {{- end }}
+{{- end }}
