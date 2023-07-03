@@ -3,6 +3,16 @@ entries:
   akeyless-api-gateway:
   - apiVersion: v2
     appVersion: 3.39.0
+    created: "2023-07-03T13:04:47.581273574Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
+    digest: 0155d4ecfc898206394f0e305752459b02f5712d4fe84d8504135382921511cd
+    name: akeyless-api-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-api-gateway-1.31.1/akeyless-api-gateway-1.31.1.tgz
+    version: 1.31.1
+  - apiVersion: v2
+    appVersion: 3.39.0
     created: "2023-06-29T19:40:06.279544332Z"
     description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
     digest: b94757be0a3b22fc79755be1d24baf73937ee8de92280806c22735b43837bcc3
@@ -2559,6 +2569,20 @@ entries:
       ztbVersion: v0.18.0
     apiVersion: v2
     appVersion: v0.18.0_0.15.3
+    created: "2023-07-03T13:04:47.706650995Z"
+    description: A Helm chart for Kubernetes akeyless-zero-trust-bastion and akeyless-ssh-bastion
+      deployment
+    digest: 46080c098ffc6b8c5ac645c0e836ed0bbeffdcd1bb1277c21508f4a94dee7985
+    name: akeyless-sra
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-sra-0.21.2/akeyless-sra-0.21.2.tgz
+    version: 0.21.2
+  - annotations:
+      sshVersion: 0.15.3
+      ztbVersion: v0.18.0
+    apiVersion: v2
+    appVersion: v0.18.0_0.15.3
     created: "2023-06-12T07:59:46.245753762Z"
     description: A Helm chart for Kubernetes akeyless-zero-trust-bastion and akeyless-ssh-bastion
       deployment
@@ -4819,6 +4843,20 @@ entries:
   akeyless-zero-trust-web-access:
   - apiVersion: v2
     appVersion: 1.0.1
+    created: "2023-07-03T13:04:47.823845817Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-zero-trust-web-access
+    digest: d7d1f25d886d1dc152567d68b3e939fef7083aa49b045558736a59a9c5adce4a
+    home: https://www.akeyless.io
+    icon: https://akeylesslabs.github.io/helm-charts/assets/logo/akl.jpeg
+    name: akeyless-zero-trust-web-access
+    sources:
+    - https://github.com/akeylesslabs/helm-charts/tree/feature/helm_repo/akeyless-zero-trust-web-access
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-2.1.1/akeyless-zero-trust-web-access-2.1.1.tgz
+    version: 2.1.1
+  - apiVersion: v2
+    appVersion: 1.0.1
     created: "2023-05-15T07:16:46.271247805Z"
     description: A Helm chart for Kubernetes that deploys akeyless-zero-trust-web-access
     digest: 07cef5a8739d2f6fd663f516d6c904bf7a77848f050f9580c11539bef3d21cff
@@ -6189,4 +6227,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2023-06-29T19:40:06.280811341Z"
+generated: "2023-07-03T13:04:47.825464637Z"
