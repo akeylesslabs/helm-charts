@@ -1,6 +1,6 @@
 {{- if eq .Values.sshConfig.enabled true }}
 {{- if .Values.sshConfig.HPA.enabled }}
-apiVersion: autoscaling/v2beta2
+apiVersion: {{ include "hpa.api.version" $ }}
 kind: HorizontalPodAutoscaler
 metadata:
   name: ssh-{{ $.Release.Name }}-hpa
@@ -30,7 +30,7 @@ spec:
 ---
 {{- if eq .Values.ztbConfig.enabled true }}
 {{- if .Values.ztbConfig.HPA.enabled }}
-apiVersion: autoscaling/v2beta2
+apiVersion: {{ include "hpa.api.version" $ }}
 kind: HorizontalPodAutoscaler
 metadata:
   name: ztb-{{ $.Release.Name }}-hpa
