@@ -44,7 +44,7 @@ jobs:
         uses: atlassian/gajira-create@v3
         with:
           project: ASM
-          issuetype: Task
+          issuetype: Bug
           summary: ${{ env.jira_issue_summary }}
           description: ${{ env.jira_description }}
           fields: ${{ env.jira_fields }}

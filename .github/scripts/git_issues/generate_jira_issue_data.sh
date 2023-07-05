@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Github issues Epic key
-jira_fields='{"customfield_10014": "ASM-7343"}'
+jira_fields='{"customfield_10014": "ASM-7343", "priority": {"name": "Highest", "id": "1"}}'
 
 repository=$(echo "$GITHUB_CONTEXT" | jq '.repository' --raw-output)
 git_user=$(echo "$GITHUB_CONTEXT" | jq '.actor' --raw-output)
@@ -16,6 +16,7 @@ git_issue_comment_body=$(echo "$GITHUB_CONTEXT" | jq '.event.comment.body' --raw
 git_issue_comment_created_at=$(echo "$GITHUB_CONTEXT" | jq '.event.comment.created_at' --raw-output)
 git_issue_labels=$(echo "$GITHUB_CONTEXT" | jq '.event.issue.labels[].name' --raw-output)
 
+git_issue_labels_list=()
 while IFS='' read -r line; do git_issue_labels_list+=("$line"); done < <(echo "${git_issue_labels}")
 if [[ "${git_issue_labels_list[*]}" == *"ASM"* ]]; then
   akeyless_jira_issue=$(echo "${git_issue_labels_list[*]}" | grep -e "ASM" )
