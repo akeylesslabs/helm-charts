@@ -122,3 +122,10 @@ Get serviceAccountName
         {{- end -}}
     {{- end }}
 {{- end -}}
+{{- define "hpa.api.version" }}
+    {{- if .Capabilities.APIVersions.Has "autoscaling/v2" }}
+        {{- printf "autoscaling/v2" }}
+    {{- else }}
+        {{- printf "autoscaling/v2beta2" }}
+    {{- end }}
+{{- end }}
