@@ -10,12 +10,9 @@ env:
   AKEYLESS_JIRA_USER_EMAIL: ${{ secrets.AKEYLESS_JIRA_USER_EMAIL }}
   AKEYLESS_JIRA_ISSUE_TOKEN: ${{ secrets.AKEYLESS_JIRA_ISSUE_TOKEN }}
 
-concurrency:
-  group: Git-Issues-Jira-Automation-Pipeline
-
 jobs:
   git-issues-jira-automation:
-    uses: akeylesslabs/helm-charts/.github/workflows/git-issues-jira-automation.yaml@main
+    uses: akeylesslabs/helm-charts/.github/workflows/reusable-git-issues-jira-automation.yaml@main
     with:
       caller_repo_name: ${{ github.event.repository.name }}
     secrets: inherit
