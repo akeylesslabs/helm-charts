@@ -1,8 +1,9 @@
 name: Reusable Git Issues Jira Automation Pipeline
 on:
   workflow_call:
-    caller_repo_name:
-      type: string
+    inputs:
+      caller_repo_name:
+        type: string
 
 env:
   AKEYLESS_JIRA_BASE_URL: ${{ secrets.AKEYLESS_JIRA_BASE_URL }}
