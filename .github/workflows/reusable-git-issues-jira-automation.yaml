@@ -21,7 +21,7 @@ jobs:
         with:
           repository: akeylesslabs/helm-charts
           ref: main
-          token: ${{ secrets.AKEYLESS_CI_GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Login to Akeyless jira
         uses: atlassian/gajira-login@master
