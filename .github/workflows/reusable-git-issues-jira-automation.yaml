@@ -16,8 +16,12 @@ jobs:
     name: ${{ inputs.caller_repo_name }}-git-issues-jira-automation
     runs-on: ubuntu-20.04
     steps:
-      - name: Check out code
+      - name: Checkout helm-charts code
         uses: actions/checkout@v3
+        with:
+          repository: akeylesslabs/helm-charts
+          ref: main
+          token: ${{ secrets.AKEYLESS_CI_GITHUB_TOKEN }}
 
       - name: Login to Akeyless jira
         uses: atlassian/gajira-login@master
