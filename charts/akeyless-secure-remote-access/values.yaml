@@ -6,9 +6,7 @@
 ## Global ##
 ############
 
-dockerRepositoryCreds: eyJhdXRocyI6eyJodHRwczovL2luZGV4LmRvY2tlci5pby92Mi8iOnsidXNlcm5hbWUiOiJha2V5bGVzc2xhYnMiLCJwYXNzd29yZCI6IjE5OWI0ZjZkLTZlOGItNDNhNC05OGJjLTYyMjk2MDcwMTEwOSIsImVtYWlsIjoiYWtleWxlc3NsZXRzZW5jcnlwdEBha2V5bGVzcy5pbyIsImF1dGgiOiJZV3RsZVd4bGMzTnNZV0p6T2pFNU9XSTBaalprTFRabE9HSXRORE5oTkMwNU9HSmpMVFl5TWprMk1EY3dNVEV3T1E9PSJ9fX0=
-
-
+dockerRepositoryCreds:
 
 # a full URL of Akeyless API Gateway
 apiGatewayURL: https://rest.akeyless.io
@@ -21,7 +19,7 @@ clusterName: defaultCluster
 legacySigningAlg: "false"
 
 # Optional, provide a key-name to extract the username (value) of that key in sub-claims. The extracted username will be used to authenticated to the remote target (RDP or SSH).
-usernameSubClaim: ext_username
+usernameSubClaim:
 
 # Relevant for Zero-Trust Access for non-SSH targets (e.g. DBs, K8s, AWS CLIs).
 # If provided, it's recommended to grant minimal permissions ("List" only) to the Zero-Trust Dynamic Secrets,
@@ -33,8 +31,8 @@ privilegedAccess:
   # supported auth methods: AWS IAM, Azure AD, GCP and API Key;
   # for AWS IAM or Azure AD, or GCP provide only accessID;
   # for API Key, provide both accessID and accessKey
-  accessID: "p-hqmq6p7me3xi"
-  accessKey: "Q2JfcXhkhRK3F8rhg03SOePzpJ0yy7elO6UbEN9gTqo="
+  accessID: ""
+  accessKey: ""
    ## ref: https://docs.akeyless.io/docs/gateway-k8s#gateway-admins
   allowedAccessIDs: []
    # - p-1234
@@ -72,7 +70,7 @@ ztbConfig:
 
   image:
     repository: akeyless/zero-trust-bastion
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
     # tag: latest
     
   containerName: "zero-trust-bastion"
@@ -236,7 +234,7 @@ sshConfig:
 
   image:
     repository: akeyless/ssh-proxy
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
     # tag: latest
 
   containerName: "ssh-bastion"
@@ -290,7 +288,7 @@ sshConfig:
   usernameSubClaim: sshUserSubClaim
     
   config:
-    CAPublicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC4BNle4GRIfheEtS+2j1qdyUfdGZlf0fSYXLBW2DX8zVRtoLgw0w+dHFLBVO6pljWdKtgjj2VNLUQtn1Bx2xkatxm/wt8HWbKgsjMTAHWZ22zefVyAjTmJrIhgzmEPwT3niipWI3EriS/VlFk3jodh18HuXrBWdkR0w0oZ6vlJByCwIIQdHWLrvseLmHDM0Ck3HnkwZ1oxmoezp1sGfgS+dtXa5OujKOYGcw4SqLgxVuV0pL928YCWLwjYjuQLcWB1cKaFaNZqhfNiC7wZ6JtshNbihLfv1UW64+f+rWSsKQFDcZ1bB54wvkXr/7lRTsXwxyQhKpHiMaeSe+RCRSq1
+    CAPublicKey:
     # CAPublicKey: |
       
     sessionTermination:
