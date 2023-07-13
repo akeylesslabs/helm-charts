@@ -104,6 +104,14 @@ spec:
           - name: USERNAME_SUB_CLAIM
             value: {{ .Values.usernameSubClaim }}
 {{- end }}
+{{- if .Values.ztbConfig.usernameSubClaim }}
+          - name: RDP_USERNAME_SUB_CLAIM
+            value: {{ .Values.ztbConfig.usernameSubClaim }}
+{{- end }}
+{{- if .Values.sshConfig.usernameSubClaim }}
+          - name: SSH_USERNAME_SUB_CLAIM
+            value: {{ .Values.sshConfig.usernameSubClaim }}
+{{- end }}
 {{- if .Values.privilegedAccess.allowedAccessIDs }}
           - name: ALLOWED_ACCESS_IDS
             value: {{ range $index, $element := .Values.privilegedAccess.allowedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }}

@@ -74,20 +74,21 @@ The following table lists the configurable parameters of the Zero Trust Bastion 
 
 ### Deployment parameters
 
-| Parameter                      | Description                                                                                          | Default                       |
-|--------------------------------|------------------------------------------------------------------------------------------------------|-------------------------------|
-| `ztbConfig.enabled`            | Enable Zero Trust Bastion                                                                            | `true`                        |
-| `ztbConfig.image.repository`   | Zero Trust Bastion image name                                                                        | `akeyless/zero-trust-bastion` |
-| `ztbConfig.image.tag`          | Zero Trust Bastion image tag                                                                         | `latest`                      |
-| `ztbConfig.image.pullPolicy`   | Zero Trust Bastion image pull policy                                                                 | `Always`                      |                                                        |
-| `ztbConfig.updateStrategy`     | Updating statefulset strategy                                                                        | `ztbConfig.RollingUpdate`     |
-| `ztbConfig.containerName`      | Zero Trust Bastion container name                                                                    | `zero-trust-bastion`          |
-| `ztbConfig.replicaCount`       | Number of Zero Trust Bastion nodes                                                                   | `1`                           |
-| `ztbConfig.livenessProbe`      | Liveness probe configuration for Zero Trust Bastion                                                  | Check `values.yaml` file      |
-| `ztbConfig.readinessProbe`     | Readiness probe configuration for Zero Trust Bastion                                                 | Check `values.yaml` file      |
-| `ztbConfig.resources.limits`   | The resources limits for Zero Trust Bastion containers                                               | `{}`                          |
-| `ztbConfig.resources.requests` | The requested resources for Zero Trust Bastion containers                                            | `{}`                          |
-| `ztbConfig.allowedBastionUrls` | List of URLs that will be considered valid for redirection from the Portal back to the bastion       | `[]`                          |
+| Parameter                      | Description                                                                                    | Default                       |
+|--------------------------------|------------------------------------------------------------------------------------------------|-------------------------------|
+| `ztbConfig.enabled`            | Enable Zero Trust Bastion                                                                      | `true`                        |
+| `ztbConfig.image.repository`   | Zero Trust Bastion image name                                                                  | `akeyless/zero-trust-bastion` |
+| `ztbConfig.image.tag`          | Zero Trust Bastion image tag                                                                   | `latest`                      |
+| `ztbConfig.image.pullPolicy`   | Zero Trust Bastion image pull policy                                                           | `Always`                      |                                                        |
+| `ztbConfig.updateStrategy`     | Updating statefulset strategy                                                                  | `ztbConfig.RollingUpdate`     |
+| `ztbConfig.containerName`      | Zero Trust Bastion container name                                                              | `zero-trust-bastion`          |
+| `ztbConfig.replicaCount`       | Number of Zero Trust Bastion nodes                                                             | `1`                           |
+| `ztbConfig.livenessProbe`      | Liveness probe configuration for Zero Trust Bastion                                            | Check `values.yaml` file      |
+| `ztbConfig.readinessProbe`     | Readiness probe configuration for Zero Trust Bastion                                           | Check `values.yaml` file      |
+| `ztbConfig.resources.limits`   | The resources limits for Zero Trust Bastion containers                                         | `{}`                          |
+| `ztbConfig.resources.requests` | The requested resources for Zero Trust Bastion containers                                      | `{}`                          |
+| `ztbConfig.allowedBastionUrls` | List of URLs that will be considered valid for redirection from the Portal back to the bastion | `[]`                          |
+| `ztbConfig.usernameSubClaim`   | This overrides (for Zero Trust Bastion only) the global setting with the same name                                           | `[]`                          |
 
 ### Exposure parameters
 
@@ -132,20 +133,21 @@ The following table lists the configurable parameters of the SSH Bastion chart a
 
 ### Statefulset parameters
 
-| Parameter                                 | Description                                                                                                          | Default                                                      |
-|-------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
-| `ssgConfig.enabled`                        | Enable SSH Bastion                                                                                         | `true`
-| `sshConfig.image.repository`                        | SSH Bastion image name                                                                                               | `akeyless/ssh-bastion`                                         |
-| `sshConfig.image.tag`                               | SSH Bastion image tag                                                                                                | `latest`                                                     |      
-| `sshConfig.image.pullPolicy`                        | SSH Bastion image pull policy                                                                                        | `Always`                                                     |                                                       |
-| `sshConfig.updateStrategy`                          | Updating statefulset strategy                                                                                        | `RollingUpdate`                                              |  
-| `sshConfig.containerName`                           | SSH Bastion container name                                                                                           | `ssh-proxy`                                                  |  
-| `sshConfig.replicaCount`                            | Number of SSH-Bastion nodes                                                                                          | `1`                                                          |
-| `sshConfig.livenessProbe`                           | Liveness probe configuration for SSH Bastion                                                                         | Check `values.yaml` file                                     |                   
-| `sshConfig.readinessProbe`                          | Readiness probe configuration for SSH Bastion                                                                        | Check `values.yaml` file                                     |         
-| `sshConfig.resources.limits`                        | The resources limits for SSH Bastion containers  (If HPA is enabled these must be set)                               | `{}`                                                         |
-| `sshConfig.resources.requests`                      | The requested resources for SSH-Bastion containers (If HPA is enabled these must be set)                             | `{}`                                                         |
+| Parameter                      | Description                                                                                    | Default                                                      |
+|--------------------------------|------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
+| `ssgConfig.enabled`            | Enable SSH Bastion                                                                             | `true`
+| `sshConfig.image.repository`   | SSH Bastion image name                                                                         | `akeyless/ssh-bastion`                                         |
+| `sshConfig.image.tag`          | SSH Bastion image tag                                                                          | `latest`                                                     |      
+| `sshConfig.image.pullPolicy`   | SSH Bastion image pull policy                                                                  | `Always`                                                     |                                                       |
+| `sshConfig.updateStrategy`     | Updating statefulset strategy                                                                  | `RollingUpdate`                                              |  
+| `sshConfig.containerName`      | SSH Bastion container name                                                                     | `ssh-proxy`                                                  |  
+| `sshConfig.replicaCount`       | Number of SSH-Bastion nodes                                                                    | `1`                                                          |
+| `sshConfig.livenessProbe`      | Liveness probe configuration for SSH Bastion                                                   | Check `values.yaml` file                                     |                   
+| `sshConfig.readinessProbe`     | Readiness probe configuration for SSH Bastion                                                  | Check `values.yaml` file                                     |         
+| `sshConfig.resources.limits`   | The resources limits for SSH Bastion containers  (If HPA is enabled these must be set)         | `{}`                                                         |
+| `sshConfig.resources.requests` | The requested resources for SSH-Bastion containers (If HPA is enabled these must be set)       | `{}`                                                         |
 | `sshConfig.allowedBastionUrls` | List of URLs that will be considered valid for redirection from the Portal back to the bastion | `[]`                          |
+| `sshConfig.usernameSubClaim`   | This overrides (for SSH only) the global setting with the same name                            | `[]`                          |
 
 
 ### Exposure parameters
