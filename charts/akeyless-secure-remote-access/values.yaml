@@ -179,7 +179,7 @@ ztbConfig:
 
   # Optional, provide a key-name to extract the username (value) of that key in sub-claims. The extracted username will be used to authenticated to the remote RDP target.
   # This overrides (for Zero Trust Bastion only) the global setting with the same name
-  usernameSubClaim: rdpUserSubClaim
+  usernameSubClaim:
 
   config:
     rdpRecord:
@@ -285,7 +285,7 @@ sshConfig:
 
   # Optional, provide a key-name to extract the username (value) of that key in sub-claims. The extracted username will be used to authenticated to the remote SSH target.
   # This overrides (for SSH only) the global setting with the same name
-  usernameSubClaim: sshUserSubClaim
+  usernameSubClaim:
     
   config:
     CAPublicKey:
