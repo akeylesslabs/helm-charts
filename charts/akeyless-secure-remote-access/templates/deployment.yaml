@@ -57,6 +57,13 @@ spec:
             - name: AKEYLESS_URL
               value: {{ .Values.apiGatewayURL }}
 {{- end }}
+{{- if .Values.gatewayCert.tlsCertsSecretName }}
+          - name: AKEYLESS_GW_CERTIFICATE
+            valueFrom:
+              secretKeyRef:
+                name: {{.Values.gatewayCert.tlsCertsSecretName | quote  }}
+                key: tls.crt
+{{- end }}
 {{- if .Values.clusterName }}
             - name: CLUSTER_NAME
               value: {{ .Values.clusterName }}
