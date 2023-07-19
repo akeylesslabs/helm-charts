@@ -33,6 +33,11 @@ spec:
           emptyDir: {}
         - name: ng-config
           emptyDir: {}
+{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+        - name: gw-signed-ca
+          secret:
+            secretName: {{ .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+{{- end }}
         - name: configmap-akeyless
           configMap:
             name: {{ $.Release.Name }}-cm-akeyless
@@ -80,6 +85,11 @@ spec:
               mountPath: /etc/akeyless
             - name: akeyless-config
               mountPath: /var/akeyless/conf
+{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+            - name: gw-signed-ca
+              mountPath: "/etc/ssl/certs/gwCA.pem"
+              subPath: gwCA.pem
+{{- end }}
       imagePullSecrets:
         - name: akeyless-docker-hub-web-access
       containers:
@@ -130,6 +140,11 @@ spec:
             - name: {{ .Values.persistence.shareStorageVolume.name | title | lower }}
               mountPath: /etc/shared
             {{ end }}
+{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+            - name: gw-signed-ca
+              mountPath: "/etc/ssl/certs/gwCA.pem"
+              subPath: gwCA.pem
+{{- end }}
           resources:
 {{- toYaml .Values.dispatcher.resources | nindent 12 }}
           livenessProbe:

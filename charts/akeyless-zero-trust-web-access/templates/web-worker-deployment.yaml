@@ -25,6 +25,11 @@ spec:
       volumes:
         - name: config
           emptyDir: {}
+{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+        - name: gw-signed-ca
+          secret:
+          secretName: {{ .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+{{- end }}
         - name: configmap-policies
           configMap:
             name: {{ $.Release.Name }}-cm-web-policies
@@ -65,6 +70,11 @@ spec:
               mountPath: /var/akeyless/conf
             - name: configmap-policies
               mountPath: /configmap_policy_conf
+{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+            - name: gw-signed-ca
+              mountPath: "/etc/ssl/certs/gwCA.pem"
+              subPath: gwCA.pem
+{{- end }}
       imagePullSecrets:
         - name: akeyless-docker-hub-web-access
       terminationGracePeriodSeconds: {{ .Values.HPA.webWorker.sessionTerminationGracePeriodSeconds | default 3600 }}
@@ -118,6 +128,11 @@ spec:
           - name: {{ .Values.persistence.shareStorageVolume.name | title | lower }}
             mountPath: /etc/shared
           {{ end }}
+{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+            - name: gw-signed-ca
+              mountPath: "/etc/ssl/certs/gwCA.pem"
+              subPath: gwCA.pem
+{{- end }}
           resources:
 {{- toYaml .Values.webWorker.resources | nindent 12 }}
           livenessProbe:
