@@ -9,7 +9,7 @@
 dockerRepositoryCreds:
 
 # a full URL of Akeyless API Gateway
-apiGatewayURL: https://rest.akeyless.iogatewayCert:
+apiGatewayURL: https://rest.akeyless.io
 apiGatewayCert:
   #  Specifies an existing secret for gateway tls certificate must include:
   # - tls.crt (base64)
