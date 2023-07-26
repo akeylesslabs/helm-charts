@@ -14,6 +14,12 @@ gatewayCert:
   # - tls.crt (base64)
   tlsCertsSecretName:
 
+containerSecurityContext: {}
+# Remove the {} and add any needed values to your SecurityContext
+#    runAsUser: 0
+#    seccompProfile:
+#      type: RuntimeDefault
+
 image:
   repository: docker.registry-2.akeyless.io/k8s-webhook-server
   agentImage: docker.registry-2.akeyless.io/k8s-secrets-sidecar

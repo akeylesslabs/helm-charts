@@ -125,8 +125,12 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}-akeyless"
           {{else}}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          {{end}}
+          {{- end}}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.deployment.containerSecurityContext }}
+          securityContext:
+            {{- toYaml .Values.deployment.containerSecurityContext | nindent 12 }}
+          {{- end }}
           ports:
             - name: web
               containerPort: 18888
