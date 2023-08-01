@@ -4,6 +4,10 @@
 
 deployment:
   labels: {}
+  # Remove the {} and add any needed values to your SecurityContext
+  securityContext: {}
+#    fsGroup: 3000
+#    runAsUser: 65534
 
 replicaCount: 1
 openshiftEnabled: false
@@ -14,15 +18,8 @@ gatewayCert:
   # - tls.crt (base64)
   tlsCertsSecretName:
 
-securityContext:
-  enabled: false
-  fsGroup: 3000
-  runAsUser: 65534
-
-#you can add SecurityContext Values here, do not change runAsUser and allowPrivilegeEscalation
-containerSecurityContext:
-  runAsUser: 65534
-  allowPrivilegeEscalation: false
+#Remove the {} and add any needed values to your SecurityContext here, do not change runAsUser and allowPrivilegeEscalation
+containerSecurityContext: {}
 #  seccompProfile:
 #    type: RuntimeDefault
 

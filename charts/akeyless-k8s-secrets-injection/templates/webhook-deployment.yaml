@@ -26,12 +26,9 @@ spec:
         checksum/config: {{ include (print $.Template.BasePath "/apiservice-webhook.yaml") . | sha256sum }}
     spec:
       serviceAccountName: {{ template "vault-secrets-webhook.serviceAccountName" . }}
-      {{- if .Values.securityContext }}
-        {{- if .Values.securityContext.enabled }}
+      {{- if .Values.deployment.securityContext }}
       securityContext:
-        runAsUser: {{ .Values.securityContext.runAsUser }}
-        fsGroup: {{ .Values.securityContext.fsGroup }}
-        {{- end }}
+        {{- toYaml .Values.deployment.securityContext | nindent 12 }}
       {{- end }}
       volumes:
       - name: serving-cert
@@ -71,8 +68,10 @@ spec:
             name: serving-cert
 {{- if not .Values.openshiftEnabled }}
           securityContext: #//only for k8s - not openshift compatible
+            runAsUser: 65534
+            allowPrivilegeEscalation: false
 {{- if .Values.containerSecurityContext }}
-  {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+{{- toYaml .Values.containerSecurityContext | nindent 12 }}
 {{- end }}
 {{- end }}
           resources:
