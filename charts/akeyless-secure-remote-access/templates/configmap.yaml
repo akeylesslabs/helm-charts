@@ -27,11 +27,25 @@ metadata:
     app: {{ $.Values.sshConfig.containerName }}
     chart: {{ $.Chart.Name }}
 data:
-{{- if .Values.sshConfig.config.logForwarding.enabled }}
+  {{- with .Values.sshConfig.config.logForwarding}}
+  {{- if .enabled }}
   logand.conf: |
-{{ required "A valid .Values.sshConfig.config.logForwarding.logand entry required!" .Values.sshConfig.config.logForwarding.settings | indent 4 }}
-{{- end }}
+  {{- if .existingSecretName }}
+  {{- include "getValueFromSecret" (dict "Namespace" $.Release.Namespace "Name" .existingSecretName "Key" "settings") | nindent 4 -}}
+  {{- else }}
+  {{- required "A valid .Values.sshConfig.config.logForwarding.settings entry required!" .settings | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- end }}
   akeyless_config_file: |
     {{ required "API Gateway URL is required" .Values.apiGatewayURL }}
-    cmd=auth&access-id={{ required "Privileged access credentials are required" .Values.privilegedAccess.accessID }}&access-key={{ .Values.privilegedAccess.accessKey }}
+    {{- with .Values.privilegedAccess}}
+    {{- if .existingSecretName }}
+    {{- $accessID := include "getValueFromSecret" (dict "Namespace" $.Release.Namespace "Name" .existingSecretName "Key" "accessID") }}
+    {{- $accessKey := include "getValueFromSecret" (dict "Namespace" $.Release.Namespace "Name" .existingSecretName "Key" "accessKey")}}
+    cmd=auth&access-id={{ required "Privileged access credentials are required" $accessID }}&access-key={{ $accessKey }}
+    {{- else}}
+    cmd=auth&access-id={{ required "Privileged access credentials are required" .accessID }}&access-key={{ .accessKey }}
+    {{- end }}
+    {{- end }}
 {{- end }}
