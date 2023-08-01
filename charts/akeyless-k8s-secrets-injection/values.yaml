@@ -14,11 +14,17 @@ gatewayCert:
   # - tls.crt (base64)
   tlsCertsSecretName:
 
-containerSecurityContext: {}
-# Remove the {} and add any needed values to your SecurityContext
-#    runAsUser: 0
-#    seccompProfile:
-#      type: RuntimeDefault
+securityContext:
+  enabled: false
+  fsGroup: 3000
+  runAsUser: 65534
+
+#you can add SecurityContext Values here, do not change runAsUser and allowPrivilegeEscalation
+containerSecurityContext:
+  runAsUser: 65534
+  allowPrivilegeEscalation: false
+#  seccompProfile:
+#    type: RuntimeDefault
 
 image:
   repository: docker.registry-2.akeyless.io/k8s-webhook-server
