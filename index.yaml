@@ -3,6 +3,16 @@ entries:
   akeyless-api-gateway:
   - apiVersion: v2
     appVersion: 3.41.0
+    created: "2023-08-01T08:48:48.550574093Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
+    digest: f3064944f711bd8098b9a484daba42f31164b89a6b9426dbcf215af3441010e6
+    name: akeyless-api-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-api-gateway-1.31.6/akeyless-api-gateway-1.31.6.tgz
+    version: 1.31.6
+  - apiVersion: v2
+    appVersion: 3.41.0
     created: "2023-07-19T17:46:41.868844393Z"
     description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
     digest: 31e1c46721323bb8e9e49ce267e06b23af0f89c89e1da1ab2bf1c405b736074a
@@ -2218,6 +2228,17 @@ entries:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-csi-provider-1.0.0/akeyless-csi-provider-1.0.0.tgz
     version: 1.0.0
   akeyless-secrets-injection:
+  - apiVersion: v2
+    appVersion: 0.20.28
+    created: "2023-08-01T08:48:48.641123886Z"
+    description: A Helm chart that deploys a mutating admission webhook that configures
+      applications to request env vars from Akeyless Vault Secrets
+    digest: 132e77fb36a70a4cfcf601903aaa67f23f6c91d11dc88fcfd2969bdff0d3865d
+    name: akeyless-secrets-injection
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-secrets-injection-1.2.35/akeyless-secrets-injection-1.2.35.tgz
+    version: 1.2.35
   - apiVersion: v2
     appVersion: 0.20.28
     created: "2023-07-10T07:14:22.803145827Z"
@@ -6292,4 +6313,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2023-07-30T11:50:02.816774664Z"
+generated: "2023-08-01T08:48:48.642701405Z"
