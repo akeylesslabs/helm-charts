@@ -40,9 +40,12 @@ spec:
       - name: creds
         emptyDir: {}
 {{- if .Values.apiGatewayCert.tlsCertsSecretName }}
-        - name: gw-signed-ca
-          secret:
-            secretName: {{ .Values.apiGatewayCert.tlsCertsSecretName }}
+      - name: gw-signed-ca
+        secret:
+          secretName: {{ .Values.apiGatewayCert.tlsCertsSecretName }}
+          items:
+            - key: tls.crt
+              path: gw-cert.pem
 {{- end }}
       - name: ssh
       {{- range .Values.sshConfig.persistence.volumes }}
@@ -81,8 +84,9 @@ spec:
               mountPath: /var/akeyless/creds
 {{- if .Values.apiGatewayCert.tlsCertsSecretName }}
             - name: gw-signed-ca
-              mountPath: "/etc/ssl/certs/gwCA.pem"
-              subPath: gwCA.pem
+              mountPath: "/etc/ssl/certs/gw-cert.pem"
+              subPath: gw-cert.pem
+  #
 {{- end }}
       imagePullSecrets:
         - name: akeyless-docker-hub
@@ -166,8 +170,8 @@ spec:
               mountPath: /var/akeyless/creds
 {{- if .Values.apiGatewayCert.tlsCertsSecretName }}
             - name: gw-signed-ca
-              mountPath: "/etc/ssl/certs/gwCA.pem"
-              subPath: gwCA.pem
+              mountPath: "/etc/ssl/certs/gw-cert.pem"
+              subPath: gw-cert.pem
 {{- end }}
           resources:
 {{- toYaml .Values.sshConfig.resources | nindent 12 }}

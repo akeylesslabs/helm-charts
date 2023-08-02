@@ -45,6 +45,9 @@ spec:
         - name: gw-signed-ca
           secret:
             secretName: {{ .Values.apiGatewayCert.tlsCertsSecretName }}
+            items:
+              - key: tls.crt
+                path: gw-cert.pem
 {{- end }}
       containers:
         - name: {{ .Values.ztbConfig.containerName }}
@@ -191,8 +194,8 @@ spec:
           {{- end }}
 {{- if .Values.apiGatewayCert.tlsCertsSecretName }}
             - name: gw-signed-ca
-              mountPath: "/etc/ssl/certs/gwCA.pem"
-              subPath: gwCA.pem
+              mountPath: "/etc/ssl/certs/gw-cert.pem"
+              subPath: gw-cert.pem
 {{- end }}
 {{- end }}
 

@@ -28,7 +28,10 @@ spec:
 {{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
         - name: gw-signed-ca
           secret:
-          secretName: {{ .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+            secretName: {{ .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+            items:
+              - key: tls.crt
+                path: gw-cert.pem
 {{- end }}
         - name: configmap-policies
           configMap:
@@ -72,8 +75,8 @@ spec:
               mountPath: /configmap_policy_conf
 {{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
             - name: gw-signed-ca
-              mountPath: "/etc/ssl/certs/gwCA.pem"
-              subPath: gwCA.pem
+              mountPath: "/etc/ssl/certs/gw-cert.pem"
+              subPath: gw-cert.pem
 {{- end }}
       imagePullSecrets:
         - name: akeyless-docker-hub-web-access
@@ -129,9 +132,9 @@ spec:
             mountPath: /etc/shared
           {{ end }}
 {{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
-            - name: gw-signed-ca
-              mountPath: "/etc/ssl/certs/gwCA.pem"
-              subPath: gwCA.pem
+          - name: gw-signed-ca
+            mountPath: "/etc/ssl/certs/gw-cert.pem"
+            subPath: gw-cert.pem
 {{- end }}
           resources:
 {{- toYaml .Values.webWorker.resources | nindent 12 }}
