@@ -3,6 +3,7 @@
 image:
   dockerRepositoryCreds:
 
+
 # Linux system HTTP Proxy
 httpProxySettings:
   http_proxy: ""
@@ -108,7 +109,7 @@ dispatcher:
     apiGatewayURL: https://rest.akeyless.io
     apiGatewayCert:
   #  Specifies an existing secret for gateway tls certificate must include:
-  # - tls.crt (base64)
+  # - tls.crt
       tlsCertsSecretName:
 
     # Secure remote access cluster name. Use a name that will help you understand
