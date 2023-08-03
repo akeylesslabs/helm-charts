@@ -11,7 +11,13 @@ data:
   akeyless_config_file: |
     {{ required "API Gateway URL is required" .apiGatewayURL }}
     cmd=auth&access-id={{ .listOnlyCredentials.samlAccessID }}
+    {{- if .privilegedAccess.existingSecretName }}
+    {{- $accessID := include "getValueFromSecret" (dict "Namespace" $.Release.Namespace "Name" .privilegedAccess.existingSecretName "Key" "accessID") }}
+    {{- $accessKey := include "getValueFromSecret" (dict "Namespace" $.Release.Namespace "Name" .privilegedAccess.existingSecretName "Key" "accessKey")}}
+    cmd=auth&access-id={{ required "Privileged access credentials are required" $accessID }}&access-key={{ $accessKey }}
+    {{- else}}
     cmd=auth&access-id={{ required "Privileged credentials are required" .privilegedAccess.accessID }}&access-key={{ .privilegedAccess.accessKey }}
+    {{- end }}
 {{- end}}
 
 ---
@@ -43,9 +49,15 @@ data:
     path_prefix={{ .Values.dlp.config.pathPrefix | quote }}
     mode={{ .Values.dlp.config.mode | quote }}
     log_level={{ .Values.dlp.config.logLevel | quote }}
-{{ if .Values.dlp.audit }}
+
+{{- if .Values.dlp.existingLogForwardSecretName }}
+  logand.conf: |
+    {{- include "getValueFromSecret" (dict "Namespace" $.Release.Namespace "Name" .Values.dlp.existingLogForwardSecretName "Key" "audit") | nindent 4 -}}
+{{- else }}
+    {{ if .Values.dlp.audit }}
   logand.conf: |
 {{ .Values.dlp.audit | indent 4 }}
+{{- end }}
 {{- end }}
 {{- end }}
 
@@ -58,7 +70,12 @@ metadata:
   labels:
     chart: {{ $.Chart.Name }}
 data:
+{{- if .Values.dispatcher.config.existingLogForwardSecretName  }}
+  logand.conf: |
+{{- include "getValueFromSecret" (dict "Namespace" $.Release.Namespace "Name" .Values.dispatcher.config.existingLogForwardSecretName "Key" "logForward") | nindent 4 -}}
+{{- else }}
 {{ if .Values.dispatcher.config.logForward }}
   logand.conf: |
 {{ .Values.dispatcher.config.logForward | indent 4 }}
+{{- end }}
 {{- end }}

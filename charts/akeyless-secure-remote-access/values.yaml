@@ -37,6 +37,13 @@ privilegedAccess:
   # supported auth methods: AWS IAM, Azure AD, GCP and API Key;
   # for AWS IAM or Azure AD, or GCP provide only accessID;
   # for API Key, provide both accessID and accessKey
+
+  # existingSecretName will hold accessId, AccessKey and allowedAccessIDs
+  # The data structure in secret should be like so:
+  # accessID: "p-1234"
+  # accessKey: "myKey"
+  # allowedAccessIDs: "p-1245,p1256"
+  existingSecretName:
   accessID: ""
   accessKey: ""
    ## ref: https://docs.akeyless.io/docs/gateway-k8s#gateway-admins
@@ -301,6 +308,15 @@ sshConfig:
     ##
     logForwarding:
       enabled: false
+
+      # existingSecretName will hold the configuration for sshConfig log forward
+      # The data structure in secret should be like so:
+      # settings: | ## make sure to use settings as the key!
+        # target_syslog_tag="ssh-audit-export"
+        # target_log_type="syslog"
+        # target_syslog_network="udp"
+        # target_syslog_host="<host>:<port>"
+      existingSecretName:
       # Syslog example
       # settings: |
         # target_syslog_tag="ssh-audit-export"
