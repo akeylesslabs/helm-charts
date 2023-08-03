@@ -8,8 +8,14 @@
 
 dockerRepositoryCreds:
 
+
 # a full URL of Akeyless API Gateway
 apiGatewayURL: https://rest.akeyless.io
+apiGatewayCert:
+  #  Specifies an existing secret for gateway tls certificate must include:
+  # - tls.crt
+  tlsCertsSecretName: 
+
 
 # Secure remote access cluster name. Use a name that will help you understand
 # the purpose of this cluster, for example, "sra-staging" or "us-west-prod"

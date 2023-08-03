@@ -41,6 +41,14 @@ spec:
           persistentVolumeClaim:
             claimName: {{ printf "%s-%s" $.Release.Name .name | title | lower }}
           {{- end }}
+{{- if .Values.apiGatewayCert.tlsCertsSecretName }}
+        - name: gw-signed-ca
+          secret:
+            secretName: {{ .Values.apiGatewayCert.tlsCertsSecretName }}
+            items:
+              - key: tls.crt
+                path: gw-cert.pem
+{{- end }}
       containers:
         - name: {{ .Values.ztbConfig.containerName }}
           image: "{{ .Values.ztbConfig.image.repository }}:{{ .Values.ztbConfig.image.tag | default .Chart.Annotations.ztbVersion }}"
@@ -56,6 +64,13 @@ spec:
 {{- if .Values.apiGatewayURL }}
             - name: AKEYLESS_URL
               value: {{ .Values.apiGatewayURL }}
+{{- end }}
+{{- if .Values.apiGatewayCert.tlsCertsSecretName }}
+            - name: AKEYLESS_GW_CERTIFICATE
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Values.apiGatewayCert.tlsCertsSecretName | quote  }}
+                  key: tls.crt
 {{- end }}
 {{- if .Values.clusterName }}
             - name: CLUSTER_NAME
@@ -198,4 +213,10 @@ spec:
               mountPath: /home/akeyless/recordings
               subPath: recordings
           {{- end }}
+{{- if .Values.apiGatewayCert.tlsCertsSecretName }}
+            - name: gw-signed-ca
+              mountPath: "/etc/ssl/certs/gw-cert.pem"
+              subPath: gw-cert.pem
 {{- end }}
+{{- end }}
+
