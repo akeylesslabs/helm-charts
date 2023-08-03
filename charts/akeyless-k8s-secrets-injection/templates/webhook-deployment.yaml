@@ -34,6 +34,10 @@ spec:
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          {{- if .Values.deployment.containerSecurityContext }}
+          securityContext:
+            {{- toYaml .Values.deployment.containerSecurityContext | nindent 12 }}
+          {{- end }}
           env:
           - name: TLS_CERT_FILE
             value: /var/serving-cert/servingCert

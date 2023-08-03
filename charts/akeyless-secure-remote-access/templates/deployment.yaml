@@ -81,17 +81,38 @@ spec:
             - name: ALLOWED_BASTION_URLS
               value: {{ range $index, $element := .Values.ztbConfig.allowedBastionUrls -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }}
 {{- end }}
+
 {{- with .Values.privilegedAccess }}
+  {{- if .existingSecretName }}
+            - name: PRIVILEGED_ACCESS_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .existingSecretName}}
+                  key: accessID
+            - name: PRIVILEGED_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .existingSecretName}}
+                  key: accessKey
+  {{- else }}
             - name: PRIVILEGED_ACCESS_ID
               value: {{ required "Privileged access ID is required" .accessID }}
   {{- if .accessKey }}
             - name: PRIVILEGED_ACCESS_KEY
               value: {{ .accessKey }}
   {{- end }}
-  {{- if .allowedAccessIDs }}
+  {{- end }}
+  {{- if and (.existingSecretName) (eq (include "keyExistinSecret" (dict "Namespace" $.Release.Namespace "Name" .existingSecretName "Key" "allowedAccessIDs")) "true")}}
+            {{- $allowedAccessIDs := include "getValueFromSecret" (dict "Namespace" $.Release.Namespace "Name" .existingSecretName "Key" "allowedAccessIDs") }}
+            - name: ALLOWED_ACCESS_IDS
+              value: {{ $allowedAccessIDs }}
+  {{- else }}
+{{- if .allowedAccessIDs }}
             - name: ALLOWED_ACCESS_IDS
               value: {{ range $index, $element := .allowedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }}
-  {{- end }}
+{{- end }}
+{{- end }}
+
   {{- if .azureObjectID }}
             - name: AZURE_OBJECT_ID
               value: {{ .azureObjectID }}
