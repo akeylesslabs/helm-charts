@@ -33,6 +33,14 @@ spec:
           emptyDir: {}
         - name: ng-config
           emptyDir: {}
+{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+        - name: gw-signed-ca
+          secret:
+            secretName: {{ .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+            items:
+              - key: tls.crt
+                path: gw-cert.pem           
+{{- end }}
         - name: configmap-akeyless
           configMap:
             name: {{ $.Release.Name }}-cm-akeyless
@@ -62,8 +70,13 @@ spec:
               export WEB_WORKER_SERVICE_DNS=$(cat /etc/akeyless/service-dns)
               echo {{ .Values.dispatcher.config.allowedInternalAuth }} > /etc/akeyless/allowed_internal_auth
               echo {{ .Values.dispatcher.config.disableSecureCookie }} > /etc/akeyless/disable_secure_cookie
+{{- if and (.Values.dispatcher.config.privilegedAccess.existingSecretName) (eq (include "keyExistinSecret" (dict "Namespace" $.Release.Namespace "Name" .Values.dispatcher.config.privilegedAccess.existingSecretName "Key" "allowedAccessIDs")) "true")}}
+              {{- $allowedAccessIDs := include "getValueFromSecret" (dict "Namespace" $.Release.Namespace "Name" .Values.dispatcher.config.privilegedAccess.existingSecretName "Key" "allowedAccessIDs") }}
+              echo "{{ $allowedAccessIDs }}" > /etc/akeyless/allowed_access_ids
+{{- else }}
 {{- if .Values.dispatcher.config.privilegedAccess.allowedAccessIDs }}
               echo {{ range $index, $element := .Values.dispatcher.config.privilegedAccess.allowedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_access_ids
+{{- end }}
 {{- end }}
 {{- if .Values.dispatcher.config.allowedBastionUrls }}
               echo {{ range $index, $element := .Values.dispatcher.config.allowedBastionUrls -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_bastion_urls
@@ -80,6 +93,11 @@ spec:
               mountPath: /etc/akeyless
             - name: akeyless-config
               mountPath: /var/akeyless/conf
+{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+            - name: gw-signed-ca
+              mountPath: "/etc/ssl/certs/gw-cert.pem"
+              subPath: gw-cert.pem
+{{- end }}
       imagePullSecrets:
         - name: akeyless-docker-hub-web-access
       containers:
@@ -130,6 +148,11 @@ spec:
             - name: {{ .Values.persistence.shareStorageVolume.name | title | lower }}
               mountPath: /etc/shared
             {{ end }}
+{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+            - name: gw-signed-ca
+              mountPath: "/etc/ssl/certs/gw-cert.pem"
+              subPath: gw-cert.pem
+{{- end }}
           resources:
 {{- toYaml .Values.dispatcher.resources | nindent 12 }}
           livenessProbe:

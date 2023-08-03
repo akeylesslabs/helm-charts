@@ -39,6 +39,14 @@ spec:
         emptyDir: {}
       - name: creds
         emptyDir: {}
+{{- if .Values.apiGatewayCert.tlsCertsSecretName }}
+      - name: gw-signed-ca
+        secret:
+          secretName: {{ .Values.apiGatewayCert.tlsCertsSecretName }}
+          items:
+            - key: tls.crt
+              path: gw-cert.pem
+{{- end }}
       - name: ssh
       {{- range .Values.sshConfig.persistence.volumes }}
       - name: {{ .name | title | lower }}
@@ -74,6 +82,12 @@ spec:
               mountPath: /var/akeyless/conf
             - name: creds
               mountPath: /var/akeyless/creds
+{{- if .Values.apiGatewayCert.tlsCertsSecretName }}
+            - name: gw-signed-ca
+              mountPath: "/etc/ssl/certs/gw-cert.pem"
+              subPath: gw-cert.pem
+  #
+{{- end }}
       imagePullSecrets:
         - name: akeyless-docker-hub
       containers:
@@ -104,9 +118,15 @@ spec:
           - name: USERNAME_SUB_CLAIM
             value: {{ .Values.usernameSubClaim }}
 {{- end }}
+  {{- if and (.Values.privilegedAccess.existingSecretName) (eq (include "keyExistinSecret" (dict "Namespace" $.Release.Namespace "Name" .Values.privilegedAccess.existingSecretName "Key" "allowedAccessIDs")) "true")}}
+            {{- $allowedAccessIDs := include "getValueFromSecret" (dict "Namespace" $.Release.Namespace "Name" .Values.privilegedAccess.existingSecretName "Key" "allowedAccessIDs") }}
+          - name: ALLOWED_ACCESS_IDS
+            value: {{ $allowedAccessIDs }}
+  {{- else }}
 {{- if .Values.privilegedAccess.allowedAccessIDs }}
           - name: ALLOWED_ACCESS_IDS
             value: {{ range $index, $element := .Values.privilegedAccess.allowedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }}
+{{- end }}
 {{- end }}
 {{- if .Values.sshConfig.allowedBastionUrls }}
           - name: ALLOWED_BASTION_URLS
@@ -154,6 +174,11 @@ spec:
               mountPath: /var/akeyless/conf
             - name: creds
               mountPath: /var/akeyless/creds
+{{- if .Values.apiGatewayCert.tlsCertsSecretName }}
+            - name: gw-signed-ca
+              mountPath: "/etc/ssl/certs/gw-cert.pem"
+              subPath: gw-cert.pem
+{{- end }}
           resources:
 {{- toYaml .Values.sshConfig.resources | nindent 12 }}
 {{- end }}
