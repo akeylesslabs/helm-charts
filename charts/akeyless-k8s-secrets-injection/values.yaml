@@ -4,6 +4,10 @@
 
 deployment:
   labels: {}
+  # Remove the {} and add any needed values to your SecurityContext
+  securityContext: {}
+#    fsGroup: 3000
+#    runAsUser: 65534
 
 replicaCount: 1
 openshiftEnabled: false
@@ -14,11 +18,10 @@ gatewayCert:
   # - tls.crt (base64)
   tlsCertsSecretName:
 
+#Remove the {} and add any needed values to your SecurityContext here, do not change runAsUser and allowPrivilegeEscalation
 containerSecurityContext: {}
-# Remove the {} and add any needed values to your SecurityContext
-#    runAsUser: 0
-#    seccompProfile:
-#      type: RuntimeDefault
+#  seccompProfile:
+#    type: RuntimeDefault
 
 image:
   repository: docker.registry-2.akeyless.io/k8s-webhook-server
