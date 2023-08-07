@@ -41,7 +41,7 @@ privilegedAccess:
   # existingSecretName will hold accessId, AccessKey and allowedAccessIDs
   # The data structure in secret should be like so:
   # accessID: "p-1234"
-  # accessKey: "myKey"
+  # accessKey: "myKey" ## the key must exist but can be left empty
   # allowedAccessIDs: "p-1245,p1256"
   existingSecretNames:
     ## access secret content should look like this:
