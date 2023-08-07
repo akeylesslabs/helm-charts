@@ -38,8 +38,13 @@ spec:
             name: {{ $.Release.Name }}-cm-web-policies
 {{- if .Values.dlp.enabled }}
         - name: configmap-conf
+          {{- if $.Values.dlp.existingLogForwardSecretName }}
+          secret:
+            secretName: "{{ $.Values.dlp.existingLogForwardSecretName }}"
+          {{- else }}
           configMap:
             name: {{ $.Release.Name }}-cm-dlp-conf
+          {{- end }}
 {{- end }}
         - name: dshm
           emptyDir:

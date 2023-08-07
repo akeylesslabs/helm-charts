@@ -9,7 +9,7 @@ metadata:
     chart: {{ $.Chart.Name }}
 data:
   ca.pub: |
-{{ required "A valid .Values.sshConfig.conf.CAPublicKey entry required!" .Values.sshConfig.config.CAPublicKey | indent 4 }}
+{{ required "A valid .Values.sshConfig.config.CAPublicKey entry required!" .Values.sshConfig.config.CAPublicKey | indent 4 }}
 
 {{- if .Values.sshConfig.config.sessionTermination.enabled }}
   api-url: |
@@ -30,9 +30,7 @@ data:
   {{- with .Values.sshConfig.config.logForwarding}}
   {{- if .enabled }}
   logand.conf: |
-  {{- if .existingSecretName }}
-  {{- include "getValueFromSecret" (dict "Namespace" $.Release.Namespace "Name" .existingSecretName "Key" "settings") | nindent 4 -}}
-  {{- else }}
+  {{- if not .existingSecretName }}
   {{- required "A valid .Values.sshConfig.config.logForwarding.settings entry required!" .settings | nindent 4 }}
   {{- end }}
   {{- end }}
@@ -40,11 +38,7 @@ data:
   akeyless_config_file: |
     {{ required "API Gateway URL is required" .Values.apiGatewayURL }}
     {{- with .Values.privilegedAccess}}
-    {{- if .existingSecretName }}
-    {{- $accessID := include "getValueFromSecret" (dict "Namespace" $.Release.Namespace "Name" .existingSecretName "Key" "accessID") }}
-    {{- $accessKey := include "getValueFromSecret" (dict "Namespace" $.Release.Namespace "Name" .existingSecretName "Key" "accessKey")}}
-    cmd=auth&access-id={{ required "Privileged access credentials are required" $accessID }}&access-key={{ $accessKey }}
-    {{- else}}
+    {{- if  not .existingSecretNames.access }}
     cmd=auth&access-id={{ required "Privileged access credentials are required" .accessID }}&access-key={{ .accessKey }}
     {{- end }}
     {{- end }}
