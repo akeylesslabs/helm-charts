@@ -139,10 +139,10 @@ dispatcher:
       existingSecretNames:
         ## access secret content should look like this:
         # cmd=auth&access-id=REPLACE_ME_WITH_ACCESS_ID&access-key=REPLACE_ME_WITH_ACCESS_KEY
-        access: zero-trust-access
+        access:
         ## allowedIDs secret content should like this
         # allowedAccessIDs: p-1234,11245,p-1256
-        allowedIDs: zero-trust-allow
+        allowedIDs:
 
       accessID: ""
       accessKey: ""
@@ -169,7 +169,7 @@ dispatcher:
     #      target_splunk_index=""
     #      target_splunk_token=""
     #      target_splunk_url=""
-    existingLogForwardSecretName: zero-trust-log
+    existingLogForwardSecretName:
     logForward:
 #    # audit configuration for log forwarding, currently support several technologies: https://docs.akeyless.io/docs/ssh-log-forwarding
 #    #splunk example
@@ -274,7 +274,7 @@ dlp:
 #    target_splunk_token=""
 #    target_splunk_url=""
 
-  existingLogForwardSecretName: zero-trust-dlp-log
+  existingLogForwardSecretName:
   audit:
 # audit configuration for log forwarding, currently support several technologies: https://docs.akeyless.io/docs/ssh-log-forwarding
 #splunk example

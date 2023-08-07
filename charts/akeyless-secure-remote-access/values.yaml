@@ -46,10 +46,10 @@ privilegedAccess:
   existingSecretNames:
     ## access secret content should look like this:
     # cmd=auth&access-id=REPLACE_ME_WITH_ACCESS_ID&access-key=REPLACE_ME_WITH_ACCESS_KEY
-    access:  zero-trust-access
+    access:
     ## allowedIDs secret content should like this
     # allowedAccessIDs: p-1234,11245,p-1256
-    allowedIDs: zero-trust-allow
+    allowedIDs:
 
   accessID: ""
   accessKey: ""
@@ -326,7 +326,7 @@ sshConfig:
       #
       # akeyless_config_file: |  ## make sure to keep akeyless_config_file as the key!
       #   cmd=auth&access-id=REPLACE_ME_WITH_ACCESS_ID&access-key=REPLACE_ME_WITH_ACCESS_KEY
-      existingSecretName: zero-trust-log
+      existingSecretName:
       # Syslog example
       # settings: |
         # target_syslog_tag="ssh-audit-export"
