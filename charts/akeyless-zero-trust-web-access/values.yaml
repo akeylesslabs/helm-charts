@@ -134,13 +134,16 @@ dispatcher:
     # The privilegedAccess should have "Read" and "List" permissions to the relevant secrets.
     # If accessKey field is left empty, the accessID will be used as a Cloud Provider IAM Auth Method (e.g. AWS-IAM, AzureAD, GCP-GCE)
     privilegedAccess:
-      # existingSecretName will hold accessId, AccessKey and allowedAccessIDs
-      # The data structure in secret should be like so:
-      # accessID: "p-1234"
-      # accessKey: "myKey"
-      # allowedAccessIDs: "p-1245,p1256"
 
-      existingSecretName:
+
+      existingSecretNames:
+        ## access secret content should look like this:
+        # cmd=auth&access-id=REPLACE_ME_WITH_ACCESS_ID&access-key=REPLACE_ME_WITH_ACCESS_KEY
+        access: zero-trust-access
+        ## allowedIDs secret content should like this
+        # allowedAccessIDs: p-1234,11245,p-1256
+        allowedIDs: zero-trust-allow
+
       accessID: ""
       accessKey: ""
 
@@ -158,14 +161,15 @@ dispatcher:
 
     # existingLogForwardSecretName will hold the configuration for dispatcher log forward
     # The data structure in secret should be like so:
-    # logForward: | ## make sure to use logForward as the key!
-    #   target_log_type="splunk"
-    #   target_splunk_sourcetype=""
-    #   target_splunk_source=""
-    #   target_splunk_index=""
-    #   target_splunk_token=""
-    #   target_splunk_url=""
-    existingLogForwardSecretName:
+    ## logand.conf: |  ## make sure to keep logand.conf as the key!
+    #    logForward: |
+    #      target_log_type="splunk"
+    #      target_splunk_sourcetype=""
+    #      target_splunk_source=""
+    #      target_splunk_index=""
+    #      target_splunk_token=""
+    #      target_splunk_url=""
+    existingLogForwardSecretName: zero-trust-log
     logForward:
 #    # audit configuration for log forwarding, currently support several technologies: https://docs.akeyless.io/docs/ssh-log-forwarding
 #    #splunk example
@@ -262,7 +266,7 @@ dlp:
 
 # existingLogForwardSecretName will hold the configuration for dlp log forward
 # The data structure in secret should be like so:
-#  audit: | ## make sure to use audit as the key!
+#  logand.conf: | ## make sure to keep logand.conf as the key!
 #    target_log_type="splunk"
 #    target_splunk_sourcetype=""
 #    target_splunk_source=""
@@ -270,7 +274,7 @@ dlp:
 #    target_splunk_token=""
 #    target_splunk_url=""
 
-  existingLogForwardSecretName:
+  existingLogForwardSecretName: zero-trust-dlp-log
   audit:
 # audit configuration for log forwarding, currently support several technologies: https://docs.akeyless.io/docs/ssh-log-forwarding
 #splunk example

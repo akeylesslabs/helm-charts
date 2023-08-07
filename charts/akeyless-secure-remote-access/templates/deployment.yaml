@@ -90,16 +90,16 @@ spec:
 {{- end }}
 
 {{- with .Values.privilegedAccess }}
-  {{- if .existingSecretName }}
+  {{- if .existingSecretNames.access }}
             - name: PRIVILEGED_ACCESS_ID
               valueFrom:
                 secretKeyRef:
-                  name: {{ .existingSecretName}}
+                  name: {{ .existingSecretNames.access }}
                   key: accessID
             - name: PRIVILEGED_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ .existingSecretName}}
+                  name: {{ .existingSecretNames.access }}
                   key: accessKey
   {{- else }}
             - name: PRIVILEGED_ACCESS_ID
@@ -109,10 +109,12 @@ spec:
               value: {{ .accessKey }}
   {{- end }}
   {{- end }}
-  {{- if and (.existingSecretName) (eq (include "keyExistinSecret" (dict "Namespace" $.Release.Namespace "Name" .existingSecretName "Key" "allowedAccessIDs")) "true")}}
-            {{- $allowedAccessIDs := include "getValueFromSecret" (dict "Namespace" $.Release.Namespace "Name" .existingSecretName "Key" "allowedAccessIDs") }}
+  {{- if .existingSecretNames.allowedIDs }}
             - name: ALLOWED_ACCESS_IDS
-              value: {{ $allowedAccessIDs }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .existingSecretNames.allowedIDs }}
+                  key: allowedAccessIDs
   {{- else }}
 {{- if .allowedAccessIDs }}
             - name: ALLOWED_ACCESS_IDS

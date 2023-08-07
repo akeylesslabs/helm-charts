@@ -57,8 +57,13 @@ spec:
         configMap:
           name: {{ $.Release.Name }}-cm-creds
       - name: configmap-conf
+        {{- if .Values.sshConfig.config.logForwarding.existingSecretName }}
+        secret:
+          secretName: {{ .Values.sshConfig.config.logForwarding.existingSecretName }}
+        {{- else }}
         configMap:
           name: {{ $.Release.Name }}-cm-conf
+        {{- end }}
       initContainers:
         # Since k8s 1.9.4, config maps mount read-only volumes. Since the Docker image also writes to the config file,
         # the file must be mounted as read-write. We use init containers to copy from the config map read-only
@@ -118,10 +123,12 @@ spec:
           - name: USERNAME_SUB_CLAIM
             value: {{ .Values.usernameSubClaim }}
 {{- end }}
-  {{- if and (.Values.privilegedAccess.existingSecretName) (eq (include "keyExistinSecret" (dict "Namespace" $.Release.Namespace "Name" .Values.privilegedAccess.existingSecretName "Key" "allowedAccessIDs")) "true")}}
-            {{- $allowedAccessIDs := include "getValueFromSecret" (dict "Namespace" $.Release.Namespace "Name" .Values.privilegedAccess.existingSecretName "Key" "allowedAccessIDs") }}
+  {{- if .Values.privilegedAccess.existingSecretNames.allowedIDs }}
           - name: ALLOWED_ACCESS_IDS
-            value: {{ $allowedAccessIDs }}
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.privilegedAccess.existingSecretNames.allowedIDs }}
+                key: allowedAccessIDs
   {{- else }}
 {{- if .Values.privilegedAccess.allowedAccessIDs }}
           - name: ALLOWED_ACCESS_IDS
