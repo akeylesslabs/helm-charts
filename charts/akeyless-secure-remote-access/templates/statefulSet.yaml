@@ -104,13 +104,13 @@ spec:
           - name: USERNAME_SUB_CLAIM
             value: {{ .Values.usernameSubClaim }}
 {{- end }}
-{{- if .Values.ztbConfig.usernameSubClaim }}
+{{- if .Values.RDPusernameSubClaim }}
           - name: RDP_USERNAME_SUB_CLAIM
-            value: {{ .Values.ztbConfig.usernameSubClaim }}
+            value: {{ .Values.RDPusernameSubClaim }}
 {{- end }}
-{{- if .Values.sshConfig.usernameSubClaim }}
+{{- if .Values.SSHusernameSubClaim }}
           - name: SSH_USERNAME_SUB_CLAIM
-            value: {{ .Values.sshConfig.usernameSubClaim }}
+            value: {{ .Values.SSHusernameSubClaim }}
 {{- end }}
   {{- if and (.Values.privilegedAccess.existingSecretName) (eq (include "keyExistinSecret" (dict "Namespace" $.Release.Namespace "Name" .Values.privilegedAccess.existingSecretName "Key" "allowedAccessIDs")) "true")}}
             {{- $allowedAccessIDs := include "getValueFromSecret" (dict "Namespace" $.Release.Namespace "Name" .Values.privilegedAccess.existingSecretName "Key" "allowedAccessIDs") }}
