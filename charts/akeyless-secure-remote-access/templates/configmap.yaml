@@ -29,16 +29,16 @@ metadata:
 data:
   {{- with .Values.sshConfig.config.logForwarding}}
   {{- if .enabled }}
-  logand.conf: |
   {{- if not .existingSecretName }}
+  logand.conf: |
   {{- required "A valid .Values.sshConfig.config.logForwarding.settings entry required!" .settings | nindent 4 }}
   {{- end }}
   {{- end }}
   {{- end }}
+  {{- if not .Values.privilegedAccess.existingSecretNames.access }}
   akeyless_config_file: |
     {{ required "API Gateway URL is required" .Values.apiGatewayURL }}
     {{- with .Values.privilegedAccess}}
-    {{- if  not .existingSecretNames.access }}
     cmd=auth&access-id={{ required "Privileged access credentials are required" .accessID }}&access-key={{ .accessKey }}
     {{- end }}
     {{- end }}
