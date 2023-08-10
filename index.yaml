@@ -2662,6 +2662,20 @@ entries:
       ztbVersion: v0.19.0
     apiVersion: v2
     appVersion: v0.19.0_0.15.5
+    created: "2023-08-10T07:31:45.037616432Z"
+    description: A Helm chart for Kubernetes akeyless-zero-trust-bastion and akeyless-ssh-bastion
+      deployment
+    digest: 908b8e798591a218e7cc6d0908ea3fed3098c5ea0955dcfd8fc0f9aca90b058a
+    name: akeyless-sra
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-sra-0.23.4/akeyless-sra-0.23.4.tgz
+    version: 0.23.4
+  - annotations:
+      sshVersion: 0.15.5
+      ztbVersion: v0.19.0
+    apiVersion: v2
+    appVersion: v0.19.0_0.15.5
     created: "2023-08-09T13:00:40.352190597Z"
     description: A Helm chart for Kubernetes akeyless-zero-trust-bastion and akeyless-ssh-bastion
       deployment
@@ -5034,6 +5048,20 @@ entries:
   akeyless-zero-trust-web-access:
   - apiVersion: v2
     appVersion: 1.0.1
+    created: "2023-08-10T07:31:45.187776213Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-zero-trust-web-access
+    digest: a1eb7d99762505ceae09b599467aafc6be5d778de056b829964801f81474b6a9
+    home: https://www.akeyless.io
+    icon: https://akeylesslabs.github.io/helm-charts/assets/logo/akl.jpeg
+    name: akeyless-zero-trust-web-access
+    sources:
+    - https://github.com/akeylesslabs/helm-charts/tree/feature/helm_repo/akeyless-zero-trust-web-access
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-2.2.2/akeyless-zero-trust-web-access-2.2.2.tgz
+    version: 2.2.2
+  - apiVersion: v2
+    appVersion: 1.0.1
     created: "2023-08-08T14:39:27.06840042Z"
     description: A Helm chart for Kubernetes that deploys akeyless-zero-trust-web-access
     digest: ff869b40b9133499f93a2269a3bb5195fb57eab3688d81af78dda1e5fa42d09b
@@ -6460,4 +6488,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2023-08-09T13:00:40.353954427Z"
+generated: "2023-08-10T07:31:45.189102733Z"
