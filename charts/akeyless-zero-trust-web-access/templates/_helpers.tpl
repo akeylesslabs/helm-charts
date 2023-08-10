@@ -92,21 +92,3 @@ Checks kubernetes API version support for ingress BC
         {{- printf "autoscaling/v2beta2" }}
     {{- end }}
 {{- end }}
-
-
-{{- define "getValueFromSecret" }}
-     {{- $obj := (lookup "v1" "Secret" .Namespace .Name).data }}
-    {{- if $obj }}
-        {{- index $obj .Key | b64dec -}}
-    {{- else -}}
-        {{- fail (printf "%s - No such secret" .Name) }}
-    {{- end -}}
-{{- end }}
-
-{{- define "keyExistinSecret" }}
-        {{- if hasKey (get (lookup "v1" "Secret" .Namespace .Name) "data") .Key -}}
-            {{- printf "true" -}}
-        {{- else -}}
-            {{- printf "false" -}}
-        {{- end }}
-{{- end }}

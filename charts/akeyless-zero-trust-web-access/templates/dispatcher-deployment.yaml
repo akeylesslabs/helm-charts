@@ -42,11 +42,21 @@ spec:
                 path: gw-cert.pem           
 {{- end }}
         - name: configmap-akeyless
+          {{- if $.Values.dispatcher.config.privilegedAccess.existingSecretNames.access }}
+          secret:
+            secretName: {{ $.Values.dispatcher.config.privilegedAccess.existingSecretNames.access }}
+          {{- else }}
           configMap:
             name: {{ $.Release.Name }}-cm-akeyless
+          {{- end }}
         - name: configmap-akeyless-config
+        {{- if $.Values.dispatcher.config.existingLogForwardSecretName }}
+          secret:
+            secretName: {{ $.Values.dispatcher.config.existingLogForwardSecretName }}
+        {{- else }}
           configMap:
             name: {{ $.Release.Name }}-cm-akeyless-config
+        {{- end }}
         {{ if and .Values.persistence .Values.persistence.shareStorageVolume }}
         - name: {{ .Values.persistence.shareStorageVolume.name | title | lower }}
           persistentVolumeClaim:
@@ -59,6 +69,14 @@ spec:
         - name: bootstrap
           image: "{{ .Values.dispatcher.initContainer.image.repository }}:{{ .Values.dispatcher.initContainer.image.tag }}"
           imagePullPolicy: {{ .Values.dispatcher.initContainer.image.pullPolicy }}
+          {{- if .Values.dispatcher.config.privilegedAccess.existingSecretNames.allowedIDs }}
+          env:
+            - name: allowedAccessIDs
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.dispatcher.config.privilegedAccess.existingSecretNames.allowedIDs }}
+                  key: allowedAccessIDs
+          {{- end }}
           command: ['sh']
           args:
             - "-c"
@@ -70,9 +88,8 @@ spec:
               export WEB_WORKER_SERVICE_DNS=$(cat /etc/akeyless/service-dns)
               echo {{ .Values.dispatcher.config.allowedInternalAuth }} > /etc/akeyless/allowed_internal_auth
               echo {{ .Values.dispatcher.config.disableSecureCookie }} > /etc/akeyless/disable_secure_cookie
-{{- if and (.Values.dispatcher.config.privilegedAccess.existingSecretName) (eq (include "keyExistinSecret" (dict "Namespace" $.Release.Namespace "Name" .Values.dispatcher.config.privilegedAccess.existingSecretName "Key" "allowedAccessIDs")) "true")}}
-              {{- $allowedAccessIDs := include "getValueFromSecret" (dict "Namespace" $.Release.Namespace "Name" .Values.dispatcher.config.privilegedAccess.existingSecretName "Key" "allowedAccessIDs") }}
-              echo "{{ $allowedAccessIDs }}" > /etc/akeyless/allowed_access_ids
+{{- if .Values.dispatcher.config.privilegedAccess.existingSecretNames.allowedIDs }}
+              echo $allowedAccessIDs > /etc/akeyless/allowed_access_ids
 {{- else }}
 {{- if .Values.dispatcher.config.privilegedAccess.allowedAccessIDs }}
               echo {{ range $index, $element := .Values.dispatcher.config.privilegedAccess.allowedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_access_ids
