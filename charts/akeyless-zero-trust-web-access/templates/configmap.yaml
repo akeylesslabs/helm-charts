@@ -8,10 +8,10 @@ metadata:
     chart: {{ $.Chart.Name }}
 data:
 {{ with .Values.dispatcher.config }}
+  {{- if not .privilegedAccess.existingSecretNames.access }}
   akeyless_config_file: |
     {{ required "API Gateway URL is required" .apiGatewayURL }}
     cmd=auth&access-id={{ .listOnlyCredentials.samlAccessID }}
-    {{- if not .privilegedAccess.existingSecretNames.access }}
     cmd=auth&access-id={{ required "Privileged credentials are required" .privilegedAccess.accessID }}&access-key={{ .privilegedAccess.accessKey }}
     {{- end }}
 {{- end}}

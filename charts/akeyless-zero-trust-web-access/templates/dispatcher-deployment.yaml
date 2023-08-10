@@ -42,13 +42,8 @@ spec:
                 path: gw-cert.pem           
 {{- end }}
         - name: configmap-akeyless
-          {{- if $.Values.dispatcher.config.privilegedAccess.existingSecretNames.access }}
-          secret:
-            secretName: {{ $.Values.dispatcher.config.privilegedAccess.existingSecretNames.access }}
-          {{- else }}
           configMap:
             name: {{ $.Release.Name }}-cm-akeyless
-          {{- end }}
         - name: configmap-akeyless-config
         {{- if $.Values.dispatcher.config.existingLogForwardSecretName }}
           secret:
@@ -69,19 +64,37 @@ spec:
         - name: bootstrap
           image: "{{ .Values.dispatcher.initContainer.image.repository }}:{{ .Values.dispatcher.initContainer.image.tag }}"
           imagePullPolicy: {{ .Values.dispatcher.initContainer.image.pullPolicy }}
-          {{- if .Values.dispatcher.config.privilegedAccess.existingSecretNames.allowedIDs }}
+
           env:
+          {{- if .Values.dispatcher.config.privilegedAccess.existingSecretNames.allowedIDs }}
             - name: allowedAccessIDs
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.dispatcher.config.privilegedAccess.existingSecretNames.allowedIDs }}
                   key: allowedAccessIDs
           {{- end }}
+          {{- if .Values.dispatcher.config.privilegedAccess.existingSecretNames.access }}
+            - name: accessID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.dispatcher.config.privilegedAccess.existingSecretNames.access }}
+                  key: accessID
+            - name: accessKey
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.dispatcher.config.privilegedAccess.existingSecretNames.access }}
+                  key: accessKey
+          {{- end }}
           command: ['sh']
           args:
             - "-c"
             - |
               set -ex
+{{- if $.Values.dispatcher.config.privilegedAccess.existingSecretNames.access }}
+              echo "{{ required "API Gateway URL is required" .Values.dispatcher.config.apiGatewayURL }}" > /etc/akeyless/akeyless_config_file
+              echo "cmd=auth&access-id={{ .Values.dispatcher.config.listOnlyCredentials.samlAccessID }}" >> /etc/akeyless/akeyless_config_file
+              echo "cmd=auth&access-id=$accessID&access-key=$accessKey" >> /etc/akeyless/akeyless_config_file
+{{- end }}
               [ "$(ls /configmap_akeyless)" ] && cp /configmap_akeyless/* /etc/akeyless
               [ "$(ls /configmap_akeyless_config)" ] && cp /configmap_akeyless_config/* /var/akeyless/conf
               echo {{ include "akeyless-zero-web-access.fullname" . }}-discovery > /etc/akeyless/service-dns
