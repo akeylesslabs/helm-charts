@@ -94,36 +94,36 @@ The following table lists the configurable parameters of the API Gateway chart a
 
 ### API-Gateway defaults section configuration parameters
 
-| Parameter                                    | Description                                                                                                                                                  | Default                                                      |
-|----------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
-| `defaultsConf.defaultSamlAccessId`           | Default SAML Access ID to be used for initial WebUI login                                                                                                    | `nil`                                                        |
-| `defaultsConf.defaultOidcAccessId`           | Default OIDC Access ID to be used for initial WebUI login                                                                                                    | `nil`                                                        |
-| `defaultsConf.defaultCertificateAccessId`    | Default Certificate Access ID to be used for initial WebUI login                                                                                             | `nil`                                                        |
-| `defaultsConf.defaultEncryptionKey`          | This Default Encryption Key will be selected when creating the following items: Static Secrets, Dynamic Secret Producers and Secret Migration Configurations | `nil`                                                        |
-| `defaultsConf.defaultSecretLocation`         | The location of the default path to save secrets                                                                                                             | `nil`                                                        |
+| Parameter                                   | Description                                                                                                          | Default                                                      |
+|---------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
+| `defaultsConf.defaultSamlAccessId`            | Default SAML Access ID to be used for initial WebUI login     | `nil`                                                        |
+| `defaultsConf.defaultOidcAccessId`           | Default OIDC Access ID to be used for initial WebUI login      | `nil`                                                        |
+| `defaultsConf.defaultCertificateAccessId`    | Default Certificate Access ID to be used for initial WebUI login | `nil`                                                        |
+| `defaultsConf.defaultEncryptionKey`            | This Default Encryption Key will be selected when creating the following items: Static Secrets, Dynamic Secret Producers and Secret Migration Configurations                        | `nil`                                                        |
+| `defaultsConf.defaultSecretLocation`              | The location of the default path to save secrets                   | `nil`                                                        |
 
 
 ### API-Gateway caching section configuration parameters
 
-| Parameter                                          | Description                                                                                                                                                                                                                           | Default                     |
-|----------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------|
-| `cachingConf.enabled`                              | Should Caching be enabled                                                                                                                                                                                                             | `false`                     |
-| `cachingConf.cacheTTL`                             | Stale timeout in minutes, cache entries which are not accessed within timeout will be removed from cache                                                                                                                              | `nil`                       |
-| `cachingConf.proActiveCaching.enabled`             | Should Proactive Caching be enabled                                                                                                                                                                                                   | `false`                     |
-| `cachingConf.proActiveCaching.minimumFetchingTime` | When using Caching or/and Proactive Caching, additional secrets will be fetched upon requesting a secret, based on the requestor's access policy. Define minimum fetching interval to avoid over fetching in a given time frame. name | `nil`                       | 
-| `cachingConf.proActiveCaching.dumpInterval`        | To ensure service continuity in case of power cycle and network outage secrets will be backed up periodically per backup interval.                                                                                                    | `nil`                       |
+| Parameter                                   | Description                                                                                                          | Default                                                      |
+|---------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
+| `cachingConf.enabled`            | Should Caching be enabled                                                                       | `false`                                                        |
+| `cachingConf.cacheTTL`           | Stale timeout in minutes, cache entries which are not accessed within timeout will be removed from cache | `nil`                                                        |
+| `cachingConf.proActiveCaching.enabled`            | Should Proactive Caching be enabled                           | `false`                                                        |
+| `cachingConf.proActiveCaching.minimumFetchingTime`              | When using Caching or/and Proactive Caching, additional secrets will be fetched upon requesting a secret, based on the requestor's access policy. Define minimum fetching interval to avoid over fetching in a given time frame. name                                                                                                                                                                    | `nil`
+| `cachingConf.proActiveCaching.dumpInterval`              | To ensure service continuity in case of power cycle and network outage secrets will be backed up periodically per backup interval.                                                                                              | `nil`                                                          |
 
 
 ### API-Gateway logand configuration
 
-| Parameter             | Description                                                                                                             | Default |
-|-----------------------|-------------------------------------------------------------------------------------------------------------------------|---------|
-| `logandConf`          | Specifies an initial configuration for log forwarding. for more details: https://docs.akeyless.io/docs/log-forwarding-2 |         |
+| Parameter                                   | Description                                                                                                          | Default                                                      |
+|---------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
+| `logandConf`            |  Specifies an initial configuration for log forwarding. for more details: https://docs.akeyless.io/docs/log-forwarding                                                                       |                                                         |
 
 ### API-Gateway Metrics configuration
 
-| Parameter                    | Description                                                                                                    | Default                  |
-|------------------------------|----------------------------------------------------------------------------------------------------------------|--------------------------|
-| `metrics.enabled`            | Enable metrics streaming                                                                                       | `false`                  |
-| `metrics.config`             | Configure the metrics streaming exporter(backend). Must be in YAML foramt. For more details: docs-ref          | `nil`                    |                           
-| `metrics.existingSecretName` | Specifies an existing secret to be used for Metrics streaming configuration, instead of using `metrics.config` | Check `values.yaml` file |
+| Parameter                                   | Description                                                                                                          | Default                                                      |
+|---------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
+| `metrics.enabled`            | Enable metrics streaming                                                                         | `false`                                                        |
+| `metrics.config`           | Configure the metrics streaming exporter(backend). Must be in YAML foramt. For more details: docs-ref | `nil`
+| `metrics.existingSecretName`                            | Specifies an existing secret to be used for Metrics streaming configuration, instead of using `metrics.config`                                                              | Check `values.yaml` file                                  |
