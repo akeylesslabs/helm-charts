@@ -57,13 +57,8 @@ spec:
         configMap:
           name: {{ $.Release.Name }}-cm-creds
       - name: configmap-conf
-        {{- if .Values.sshConfig.config.logForwarding.existingSecretName }}
-        secret:
-          secretName: {{ .Values.sshConfig.config.logForwarding.existingSecretName }}
-        {{- else }}
         configMap:
           name: {{ $.Release.Name }}-cm-conf
-        {{- end }}
       initContainers:
         # Since k8s 1.9.4, config maps mount read-only volumes. Since the Docker image also writes to the config file,
         # the file must be mounted as read-write. We use init containers to copy from the config map read-only
@@ -71,12 +66,40 @@ spec:
         - name: bootstrap
           image: "{{ .Values.sshConfig.initContainer.image.repository }}:{{ .Values.sshConfig.initContainer.image.tag }}"
           imagePullPolicy: {{ .Values.sshConfig.initContainer.image.pullPolicy }}
+          env:
+          {{- if .Values.privilegedAccess.existingSecretNames.access }}
+            - name: accessID
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Values.privilegedAccess.existingSecretNames.access }}
+                  key: accessID
+            - name: accessKey
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Values.privilegedAccess.existingSecretNames.access }}
+                  key: accessKey
+          {{- end }}
+          {{- if .Values.sshConfig.config.logForwarding.existingSecretName }}
+            - name: config
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.sshConfig.config.logForwarding.existingSecretName }}
+                  key: settings
+          {{- end }}
+
           command: ['sh']
           args:
             - "-c"
             - |
               set -ex
-              [ "$(ls /configmap_conf)" ] && cp /configmap_conf/* /var/akeyless/conf
+              {{- if .Values.privilegedAccess.existingSecretNames.access }}
+              echo {{ required "API Gateway URL is required" .Values.apiGatewayURL }} > /var/akeyless/conf/akeyless_config_file
+              echo "cmd=auth&access-id=$accessID&access-key=$accessKey" >> /var/akeyless/conf/akeyless_config_file
+              {{- end }}
+              {{- if .Values.sshConfig.config.logForwarding.existingSecretName }}
+              echo -e "$config" > /var/akeyless/conf/logand.conf
+              {{- end }}
+              [ "$(ls /configmap_conf)" ] && cp -u /configmap_conf/* /var/akeyless/conf
               [ "$(ls /configmap_creds)" ] && cp /configmap_creds/* /var/akeyless/creds
           volumeMounts:
             - name: configmap-conf

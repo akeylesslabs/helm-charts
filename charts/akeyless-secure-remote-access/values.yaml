@@ -39,13 +39,11 @@ privilegedAccess:
   # for API Key, provide both accessID and accessKey
 
   # existingSecretName will hold accessId, AccessKey and allowedAccessIDs
-  # The data structure in secret should be like so:
-  # accessID: "p-1234"
-  # accessKey: "myKey" ## the key must exist but can be left empty
-  # allowedAccessIDs: "p-1245,p1256"
   existingSecretNames:
     ## access secret content should look like this:
-    # cmd=auth&access-id=REPLACE_ME_WITH_ACCESS_ID&access-key=REPLACE_ME_WITH_ACCESS_KEY
+    # accessID: p-1234
+    # accessKey: mySecretKey
+    # * accessKey can be left empty, but the key must exist
     access:
     ## allowedIDs secret content should like this
     # allowedAccessIDs: p-1234,11245,p-1256
@@ -318,21 +316,19 @@ sshConfig:
 
       # existingSecretName will hold the configuration for sshConfig log forward
       # The data structure in secret should be like so:
-      # logand.conf: | ## make sure to keep logand.conf as the key!
+      # settings: | ## make sure to keep settings as the key!
       #   target_syslog_tag="ssh-audit-export"
       #   target_log_type="syslog"
       #   target_syslog_network="udp"
       #   target_syslog_host="<host>:<port>"
-      #
-      # akeyless_config_file: |  ## make sure to keep akeyless_config_file as the key!
-      #   cmd=auth&access-id=REPLACE_ME_WITH_ACCESS_ID&access-key=REPLACE_ME_WITH_ACCESS_KEY
       existingSecretName:
+
       # Syslog example
-      # settings: |
-        # target_syslog_tag="ssh-audit-export"
-        # target_log_type="syslog"
-        # target_syslog_network="udp"
-        # target_syslog_host="<host>:<port>"
+#      settings: |
+#        target_syslog_tag="ssh-audit-export"
+#        target_log_type="syslog"
+#        target_syslog_network="udp"
+#        target_syslog_host="<host>:<port>"
 
   # List of URLs that will be considered valid for redirection from the Portal back to the bastion
   allowedBastionUrls: []
