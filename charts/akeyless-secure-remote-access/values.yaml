@@ -26,6 +26,10 @@ legacySigningAlg: "false"
 
 # Optional, provide a key-name to extract the username (value) of that key in sub-claims. The extracted username will be used to authenticated to the remote target (RDP or SSH).
 usernameSubClaim:
+# Optional, This overrides (for RDP only) the global parameter usernameSubClaim
+RDPusernameSubClaim:
+# Optional, This overrides (for SSH only) the global parameter usernameSubClaim
+SSHusernameSubClaim:
 
 # Relevant for Zero-Trust Access for non-SSH targets (e.g. DBs, K8s, AWS CLIs).
 # If provided, it's recommended to grant minimal permissions ("List" only) to the Zero-Trust Dynamic Secrets,
@@ -194,7 +198,7 @@ ztbConfig:
     maxReplicas: 14
     cpuAvgUtil: 50
     memAvgUtil: 50
-  
+
   config:
     rdpRecord:
       enabled: false

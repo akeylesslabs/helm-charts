@@ -84,6 +84,14 @@ spec:
             - name: USERNAME_SUB_CLAIM
               value: {{ .Values.usernameSubClaim }}
 {{- end }}
+{{- if .Values.RDPusernameSubClaim }}
+            - name: RDP_USERNAME_SUB_CLAIM
+              value: {{ .Values.RDPusernameSubClaim }}
+{{- end }}
+{{- if .Values.SSHusernameSubClaim }}
+            - name: SSH_USERNAME_SUB_CLAIM
+              value: {{ .Values.SSHusernameSubClaim }}
+{{- end }}
 {{- if .Values.ztbConfig.allowedBastionUrls }}
             - name: ALLOWED_BASTION_URLS
               value: {{ range $index, $element := .Values.ztbConfig.allowedBastionUrls -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }}

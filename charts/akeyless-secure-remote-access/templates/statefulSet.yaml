@@ -146,7 +146,15 @@ spec:
           - name: USERNAME_SUB_CLAIM
             value: {{ .Values.usernameSubClaim }}
 {{- end }}
-  {{- if .Values.privilegedAccess.existingSecretNames.allowedIDs }}
+{{- if .Values.RDPusernameSubClaim }}
+          - name: RDP_USERNAME_SUB_CLAIM
+            value: {{ .Values.RDPusernameSubClaim }}
+{{- end }}
+{{- if .Values.SSHusernameSubClaim }}
+          - name: SSH_USERNAME_SUB_CLAIM
+            value: {{ .Values.SSHusernameSubClaim }}
+{{- end }}
+{{- if .Values.privilegedAccess.existingSecretNames.allowedIDs }}
           - name: ALLOWED_ACCESS_IDS
             valueFrom:
               secretKeyRef:
