@@ -67,7 +67,7 @@ spec:
           image: "{{ .Values.sshConfig.initContainer.image.repository }}:{{ .Values.sshConfig.initContainer.image.tag }}"
           imagePullPolicy: {{ .Values.sshConfig.initContainer.image.pullPolicy }}
           env:
-          {{- if .Values.privilegedAccess.existingSecretNames.access }}
+          {{- if (eq (include "secret-exist" (dict "Root" $.Values.privilegedAccess.existingSecretNames "Name" "access")) "true") }}
             - name: accessID
               valueFrom:
                 secretKeyRef:
@@ -92,7 +92,7 @@ spec:
             - "-c"
             - |
               set -ex
-              {{- if .Values.privilegedAccess.existingSecretNames.access }}
+              {{- if (eq (include "secret-exist" (dict "Root" $.Values.privilegedAccess.existingSecretNames "Name" "access")) "true") }}
               echo {{ required "API Gateway URL is required" .Values.apiGatewayURL }} > /var/akeyless/conf/akeyless_config_file
               echo "cmd=auth&access-id=$accessID&access-key=$accessKey" >> /var/akeyless/conf/akeyless_config_file
               {{- end }}
@@ -154,7 +154,7 @@ spec:
           - name: SSH_USERNAME_SUB_CLAIM
             value: {{ .Values.SSHusernameSubClaim }}
 {{- end }}
-{{- if .Values.privilegedAccess.existingSecretNames.allowedIDs }}
+{{- if (eq (include "secret-exist" (dict "Root" $.Values.privilegedAccess.existingSecretNames "Name" "allowedIDs")) "true") }}
           - name: ALLOWED_ACCESS_IDS
             valueFrom:
               secretKeyRef:

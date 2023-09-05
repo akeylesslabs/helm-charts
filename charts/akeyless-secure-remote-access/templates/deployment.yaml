@@ -98,7 +98,7 @@ spec:
 {{- end }}
 
 {{- with .Values.privilegedAccess }}
-  {{- if .existingSecretNames.access }}
+  {{- if (eq (include "secret-exist" (dict "Root" $.Values.privilegedAccess.existingSecretNames "Name" "access")) "true") }}
             - name: PRIVILEGED_ACCESS_ID
               valueFrom:
                 secretKeyRef:
@@ -117,7 +117,7 @@ spec:
               value: {{ .accessKey }}
   {{- end }}
   {{- end }}
-  {{- if .existingSecretNames.allowedIDs }}
+  {{- if (eq (include "secret-exist" (dict "Root" $.Values.privilegedAccess.existingSecretNames "Name" "allowedIDs")) "true") }}
             - name: ALLOWED_ACCESS_IDS
               valueFrom:
                 secretKeyRef:
