@@ -92,3 +92,15 @@ Checks kubernetes API version support for ingress BC
         {{- printf "autoscaling/v2beta2" }}
     {{- end }}
 {{- end }}
+
+{{- define "secret-exist" }}
+  {{- if .Root }}
+    {{- if (get .Root .Name)}}
+        {{ print "true" }}
+    {{- else }}
+        {{ print "false" }}
+    {{- end }}
+  {{- else }}
+    {{ print "false" }}
+  {{- end }}
+{{- end }}
