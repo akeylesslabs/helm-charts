@@ -3,6 +3,7 @@
 image:
   dockerRepositoryCreds:
 
+
 # Linux system HTTP Proxy
 httpProxySettings:
   http_proxy: ""
@@ -106,6 +107,10 @@ dispatcher:
   config:
     # a full URL of Akeyless API Gateway
     apiGatewayURL: https://rest.akeyless.io
+    apiGatewayCert:
+  #  Specifies an existing secret for gateway tls certificate must include:
+  # - tls.crt
+      tlsCertsSecretName:
 
     # Secure remote access cluster name. Use a name that will help you understand
     # the purpose of this cluster, for example, "sra-staging" or "us-west-prod"
@@ -129,6 +134,18 @@ dispatcher:
     # The privilegedAccess should have "Read" and "List" permissions to the relevant secrets.
     # If accessKey field is left empty, the accessID will be used as a Cloud Provider IAM Auth Method (e.g. AWS-IAM, AzureAD, GCP-GCE)
     privilegedAccess:
+
+
+      existingSecretNames:
+        ## access secret content should look like this:
+        # accessID: p-1234
+        # accessKey: mySecretKey
+        # * accessKey can be left empty, but the key must exist
+        access:
+        ## allowedIDs secret content should like this
+        # allowedAccessIDs: p-1234,11245,p-1256
+        allowedIDs:
+
       accessID: ""
       accessKey: ""
 
@@ -144,16 +161,26 @@ dispatcher:
    # When false, dispatcher session cookie can be send only on top off encrypted requests (HTTPS)
     disableSecureCookie: "true"
 
+    # existingLogForwardSecretName will hold the configuration for dispatcher log forward
+    # The data structure in secret should be like so:
+    ## logand.conf: | ## make sure to keep logand.conf as the key!
+    #    target_log_type="splunk"
+    #    target_splunk_sourcetype=""
+    #    target_splunk_source=""
+    #    target_splunk_index=""
+    #    target_splunk_token=""
+    #    target_splunk_url=""
+    existingLogForwardSecretName:
     logForward:
 #    # audit configuration for log forwarding, currently support several technologies: https://docs.akeyless.io/docs/ssh-log-forwarding
 #    #splunk example
-#    #  logForward: |
-#    #    target_log_type="splunk"
-#    #    target_splunk_sourcetype=""
-#    #    target_splunk_source=""
-#    #    target_splunk_index=""
-#    #    target_splunk_token=""
-#    #    target_splunk_url=""
+#    logForward: |
+#      target_log_type="splunk"
+#      target_splunk_sourcetype=""
+#      target_splunk_source=""
+#      target_splunk_index=""
+#      target_splunk_token=""
+#      target_splunk_url=""
 
 webWorker:
   replicaCount: 5
@@ -237,6 +264,18 @@ dlp:
     # FORCING or LEARNING
     mode: ""
     logLevel: "INFO"
+
+# existingLogForwardSecretName will hold the configuration for dlp log forward
+# The data structure in secret should be like so:
+#  logand.conf: | ## make sure to keep logand.conf as the key!
+#    target_log_type="splunk"
+#    target_splunk_sourcetype=""
+#    target_splunk_source=""
+#    target_splunk_index=""
+#    target_splunk_token=""
+#    target_splunk_url=""
+
+  existingLogForwardSecretName:
   audit:
 # audit configuration for log forwarding, currently support several technologies: https://docs.akeyless.io/docs/ssh-log-forwarding
 #splunk example

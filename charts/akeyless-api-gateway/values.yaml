@@ -46,7 +46,7 @@ deployment:
 
   # Place here any pod annotations you may need
   pod:
-    annotations:
+    annotations: {}
 
   affinity:
     enabled: false
@@ -71,6 +71,12 @@ deployment:
     enabled: false
     fsGroup: 0
     runAsUser: 0
+
+  containerSecurityContext: {}
+# Remove the {} and add any needed values to your SecurityContext
+#    runAsUser: 0
+#    seccompProfile:
+#      type: RuntimeDefault
 service:
   # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
   annotations: {}

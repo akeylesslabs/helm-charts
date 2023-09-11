@@ -125,8 +125,12 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}-akeyless"
           {{else}}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          {{end}}
+          {{- end}}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.deployment.containerSecurityContext }}
+          securityContext:
+            {{- toYaml .Values.deployment.containerSecurityContext | nindent 12 }}
+          {{- end }}
           ports:
             - name: web
               containerPort: 18888
@@ -356,15 +360,15 @@ spec:
             - name: VERSION
               value: {{ .Values.version | default .Chart.AppVersion }}
           {{- if .Values.httpProxySettings.http_proxy }}
-            - name: http_proxy
+            - name: HTTP_PROXY
               value: {{ .Values.httpProxySettings.http_proxy }}
           {{- end }}
           {{- if .Values.httpProxySettings.https_proxy }}
-            - name: https_proxy
+            - name: HTTPS_PROXY
               value: {{ .Values.httpProxySettings.https_proxy }}
           {{- end }}
           {{- if .Values.httpProxySettings.no_proxy }}
-            - name: no_proxy
+            - name: NO_PROXY
               value: {{ .Values.httpProxySettings.no_proxy }}
           {{- end }}
           {{- if .Values.env }}

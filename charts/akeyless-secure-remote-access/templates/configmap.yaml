@@ -9,7 +9,7 @@ metadata:
     chart: {{ $.Chart.Name }}
 data:
   ca.pub: |
-{{ required "A valid .Values.sshConfig.conf.CAPublicKey entry required!" .Values.sshConfig.config.CAPublicKey | indent 4 }}
+{{ required "A valid .Values.sshConfig.config.CAPublicKey entry required!" .Values.sshConfig.config.CAPublicKey | indent 4 }}
 
 {{- if .Values.sshConfig.config.sessionTermination.enabled }}
   api-url: |
@@ -27,11 +27,19 @@ metadata:
     app: {{ $.Values.sshConfig.containerName }}
     chart: {{ $.Chart.Name }}
 data:
-{{- if .Values.sshConfig.config.logForwarding.enabled }}
+  {{- with .Values.sshConfig.config.logForwarding}}
+  {{- if .enabled }}
+  {{- if not .existingSecretName }}
   logand.conf: |
-{{ required "A valid .Values.sshConfig.config.logForwarding.logand entry required!" .Values.sshConfig.config.logForwarding.settings | indent 4 }}
-{{- end }}
+  {{- required "A valid .Values.sshConfig.config.logForwarding.settings entry required!" .settings | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- end }}
+  {{- if (eq (include "secret-exist" (dict "Root" $.Values.privilegedAccess.existingSecretNames "Name" "access")) "false") }}
   akeyless_config_file: |
     {{ required "API Gateway URL is required" .Values.apiGatewayURL }}
-    cmd=auth&access-id={{ required "Privileged access credentials are required" .Values.privilegedAccess.accessID }}&access-key={{ .Values.privilegedAccess.accessKey }}
+    {{- with .Values.privilegedAccess}}
+    cmd=auth&access-id={{ required "Privileged access credentials are required" .accessID }}&access-key={{ .accessKey }}
+    {{- end }}
+    {{- end }}
 {{- end }}

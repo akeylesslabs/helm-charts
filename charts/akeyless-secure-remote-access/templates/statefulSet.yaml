@@ -39,6 +39,14 @@ spec:
         emptyDir: {}
       - name: creds
         emptyDir: {}
+{{- if .Values.apiGatewayCert.tlsCertsSecretName }}
+      - name: gw-signed-ca
+        secret:
+          secretName: {{ .Values.apiGatewayCert.tlsCertsSecretName }}
+          items:
+            - key: tls.crt
+              path: gw-cert.pem
+{{- end }}
       - name: ssh
       {{- range .Values.sshConfig.persistence.volumes }}
       - name: {{ .name | title | lower }}
@@ -58,12 +66,40 @@ spec:
         - name: bootstrap
           image: "{{ .Values.sshConfig.initContainer.image.repository }}:{{ .Values.sshConfig.initContainer.image.tag }}"
           imagePullPolicy: {{ .Values.sshConfig.initContainer.image.pullPolicy }}
+          env:
+          {{- if (eq (include "secret-exist" (dict "Root" $.Values.privilegedAccess.existingSecretNames "Name" "access")) "true") }}
+            - name: accessID
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Values.privilegedAccess.existingSecretNames.access }}
+                  key: accessID
+            - name: accessKey
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Values.privilegedAccess.existingSecretNames.access }}
+                  key: accessKey
+          {{- end }}
+          {{- if .Values.sshConfig.config.logForwarding.existingSecretName }}
+            - name: config
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.sshConfig.config.logForwarding.existingSecretName }}
+                  key: settings
+          {{- end }}
+
           command: ['sh']
           args:
             - "-c"
             - |
               set -ex
-              [ "$(ls /configmap_conf)" ] && cp /configmap_conf/* /var/akeyless/conf
+              {{- if (eq (include "secret-exist" (dict "Root" $.Values.privilegedAccess.existingSecretNames "Name" "access")) "true") }}
+              echo {{ required "API Gateway URL is required" .Values.apiGatewayURL }} > /var/akeyless/conf/akeyless_config_file
+              echo "cmd=auth&access-id=$accessID&access-key=$accessKey" >> /var/akeyless/conf/akeyless_config_file
+              {{- end }}
+              {{- if .Values.sshConfig.config.logForwarding.existingSecretName }}
+              echo -e "$config" > /var/akeyless/conf/logand.conf
+              {{- end }}
+              [ "$(ls /configmap_conf)" ] && cp -u /configmap_conf/* /var/akeyless/conf
               [ "$(ls /configmap_creds)" ] && cp /configmap_creds/* /var/akeyless/creds
           volumeMounts:
             - name: configmap-conf
@@ -74,6 +110,12 @@ spec:
               mountPath: /var/akeyless/conf
             - name: creds
               mountPath: /var/akeyless/creds
+{{- if .Values.apiGatewayCert.tlsCertsSecretName }}
+            - name: gw-signed-ca
+              mountPath: "/etc/ssl/certs/gw-cert.pem"
+              subPath: gw-cert.pem
+  #
+{{- end }}
       imagePullSecrets:
         - name: akeyless-docker-hub
       containers:
@@ -104,9 +146,25 @@ spec:
           - name: USERNAME_SUB_CLAIM
             value: {{ .Values.usernameSubClaim }}
 {{- end }}
+{{- if .Values.RDPusernameSubClaim }}
+          - name: RDP_USERNAME_SUB_CLAIM
+            value: {{ .Values.RDPusernameSubClaim }}
+{{- end }}
+{{- if .Values.SSHusernameSubClaim }}
+          - name: SSH_USERNAME_SUB_CLAIM
+            value: {{ .Values.SSHusernameSubClaim }}
+{{- end }}
+{{- if (eq (include "secret-exist" (dict "Root" $.Values.privilegedAccess.existingSecretNames "Name" "allowedIDs")) "true") }}
+          - name: ALLOWED_ACCESS_IDS
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.privilegedAccess.existingSecretNames.allowedIDs }}
+                key: allowedAccessIDs
+  {{- else }}
 {{- if .Values.privilegedAccess.allowedAccessIDs }}
           - name: ALLOWED_ACCESS_IDS
             value: {{ range $index, $element := .Values.privilegedAccess.allowedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }}
+{{- end }}
 {{- end }}
 {{- if .Values.sshConfig.allowedBastionUrls }}
           - name: ALLOWED_BASTION_URLS
@@ -154,6 +212,11 @@ spec:
               mountPath: /var/akeyless/conf
             - name: creds
               mountPath: /var/akeyless/creds
+{{- if .Values.apiGatewayCert.tlsCertsSecretName }}
+            - name: gw-signed-ca
+              mountPath: "/etc/ssl/certs/gw-cert.pem"
+              subPath: gw-cert.pem
+{{- end }}
           resources:
 {{- toYaml .Values.sshConfig.resources | nindent 12 }}
 {{- end }}

@@ -3,6 +3,8 @@
 # Github issues Epic key
 jira_fields='{"customfield_10014": "ASM-7343", "priority": {"name": "Highest", "id": "1"}}'
 
+git_issue_event_name=$(echo "$GITHUB_CONTEXT" | jq '.event_name' --raw-output)
+git_issue_event_action=$(echo "$GITHUB_CONTEXT" | jq '.event.action' --raw-output)
 repository=$(echo "$GITHUB_CONTEXT" | jq '.repository' --raw-output)
 git_user=$(echo "$GITHUB_CONTEXT" | jq '.actor' --raw-output)
 git_issue_id=$(echo "$GITHUB_CONTEXT" | jq '.event.issue.id' --raw-output)

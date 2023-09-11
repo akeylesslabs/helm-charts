@@ -41,6 +41,14 @@ spec:
           persistentVolumeClaim:
             claimName: {{ printf "%s-%s" $.Release.Name .name | title | lower }}
           {{- end }}
+{{- if .Values.apiGatewayCert.tlsCertsSecretName }}
+        - name: gw-signed-ca
+          secret:
+            secretName: {{ .Values.apiGatewayCert.tlsCertsSecretName }}
+            items:
+              - key: tls.crt
+                path: gw-cert.pem
+{{- end }}
       containers:
         - name: {{ .Values.ztbConfig.containerName }}
           image: "{{ .Values.ztbConfig.image.repository }}:{{ .Values.ztbConfig.image.tag | default .Chart.Annotations.ztbVersion }}"
@@ -57,6 +65,13 @@ spec:
             - name: AKEYLESS_URL
               value: {{ .Values.apiGatewayURL }}
 {{- end }}
+{{- if .Values.apiGatewayCert.tlsCertsSecretName }}
+            - name: AKEYLESS_GW_CERTIFICATE
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Values.apiGatewayCert.tlsCertsSecretName | quote  }}
+                  key: tls.crt
+{{- end }}
 {{- if .Values.clusterName }}
             - name: CLUSTER_NAME
               value: {{ .Values.clusterName }}
@@ -69,21 +84,52 @@ spec:
             - name: USERNAME_SUB_CLAIM
               value: {{ .Values.usernameSubClaim }}
 {{- end }}
+{{- if .Values.RDPusernameSubClaim }}
+            - name: RDP_USERNAME_SUB_CLAIM
+              value: {{ .Values.RDPusernameSubClaim }}
+{{- end }}
+{{- if .Values.SSHusernameSubClaim }}
+            - name: SSH_USERNAME_SUB_CLAIM
+              value: {{ .Values.SSHusernameSubClaim }}
+{{- end }}
 {{- if .Values.ztbConfig.allowedBastionUrls }}
             - name: ALLOWED_BASTION_URLS
               value: {{ range $index, $element := .Values.ztbConfig.allowedBastionUrls -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }}
 {{- end }}
+
 {{- with .Values.privilegedAccess }}
+  {{- if (eq (include "secret-exist" (dict "Root" $.Values.privilegedAccess.existingSecretNames "Name" "access")) "true") }}
+            - name: PRIVILEGED_ACCESS_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .existingSecretNames.access }}
+                  key: accessID
+            - name: PRIVILEGED_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .existingSecretNames.access }}
+                  key: accessKey
+  {{- else }}
             - name: PRIVILEGED_ACCESS_ID
               value: {{ required "Privileged access ID is required" .accessID }}
   {{- if .accessKey }}
             - name: PRIVILEGED_ACCESS_KEY
               value: {{ .accessKey }}
   {{- end }}
-  {{- if .allowedAccessIDs }}
+  {{- end }}
+  {{- if (eq (include "secret-exist" (dict "Root" $.Values.privilegedAccess.existingSecretNames "Name" "allowedIDs")) "true") }}
+            - name: ALLOWED_ACCESS_IDS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .existingSecretNames.allowedIDs }}
+                  key: allowedAccessIDs
+  {{- else }}
+{{- if .allowedAccessIDs }}
             - name: ALLOWED_ACCESS_IDS
               value: {{ range $index, $element := .allowedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }}
-  {{- end }}
+{{- end }}
+{{- end }}
+
   {{- if .azureObjectID }}
             - name: AZURE_OBJECT_ID
               value: {{ .azureObjectID }}
@@ -177,4 +223,10 @@ spec:
               mountPath: /home/akeyless/recordings
               subPath: recordings
           {{- end }}
+{{- if .Values.apiGatewayCert.tlsCertsSecretName }}
+            - name: gw-signed-ca
+              mountPath: "/etc/ssl/certs/gw-cert.pem"
+              subPath: gw-cert.pem
 {{- end }}
+{{- end }}
+

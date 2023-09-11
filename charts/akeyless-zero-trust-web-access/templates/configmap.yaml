@@ -8,10 +8,12 @@ metadata:
     chart: {{ $.Chart.Name }}
 data:
 {{ with .Values.dispatcher.config }}
+  {{- if (eq (include "secret-exist" (dict "Root" $.Values.dispatcher.config.privilegedAccess.existingSecretNames "Name" "access")) "false") }}
   akeyless_config_file: |
     {{ required "API Gateway URL is required" .apiGatewayURL }}
     cmd=auth&access-id={{ .listOnlyCredentials.samlAccessID }}
     cmd=auth&access-id={{ required "Privileged credentials are required" .privilegedAccess.accessID }}&access-key={{ .privilegedAccess.accessKey }}
+    {{- end }}
 {{- end}}
 
 ---
@@ -43,9 +45,12 @@ data:
     path_prefix={{ .Values.dlp.config.pathPrefix | quote }}
     mode={{ .Values.dlp.config.mode | quote }}
     log_level={{ .Values.dlp.config.logLevel | quote }}
-{{ if .Values.dlp.audit }}
+
+{{- if not .Values.dlp.existingLogForwardSecretName }}
+    {{ if .Values.dlp.audit }}
   logand.conf: |
 {{ .Values.dlp.audit | indent 4 }}
+{{- end }}
 {{- end }}
 {{- end }}
 
@@ -58,7 +63,9 @@ metadata:
   labels:
     chart: {{ $.Chart.Name }}
 data:
+{{- if not .Values.dispatcher.config.existingLogForwardSecretName  }}
 {{ if .Values.dispatcher.config.logForward }}
   logand.conf: |
 {{ .Values.dispatcher.config.logForward | indent 4 }}
+{{- end }}
 {{- end }}

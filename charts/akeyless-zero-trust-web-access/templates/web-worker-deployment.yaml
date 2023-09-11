@@ -25,13 +25,26 @@ spec:
       volumes:
         - name: config
           emptyDir: {}
+{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+        - name: gw-signed-ca
+          secret:
+            secretName: {{ .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+            items:
+              - key: tls.crt
+                path: gw-cert.pem
+{{- end }}
         - name: configmap-policies
           configMap:
             name: {{ $.Release.Name }}-cm-web-policies
 {{- if .Values.dlp.enabled }}
         - name: configmap-conf
+          {{- if $.Values.dlp.existingLogForwardSecretName }}
+          secret:
+            secretName: "{{ $.Values.dlp.existingLogForwardSecretName }}"
+          {{- else }}
           configMap:
             name: {{ $.Release.Name }}-cm-dlp-conf
+          {{- end }}
 {{- end }}
         - name: dshm
           emptyDir:
@@ -65,6 +78,11 @@ spec:
               mountPath: /var/akeyless/conf
             - name: configmap-policies
               mountPath: /configmap_policy_conf
+{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+            - name: gw-signed-ca
+              mountPath: "/etc/ssl/certs/gw-cert.pem"
+              subPath: gw-cert.pem
+{{- end }}
       imagePullSecrets:
         - name: akeyless-docker-hub-web-access
       terminationGracePeriodSeconds: {{ .Values.HPA.webWorker.sessionTerminationGracePeriodSeconds | default 3600 }}
@@ -118,6 +136,11 @@ spec:
           - name: {{ .Values.persistence.shareStorageVolume.name | title | lower }}
             mountPath: /etc/shared
           {{ end }}
+{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+          - name: gw-signed-ca
+            mountPath: "/etc/ssl/certs/gw-cert.pem"
+            subPath: gw-cert.pem
+{{- end }}
           resources:
 {{- toYaml .Values.webWorker.resources | nindent 12 }}
           livenessProbe:
