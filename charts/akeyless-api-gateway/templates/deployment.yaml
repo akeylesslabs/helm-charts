@@ -256,6 +256,8 @@ spec:
                 secretKeyRef:
                   name: {{ include "akeyless-api-gw.secretName" . }}
                   key: admin-uid-init-token
+            {{- end }}
+            {{- if or (eq (include "akeyless-api-gw.adminAccessUidExist" .) "true") ( .Values.cachingConf.useClusterCache) }}
             - name:  GATEWAY_CLUSTER_CACHE
               value: enable
             - name: REDIS_ADDR
@@ -265,6 +267,15 @@ spec:
                 secretKeyRef:
                   name: {{ include "akeyless-api-gw.cacheSecretName" . }}
                   key: cache-pass
+          {{- end }}
+          {{- if .Values.cachingConf.useClusterCache }}
+            - name: USE_CLUSTER_CACHE
+              value: "true"
+            - name: CACHE_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "akeyless-api-gw.clusterCacheEncryptionKeyExist" . }}
+                  key: cluster-cache-encryption-key
           {{- end }}
           {{- if .Values.universalIdentity.uidRotationInterval }}
             - name: UID_ROTATE_INTERVAL

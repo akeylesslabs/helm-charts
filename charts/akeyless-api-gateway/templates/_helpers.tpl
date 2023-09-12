@@ -108,6 +108,14 @@ Generate chart secret name
         {{ $.Release.Name }}-cache-secret
 {{- end -}}
 
+{{- define "akeyless-api-gw.clusterCacheEncryptionKeyExist" -}}
+        {{- if .Values.cachingConf.clusterCacheEncryptionKey -}}
+            {{ include "akeyless-api-gw.secretName" . }}
+        {{- else if .Values.cachingConf.clusterCacheEncryptionKeyExistingSecret -}}
+            {{- printf "%s" .Values.cachingConf.clusterCacheEncryptionKeyExistingSecret -}}
+        {{- end -}}
+{{- end -}}
+
 {{/*
 Check customer fragment
 */}}
