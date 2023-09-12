@@ -35,7 +35,7 @@ data:
   {{- end }}
   {{- end }}
   {{- end }}
-  {{- if not .Values.privilegedAccess.existingSecretNames.access }}
+  {{- if (eq (include "secret-exist" (dict "Root" $.Values.privilegedAccess.existingSecretNames "Name" "access")) "false") }}
   akeyless_config_file: |
     {{ required "API Gateway URL is required" .Values.apiGatewayURL }}
     {{- with .Values.privilegedAccess}}
