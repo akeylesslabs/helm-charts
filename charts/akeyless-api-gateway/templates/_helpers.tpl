@@ -63,6 +63,17 @@ Create the name of the service account to use
 {{- end -}}
 
 {{/*
+Set the default values of existing certificate files if not provided
+*/}}
+{{- define "akeyless-api-gw.certFileName" -}}
+{{- default "akeyless-api-cert.crt" .Values.TLSConf.overrideCertFileName -}}
+{{- end -}}
+
+{{- define "akeyless-api-gw.keyFileName" -}}
+{{- default "akeyless-api-cert.key" .Values.TLSConf.overrideKeyFileName -}}
+{{- end -}}
+
+{{/*
 Get the Ingress TLS secret.
 */}}
 {{- define "akeyless-api-gw.ingressSecretTLSName" -}}
@@ -286,7 +297,7 @@ Check tlsCertificate
     {{- if .Values.TLSConf.tlsCertificate -}}
         {{- printf "true" -}}
     {{- else if and (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.tlsSecretName" .)) .Values.TLSConf.tlsExistingSecretName -}}
-        {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.tlsSecretName" . )) "data") "akeyless-api-cert.crt" -}}
+        {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.tlsSecretName" . )) "data") ( default "akeyless-api-cert.crt" .Values.TLSConf.overrideCertFileName ) -}}
             {{- printf "true" -}}
         {{- else -}}
             {{- printf "false" -}}
@@ -303,7 +314,7 @@ Check tlsPrivateKey
     {{- if .Values.TLSConf.tlsPrivateKey -}}
         {{- printf "true" -}}
     {{- else if and (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.tlsSecretName" .)) .Values.TLSConf.tlsExistingSecretName -}}
-        {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.tlsSecretName" . )) "data") "akeyless-api-cert.key" -}}
+        {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.tlsSecretName" . )) "data") ( default "akeyless-api-cert.key" .Values.TLSConf.overrideKeyFileName ) -}}
             {{- printf "true" -}}
         {{- else -}}
             {{- printf "false" -}}
