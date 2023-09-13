@@ -300,10 +300,14 @@ TLSConf:
   enableSniProxy: false
   # minimumTlsVersion can be one of the following <TLSv1/TLSv1.1/TLSv1.2/TLSv1.3> 
   minimumTlsVersion:
-  # Specifies an existing secret for tls-certificate must include:
-  # - akeyless-api-cert.crt (base64)
-  # - akeyless-api-cert.key (base64)
+  # Specifies an existing secret for tls-certificate:
   tlsExistingSecretName: 
+  # Alter this property of you need to use a different INPUT file name for the certificate, like from an existing secret
+  # Default value is 'akeyless-api-cert.crt' or change to your override file name
+  overrideCertFileName:
+  # Alter this property of you need to use a different INPUT file name for the key, like from an existing secret
+  # Default value is 'akeyless-api-cert.key' or change to your override file name
+  overrideKeyFileName:
   # 
   # tlsCertificate: |-
   #   -----BEGIN CERTIFICATE-----
