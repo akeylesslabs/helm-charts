@@ -336,10 +336,9 @@ cachingConf:
   # cacheTTL: 60
 
   useClusterCache: true
-  clusterCacheEncryptionKey: #"R+jBj+VqBno5hM1PR3bGMYw5enpM6mmrJ8IYDqrbvq4="
   # Specifies an existing secret for the cluster cache configuration, must include:
   # - cluster-cache-encryption-key
-  clusterCacheEncryptionKeyExistingSecret: belbal
+  clusterCacheEncryptionKeyExistingSecret:
 
   proActiveCaching:
     enabled: false
