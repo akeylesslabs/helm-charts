@@ -19,7 +19,7 @@ cache:
 image:
   repository: akeyless/base
   pullPolicy: Always
-  tag: 1.0.0
+  tag: latest
 
 # Uncomment for downloading Akeyless artifacts from fixed repository
 # ref: https://docs.akeyless.io/docs/advanced-k8s-gateway-configuration#fixed-artifact-repository
