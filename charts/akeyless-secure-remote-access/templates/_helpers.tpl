@@ -132,8 +132,8 @@ Get serviceAccountName
 
 {{- define "secret-exist" }}
   {{- if .Root }}
-    {{- if (hasKey .Root .Name)}}
-      {{- print "true" }}
+    {{- if (get .Root .Name) }}
+        {{- print "true" }}
     {{- else }}
        {{- print "false" }}
     {{- end }}
