@@ -215,12 +215,17 @@ akeylessUserAuth:
   adminBase64CertificateKey:
   adminUIDInitToken:
 
-  # Use with an Existing Secret
+  # Use a k8s existing secret, specify secret name, must include the following key: admin-access-id
   adminAccessIdExistingSecret:
+  # Use a k8s existing secret, specify secret name, must include the following key: admin-access-key
   adminAccessKeyExistingSecret:
+  # Use a k8s existing secret, specify secret name, must include the following key: admin-password
   adminPasswordExistingSecret:
+  # Use a k8s existing secret, specify secret name, must include the following key: admin-certificate (base64)
   adminBase64CertificateExistingSecret:
+  # Use a k8s existing secret, specify secret name, must include the following key: admin-certificate-key (base64)
   adminBase64CertificateKeyExistingSecret:
+  # Use a k8s existing secret, specify secret name, must include the following key: admin-uid-init-token
   adminUIDInitTokenExistingSecret:
 
   clusterName:
@@ -238,7 +243,7 @@ akeylessUserAuth:
   # - p-5678 subClimekey1=subClimeVal1
   # - p-5678
 
-  # Use with an Existing Secret
+  # Use a k8s existing secret, specify secret name, must include the following key: allowed-access-ids
   allowedAccessIDsExistingSecret:
 
   # Configure this list to add one or more allowed access to this GW, with the specified permissions and sub-claims.
@@ -269,7 +274,7 @@ akeylessUserAuth:
 #        - targets
 #        - defaults
 
-  # Use with an Existing Secret
+  # Use a k8s existing secret, specify secret name, must include the following key: allowed-access-permissions
   allowedAccessPermissionsExistingSecret:
 
   # restrict access to specific access-ids (comma separated list)
@@ -288,30 +293,17 @@ universalIdentity:
 # For more information: https://docs.akeyless.io/docs/implement-zero-knowledge
 #customerFragments: |
 
-# Use with an Existing Secret
+# Use a k8s existing secret, specify secret name, must include the following key: customer-fragments
 customerFragmentsExistingSecret:
+
 # Customer Fragment that will be in use instead of the regular value, in base64 because of formatting issues.
 # Use this in case you deploy the chart using Terraform.
 #
 # Use only one of the values!
 #customerFragmentsEncoded: "BASE64 String"
 
-# Use with an Existing Secret
+# Use a k8s existing secret, specify secret name, must include the following key: customer-fragments (base64)
 customerFragmentsEncodedExistingSecret:
-
-
-# Specifies an existing secret to be used for API Gateway, must include:
-#  - admin-access-id,
-#  - admin-access-key
-#  - admin-password
-#  - admin-certificate (base64)
-#  - admin-certificate-key (base64)
-#  - allowed-access-ids
-#  - allowed-access-permissions
-#  - customer-fragments
-
-# Using exsitingSecret is deprecated
-existingSecret:
 
 # Specifies an initial configuration for the general section
 TLSConf:
