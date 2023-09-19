@@ -164,7 +164,7 @@ spec:
           volumeMounts:
             - name: akeyless-config
               mountPath: {{include "akeyless-api-gw.root.config.path" $}}/.akeyless
-          {{- if and (.Values.metrics.enabled) (not (eq (include "akeyless-api-gw.customerFragmentExist" .) "")) }}
+          {{- if and (.Values.metrics.enabled) (not (eq (include "akeyless-api-gw.metricsSecretExist" .) "")) }}
             - name: otelcol-metrics-config
               mountPath: /akeyless/otel-config.yaml
               subPath: otel-config.yaml
