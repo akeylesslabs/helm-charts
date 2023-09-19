@@ -9,7 +9,7 @@ deployment:
 #    fsGroup: 3000
 #    runAsUser: 65534
 
-replicaCount: 1
+replicaCount: 2
 openshiftEnabled: false
 debug: false
 
@@ -97,3 +97,14 @@ affinity: |
           matchLabels:
             app: {{ template "vault-secrets-webhook.name" . }}
             release: {{ .Release.Name }}
+
+HPA:
+  # Note that metrics server must be installed for this to work:
+  # https://github.com/kubernetes-sigs/metrics-server
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 14
+  cpuAvgUtil: 50
+  memAvgUtil: 50
+
+  annotations: {}
