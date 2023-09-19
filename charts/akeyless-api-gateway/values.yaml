@@ -215,17 +215,17 @@ akeylessUserAuth:
   adminBase64CertificateKey:
   adminUIDInitToken:
 
-  # Use a k8s existing secret, specify secret name, must include the following key: admin-access-id
+  # Use a k8s existing secret, must include the following key: admin-access-id
   adminAccessIdExistingSecret:
-  # Use a k8s existing secret, specify secret name, must include the following key: admin-access-key
+  # Use a k8s existing secret, must include the following key: admin-access-key
   adminAccessKeyExistingSecret:
-  # Use a k8s existing secret, specify secret name, must include the following key: admin-password
+  # Use a k8s existing secret, must include the following key: admin-password
   adminPasswordExistingSecret:
-  # Use a k8s existing secret, specify secret name, must include the following key: admin-certificate (base64)
+  # Use a k8s existing secret, must include the following key: admin-certificate (base64)
   adminBase64CertificateExistingSecret:
-  # Use a k8s existing secret, specify secret name, must include the following key: admin-certificate-key (base64)
+  # Use a k8s existing secret, must include the following key: admin-certificate-key (base64)
   adminBase64CertificateKeyExistingSecret:
-  # Use a k8s existing secret, specify secret name, must include the following key: admin-uid-init-token
+  # Use a k8s existing secret, must include the following key: admin-uid-init-token
   adminUIDInitTokenExistingSecret:
 
   clusterName:
@@ -243,7 +243,7 @@ akeylessUserAuth:
   # - p-5678 subClimekey1=subClimeVal1
   # - p-5678
 
-  # Use a k8s existing secret, specify secret name, must include the following key: allowed-access-ids
+  # Use a k8s existing secret, must include the following key: allowed-access-ids
   allowedAccessIDsExistingSecret:
 
   # Configure this list to add one or more allowed access to this GW, with the specified permissions and sub-claims.
@@ -274,7 +274,7 @@ akeylessUserAuth:
 #        - targets
 #        - defaults
 
-  # Use a k8s existing secret, specify secret name, must include the following key: allowed-access-permissions
+  # Use a k8s existing secret, must include the following key: allowed-access-permissions
   allowedAccessPermissionsExistingSecret:
 
   # restrict access to specific access-ids (comma separated list)
@@ -293,7 +293,7 @@ universalIdentity:
 # For more information: https://docs.akeyless.io/docs/implement-zero-knowledge
 #customerFragments: |
 
-# Use a k8s existing secret, specify secret name, must include the following key: customer-fragments
+# Use a k8s existing secret, must include the following key: customer-fragments
 customerFragmentsExistingSecret:
 
 # Customer Fragment that will be in use instead of the regular value, in base64 because of formatting issues.
@@ -302,7 +302,7 @@ customerFragmentsExistingSecret:
 # Use only one of the values!
 #customerFragmentsEncoded: "BASE64 String"
 
-# Use a k8s existing secret, specify secret name, must include the following key: customer-fragments (base64)
+# Use a k8s existing secret, must include the following key: customer-fragments (base64)
 customerFragmentsEncodedExistingSecret:
 
 # Specifies an initial configuration for the general section
