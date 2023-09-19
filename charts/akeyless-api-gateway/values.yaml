@@ -215,6 +215,19 @@ akeylessUserAuth:
   adminBase64CertificateKey:
   adminUIDInitToken:
 
+  # Use k8s existing secret, must include the following key: admin-access-id
+  adminAccessIdExistingSecret:
+  # Use k8s existing secret, must include the following key: admin-access-key
+  adminAccessKeyExistingSecret:
+  # Use k8s existing secret, must include the following key: admin-password
+  adminPasswordExistingSecret:
+  # Use k8s existing secret, must include the following key: admin-certificate (base64)
+  adminBase64CertificateExistingSecret:
+  # Use k8s existing secret, must include the following key: admin-certificate-key (base64)
+  adminBase64CertificateKeyExistingSecret:
+  # Use k8s existing secret, must include the following key: admin-uid-init-token
+  adminUIDInitTokenExistingSecret:
+
   clusterName:
   initialClusterDisplayName:
   # The key which is used to encrypt the API Gateway configuration. 
@@ -229,6 +242,9 @@ akeylessUserAuth:
   # - p-1234 subClimekey2=subClimeVal2
   # - p-5678 subClimekey1=subClimeVal1
   # - p-5678
+
+  # Use k8s existing secret, must include the following key: allowed-access-ids
+  allowedAccessIDsExistingSecret:
 
   # Configure this list to add one or more allowed access to this GW, with the specified permissions and sub-claims.
   # Name must be unique.
@@ -258,6 +274,9 @@ akeylessUserAuth:
 #        - targets
 #        - defaults
 
+  # Use k8s existing secret, must include the following key: allowed-access-permissions
+  allowedAccessPermissionsExistingSecret:
+
   # restrict access to specific access-ids (comma separated list)
   # restrictServiceToAccessIds: "p-1234,p-5678"
   restrictServiceToAccessIds:
@@ -274,28 +293,23 @@ universalIdentity:
 # For more information: https://docs.akeyless.io/docs/implement-zero-knowledge
 #customerFragments: |
 
+# Use k8s existing secret, must include the following key: customer-fragments
+customerFragmentsExistingSecret:
+
 # Customer Fragment that will be in use instead of the regular value, in base64 because of formatting issues.
 # Use this in case you deploy the chart using Terraform.
 #
 # Use only one of the values!
 #customerFragmentsEncoded: "BASE64 String"
 
-# Specifies an existing secret to be used for API Gateway, must include:
-#  - admin-access-id,
-#  - admin-access-key
-#  - admin-password
-#  - admin-certificate (base64)
-#  - admin-certificate-key (base64)
-#  - allowed-access-ids
-#  - allowed-access-permissions
-#  - customer-fragments
-existingSecret:
+# Use k8s existing secret, must include the following key: customer-fragments (base64)
+customerFragmentsEncodedExistingSecret:
 
 # Specifies an initial configuration for the general section
 TLSConf:
   akeylessWebUI: false
   vaultProxy: false
-  akeylessAPIServices:  false
+  akeylessAPIServices: false
   configurationManager: false
   enableSniProxy: false
   # minimumTlsVersion can be one of the following <TLSv1/TLSv1.1/TLSv1.2/TLSv1.3> 
@@ -359,17 +373,17 @@ metrics:
   existingSecretName:
   # An example for metrics configuration for datadog exporter
 
-  # config: |
-  #   exporters:
-    
-  #     datadog:
-  #       api:
-  #         key: <api-key>
-          
-  #   service:
-  #     pipelines:
-  #       metrics:
-  #         exporters: [datadog]
+#  config: |
+#     exporters:
+#
+#       datadog:
+#         api:
+#           key: <api-key>
+#
+#     service:
+#       pipelines:
+#         metrics:
+#           exporters: [datadog]
 
 ## Specifies an initial configuration for log forwarding
 # for more details: https://docs.akeyless.io/docs/ssh-log-forwarding
@@ -385,11 +399,9 @@ metrics:
 # target_splunk_url="<your_splunk_host_address>"
 
 
-
 # Specifies an existing secret for logand should be in yaml syntax, and include:
 # - logand-conf field (base64). The content the same as above.
 logandExistingSecretName:
-
 
 
 HPA:
