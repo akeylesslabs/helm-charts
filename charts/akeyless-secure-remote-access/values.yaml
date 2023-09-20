@@ -6,6 +6,9 @@
 ## Global ##
 ############
 
+# Optional, completely ≈replaces the generated name of the chart in the Chart.yaml file, and chart release name.
+fullnameOverride:
+
 dockerRepositoryCreds:
 
 
