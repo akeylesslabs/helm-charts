@@ -1,9 +1,7 @@
 # Default values for akeyless-zero-trust-web-access.
 
-# Override .Chart.Name default name and release name on resources and objects metadata naming
+# Optional, completely replaces the generated name of the chart in the Chart.yaml file, and chart release name.
 fullnameOverride:
-# Override .Chart.Name default name on resources and objects metadata naming
-nameOverride:
 
 image:
   dockerRepositoryCreds:

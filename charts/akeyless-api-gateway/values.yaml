@@ -1,3 +1,6 @@
+# Optional, completely replaces the generated name of the chart in the Chart.yaml file, and chart release name.
+fullnameOverride:
+
 # Default values for akeyless-api-gateway.
 
 replicaCount: 2
