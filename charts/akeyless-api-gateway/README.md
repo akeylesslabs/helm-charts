@@ -122,7 +122,7 @@ The following table lists the configurable parameters of the API Gateway chart a
 | `cachingConf.proActiveCaching.minimumFetchingTime`    | When using Caching or/and Proactive Caching, additional secrets will be fetched upon requesting a secret, based on the requestor's access policy. Define minimum fetching interval to avoid over fetching in a given time frame. name | `nil`   |
 | `cachingConf.proActiveCaching.dumpInterval`           | To ensure service continuity in case of power cycle and network outage secrets will be backed up periodically per backup interval.                                                                                                    | `nil`   |
 | `cachingConf.useClusterCache`                         | Should cluster caching be enabled                                                                                                                                                                                                     | `false` |
-| `cachingConf.clusterCacheEncryptionKeyExistingSecret` | Specifies an existing secret for the cluster cache configuration                                                                                                                                                                      | `false` |
+| `cachingConf.clusterCacheEncryptionKeyExistingSecret` | Specifies an existing secret for the cluster cache configuration, must include the following key: cluster-cache-encryption-key                                                                                                        | `nil`   |
 
 ### API-Gateway logand configuration
 
