@@ -2349,6 +2349,17 @@ entries:
     version: 1.0.0
   akeyless-secrets-injection:
   - apiVersion: v2
+    appVersion: 0.20.31
+    created: "2023-09-20T09:37:48.48460545Z"
+    description: A Helm chart that deploys a mutating admission webhook that configures
+      applications to request env vars from Akeyless Vault Secrets
+    digest: 2854e294651b7bf69da637c64a31da005a434a4292daf7eb8ea6a16dcf8feb38
+    name: akeyless-secrets-injection
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-secrets-injection-1.2.40/akeyless-secrets-injection-1.2.40.tgz
+    version: 1.2.40
+  - apiVersion: v2
     appVersion: 0.20.30
     created: "2023-09-20T07:41:19.997459574Z"
     description: A Helm chart that deploys a mutating admission webhook that configures
@@ -6757,4 +6768,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2023-09-20T07:41:19.999656434Z"
+generated: "2023-09-20T09:37:48.485830021Z"
