@@ -353,7 +353,7 @@ cachingConf:
   ## The amount of time during which a secret should be cached in minutes
   # cacheTTL: 60
 
-  useClusterCache: true
+  useClusterCache: false
   # Specifies an existing secret for the cluster cache configuration, must include:
   # - cluster-cache-encryption-key
   clusterCacheEncryptionKeyExistingSecret:
