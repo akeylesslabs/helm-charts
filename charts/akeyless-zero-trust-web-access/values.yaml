@@ -1,5 +1,8 @@
 # Default values for akeyless-zero-trust-web-access.
 
+# Optional, completely replaces the generated name of the chart in the Chart.yaml file, and chart release name.
+fullnameOverride:
+
 image:
   dockerRepositoryCreds:
 
