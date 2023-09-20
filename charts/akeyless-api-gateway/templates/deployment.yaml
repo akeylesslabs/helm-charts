@@ -48,14 +48,14 @@ spec:
       nodeSelector:
       {{ toYaml .Values.deployment.nodeSelector | indent 4 }}
       {{- end }}
-      {{- if or (eq (include "akeyless-api-gw.customerFragmentExist" .) "true") (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true" ) (.Values.metrics.enabled)}}
+      {{- if or (not (eq (include "akeyless-api-gw.customerFragmentExist" .) "")) (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true" ) (.Values.metrics.enabled)}}
       volumes:
       - name: akeyless-config
         emptyDir: {}
-      {{- if eq (include "akeyless-api-gw.customerFragmentExist" .) "true"}}
+      {{- if not (eq (include "akeyless-api-gw.customerFragmentExist" .) "") }}
       - name: customer-fragments-secret
         secret:
-          secretName: {{ include "akeyless-api-gw.secretName" . }}
+          secretName: {{ include "akeyless-api-gw.customerFragmentExist" . }}
           items:
             - key: customer-fragments
               path: customer_fragments.json
@@ -74,10 +74,10 @@ spec:
           secretName: {{ include "akeyless-api-gw.tlsSecretName" . }}
           defaultMode: 420
       {{- end }}
-      {{- if and (.Values.metrics.enabled) (eq (include "akeyless-api-gw.metricsSecretExist" .) "true") }}
+      {{- if and (.Values.metrics.enabled) (not (eq (include "akeyless-api-gw.metricsSecretExist" .) "")) }}
       - name: otelcol-metrics-config
         secret:
-          secretName: {{ include "akeyless-api-gw.metricsSecretName" . }}
+          secretName: {{ include "akeyless-api-gw.metricsSecretExist" . }}
       {{- end }}
       initContainers:
         # Since k8s 1.9.4, config maps mount read-only volumes. Since the Docker image also writes to the config file,
@@ -91,7 +91,7 @@ spec:
             - "-c"
             - |
               set -ex
-            {{- if eq (include "akeyless-api-gw.customerFragmentExist" .) "true"}}
+            {{- if not (eq (include "akeyless-api-gw.customerFragmentExist" .) "") }}
               [ "$(ls /customer_fragments)" ] && cp /customer_fragments/* {{include "akeyless-api-gw.root.config.path" $}}/.akeyless
             {{- end }}
             {{- if eq (include "akeyless-api-gw.logandConfExist" .) "true"}}
@@ -104,7 +104,7 @@ spec:
               cp /tls_conf/{{ include "akeyless-api-gw.keyFileName" . }} {{include "akeyless-api-gw.root.config.path" $}}/.akeyless/akeyless-api-cert.key
             {{- end }} 
           volumeMounts:
-          {{- if eq (include "akeyless-api-gw.customerFragmentExist" .) "true"}}
+          {{- if not (eq (include "akeyless-api-gw.customerFragmentExist" .) "") }}
             - name: customer-fragments-secret
               mountPath: /customer_fragments
           {{- end }}
@@ -160,11 +160,11 @@ spec:
               scheme: HTTPS
               {{- end }}
 {{- toYaml .Values.readinessProbe | trim | nindent 12 }}
-         {{- if or (eq (include "akeyless-api-gw.customerFragmentExist" .) "true") (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true") ( .Values.metrics.enabled)}}
+         {{- if or (not (eq (include "akeyless-api-gw.customerFragmentExist" .) "")) (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true") ( .Values.metrics.enabled)}}
           volumeMounts:
             - name: akeyless-config
               mountPath: {{include "akeyless-api-gw.root.config.path" $}}/.akeyless
-          {{- if and (.Values.metrics.enabled) (eq (include "akeyless-api-gw.metricsSecretExist" .) "true") }}
+          {{- if and (.Values.metrics.enabled) (not (eq (include "akeyless-api-gw.metricsSecretExist" .) "")) }}
             - name: otelcol-metrics-config
               mountPath: /akeyless/otel-config.yaml
               subPath: otel-config.yaml
@@ -181,53 +181,53 @@ spec:
             - name: FIPS
               value: {{ .Values.deployment.fips.enabled }}
           {{- end }}
-          {{- if eq (include "akeyless-api-gw.adminAccessIdExist" .) "true" }}
+          {{- if not (eq (include "akeyless-api-gw.adminAccessIdExist" .) "") }}
             - name: ADMIN_ACCESS_ID
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "akeyless-api-gw.secretName" . }}
+                  name: {{ include "akeyless-api-gw.adminAccessIdExist" . }}
                   key: admin-access-id
           {{- end }}
-          {{- if eq (include "akeyless-api-gw.allowedAccessIDsExist" .) "true" }}
+          {{- if not (eq (include "akeyless-api-gw.allowedAccessIDsExist" .) "") }}
             - name: ALLOWED_ACCESS_IDS
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "akeyless-api-gw.secretName" . }}
+                  name: {{ include "akeyless-api-gw.allowedAccessIDsExist" . }}
                   key: allowed-access-ids
           {{- end }}
-          {{- if eq (include "akeyless-api-gw.allowedAccessPermissionsExist" .) "true" }}
+          {{- if not (eq (include "akeyless-api-gw.allowedAccessPermissionsExist" .) "") }}
             - name: ALLOWED_ACCESS_PERMISSIONS
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "akeyless-api-gw.secretName" . }}
+                  name: {{ include "akeyless-api-gw.allowedAccessPermissionsExist" . }}
                   key: allowed-access-permissions
           {{- end }}
-          {{- if eq (include "akeyless-api-gw.adminAccessKeyExist" .) "true" }}
-            - name: ADMIN_ACCESS_KEY 
+          {{- if not (eq (include "akeyless-api-gw.adminAccessKeyExist" .) "") }}
+            - name: ADMIN_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "akeyless-api-gw.secretName" . }}
+                  name: {{ include "akeyless-api-gw.adminAccessKeyExist" . }}
                   key: admin-access-key
           {{- end }}
-          {{- if eq (include "akeyless-api-gw.adminPasswordExist" .) "true" }}
+          {{- if not (eq (include "akeyless-api-gw.adminPasswordExist" .) "") }}
             - name: ADMIN_PASSWORD 
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "akeyless-api-gw.secretName" . }}
+                  name: {{ include "akeyless-api-gw.adminPasswordExist" . }}
                   key: admin-password
           {{- end }}
-          {{- if eq (include "akeyless-api-gw.adminAccessCertExist" .) "true" }}
+          {{- if not (eq (include "akeyless-api-gw.adminAccessCertExist" .) "") }}
             - name: ADMIN_CERTIFICATE 
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "akeyless-api-gw.secretName" . }}
+                  name: {{ include "akeyless-api-gw.adminAccessCertExist" . }}
                   key: admin-certificate 
           {{- end }}
-          {{- if eq (include "akeyless-api-gw.adminAccessCertKeyExist" .) "true" }}
+          {{- if not (eq (include "akeyless-api-gw.adminAccessCertKeyExist" .) "") }}
             - name: ADMIN_CERTIFICATE_KEY 
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "akeyless-api-gw.secretName" . }}
+                  name: {{ include "akeyless-api-gw.adminAccessCertKeyExist" . }}
                   key: admin-certificate-key
           {{- end }}
           {{- if .Values.akeylessUserAuth.clusterName }}
@@ -250,11 +250,11 @@ spec:
             - name: CONFIG_PROTECTION_KEY_NAME
               value: {{ .Values.akeylessUserAuth.configProtectionKeyName }}
           {{- end }}
-          {{- if eq (include "akeyless-api-gw.adminAccessUidExist" .) "true"  }}
+          {{- if not (eq (include "akeyless-api-gw.adminAccessUidExist" .) "")  }}
             - name: ADMIN_UID_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "akeyless-api-gw.secretName" . }}
+                  name: {{ include "akeyless-api-gw.adminAccessUidExist" . }}
                   key: admin-uid-init-token
             {{- end }}
             {{- if or (eq (include "akeyless-api-gw.adminAccessUidExist" .) "true") ( .Values.cachingConf.useClusterCache) }}

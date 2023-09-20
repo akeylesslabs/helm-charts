@@ -95,7 +95,7 @@ Generate chart secret name
     {{- if .Values.existingSecret -}}
         {{- printf "%s" .Values.existingSecret -}}
     {{- else -}}
-        {{ $.Release.Name }}-conf-secret
+        {{- printf "%s-conf-secret" $.Release.Name -}}
     {{- end -}}
 {{- end -}}
 
@@ -138,17 +138,17 @@ Check customer fragment
 {{- end -}}
 {{- define "akeyless-api-gw.customerFragmentExist" -}}
     {{- if .Values.customerFragments -}}
-        {{- printf "true" -}}
+        {{ include "akeyless-api-gw.secretName" . }}
     {{- else if .Values.customerFragmentsEncoded -}}
-        {{- printf "true" -}}
+        {{ include "akeyless-api-gw.secretName" . }}
+    {{- else if .Values.customerFragmentsExistingSecret -}}
+        {{- printf "%s" .Values.customerFragmentsExistingSecret -}}
+    {{- else if .Values.customerFragmentsEncodedExistingSecret -}}
+        {{- printf "%s" .Values.customerFragmentsEncodedExistingSecret -}}
     {{- else if and (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)) .Values.existingSecret -}}
         {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" . )) "data") "customer-fragments" -}}
-            {{- printf "true" -}}
-        {{- else -}}
-            {{- printf "false" -}}
+            {{ include "akeyless-api-gw.secretName" . }}
         {{- end -}}
-    {{- else -}}
-        {{- printf "false" -}}
     {{- end -}}
 {{- end -}}
 
@@ -157,15 +157,13 @@ Check admin access-id
 */}}
 {{- define "akeyless-api-gw.adminAccessIdExist" -}}
     {{- if .Values.akeylessUserAuth.adminAccessId -}}
-        {{- printf "true" -}}
+        {{ include "akeyless-api-gw.secretName" . }}
+    {{- else if .Values.akeylessUserAuth.adminAccessIdExistingSecret -}}
+        {{- printf "%s" .Values.akeylessUserAuth.adminAccessIdExistingSecret -}}
     {{- else if and (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)) .Values.existingSecret -}}
         {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" . )) "data") "admin-access-id" -}}
-            {{- printf "true" -}}
-        {{- else -}}
-            {{- printf "false" -}}
+            {{ include "akeyless-api-gw.secretName" . }}
         {{- end -}}
-    {{- else -}}
-        {{- printf "false" -}}
     {{- end -}}
 {{- end -}}
 
@@ -174,15 +172,13 @@ Check admin access-id
 */}}
 {{- define "akeyless-api-gw.adminAccessUidExist" -}}
     {{- if .Values.akeylessUserAuth.adminUIDInitToken -}}
-        {{- printf "true" -}}
+        {{ include "akeyless-api-gw.secretName" . }}
+    {{- else if .Values.akeylessUserAuth.adminUIDInitTokenExistingSecret -}}
+        {{- printf "%s" .Values.akeylessUserAuth.adminUIDInitTokenExistingSecret -}}
     {{- else if and (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)) .Values.existingSecret -}}
         {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" . )) "data") "admin-uid-init-token" -}}
-            {{- printf "true" -}}
-        {{- else -}}
-            {{- printf "false" -}}
+            {{ include "akeyless-api-gw.secretName" . }}
         {{- end -}}
-    {{- else -}}
-        {{- printf "false" -}}
     {{- end -}}
 {{- end -}}
 
@@ -191,29 +187,25 @@ Check allowed Access IDs
 */}}
 {{- define "akeyless-api-gw.allowedAccessIDsExist" -}}
     {{- if .Values.akeylessUserAuth.allowedAccessIDs -}}
-        {{- printf "true" -}}
+        {{ include "akeyless-api-gw.secretName" . }}
+    {{- else if .Values.akeylessUserAuth.allowedAccessIDsExistingSecret -}}
+        {{- printf "%s" .Values.akeylessUserAuth.allowedAccessIDsExistingSecret -}}
     {{- else if and (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)) .Values.existingSecret -}}
         {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" . )) "data") "allowed-access-ids" -}}
-            {{- printf "true" -}}
-        {{- else -}}
-            {{- printf "false" -}}
+            {{ include "akeyless-api-gw.secretName" . }}
         {{- end -}}
-    {{- else -}}
-        {{- printf "false" -}}
     {{- end -}}
 {{- end -}}
 
 {{- define "akeyless-api-gw.allowedAccessPermissionsExist" -}}
     {{- if .Values.akeylessUserAuth.allowedAccessPermissions -}}
-        {{- printf "true" -}}
+        {{ include "akeyless-api-gw.secretName" . }}
+    {{- else if .Values.akeylessUserAuth.allowedAccessPermissionsExistingSecret -}}
+        {{- printf "%s" .Values.akeylessUserAuth.allowedAccessPermissionsExistingSecret -}}
     {{- else if and (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)) .Values.existingSecret -}}
         {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" . )) "data") "allowed-access-permissions" -}}
-            {{- printf "true" -}}
-        {{- else -}}
-            {{- printf "false" -}}
+            {{ include "akeyless-api-gw.secretName" . }}
         {{- end -}}
-    {{- else -}}
-        {{- printf "false" -}}
     {{- end -}}
 {{- end -}}
 
@@ -222,15 +214,13 @@ Check admin access-key
 */}}
 {{- define "akeyless-api-gw.adminAccessKeyExist" -}}
     {{- if .Values.akeylessUserAuth.adminAccessKey -}}
-        {{- printf "true" -}}
+        {{ include "akeyless-api-gw.secretName" . }}
+    {{- else if .Values.akeylessUserAuth.adminAccessKeyExistingSecret -}}
+        {{- printf "%s" .Values.akeylessUserAuth.adminAccessKeyExistingSecret -}}
     {{- else if and (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)) .Values.existingSecret -}}
         {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" . )) "data") "admin-access-key" -}}
-            {{- printf "true" -}}
-        {{- else -}}
-            {{- printf "false" -}}
+            {{ include "akeyless-api-gw.secretName" . }}
         {{- end -}}
-    {{- else -}}
-        {{- printf "false" -}}
     {{- end -}}
 {{- end -}}
 
@@ -239,15 +229,13 @@ Check admin password
 */}}
 {{- define "akeyless-api-gw.adminPasswordExist" -}}
     {{- if .Values.akeylessUserAuth.adminPassword -}}
-        {{- printf "true" -}}
+        {{ include "akeyless-api-gw.secretName" . }}
+    {{- else if .Values.akeylessUserAuth.adminPasswordExistingSecret -}}
+        {{- printf "%s" .Values.akeylessUserAuth.adminPasswordExistingSecret -}}
     {{- else if and (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)) .Values.existingSecret -}}
         {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" . )) "data") "admin-password" -}}
-            {{- printf "true" -}}
-        {{- else -}}
-            {{- printf "false" -}}
+            {{ include "akeyless-api-gw.secretName" . }}
         {{- end -}}
-    {{- else -}}
-        {{- printf "false" -}}
     {{- end -}}
 {{- end -}}
 
@@ -256,15 +244,13 @@ Check admin cert
 */}}
 {{- define "akeyless-api-gw.adminAccessCertExist" -}}
     {{- if .Values.akeylessUserAuth.adminBase64Certificate -}}
-        {{- printf "true" -}}
+        {{ include "akeyless-api-gw.secretName" . }}
+    {{- else if .Values.akeylessUserAuth.adminBase64CertificateExistingSecret -}}
+        {{- printf "%s" .Values.akeylessUserAuth.adminBase64CertificateExistingSecret -}}
     {{- else if and (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)) .Values.existingSecret -}}
         {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" . )) "data") "admin-certificate" -}}
-            {{- printf "true" -}}
-        {{- else -}}
-            {{- printf "false" -}}
+            {{ include "akeyless-api-gw.secretName" . }}
         {{- end -}}
-    {{- else -}}
-        {{- printf "false" -}}
     {{- end -}}
 {{- end -}}
 
@@ -273,15 +259,13 @@ Check admin cert-key
 */}}
 {{- define "akeyless-api-gw.adminAccessCertKeyExist" -}}
     {{- if .Values.akeylessUserAuth.adminBase64CertificateKey -}}
-        {{- printf "true" -}}
+        {{ include "akeyless-api-gw.secretName" . }}
+    {{- else if .Values.akeylessUserAuth.adminBase64CertificateKeyExistingSecret -}}
+        {{- printf "%s" .Values.akeylessUserAuth.adminBase64CertificateKeyExistingSecret -}}
     {{- else if and (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" .)) .Values.existingSecret -}}
         {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.secretName" . )) "data") "admin-certificate-key" -}}
-            {{- printf "true" -}}
-        {{- else -}}
-            {{- printf "false" -}}
+            {{ include "akeyless-api-gw.secretName" . }}
         {{- end -}}
-    {{- else -}}
-        {{- printf "false" -}}
     {{- end -}}
 {{- end -}}
 
@@ -363,7 +347,7 @@ Get metrics secret name
     {{- if .Values.metrics.existingSecretName -}}
         {{- printf "%s" .Values.metrics.existingSecretName -}}
     {{- else -}}
-        {{ $.Release.Name }}-metrics-conf
+        {{- printf "%s-metrics-conf" $.Release.Name -}}
     {{- end -}}
 {{- end -}}
 
@@ -372,15 +356,13 @@ Check metrics configuration Secret
 */}}
 {{- define "akeyless-api-gw.metricsSecretExist" -}}
     {{- if .Values.metrics.config -}}
-        {{- printf "true" -}}
+        {{ include "akeyless-api-gw.metricsSecretName" . }}
+    {{- else if .Values.metrics.existingSecretName -}}
+        {{- printf "%s" .Values.metrics.existingSecretName -}}
     {{- else if and (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.metricsSecretName" .)) .Values.metrics.existingSecretName -}}  
         {{- if hasKey (get (lookup "v1" "Secret" .Release.Namespace (include "akeyless-api-gw.metricsSecretName" . )) "data") "otel-config.yaml" -}}
-            {{- printf "true" -}}
-        {{- else -}}
-            {{- printf "false" -}}
+            {{ include "akeyless-api-gw.metricsSecretName" . }}
         {{- end -}}
-    {{- else -}}
-        {{- printf "false" -}}
     {{- end -}}
 {{- end -}}
 
