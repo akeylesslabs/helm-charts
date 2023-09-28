@@ -96,11 +96,11 @@ Checks kubernetes API version support for ingress BC
 {{- define "secret-exist" }}
   {{- if .Root }}
     {{- if (get .Root .Name) }}
-        {{- print "true" }}
+        {{- print "true" -}}
     {{- else }}
-       {{- print "false" }}
+       {{- print "false" -}}
     {{- end }}
   {{- else }}
-    {{- print "false" }}
+    {{- print "false" -}}
   {{- end }}
 {{- end }}

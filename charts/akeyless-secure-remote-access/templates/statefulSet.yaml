@@ -66,6 +66,7 @@ spec:
         - name: bootstrap
           image: "{{ .Values.sshConfig.initContainer.image.repository }}:{{ .Values.sshConfig.initContainer.image.tag }}"
           imagePullPolicy: {{ .Values.sshConfig.initContainer.image.pullPolicy }}
+          {{- if (or (eq (include "secret-exist" (dict "Root" $.Values.privilegedAccess.existingSecretNames "Name" "access")) "true") (.Values.sshConfig.config.logForwarding.existingSecretName))}}
           env:
           {{- if (eq (include "secret-exist" (dict "Root" $.Values.privilegedAccess.existingSecretNames "Name" "access")) "true") }}
             - name: accessID
@@ -85,6 +86,7 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.sshConfig.config.logForwarding.existingSecretName }}
                   key: settings
+          {{- end }}
           {{- end }}
 
           command: ['sh']
