@@ -64,26 +64,27 @@ spec:
         - name: bootstrap
           image: "{{ .Values.dispatcher.initContainer.image.repository }}:{{ .Values.dispatcher.initContainer.image.tag }}"
           imagePullPolicy: {{ .Values.dispatcher.initContainer.image.pullPolicy }}
-
+          {{- if (or (eq (include "secret-exist" (dict "Root" $.Values.dispatcher.config.privilegedAccess.existingSecretNames "Name" "allowedIDs")) "true") (eq (include "secret-exist" (dict "Root" $.Values.dispatcher.config.privilegedAccess.existingSecretNames "Name" "access")) "true")) }}
           env:
           {{- if (eq (include "secret-exist" (dict "Root" $.Values.dispatcher.config.privilegedAccess.existingSecretNames "Name" "allowedIDs")) "true") }}
             - name: allowedAccessIDs
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.dispatcher.config.privilegedAccess.existingSecretNames.allowedIDs }}
+                  name: {{ $.Values.dispatcher.config.privilegedAccess.existingSecretNames.allowedIDs }}
                   key: allowedAccessIDs
           {{- end }}
           {{- if (eq (include "secret-exist" (dict "Root" $.Values.dispatcher.config.privilegedAccess.existingSecretNames "Name" "access")) "true") }}
             - name: accessID
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.dispatcher.config.privilegedAccess.existingSecretNames.access }}
+                  name: {{ $.Values.dispatcher.config.privilegedAccess.existingSecretNames.access }}
                   key: accessID
             - name: accessKey
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.dispatcher.config.privilegedAccess.existingSecretNames.access }}
                   key: accessKey
+          {{- end }}
           {{- end }}
           command: ['sh']
           args:
