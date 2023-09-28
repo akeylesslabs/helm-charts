@@ -1,4 +1,4 @@
-{{- if eq (include "akeyless-api-gw.adminAccessUidExist" .) "true" }}
+{{- if not (eq (include "akeyless-api-gw.adminAccessUidExist" .) "")  }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
