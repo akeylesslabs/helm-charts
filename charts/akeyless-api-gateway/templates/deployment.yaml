@@ -257,7 +257,7 @@ spec:
                   name: {{ include "akeyless-api-gw.adminAccessUidExist" . }}
                   key: admin-uid-init-token
             {{- end }}
-            {{- if or (eq (include "akeyless-api-gw.adminAccessUidExist" .) "true") ( .Values.cachingConf.useClusterCache) }}
+            {{- if or (eq (include "akeyless-api-gw.adminAccessUidExist" .) "true") ( .Values.cachingConf.clusterCache.enabled) }}
             - name:  GATEWAY_CLUSTER_CACHE
               value: enable
             - name: REDIS_ADDR
@@ -268,7 +268,7 @@ spec:
                   name: {{ include "akeyless-api-gw.cacheSecretName" . }}
                   key: cache-pass
           {{- end }}
-          {{- if .Values.cachingConf.useClusterCache }}
+          {{- if .Values.cachingConf.clusterCache.enabled }}
             - name: USE_CLUSTER_CACHE
               value: "true"
             - name: CACHE_ENCRYPTION_KEY
