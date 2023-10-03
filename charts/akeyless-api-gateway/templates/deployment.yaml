@@ -335,6 +335,10 @@ spec:
             - name: MIN_TLS_VERSION
               value: "{{ .Values.TLSConf.minimumTlsVersion }}"
           {{- end }}
+          {{- if .Values.TLSConf.excludeCipherSuites }}
+            - name: EXCLUDE_CIPHER_SUITES
+              value: "{{ .Values.TLSConf.excludeCipherSuites }}"
+          {{- end }}
           ## caching section
           {{- if .Values.cachingConf.enabled }}
             - name: CACHE_ENABLE
