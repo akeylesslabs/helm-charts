@@ -112,6 +112,13 @@ The following table lists the configurable parameters of the API Gateway chart a
 | `defaultsConf.defaultSecretLocation`              | The location of the default path to save secrets                   | `nil`                                                        |
 
 
+### API-Gateway general section configuration parameters
+
+| Parameter                                   | Description                                                                                                                        | Default                                                      |
+|---------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
+| `TLSConf.minimumTlsVersion`            | Minimum TLS version that is acceptable, can be one of the following <TLSv1/TLSv1.1/TLSv1.2/TLSv1.3>                                | `nil`   
+| `TLSConf.excludeCipherSuites`            | Comma separated list of cipher suites to exclude (e.g. "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA") | `nil`                                                        |
+
 ### API-Gateway caching section configuration parameters
 
 | Parameter                                   | Description                                                                                                          | Default                                                      |
