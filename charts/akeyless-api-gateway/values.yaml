@@ -316,6 +316,8 @@ TLSConf:
   enableSniProxy: false
   # minimumTlsVersion can be one of the following <TLSv1/TLSv1.1/TLSv1.2/TLSv1.3> 
   minimumTlsVersion:
+  # Comma separated list of cipher suites to exclude (e.g. "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA")
+  excludeCipherSuites:
   # Specifies an existing secret for tls-certificate:
   tlsExistingSecretName: 
   # Alter this property of you need to use a different INPUT file name for the certificate, like from an existing secret
