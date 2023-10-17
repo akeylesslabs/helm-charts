@@ -11,7 +11,7 @@ metadata:
   {{- end }}
 spec:
   serviceName: {{ include "akeyless-secure-remote-access.fullname" . }}
-  replicas: 1
+  replicas: {{ .Values.sshConfig.replicaCount }}
   updateStrategy:
     type: {{ .Values.sshConfig.updateStrategy }}
   selector:
