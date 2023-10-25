@@ -250,6 +250,10 @@ spec:
             - name: CONFIG_PROTECTION_KEY_NAME
               value: {{ .Values.akeylessUserAuth.configProtectionKeyName }}
           {{- end }}
+          {{- if .Values.akeylessUserAuth.useGwForOidc }}
+            - name: AKEYLESS_OIDC_GW_AUTH
+              value: "true"
+          {{- end }}
           {{- if not (eq (include "akeyless-api-gw.adminAccessUidExist" .) "")  }}
             - name: ADMIN_UID_TOKEN
               valueFrom:
