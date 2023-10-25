@@ -286,6 +286,9 @@ akeylessUserAuth:
   # restrict access to admin account
   restrictAccessToAdminAccount: true
 
+  # use the gateway as oidc callback target
+  useGwForOidc: false
+
 universalIdentity:
   # interval im minutes, if empty the token will be rotated in token-ttl/3  max=10 
   uidRotationInterval: "5m" 
