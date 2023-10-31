@@ -183,19 +183,23 @@ ztbConfig:
     timeoutSeconds: 5
 
   resources: {}
-    # We usually recommend not to specify default resources and to leave this as a conscious
-    # choice for the user. This also increases chances charts run on environments with little
-    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # The following resource settings represent minimum recommended requests without defined limits.
+    # We've set a base recommended requests of 1 vCPU and 2GB memory.
+    # We intentionally leave resource limits unspecified to enable customization. If you wish to set specific resource
+    # limits, uncomment the 'limits' section and adjust values as needed.
+    # If Horizontal Pod Autoscaler (HPA) usage is desired, you must set requests values.
+    # If you do want to specify resources, uncomment the following
     # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-    # limits:
-    #   cpu: 100m
-    #   memory: 128Mi
-    # requests:
-    #   cpu: 100m
-    #   memory: 128Mi
+    #limits:
+    #  cpu: <your_cpu_limit>
+    #  memory: <your_memory_limit>
+    #requests:
+    #  cpu: 1
+    #  memory: 2G
 
   HPA:
     # Set the below to false in case you do not want to add Horizontal Pod AutoScaling to the Deployment
+    # If HPA is enabled resources requests must be set
     enabled: true
     minReplicas: 1
     maxReplicas: 14
@@ -286,19 +290,23 @@ sshConfig:
     #     usage: "ssh-bastion-pv"
 
   resources: {}
-    # We usually recommend not to specify default resources and to leave this as a conscious
-    # choice for the user. This also increases chances charts run on environments with little
-    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # The following resource settings represent minimum recommended requests without defined limits.
+    # We've set a base recommended requests of 1 vCPU and 2GB memory.
+    # We intentionally leave resource limits unspecified to enable customization. If you wish to set specific resource
+    # limits, uncomment the 'limits' section and adjust values as needed.
+    # If Horizontal Pod Autoscaler (HPA) usage is desired, you must set requests values.
+    # If you do want to specify resources, uncomment the following
     # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-    # limits:
-    #   cpu: 100m
-    #   memory: 128Mi
-    # requests:
-    #   cpu: 100m
-    #   memory: 128Mi
+    #limits:
+    #  cpu: <your_cpu_limit>
+    #  memory: <your_memory_limit>
+    #requests:
+    #  cpu: 1
+    #  memory: 2G
 
   HPA:
-    # Set the below to true only when using a shared persistent storage (defined at .persistence.volumes) 
+    # Set the below to true only when using a shared persistent storage (defined at .persistence.volumes)
+    # If HPA is enabled resources requests must be set
     enabled: false
     minReplicas: 1
     maxReplicas: 14
