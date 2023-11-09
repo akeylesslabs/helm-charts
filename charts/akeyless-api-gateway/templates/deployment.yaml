@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: {{ .Values.kind }}
 metadata:
   name: {{ include "akeyless-api-gw.fullname" . }}
   namespace: {{ .Release.Namespace }}
@@ -14,7 +14,7 @@ metadata:
   {{- end }}
 spec:
 
-  {{- if not .Values.HPA.enabled }}
+  {{- if and (not .Values.HPA.enabled) (eq .Values.kind "Deployment")}}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:

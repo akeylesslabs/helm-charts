@@ -4,6 +4,7 @@ fullnameOverride:
 # Default values for akeyless-api-gateway.
 
 replicaCount: 2
+kind: Deployment
 
 # akeylessStrictMode need to be enabled when using Redhat Openshift
 akeylessStrictMode: false

@@ -10,6 +10,7 @@ deployment:
 #    runAsUser: 65534
 
 replicaCount: 2
+kind: Deployment 
 openshiftEnabled: false
 debug: false
 
@@ -55,11 +56,9 @@ service:
 env:
   AKEYLESS_URL: "https://vault.akeyless.io"
   AKEYLESS_ACCESS_ID: "" 
-  AKEYLESS_ACCESS_TYPE: ""  # azure_ad/aws_iam/api_key/k8s
+  AKEYLESS_ACCESS_TYPE: ""  # azure_ad/aws_iam/api_key/k8s/gcp
 
  # AKEYLESS_API_GW_URL: "https://api-gw-url"
- # AKEYLESS_POD_ACCESS_PATH: "<location-to-access-secrets-per-pod-name>"
- # AKEYLESS_NAMESPACE_ACCESS_PATH: "<location-to-access-secrets-per-namespace>"
  # AKEYLESS_SECRET_DIR_NAME: "<path>"
  # AKEYLESS_API_KEY: "<api_key>"
  # AKEYLESS_CRASH_POD_ON_ERROR: "enable"
