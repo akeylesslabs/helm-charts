@@ -107,9 +107,6 @@ service:
     - name: kmip
       port: 5696
 
-
-
-
 livenessProbe:
   initialDelaySeconds: 120
   periodSeconds: 60
@@ -145,6 +142,20 @@ ingress:
   #      nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
   #      nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
   #      nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+
+  # Example for Istio ingress
+  #    labels:
+  #      istio-injection: enabled
+  #    annotations:
+  #      kubernetes.io/ingress.class: "istio"
+  #
+  # You can set ingressClassName instead annotation and label
+  #    ingressClassName: istio
+  #
+  # In addition if you are using istio ingress, you must add the following annotation to gateway pod annotations
+  #  pod:
+  #    annotations:
+  #      proxy.istio.io/config: '{"holdApplicationUntilProxyStarts": true }'
 
   # Example for AWS ELB ingress
   #    annotations:
