@@ -152,7 +152,7 @@ ingress:
   # You can set ingressClassName instead annotation and label
   #    ingressClassName: istio
   #
-  # In addition if you are using istio ingress, you must add the following annotation to gateway pod annotations
+  # In addition if you are using istio ingress, you must add the following annotation to the gateway pod annotations
   #  pod:
   #    annotations:
   #      proxy.istio.io/config: '{"holdApplicationUntilProxyStarts": true }'
