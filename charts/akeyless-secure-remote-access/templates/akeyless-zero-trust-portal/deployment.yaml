@@ -1,0 +1,98 @@
+{{- if .Values.ztpConfig.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ztp-{{ include "akeyless-secure-remote-access.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{- include "akeyless-secure-remote-access.labels" . | nindent 4 }}
+  {{- if .Values.deployment.labels }}
+    {{- toYaml .Values.deployment.labels | nindent 4 }}
+  {{- end }}
+spec:
+  selector:
+    matchLabels:
+      app: zero-trust-portal
+  {{- if not .Values.ztpConfig.HPA.enabled }}
+  replicas: {{ .Values.ztbConfig.replicaCount }}
+  {{- end }}
+  template:
+    metadata:
+      labels:
+        app: zero-trust-portal
+    spec:
+      {{- if .Values.ztpConfig.securityContext }}
+        {{- if .Values.ztpConfig.securityContext.enabled }}
+      securityContext:
+        runAsUser: {{ .Values.ztpConfig.securityContext.runAsUser }}
+        fsGroup: {{ .Values.ztpConfig.securityContext.fsGroup }}
+        {{- end }}
+      {{- end }}
+      serviceAccountName: {{ template "akeyless-zero-trust-portal.getServiceAccountName" . }}
+      {{- if .Values.ztpConfig.nodeSelector }}
+      nodeSelector:
+      {{ toYaml .Values.ztpConfig.nodeSelector | indent 4 }}
+      {{- end }}
+      imagePullSecrets:
+        - name: akeyless-docker-hub
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ $.Release.Name }}-cm-ztp
+          {{- range .Values.ztpConfig.persistence.volumes }}
+        - name: {{ .name | title | lower }}
+          persistentVolumeClaim:
+            claimName: {{ printf "%s-%s" $.Release.Name .name | title | lower }}
+          {{- end }}
+      containers:
+        - name: {{ .Values.ztpConfig.containerName }}
+          image: "{{ .Values.ztpConfig.image.repository }}:{{ .Values.ztpConfig.image.tag | default .Chart.Annotations.ztpVersion }}"
+          imagePullPolicy: {{ .Values.ztpConfig.image.pullPolicy }}
+          ports:
+            - containerPort: 80
+              name: ztp
+          env:
+  {{- if .Values.httpProxySettings.http_proxy }}
+            - name: HTTP_PROXY
+              value: {{ .Values.httpProxySettings.http_proxy }}
+            - name: http_proxy
+              value: {{ .Values.httpProxySettings.http_proxy }}
+  {{- end }}
+  {{- if .Values.httpProxySettings.https_proxy }}
+            - name: HTTPS_PROXY
+              value: {{ .Values.httpProxySettings.https_proxy }}
+            - name: https_proxy
+              value: {{ .Values.httpProxySettings.https_proxy }}
+  {{- end }}
+  {{- if .Values.httpProxySettings.no_proxy }}
+            - name: NO_PROXY
+              value: {{ .Values.httpProxySettings.no_proxy }}
+            - name: no_proxy
+              value: {{ .Values.httpProxySettings.no_proxy }}
+  {{- end }}
+
+{{- end }}
+{{- if .Values.ztpConfig.env }}
+{{- toYaml .Values.ztpConfig.env | nindent 12 }}
+{{- end }}
+          resources:
+{{- toYaml .Values.ztpConfig.resources | nindent 12 }}
+          livenessProbe:
+            tcpSocket:
+              port: 80
+{{- toYaml .Values.ztpConfig.livenessProbe | trim | nindent 12 }}
+          readinessProbe:
+            tcpSocket:
+              port: 80
+{{- toYaml .Values.ztpConfig.readinessProbe | trim | nindent 12 }}
+          volumeMounts:
+            - mountPath: /usr/share/nginx/html/static/env-config.js
+              name: {{ $.Release.Name }}-cm-ztp-vol
+              readOnly: true
+              subPath: env-config.js
+
+      volumes:
+        - name: {{ $.Release.Name }}-cm-ztp-vol
+          configMap:
+            name: {{ $.Release.Name }}-cm-ztp
+

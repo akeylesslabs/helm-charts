@@ -141,3 +141,34 @@ Get serviceAccountName
     {{- print "false" -}}
   {{- end }}
 {{- end }}
+
+{{- define "akeyless-zero-trust-portal.getServiceAccountName" -}}
+    {{- if .Values.ztpConfig.service_account}}
+        {{- if and (not .Values.ztpConfig.service_account.serviceAccountName) ( not .Values.ztpConfig.service_account.create )  }}
+            {{- printf "default" -}}
+        {{- else if not .Values.ztpConfig.service_account.serviceAccountName }}
+            {{.Release.Name}}-zero-trust-portal
+        {{- else }}
+            {{- printf .Values.ztpConfig.service_account.serviceAccountName}}
+    {{- end -}}
+    {{- else if .Values.privilegedAccess.serviceAccount }}
+        {{- if and (not .Values.privilegedAccess.serviceAccount.serviceAccountName) ( not .Values.privilegedAccess.serviceAccount.create ) }}
+            {{- printf "default" }}
+        {{- else if not .Values.privilegedAccess.serviceAccount.serviceAccountName }}
+            {{.Release.Name}}-zero-trust-portal
+        {{- else }}
+            {{- printf .Values.privilegedAccess.serviceAccount.serviceAccountName}}
+        {{- end -}}
+    {{- end }}
+{{- end -}}
+
+{{/*
+Get the Ingress TLS secret.
+*/}}
+{{- define "akeyless-zero-trust-portal.ingressSecretTLSName" -}}
+    {{- if .Values.ztpConfig.ingress.existingSecret -}}
+        {{- printf "%s" .Values.ztpConfig.ingress.existingSecret -}}
+    {{- else -}}
+        {{- printf "%s-tls" .Values.ztpConfig.ingress.hostname -}}
+    {{- end -}}
+{{- end -}}

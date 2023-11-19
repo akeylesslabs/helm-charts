@@ -1,0 +1,47 @@
+{{- if eq .Values.ztpConfig.enabled true }}
+{{- if .Values.ztpConfig.ingress.enabled }}
+apiVersion: {{ include "checkIngressVersion.ingress.apiVersion" . }}
+kind: Ingress
+metadata:
+  name: {{ include "akeyless-secure-remote-access.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+{{- include "akeyless-secure-remote-access.labels" . | nindent 4 }}
+  {{- if .Values.ztpConfig.ingress.labels }}
+    {{- toYaml .Values.ztpConfig.ingress.labels | nindent 4 }}
+  {{- end }}
+  annotations:
+{{- if .Values.ztpConfig.ingress.certManager }}
+    kubernetes.io/tls-acme: "true"
+{{- end }}
+{{- if .Values.ztpConfig.ingress.annotations }}
+{{ toYaml .Values.ztpConfig.ingress.annotations | indent 4 }}
+{{- end }}
+spec:
+  rules:
+{{- if .Values.ztpConfig.ingress.hostname }}
+  - host: {{ .Values.ztbConfig.ingress.hostname }}
+    http:
+      paths:
+      - path: {{ .Values.ztpConfig.ingress.path }}
+{{- if eq (include "checkIngressVersion.ingress.apiVersion" . ) "networking.k8s.io/v1" }}
+        pathType: ImplementationSpecific
+        backend:
+         service:
+          name: ztp-{{ include "akeyless-secure-remote-access.fullname" . }}
+          port:
+            name: ztp
+{{- else }}
+        backend:
+         serviceName: ztp-{{ include "akeyless-secure-remote-access.fullname" . }}
+         servicePort: ztp
+{{- end }}
+{{- end }}
+{{- if .Values.ztpConfig.ingress.tls }}
+  tls:
+    - hosts:
+      - {{ .Values.ztpConfig.ingress.hostname }}
+      secretName: {{ template "akeyless-zero-trust-portal.ingressSecretTLSName" . }}
+{{- end }}
+{{- end }}
+{{- end }}

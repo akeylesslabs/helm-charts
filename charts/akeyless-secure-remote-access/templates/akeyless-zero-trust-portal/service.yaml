@@ -1,0 +1,28 @@
+
+{{- if eq .Values.ztpConfig.enabled true }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: ztp-{{ include "akeyless-secure-remote-access.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "akeyless-secure-remote-access.labels" . | nindent 4 }}
+  {{- if .Values.ztpConfig.service.labels }}
+    {{- toYaml .Values.ztpConfig.service.labels | nindent 4 }}
+  {{- end }}
+  annotations:
+  {{- toYaml .Values.ztpConfig.service.annotations | nindent 4 }}
+spec:
+  {{- if .Values.ztpConfig.ingress.enabled }}
+  type: NodePort
+  {{- else }}
+  type: {{ required "A valid .Values.ztpConfig.service.type entry required!" .Values.ztpConfig.service.type }}
+  {{- end }}
+  ports:
+    - name: ztp
+      port: {{ .Values.ztpConfig.service.port }}
+      targetPort: ztp
+      protocol: TCP
+  selector:
+    app: zero-trust-portal
+{{- end }}
