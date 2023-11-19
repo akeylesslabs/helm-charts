@@ -8,6 +8,9 @@ metadata:
     app.kubernetes.io/version: {{ .Chart.AppVersion }}
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
   annotations:
+  {{- if .Values.validator.annotations }}
+    {{- toYaml .Values.validator.annotations | nindent 4 }}
+  {{- end }}
     "helm.sh/hook": post-install
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:

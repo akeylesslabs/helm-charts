@@ -21,6 +21,11 @@ validator:
     repository: apteno/alpine-jq
     pullPolicy: IfNotPresent
     tag: 2021-04-04
+  annotations: {}
+  # Remove the {} and add any needed annotations regarding your pod sidecar implementation
+  # For Example when using istio sidecar to avoid issues with validator job completion please add the following annotation:
+  #  annotations:
+  #    sidecar.istio.io/inject: "false"
 
 
 dispatcher:
