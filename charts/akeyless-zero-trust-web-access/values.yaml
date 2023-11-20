@@ -17,6 +17,9 @@ deployment:
   labels: {}
 
 validator:
+  # Validator is enabled by default, and will run on helm chart installation.
+  # If Validator set to false, policies validation will still run on the web-worker deployment, with the validator as init-container.
+  enabled: true
   image:
     repository: apteno/alpine-jq
     pullPolicy: IfNotPresent
