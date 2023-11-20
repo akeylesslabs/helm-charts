@@ -39,11 +39,6 @@ spec:
         - name: config-volume
           configMap:
             name: {{ $.Release.Name }}-cm-ztp
-          {{- range .Values.ztpConfig.persistence.volumes }}
-        - name: {{ .name | title | lower }}
-          persistentVolumeClaim:
-            claimName: {{ printf "%s-%s" $.Release.Name .name | title | lower }}
-          {{- end }}
       containers:
         - name: {{ .Values.ztpConfig.containerName }}
           image: "{{ .Values.ztpConfig.image.repository }}:{{ .Values.ztpConfig.image.tag | default .Chart.Annotations.ztpVersion }}"

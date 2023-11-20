@@ -3,7 +3,7 @@
 apiVersion: {{ include "checkIngressVersion.ingress.apiVersion" . }}
 kind: Ingress
 metadata:
-  name: {{ include "akeyless-secure-remote-access.fullname" . }}
+  name: ztp-{{ include "akeyless-secure-remote-access.fullname" . }}
   namespace: {{ .Release.Namespace | quote }}
   labels:
 {{- include "akeyless-secure-remote-access.labels" . | nindent 4 }}
@@ -20,7 +20,7 @@ metadata:
 spec:
   rules:
 {{- if .Values.ztpConfig.ingress.hostname }}
-  - host: {{ .Values.ztbConfig.ingress.hostname }}
+  - host: {{ .Values.ztpConfig.ingress.hostname }}
     http:
       paths:
       - path: {{ .Values.ztpConfig.ingress.path }}

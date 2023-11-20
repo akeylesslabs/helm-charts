@@ -163,7 +163,7 @@ ztbConfig:
   # accessMode: ReadWriteMany
   # Change the below values according to your environment except for the hostPath values
   persistence:
-    volumes: { }
+    volumes: {}
     #  volumes:
     #  - name: akeyless-data
     #    storageClassName: efs-zero-trust-bastion-sc
@@ -291,8 +291,8 @@ ztpConfig:
 
   service:
     # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
-    annotations: { }
-    labels: { }
+    annotations: {}
+    labels: {}
     type: LoadBalancer
     port: 8080
 
@@ -345,16 +345,6 @@ ztpConfig:
   #      nginx.ingress.kubernetes.io/affinity: "cookie"
   #      nginx.ingress.kubernetes.io/session-cookie-expires: "172800"
   #      nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
-
-  persistence:
-    volumes: { }
-    #  volumes:
-    #  - name: akeyless-data
-    #    storageClassName: efs-zero-trust-portal
-    #   #  storageClassDriver: efs.csi.aws.com
-    #    size: 100Mi
-    #    annotations:
-    #     volume.beta.kubernetes.io/storage-class: ""
 
 
 #############################################
