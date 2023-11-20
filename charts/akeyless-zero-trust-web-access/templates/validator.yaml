@@ -1,3 +1,4 @@
+{{- if .Values.validator.enabled }}
 apiVersion: v1
 kind: Pod
 metadata:
@@ -8,6 +9,9 @@ metadata:
     app.kubernetes.io/version: {{ .Chart.AppVersion }}
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
   annotations:
+  {{- if .Values.validator.annotations }}
+    {{- toYaml .Values.validator.annotations | nindent 4 }}
+  {{- end }}
     "helm.sh/hook": post-install
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
@@ -28,3 +32,4 @@ spec:
               name: {{ $.Release.Name }}-cm-web-policies
               key: policies.json           
   restartPolicy: Never
+{{- end }}
