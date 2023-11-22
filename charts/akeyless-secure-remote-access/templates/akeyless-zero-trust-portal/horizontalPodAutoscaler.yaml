@@ -1,0 +1,29 @@
+{{- if eq .Values.ztpConfig.enabled true }}
+{{- if .Values.ztpConfig.HPA.enabled }}
+apiVersion: {{ include "hpa.api.version" $ }}
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ztp-{{ $.Release.Name }}-hpa
+  namespace: {{ .Release.Namespace }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ztp-{{ include "akeyless-secure-remote-access.fullname" . }}
+  minReplicas: {{ $.Values.ztpConfig.HPA.minReplicas | default 1 }}
+  maxReplicas: {{ $.Values.ztpConfig.HPA.maxReplicas | default 14 }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ $.Values.ztpConfig.HPA.cpuAvgUtil }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ $.Values.ztpConfig.HPA.memAvgUtil }}
+{{- end }}
+{{- end }}

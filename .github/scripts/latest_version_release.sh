@@ -15,6 +15,8 @@ elif [[ "${service}" == "ssh-proxy" ]]; then
   chart_dir="akeyless-secure-remote-access"
 elif [[ "${service}" == "zero-trust-bastion" ]]; then
   chart_dir="akeyless-secure-remote-access"
+elif [[ "${service}" == "zero-trust-portal" ]]; then
+ chart_dir="akeyless-secure-remote-access"
 elif [[ "${service}" == "zero-trust-web-access" ]]; then
   chart_dir="akeyless-zero-trust-web-access"
 elif [[ "${service}" == "k8s-webhook" ]]; then
@@ -37,6 +39,8 @@ if [[ "${chart_dir}" == "akeyless-secure-remote-access" ]]; then
     sra_inner_chart="sshVersion"
   elif [[ "${service}" == "zero-trust-bastion" ]]; then
     sra_inner_chart="ztbVersion"
+  elif [[ "${service}" == "zero-trust-portal" ]]; then
+    sra_inner_chart="ztpVersion"
   else
     die "Bad SRA service name"
   fi
@@ -44,8 +48,9 @@ if [[ "${chart_dir}" == "akeyless-secure-remote-access" ]]; then
   sed -i "s/${sra_inner_chart}.*/${sra_inner_chart}: ${app_version}/g" Chart.yaml
   # edit sra app version
   ztb_app_ver=$(grep 'ztbVersion' Chart.yaml | awk '{print $2}')
+  ztp_app_ver=$(grep 'ztpVersion' Chart.yaml | awk '{print $2}')
   ssh_app_ver=$(grep 'sshVersion' Chart.yaml | awk '{print $2}')
-  sed -i "s/appVersion.*/appVersion: ${ztb_app_ver}_${ssh_app_ver}/g" Chart.yaml
+  sed -i "s/appVersion.*/appVersion: ${ztb_app_ver}_${ssh_app_ver}_${ztp_app_ver}/g" Chart.yaml
 
 else
   sed -i "s/appVersion.*/appVersion: ${app_version}/g" Chart.yaml

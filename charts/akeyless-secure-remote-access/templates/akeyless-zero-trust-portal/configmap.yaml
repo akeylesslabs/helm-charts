@@ -1,0 +1,15 @@
+{{- if eq .Values.ztpConfig.enabled true }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $.Release.Name }}-cm-ztp
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ $.Values.ztpConfig.containerName }}
+    chart: {{ $.Chart.Name }}
+data:
+  env-config.js: |
+    window._env_ = {
+        GW_DNS: {{ $.Values.apiGatewayURL | quote }}
+    };
+{{- end }}

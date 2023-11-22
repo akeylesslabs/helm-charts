@@ -163,7 +163,7 @@ ztbConfig:
   # accessMode: ReadWriteMany
   # Change the below values according to your environment except for the hostPath values
   persistence:
-    volumes: { }
+    volumes: {}
     #  volumes:
     #  - name: akeyless-data
     #    storageClassName: efs-zero-trust-bastion-sc
@@ -228,6 +228,124 @@ ztbConfig:
         azureTenantId: ""
       # Specifies an existing secret to be used for bastion, management AWS/Azure credentials
       existingSecret: ""
+
+####################################################
+## Default values for akeyless-zero-trust-portal ##
+####################################################
+ztpConfig:
+  # Enable akeyless-zero-trust-portal. Valid values: true/false.
+  enabled: false
+  replicaCount: 1
+
+  nodeSelector:
+  #     iam.gke.io/gke-metadata-server-enabled: "true"
+
+  securityContext:
+    enabled: false
+    fsGroup: 0
+    runAsUser: 0
+
+  HPA:
+    # Set the below to false in case you do not want to add Horizontal Pod AutoScaling to the Deployment
+    # If HPA is enabled resources requests must be set
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 14
+    cpuAvgUtil: 50
+    memAvgUtil: 50
+
+  containerName: "zero-trust-portal"
+  env: []
+
+  image:
+    repository: akeyless/zero-trust-portal
+    pullPolicy: Always
+    # tag: latest
+
+  config: |
+
+  resources: {}
+    # The following resource settings represent minimum recommended requests without defined limits.
+    # We've set a base recommended requests of 1 vCPU and 2GB memory.
+    # We intentionally leave resource limits unspecified to enable customization. If you wish to set specific resource
+    # limits, uncomment the 'limits' section and adjust values as needed.
+    # If Horizontal Pod Autoscaler (HPA) usage is desired, you must set requests values.
+    # If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    #limits:
+    #  cpu: <your_cpu_limit>
+    #  memory: <your_memory_limit>
+    #requests:
+    #  cpu: 1
+  #  memory: 2G
+
+  livenessProbe:
+    initialDelaySeconds: 15
+    periodSeconds: 30
+    failureThreshold: 10
+
+  readinessProbe:
+    initialDelaySeconds: 15
+    periodSeconds: 30
+    timeoutSeconds: 5
+
+  service:
+    # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
+    annotations: {}
+    labels: {}
+    type: LoadBalancer
+    port: 8080
+
+
+  ## Configure the ingress resource that allows you to access the
+  ## akeyless-zero-trust-portal installation. Set up the URL
+  ## ref: http://kubernetes.io/docs/user-guide/ingress/
+  ##
+  ingress:
+    ## From nginx ingress-controller version xxxx the annotation is no longer supported use ingressClass instead
+    # ingressClass: nginx
+    ## Set to true to enable ingress record generation
+    ##
+    # enabled: true
+    annotations: {}
+    labels: {}
+      # Example for Nginx ingress
+      #  annotations:
+      #  kubernetes.io/ingress.class: nginx
+      #  nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      #  nginx.ingress.kubernetes.io/proxy-connect-timeout: "3600"
+      #  nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+      #  nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+      #  nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
+    #  nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+
+    # IMPORTANT: When using DB application such as mysql, mssql, and mongodb, the ingress must be configured with "sticky" session!
+    # Example for sticky session on Nginx ingress
+    #      nginx.ingress.kubernetes.io/affinity: "cookie"
+    #      nginx.ingress.kubernetes.io/session-cookie-expires: "172800"
+    #      nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
+
+    hostname: zero-trust-portal.local
+    ## Path for the default host
+    ##
+    path: /
+
+    ## Enable TLS configuration for the hostname defined at ingress.hostname parameter
+    ## TLS certificates will be retrieved from a TLS secret with name: {{- printf "%s-tls" .Values.ingress.hostname }}
+    ## or a custom one if you use the tls.existingSecret parameter
+    ##
+    tls: false
+
+    ## Set this to true in order to add the corresponding annotations for cert-manager
+    ##
+    certManager: false
+
+  # IMPORTANT: When using DB application such as mysql, mssql, and mongodb, the ingress must be configured with "sticky" session!
+  # Example for sticky session on Nginx ingress
+  #      nginx.ingress.kubernetes.io/affinity: "cookie"
+  #      nginx.ingress.kubernetes.io/session-cookie-expires: "172800"
+  #      nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
+
 
 #############################################
 ## Default values for akeyless-ssh-bastion ##
