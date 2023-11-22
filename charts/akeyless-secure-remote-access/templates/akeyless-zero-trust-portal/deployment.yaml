@@ -14,7 +14,7 @@ spec:
     matchLabels:
       app: zero-trust-portal
   {{- if not .Values.ztpConfig.HPA.enabled }}
-  replicas: {{ .Values.ztbConfig.replicaCount }}
+  replicas: {{ .Values.ztpConfig.replicaCount }}
   {{- end }}
   template:
     metadata:
@@ -66,7 +66,7 @@ spec:
               value: {{ .Values.httpProxySettings.no_proxy }}
   {{- end }}
 
-{{- end }}
+
 {{- if .Values.ztpConfig.env }}
 {{- toYaml .Values.ztpConfig.env | nindent 12 }}
 {{- end }}
@@ -90,4 +90,4 @@ spec:
         - name: {{ $.Release.Name }}-cm-ztp-vol
           configMap:
             name: {{ $.Release.Name }}-cm-ztp
-
+{{- end }}
