@@ -262,8 +262,6 @@ ztpConfig:
     pullPolicy: Always
     # tag: latest
 
-  config: |
-
   resources: {}
     # The following resource settings represent minimum recommended requests without defined limits.
     # We've set a base recommended requests of 1 vCPU and 2GB memory.
