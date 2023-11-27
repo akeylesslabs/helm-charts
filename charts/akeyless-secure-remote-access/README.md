@@ -1,6 +1,7 @@
 # Akeyless Secure Remote Access
 
 Combines both Zero Trust Bastion and SSH-Bastion capabilities.
+In addition, There is [Zero Trust Portal](https://docs.akeyless.io/docs/access-resources-remotely#connect-from-the-secure-remote-access-portal) capability.
 
 Akeyless Zero Trust Bastion provides zero trust access to remote resources using Akeyless JIT credentials (dynamic
 secrets and SSH certificate issuers).
@@ -10,7 +11,7 @@ with signed certificate authentication, together with session recording.
 
 ## Introduction
 
-This chart bootstraps a Akeyless Zero Trust Bastion deployment and a Akeyless SSH bastion statefulset on Kubernetes
+This chart bootstraps a Akeyless Zero Trust Bastion deployment,  Akeyless SSH bastion statefulset and a Akeyless Zero Trust Portal deployment on Kubernetes 
 cluster using the Helm package manager.
 
 ## Preparation
@@ -202,5 +203,49 @@ The following table lists the configurable parameters of the SSH Bastion chart a
 | `sshConfig.HPA.maxReplicas` | Minimum desired number of replicas           | `14`    |
 | `sshConfig.HPA.cpuAvgUtil`  | CPU average utilization                      | `50`    |
 | `sshConfig.HPA.memAvgUtil`  | Memory average utilization                   | `50`    |
-                                                                                        
+
+
+## Zero Trust Portal Parameters
+
+The following table lists the configurable parameters of the Zero Trust Portal chart, and their default values.
+
+### Deployment parameters
+
+| Parameter                      | Description                                                                                    | Default                       |
+|--------------------------------|------------------------------------------------------------------------------------------------|-------------------------------|
+| `ztpConfig.enabled`            | Enable Zero Trust Portal                                                                       | `true`                        |
+| `ztpConfig.image.repository`   | Zero Trust Portal image name                                                                  | `akeyless/zero-trust-Portal` |
+| `ztpConfig.image.tag`          | Zero Trust Portal image tag                                                                   | `latest`                      |
+| `ztpConfig.image.pullPolicy`   | Zero Trust Portal image pull policy                                                           | `Always`                      |
+| `ztpConfig.containerName`      | Zero Trust Portal container name                                                              | `zero-trust-Portal`          |
+| `ztpConfig.replicaCount`       | Number of Zero Trust Portal nodes                                                             | `1`                           |
+| `ztpConfig.livenessProbe`      | Liveness probe configuration for Zero Trust Portal                                            | Check `values.yaml` file      |
+| `ztpConfig.readinessProbe`     | Readiness probe configuration for Zero Trust Portal                                           | Check `values.yaml` file      |
+| `ztpConfig.resources.limits`   | The resources limits for Zero Trust Portal containers (If HPA is enabled this must be set)    | `{}`                          |
+| `ztpConfig.resources.requests` | The requested resources for Zero Trust Portal containers (If HPA is enabled this must be set) | `{}`                          |
+
+### Exposure parameters
+
+| Parameter                          | Description                                                                       | Default                   |
+|------------------------------------|-----------------------------------------------------------------------------------|---------------------------|
+| `ztpConfig.service.type`           | Kubernetes Service type                                                           | `LoadBalancer`            |
+| `ztpConfig.service.port`           | Service port                                                                      | `8080`                    |
+| `ztpConfig.ingress.enabled`        | Enable ingress resource                                                           | `false`                   |
+| `ztpConfig.ingress.path`           | Path for the default host                                                         | `/`                       |
+| `ztpConfig.ingress.certManager`    | Add annotations for cert-manager                                                  | `false`                   |
+| `ztpConfig.ingress.hostname`       | Default host for the ingress resource                                             | `zero-trust-portal.local` |
+| `ztpConfig.ingress.annotations`    | Ingress annotations                                                               | `[]`                      |
+| `ztpConfig.ingress.tls`            | Enable TLS configuration for the hostname defined at `ingress.hostname` parameter | `false`                   |
+| `ztpConfig.ingress.existingSecret` | Existing secret for the Ingress TLS certificate                                   | `nil`                     |
+
+### HPA parameters
+
+| Parameter                   | Description                                         | Default |
+|-----------------------------|-----------------------------------------------------|---------|
+| `ztpConfig.HPA.enabled`     | Enable Zero Trust Portal Horizontal Pod Autoscaler | `false` |
+| `ztpConfig.HPA.minReplicas` | Minimum desired number of replicas                  | `1`     |
+| `ztpConfig.HPA.maxReplicas` | Minimum desired number of replicas                  | `14`    |
+| `ztpConfig.HPA.cpuAvgUtil`  | CPU average utilization                             | `50`    |
+| `ztpConfig.HPA.memAvgUtil`  | Memory average utilization                          | `50`    |
+                               
                        
