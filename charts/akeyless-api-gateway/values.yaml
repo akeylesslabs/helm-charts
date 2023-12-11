@@ -22,6 +22,10 @@ cache:
 
 image:
   repository: akeyless/base
+
+##   Alternative mirror registry
+#  repository: docker.registry-2.akeyless.io/base
+
   pullPolicy: Always
   tag: latest
 
