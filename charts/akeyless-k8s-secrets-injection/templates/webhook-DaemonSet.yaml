@@ -1,6 +1,6 @@
-{{-if eq .Values.kind "Deployment"}}
+{{-if eq .Values.kind "DaemonSet"}}
 apiVersion: apps/v1
-kind: Deployment
+kind: DaemonSet
 metadata:
   name: {{ template "vault-secrets-webhook.fullname" . }}
   labels:
@@ -13,9 +13,6 @@ metadata:
       {{- toYaml .Values.deployment.labels | nindent 4 }}
     {{- end }}
 spec:
-  {{- if not .Values.HPA.enabled }}
-  replicas: {{ .Values.replicaCount }}
-  {{- end }}
   selector:
     matchLabels:
       app: {{ template "vault-secrets-webhook.name" . }}
