@@ -226,8 +226,8 @@ env: []
 
 akeylessUserAuth:
   # adminAccessId is required field, supported types: access_key,password,certificate or cloud identity(aws_iam/azure_ad/gcp_gce)
-  adminAccessId: "p-9sxvxtll6jof"
-  adminAccessKey: "gbN/2As77+AgbtrIrTgieYE3LY1ILiE41x/3YAUVaXg="
+  adminAccessId:
+  adminAccessKey:
   adminPassword:
   adminBase64Certificate:
   adminBase64CertificateKey:
