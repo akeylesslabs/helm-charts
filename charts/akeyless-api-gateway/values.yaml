@@ -275,6 +275,7 @@ akeylessUserAuth:
 #          - username2
 #        group:
 #          - IT
+#      case_sensitive: false
 #      permissions:
 #        - admin
 #    - name: access2
@@ -282,6 +283,7 @@ akeylessUserAuth:
 #      sub_claims:
 #        group:
 #          - group1
+#      case_sensitive: true
 #      permissions:
 #        - targets
 #        - defaults
