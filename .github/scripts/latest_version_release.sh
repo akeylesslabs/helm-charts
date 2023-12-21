@@ -15,7 +15,7 @@ elif [[ "${service}" == "ssh-proxy" ]]; then
   chart_dir="akeyless-secure-remote-access"
 elif [[ "${service}" == "zero-trust-bastion" ]]; then
   chart_dir="akeyless-secure-remote-access"
-elif [[ "${service}" == "zero-trust-portal" ]]; then
+elif [[ "${service}" == "zt-portal" ]]; then
  chart_dir="akeyless-secure-remote-access"
 elif [[ "${service}" == "zero-trust-web-access" ]]; then
   chart_dir="akeyless-zero-trust-web-access"
@@ -39,7 +39,7 @@ if [[ "${chart_dir}" == "akeyless-secure-remote-access" ]]; then
     sra_inner_chart="sshVersion"
   elif [[ "${service}" == "zero-trust-bastion" ]]; then
     sra_inner_chart="ztbVersion"
-  elif [[ "${service}" == "zero-trust-portal" ]]; then
+  elif [[ "${service}" == "zt-portal" ]]; then
     sra_inner_chart="ztpVersion"
   else
     die "Bad SRA service name"
