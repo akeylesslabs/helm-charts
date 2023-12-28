@@ -45,6 +45,10 @@ serviceAccount:
   automountServiceAccountToken: true
   labels: {}
 
+restartRollout:
+  enabled: false
+  interval: 1m
+
 service:
   name: secrets-webhook
   type: ClusterIP
