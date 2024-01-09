@@ -49,6 +49,16 @@ restartRollout:
   enabled: false
   interval: 1m
 
+livenessProbe:
+  initialDelaySeconds: 10
+  periodSeconds: 30
+  failureThreshold: 5
+
+readinessProbe:
+  initialDelaySeconds: 10
+  periodSeconds: 30
+  timeoutSeconds: 5
+
 service:
   name: secrets-webhook
   type: ClusterIP

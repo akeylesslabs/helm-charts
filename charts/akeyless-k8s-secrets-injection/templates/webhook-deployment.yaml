@@ -71,6 +71,18 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.service.internalPort }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.service.internalPort }}
+              scheme: HTTPS
+{{- toYaml .Values.livenessProbe | trim | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.service.internalPort }}
+              scheme: HTTPS
+{{- toYaml .Values.readinessProbe | trim | nindent 12 }}
           volumeMounts:
           - mountPath: /var/serving-cert
             name: serving-cert
