@@ -50,13 +50,13 @@ restartRollout:
   interval: 1m
 
 livenessProbe:
-  initialDelaySeconds: 5
-  periodSeconds: 60
-  failureThreshold: 10
+  initialDelaySeconds: 10
+  periodSeconds: 30
+  failureThreshold: 5
 
 readinessProbe:
-  initialDelaySeconds: 5
-  periodSeconds: 10
+  initialDelaySeconds: 10
+  periodSeconds: 30
   timeoutSeconds: 5
 
 service:
