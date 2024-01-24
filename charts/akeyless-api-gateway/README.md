@@ -145,3 +145,10 @@ The following table lists the configurable parameters of the API Gateway chart a
 | `metrics.enabled`            | Enable metrics streaming                                                                         | `false`                                                        |
 | `metrics.config`           | Configure the metrics streaming exporter(backend). Must be in YAML foramt. For more details: docs-ref | `nil`
 | `metrics.existingSecretName`                            | Specifies an existing secret to be used for Metrics streaming configuration, instead of using `metrics.config`                                                              | Check `values.yaml` file                                  |
+
+### API-Gateway custom agreements configuration
+
+| Parameter                                         | Description                                                                 | Default |
+|---------------------------------------------------|-----------------------------------------------------------------------------|---------|
+| `loginPageAgreementLinks.endUserLicenseAgreement` | Specifies a custom end user license agreement link to be used on login page | `nil`   |
+| `loginPageAgreementLinks.privacyPolicy`           | Specifies a custom privacy policy agreement link to be used on login page   | `nil`   |

@@ -433,6 +433,10 @@ metrics:
 # - logand-conf field (base64). The content the same as above.
 logandExistingSecretName:
 
+# Specifies custom agreement links to appear on login page
+loginPageAgreementLinks:
+#  endUserLicenseAgreement:
+#  privacyPolicy:
 
 HPA:
   # Set the below to false in case you do not want to add Horizontal Pod AutoScaling to the StatefulSet (not recommended)
