@@ -433,10 +433,10 @@ metrics:
 # - logand-conf field (base64). The content the same as above.
 logandExistingSecretName:
 
-# Specifies custom agreement links to appear on login page. Default is akeyless agreement links, as shown below for an example.
+# Specifies custom agreement links to appear on login page. Defaults are akeyless agreement links.
 loginPageAgreementLinks:
-#  endUserLicenseAgreement: "https://www.akeyless.io/end-user-license-agreement/"
-#  privacyPolicy: "https://www.akeyless.io/terms-of-service/"
+  endUserLicenseAgreement:
+  privacyPolicy:
 
 HPA:
   # Set the below to false in case you do not want to add Horizontal Pod AutoScaling to the StatefulSet (not recommended)
