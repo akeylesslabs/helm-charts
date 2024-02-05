@@ -375,6 +375,15 @@ spec:
             - name: PROACTIVE_CACHE_DUMP_INTERVAL
               value: "{{ .Values.cachingConf.proActiveCaching.dumpInterval }}"
           {{- end }}
+          ## agreements section
+          {{- if .Values.loginPageAgreementLinks.endUserLicenseAgreement }}
+            - name: END_USER_LICENSE_AGREEMENT_LINK
+              value: {{ .Values.loginPageAgreementLinks.endUserLicenseAgreement }}
+          {{- end }}
+           {{- if .Values.loginPageAgreementLinks.privacyPolicy }}
+            - name: PRIVACY_POLICY_LINK
+              value: {{ .Values.loginPageAgreementLinks.privacyPolicy }}
+          {{- end }}
           # end provision
             - name: VERSION
               value: {{ .Values.version | default .Chart.AppVersion }}
