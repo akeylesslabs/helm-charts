@@ -373,3 +373,15 @@ Check metrics configuration Secret
         {{- printf "autoscaling/v2beta2" }}
     {{- end }}
 {{- end }}
+
+{{- define "deyploymant.type" -}}
+    {{- if .Values.deployment_type -}}
+        {{- if eq .Values.deployment_type "DaemonSet" -}}
+            {{- printf "DaemonSet" -}}
+        {{- else -}}
+            {{- printf "Deployment" -}}
+        {{- end -}}
+    {{- else -}}
+        {{- printf "Deployment" -}}
+    {{- end -}}
+{{- end -}}
