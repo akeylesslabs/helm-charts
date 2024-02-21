@@ -1,5 +1,11 @@
 apiVersion: apps/v1
+{{- if eq .Values.kind "Deployment" }}
 kind: Deployment
+{{- else if eq .Values.kind "DaemonSet" }}
+kind: DaemonSet
+{{- else }}
+kind: Deployment
+{{- end }}
 metadata:
   name: {{ include "akeyless-api-gw.fullname" . }}
   namespace: {{ .Release.Namespace }}
@@ -13,8 +19,7 @@ metadata:
   {{- toYaml .Values.deployment.annotations | nindent 4 }}
   {{- end }}
 spec:
-
-  {{- if not .Values.HPA.enabled }}
+  {{- if and (eq .Values.kind "Deployment") (not .Values.HPA.enabled) }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
