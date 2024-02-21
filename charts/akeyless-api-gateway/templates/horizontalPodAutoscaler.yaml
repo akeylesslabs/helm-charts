@@ -1,4 +1,4 @@
-{{- if .Values.HPA.enabled }}
+{{- if and (.Values.HPA.enabled) (eq .Values.kind "Deployment") }}
 apiVersion: {{ include "hpa.api.version" $ }}
 kind: HorizontalPodAutoscaler
 metadata:
