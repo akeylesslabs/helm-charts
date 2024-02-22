@@ -35,7 +35,7 @@ jobs:
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.5.0
         env:
-          CR_TOKEN: "${{ secrets.TOKEN_GITHUB }}"
+          CR_TOKEN: "${{ secrets.AKEYLESS_CI_GITHUB_TOKEN }}"
 
   Slack-Notification-on-failure:
     name: Slack-On-Failure-Notification
