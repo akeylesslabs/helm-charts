@@ -375,8 +375,8 @@ Check metrics configuration Secret
 {{- end }}
 
 {{- define "deyploymant.type" -}}
-    {{- if .Values.deployment_type -}}
-        {{- if eq .Values.deployment_type "DaemonSet" -}}
+    {{- if .Values.deploymentType -}}
+        {{- if eq .Values.deploymentType "DaemonSet" -}}
             {{- printf "DaemonSet" -}}
         {{- else -}}
             {{- printf "Deployment" -}}
