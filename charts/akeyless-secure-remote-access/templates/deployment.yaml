@@ -187,6 +187,7 @@ spec:
                   key: azure-tenant-id
           {{- end }}
   {{- end }}
+  {{- end }}
   {{- if .Values.httpProxySettings.http_proxy }}
             - name: HTTP_PROXY
               value: {{ .Values.httpProxySettings.http_proxy }}
@@ -209,7 +210,6 @@ spec:
             - name: KEEP_LOCAL_RECORDINGS
               value: "true"
   {{- end }}
-{{- end }}
 {{- if .Values.ztbConfig.env }}
 {{- toYaml .Values.ztbConfig.env | nindent 12 }}
 {{- end }}
