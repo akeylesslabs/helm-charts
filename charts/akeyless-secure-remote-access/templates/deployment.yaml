@@ -140,6 +140,10 @@ spec:
   {{- end }}
 {{- end }}
 {{- if .Values.ztbConfig.config.rdpRecord.enabled }}
+  {{- if .Values.ztbConfig.config.rdpRecord.keepLocalRecording }}
+            - name: KEEP_LOCAL_RECORDINGS
+              value: "true"
+  {{- end }}
   {{- if .Values.ztbConfig.config.rdpRecord.s3.bucketName }}
             - name: AWS_REGION
               value: {{ required "A valid .Values.ztbConfig.config.rdpRecord.s3.region required!" .Values.ztbConfig.config.rdpRecord.s3.region }}
@@ -205,10 +209,6 @@ spec:
               value: {{ .Values.httpProxySettings.no_proxy }}
             - name: no_proxy
               value: {{ .Values.httpProxySettings.no_proxy }}
-  {{- end }}
-  {{- if .Values.ztbConfig.config.rdpRecord.keepLocalRecording }}
-            - name: KEEP_LOCAL_RECORDINGS
-              value: "true"
   {{- end }}
 {{- if .Values.ztbConfig.env }}
 {{- toYaml .Values.ztbConfig.env | nindent 12 }}
