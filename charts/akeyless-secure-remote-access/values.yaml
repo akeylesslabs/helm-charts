@@ -99,7 +99,10 @@ ztbConfig:
     # tag: latest
     
   containerName: "zero-trust-bastion"
-  env: []
+  env:
+    # This env variable instruct docker to start only web-bastion processes
+    - name: "BASTION"
+      value: "web"
 
   service:
     # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
@@ -255,7 +258,10 @@ ztpConfig:
     memAvgUtil: 50
 
   containerName: "zero-trust-portal"
-  env: []
+  env:
+    # This env variable instruct docker to start only web-bastion processes
+    - name: "BASTION"
+      value: "web"
 
   image:
     repository: akeyless/zero-trust-portal
@@ -367,7 +373,11 @@ sshConfig:
     fsGroup: 0
     runAsUser: 0
 
-  env: []
+  env:
+    # This env variable instruct docker to start only ssh-proxy-bastion processes
+    - name: "BASTION"
+      value: "ssh-proxy"
+
   initContainer:
     image:
       repository: busybox
@@ -375,7 +385,7 @@ sshConfig:
       pullPolicy: IfNotPresent
 
   image:
-    repository: akeyless/ssh-proxy
+    repository: akeyless/zero-trust-portal
     pullPolicy: Always
     # tag: latest
 
