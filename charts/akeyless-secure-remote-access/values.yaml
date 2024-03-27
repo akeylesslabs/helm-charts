@@ -99,10 +99,7 @@ ztbConfig:
     # tag: latest
     
   containerName: "zero-trust-bastion"
-  env:
-    # This env variable instruct docker to start only web-bastion processes
-    - name: "BASTION"
-      value: "web"
+  env: []
 
   service:
     # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
@@ -231,6 +228,8 @@ ztbConfig:
         azureTenantId: ""
       # Specifies an existing secret to be used for bastion, management AWS/Azure credentials
       existingSecret: ""
+
+  bastionType: "web"
 
 ####################################################
 ## Default values for akeyless-zero-trust-portal ##
@@ -370,11 +369,7 @@ sshConfig:
     fsGroup: 0
     runAsUser: 0
 
-  env:
-    # This env variable instruct docker to start only ssh-proxy-bastion processes
-    - name: "BASTION"
-      value: "ssh-proxy"
-
+  env: []
   initContainer:
     image:
       repository: busybox
@@ -473,3 +468,5 @@ sshConfig:
   allowedBastionUrls: []
     #- "bastion.my.org:2222"
     #- "basion.other.org:2222"
+
+  bastionType: "ssh-proxy"
