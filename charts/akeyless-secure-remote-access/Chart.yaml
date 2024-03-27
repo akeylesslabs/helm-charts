@@ -22,6 +22,6 @@ appVersion: v1.0.0_0.16.1_1.4.2
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application.
 annotations:
-  ztbVersion: v1.0.0
-  sshVersion: 0.16.1
+  ztbVersion: v2.0.0
+  sshVersion: v2.0.0
   ztpVersion: 1.4.2

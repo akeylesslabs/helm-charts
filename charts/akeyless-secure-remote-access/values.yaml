@@ -229,8 +229,6 @@ ztbConfig:
       # Specifies an existing secret to be used for bastion, management AWS/Azure credentials
       existingSecret: ""
 
-  bastionType: "web"
-
 ####################################################
 ## Default values for akeyless-zero-trust-portal ##
 ####################################################
@@ -468,5 +466,3 @@ sshConfig:
   allowedBastionUrls: []
     #- "bastion.my.org:2222"
     #- "basion.other.org:2222"
-
-  bastionType: "ssh-proxy"

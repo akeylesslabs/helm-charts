@@ -96,10 +96,8 @@ spec:
             - name: ALLOWED_BASTION_URLS
               value: {{ range $index, $element := .Values.ztbConfig.allowedBastionUrls -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }}
 {{- end }}
-{{- if .Values.ztbConfig.bastionType }}
             - name: BASTION_TYPE
-              value: {{ .Values.ztbConfig.bastionType }}
-{{- end }}
+              value: "web"
 {{- with .Values.privilegedAccess }}
   {{- if (eq (include "secret-exist" (dict "Root" $.Values.privilegedAccess.existingSecretNames "Name" "access")) "true") }}
             - name: PRIVILEGED_ACCESS_ID

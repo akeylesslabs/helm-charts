@@ -172,10 +172,8 @@ spec:
           - name: ALLOWED_BASTION_URLS
             value: {{ range $index, $element := .Values.sshConfig.allowedBastionUrls -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }}
 {{- end }}
-{{- if .Values.sshConfig.bastionType }}
           - name: BASTION_TYPE
-            value: {{ .Values.sshConfig.bastionType }}
-{{- end }}
+            value: "ssh-proxy"
 {{- if .Values.httpProxySettings.http_proxy }}
           - name: HTTP_PROXY
             value: {{ .Values.httpProxySettings.http_proxy }}
