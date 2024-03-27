@@ -67,7 +67,7 @@ service:
   labels: {}
 
 # for EKS using custom CNI
-hostNetwork: true
+#hostNetwork: true
 
 env:
   AKEYLESS_URL: "https://vault.akeyless.io"
