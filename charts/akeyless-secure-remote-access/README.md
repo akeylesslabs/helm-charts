@@ -11,7 +11,7 @@ with signed certificate authentication, together with session recording.
 
 ## Introduction
 
-This chart bootstraps a Akeyless Zero Trust Bastion deployment,  Akeyless SSH bastion statefulset and a Akeyless Zero Trust Portal deployment on Kubernetes
+This chart bootstraps a Akeyless Zero Trust Bastion deployment,  Akeyless SSH bastion statefulset and a Akeyless Zero Trust Portal deployment on Kubernetes 
 cluster using the Helm package manager.
 
 ## Preparation
