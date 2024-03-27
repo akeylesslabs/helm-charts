@@ -258,10 +258,7 @@ ztpConfig:
     memAvgUtil: 50
 
   containerName: "zero-trust-portal"
-  env:
-    # This env variable instruct docker to start only web-bastion processes
-    - name: "BASTION"
-      value: "web"
+  env: []
 
   image:
     repository: akeyless/zero-trust-portal
@@ -385,7 +382,7 @@ sshConfig:
       pullPolicy: IfNotPresent
 
   image:
-    repository: akeyless/zero-trust-portal
+    repository: akeyless/zero-trust-bastion
     pullPolicy: Always
     # tag: latest
 
