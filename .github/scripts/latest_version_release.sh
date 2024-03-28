@@ -35,9 +35,7 @@ sed -i "s/version:.*/version: ${new_chart_version}/g" Chart.yaml
 # edit app version
 if [[ "${chart_dir}" == "akeyless-secure-remote-access" ]]; then
   # edit app service version
-  if [[ "${service}" == "ssh-proxy" ]]; then
-    sra_inner_chart="sshVersion"
-  elif [[ "${service}" == "zero-trust-bastion" ]]; then
+  if [[ "${service}" == "zero-trust-bastion" ]]; then
     sra_inner_chart="ztbVersion"
   elif [[ "${service}" == "zt-portal" ]]; then
     sra_inner_chart="ztpVersion"
@@ -49,8 +47,7 @@ if [[ "${chart_dir}" == "akeyless-secure-remote-access" ]]; then
   # edit sra app version
   ztb_app_ver=$(grep 'ztbVersion' Chart.yaml | awk '{print $2}')
   ztp_app_ver=$(grep 'ztpVersion' Chart.yaml | awk '{print $2}')
-  ssh_app_ver=$(grep 'sshVersion' Chart.yaml | awk '{print $2}')
-  sed -i "s/appVersion.*/appVersion: ${ztb_app_ver}_${ssh_app_ver}_${ztp_app_ver}/g" Chart.yaml
+  sed -i "s/appVersion.*/appVersion: ${ztb_app_ver}_${ztp_app_ver}/g" Chart.yaml
 
 else
   sed -i "s/appVersion.*/appVersion: ${app_version}/g" Chart.yaml
