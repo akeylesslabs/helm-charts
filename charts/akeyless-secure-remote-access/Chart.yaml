@@ -17,11 +17,10 @@ type: application
 version: 0.29.0
 
 
-appVersion: v2.0.0_v2.0.0_1.4.2
+appVersion: 2.0.0_1.4.2
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application.
 annotations:
-  ztbVersion: v2.0.0
-  sshVersion: v2.0.0
+  ztbVersion: 2.0.0
   ztpVersion: 1.4.2

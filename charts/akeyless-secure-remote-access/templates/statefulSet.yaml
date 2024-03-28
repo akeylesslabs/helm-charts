@@ -122,7 +122,7 @@ spec:
         - name: akeyless-docker-hub
       containers:
         - name: {{ .Values.sshConfig.containerName }}
-          image: "{{ .Values.sshConfig.image.repository }}:{{ .Values.sshConfig.image.tag | default .Chart.Annotations.sshVersion }}"
+          image: "{{ .Values.sshConfig.image.repository }}:{{ .Values.sshConfig.image.tag | default .Chart.Annotations.ztbVersion }}"
           imagePullPolicy: {{ .Values.sshConfig.image.pullPolicy }}
           securityContext:
             privileged: true
@@ -135,7 +135,7 @@ spec:
             name: curl-proxy
           env:
           - name: VERSION
-            value: {{ .Chart.Annotations.sshVersion }}
+            value: {{ .Chart.Annotations.ztbVersion }}
 {{- if .Values.clusterName }}
           - name: CLUSTER_NAME
             value: {{ .Values.clusterName }}
