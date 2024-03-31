@@ -254,7 +254,12 @@ webWorker:
               "Mode": "none",
               "Locked": true
             },
-            "Preferences": {},
+            "Preferences": {
+              "layout.forms.reveal-password-context-menu.enabled": {
+              "Value": false,
+              "Status": "locked"
+              }
+            },
             "WebsiteFilter": {
               "Block": [
                 "<all_urls>"
