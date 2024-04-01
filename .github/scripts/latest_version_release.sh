@@ -11,8 +11,6 @@ app_version=$(echo "$GITHUB_CONTEXT" | jq -r '.payload.app_version | select (.!=
 
 if [[ "${service}" == "gateway" ]]; then
   chart_dir="akeyless-api-gateway"
-elif [[ "${service}" == "ssh-proxy" ]]; then
-  chart_dir="akeyless-secure-remote-access"
 elif [[ "${service}" == "zero-trust-bastion" ]]; then
   chart_dir="akeyless-secure-remote-access"
 elif [[ "${service}" == "zt-portal" ]]; then
