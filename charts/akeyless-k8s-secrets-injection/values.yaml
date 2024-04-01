@@ -66,6 +66,9 @@ service:
   internalPort: 8443
   labels: {}
 
+# for EKS using custom CNI
+#hostNetwork: true
+
 env:
   AKEYLESS_URL: "https://vault.akeyless.io"
   AKEYLESS_ACCESS_ID: "" 
