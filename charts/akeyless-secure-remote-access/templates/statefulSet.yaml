@@ -122,7 +122,7 @@ spec:
         - name: akeyless-docker-hub
       containers:
         - name: {{ .Values.sshConfig.containerName }}
-          image: "{{ .Values.sshConfig.image.repository }}:{{ .Values.sshConfig.image.tag | default .Chart.Annotations.ztbVersion }}"
+          image: "{{ .Values.sshConfig.image.repository | default "akeyless/zero-trust-bastion" }}:{{ .Values.sshConfig.image.tag | default .Chart.Annotations.ztbVersion }}"
           imagePullPolicy: {{ .Values.sshConfig.image.pullPolicy }}
           securityContext:
             privileged: true

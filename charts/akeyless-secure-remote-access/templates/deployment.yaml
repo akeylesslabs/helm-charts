@@ -51,7 +51,7 @@ spec:
 {{- end }}
       containers:
         - name: {{ .Values.ztbConfig.containerName }}
-          image: "{{ .Values.ztbConfig.image.repository }}:{{ .Values.ztbConfig.image.tag | default .Chart.Annotations.ztbVersion }}"
+          image: "{{ .Values.ztbConfig.image.repository | default "akeyless/zero-trust-bastion" }}:{{ .Values.ztbConfig.image.tag | default .Chart.Annotations.ztbVersion }}"
           imagePullPolicy: {{ .Values.ztbConfig.image.pullPolicy }}
           ports:
             - containerPort: 8888
