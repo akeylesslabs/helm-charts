@@ -27,6 +27,10 @@ spec:
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/apiservice-webhook.yaml") . | sha256sum }}
     spec:
+{{- if .Values.hostNetwork }} 
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+ {{- end }}
       serviceAccountName: {{ template "vault-secrets-webhook.serviceAccountName" . }}
       {{- if .Values.deployment.securityContext }}
       securityContext:

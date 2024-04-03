@@ -122,7 +122,7 @@ spec:
         - name: akeyless-docker-hub
       containers:
         - name: {{ .Values.sshConfig.containerName }}
-          image: "{{ .Values.sshConfig.image.repository }}:{{ .Values.sshConfig.image.tag | default .Chart.Annotations.sshVersion }}"
+          image: "{{ .Values.sshConfig.image.repository | default "akeyless/zero-trust-bastion" }}:{{ .Values.sshConfig.image.tag | default .Chart.Annotations.ztbVersion }}"
           imagePullPolicy: {{ .Values.sshConfig.image.pullPolicy }}
           securityContext:
             privileged: true
@@ -135,7 +135,7 @@ spec:
             name: curl-proxy
           env:
           - name: VERSION
-            value: {{ .Chart.Annotations.sshVersion }}
+            value: {{ .Chart.Annotations.ztbVersion }}
 {{- if .Values.clusterName }}
           - name: CLUSTER_NAME
             value: {{ .Values.clusterName }}
@@ -172,6 +172,8 @@ spec:
           - name: ALLOWED_BASTION_URLS
             value: {{ range $index, $element := .Values.sshConfig.allowedBastionUrls -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }}
 {{- end }}
+          - name: BASTION_TYPE
+            value: "ssh-proxy"
 {{- if .Values.httpProxySettings.http_proxy }}
           - name: HTTP_PROXY
             value: {{ .Values.httpProxySettings.http_proxy }}

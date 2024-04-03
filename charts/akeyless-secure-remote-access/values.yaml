@@ -94,9 +94,10 @@ ztbConfig:
   replicaCount: 1
 
   image:
-    repository: akeyless/zero-trust-bastion
-    pullPolicy: Always
-    # tag: latest
+  #  Default image repository is: akeyless/zero-trust-bastion
+  #  repository: akeyless/zero-trust-bastion
+    pullPolicy: IfNotPresent
+  #  tag: latest
     
   containerName: "zero-trust-bastion"
   env: []
@@ -375,9 +376,10 @@ sshConfig:
       pullPolicy: IfNotPresent
 
   image:
-    repository: akeyless/ssh-proxy
-    pullPolicy: Always
-    # tag: latest
+    #  Default image repository is: akeyless/zero-trust-bastion
+    #  repository: akeyless/zero-trust-bastion
+    pullPolicy: IfNotPresent
+  #  tag: latest
 
   containerName: "ssh-bastion"
 
