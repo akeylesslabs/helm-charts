@@ -64,7 +64,7 @@ spec:
           - name: RESTART_ROLLOUT
             value: enable
           - name: RESTART_INTERVAL
-            value: .Values.restartRollout.interval
+            value: {{ .Values.restartRollout.interval }}
 {{- end }}
           - name: AKEYLESS_AGENT_IMAGE
             value: "{{ .Values.image.agentImage }}:{{ .Values.image.tag | default .Chart.AppVersion  }}"
