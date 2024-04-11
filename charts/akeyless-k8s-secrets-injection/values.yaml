@@ -10,6 +10,10 @@ deployment:
 #    runAsUser: 65534
 
 replicaCount: 2
+# Change this setting to DaemonSet if you wise to set the Getaway to run a DaemonSet
+# Valid inputs: [Deployment, DaemonSet] # if left empty will default to Deployment (recommended)
+deploymentType: Deployment
+
 openshiftEnabled: false
 debug: false
 
