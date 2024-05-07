@@ -20,7 +20,7 @@ jobs:
       chart_name: ${{ steps.vars.outputs.chart_name }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with: 
           token: ${{ secrets.AKEYLESS_CI_COMMIT_PUSH_TOKEN }}
 
@@ -43,7 +43,7 @@ jobs:
           echo new_chart_version=${{ env.new_chart_version }} >> $GITHUB_OUTPUT
           echo chart_name=${{ env.chart_name }} >> $GITHUB_OUTPUT
 
-      - uses: actions/github-script@v6
+      - uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.AKEYLESS_CI_COMMIT_PUSH_TOKEN }}
           script: |
