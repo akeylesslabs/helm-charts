@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "properties": {
+    "akeylessUserAuth": {
+      "description": "Container Image",
+      "properties": {
+        "blockServiceToAccessIds": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          ],
+          "uniqueItems": true,
+          "default": null
+        }
+      },
+      "type": "object"
+    }
+  },
+  "title": "Values",
+  "type": "object"
+}
