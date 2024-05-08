@@ -237,7 +237,7 @@ spec:
             - name: RESTRICT_SERVICE_TO_ACCESS_IDS
               value: {{ .Values.akeylessUserAuth.restrictServiceToAccessIds | quote }}
           {{- end }}
-          {{- if and .Values.akeylessUserAuth.blockServiceToAccessIds (len .Values.akeylessUserAuth.blockServiceToAccessIds | lt 0) }}
+          {{- if .Values.akeylessUserAuth.blockServiceToAccessIds }}
             - name: BLOCKLIST_ACCESS_IDS
               value: {{ .Values.akeylessUserAuth.blockServiceToAccessIds | join "," | quote }}
           {{- end }}
