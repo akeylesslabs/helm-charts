@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout helm-charts code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: akeylesslabs/helm-charts
           ref: main
@@ -57,7 +57,7 @@ jobs:
         run: echo "Jira Issue ${{ steps.create-jira-issue.outputs.issue }} was created"
 
       - name: Label Create Git Issue
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         if: steps.create-jira-issue.outcome == 'success'
         with:
           script: |
