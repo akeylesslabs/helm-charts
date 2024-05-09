@@ -334,9 +334,9 @@ Get serviceAccountName
     {{- if and (not .Values.deployment.service_account.serviceAccountName) ( not .Values.deployment.service_account.create )  }}
         {{- printf "default" -}}
     {{- else if not .Values.deployment.service_account.serviceAccountName }}
-        {{.Release.Name}}-akeyless-gateway
+        {{- printf "%s-akeyless-gateway" .Release.Name }}
     {{- else -}}
-        {{$.Values.deployment.service_account.serviceAccountName}}
+        {{- printf "%s" $.Values.deployment.service_account.serviceAccountName }}
     {{- end -}}
 {{- end -}}
 
