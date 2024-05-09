@@ -237,9 +237,9 @@ spec:
             - name: RESTRICT_SERVICE_TO_ACCESS_IDS
               value: {{ .Values.akeylessUserAuth.restrictServiceToAccessIds | quote }}
           {{- end }}
-          {{- if .Values.akeylessUserAuth.blockServiceToAccessIds }}
+          {{- if .Values.akeylessUserAuth.blockedAccessIds }}
             - name: BLOCKLIST_ACCESS_IDS
-              value: {{ .Values.akeylessUserAuth.blockServiceToAccessIds | join "," | quote }}
+              value: {{ .Values.akeylessUserAuth.blockedAccessIds | join "," | quote }}
           {{- end }}
           {{- if .Values.akeylessUserAuth.restrictAccessToAdminAccount }}
             - name: RESTRICT_ACCESS_TO_ADMIN_ACCOUNT

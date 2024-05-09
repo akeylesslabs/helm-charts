@@ -304,8 +304,8 @@ akeylessUserAuth:
   # restrictServiceToAccessIds: "p-1234,p-5678"
   restrictServiceToAccessIds:
 
-  # restrictServiceToAccessIds: ["p-1234", "p-5678"]
-  blockServiceToAccessIds: 
+  # blockedAccessIds: ["p-1234", "p-5678"]
+  blockedAccessIds: []
 
   # restrict access to admin account
   restrictAccessToAdminAccount: true

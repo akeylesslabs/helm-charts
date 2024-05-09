@@ -4,7 +4,7 @@
     "akeylessUserAuth": {
       "description": "Container Image",
       "properties": {
-        "blockServiceToAccessIds": {
+        "blockedAccessIds": {
           "oneOf": [
             { "type": "null" },
             {
