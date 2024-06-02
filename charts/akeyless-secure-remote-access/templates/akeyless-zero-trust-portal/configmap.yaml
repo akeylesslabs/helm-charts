@@ -11,8 +11,8 @@ data:
   env-config.js: |
     window._env_ = {
         CLI_GW_DNS: {{ $.Values.apiGatewayURL | quote }},
-        AUTH_DNS: 'https://auth.akeyless.io',
-        CERT_AUTH_DNS: 'https://auth-cert.akeyless.io',
-        CLI_GW_DNS_V_2: 'https://api.akeyless.io'
+        AUTH_DNS: 'https://auth.{{ include "akeylessTenantUrl" . }}',
+        CERT_AUTH_DNS: 'https://auth-cert.{{ include "akeylessTenantUrl" . }}',
+        CLI_GW_DNS_V_2: 'https://api.{{ include "akeylessTenantUrl" . }}'
     };
     {{- end }}
