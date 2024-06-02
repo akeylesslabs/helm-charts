@@ -172,3 +172,7 @@ Get the Ingress TLS secret.
         {{- printf "%s-tls" .Values.ztpConfig.ingress.hostname -}}
     {{- end -}}
 {{- end -}}
+
+{{- define "akeylessTenantUrl" -}}
+{{- default "akeyless.io" .Values.ztpConfig.akeylessTenantUrl -}}
+{{- end -}}

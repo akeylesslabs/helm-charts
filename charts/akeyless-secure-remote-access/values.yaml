@@ -236,6 +236,8 @@ ztbConfig:
 ztpConfig:
   # Enable akeyless-zero-trust-portal. Valid values: true/false.
   enabled: false
+  # The default URL suffix is "akeyless.io".It can be overridden to "eu.akeyless.io" or "us.akeyless.io"
+  akeylessTenantUrl:
   replicaCount: 1
 
   nodeSelector:
