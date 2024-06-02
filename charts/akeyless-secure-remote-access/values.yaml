@@ -236,6 +236,7 @@ ztbConfig:
 ztpConfig:
   # Enable akeyless-zero-trust-portal. Valid values: true/false.
   enabled: false
+  akeylessTenantUrl:
   replicaCount: 1
 
   nodeSelector:
