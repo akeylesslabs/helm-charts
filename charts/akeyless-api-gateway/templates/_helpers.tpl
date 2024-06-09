@@ -391,7 +391,7 @@ Check metrics configuration Secret
 {{- end }}
 
 {{- define "gw_health_path" -}}
-{{- if eq "latest" (include "version" .) -}}
+{{- if not (regexMatch "[0-9]+(\\.[0-9]+){2}" (include "version" .)) -}}
 /health
 {{- else -}}
 {{- $parts :=  split "." (include "version" .) -}}
