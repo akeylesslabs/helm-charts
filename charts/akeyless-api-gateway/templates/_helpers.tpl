@@ -385,3 +385,23 @@ Check metrics configuration Secret
         {{- printf "Deployment" -}}
     {{- end -}}
 {{- end -}}
+
+{{- define "version" -}}
+{{ .Values.image.tag  | default .Chart.AppVersion | printf }}
+{{- end }}
+
+{{- define "gw_health_path" -}}
+{{- if eq "latest" (include "version" .) -}}
+/health
+{{- else -}}
+{{- $parts :=  split "." (include "version" .) -}}
+{{- $major := index $parts "_0" | int }}
+{{- $minor := index $parts "_1" | int }}
+{{- $patch := index $parts "_2" | int }}
+{{- if or (gt $major 4) (and (eq $major 4) (or (gt $minor 10) (and (eq $minor 10) (ge $patch 0)))) -}}
+/health
+{{- else -}}
+/
+{{- end }}
+{{- end }}
+{{- end }}

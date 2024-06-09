@@ -30,7 +30,7 @@ image:
 #  repository: docker.registry-2.akeyless.io/base
 
   pullPolicy: Always
-  tag: latest
+  # tag: latest
 
 # Uncomment for downloading Akeyless artifacts from fixed repository
 # ref: https://docs.akeyless.io/docs/advanced-k8s-gateway-configuration#fixed-artifact-repository
