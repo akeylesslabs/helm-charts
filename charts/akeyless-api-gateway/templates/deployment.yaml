@@ -1,8 +1,6 @@
 apiVersion: apps/v1
 kind: {{ include "deyploymant.type" $ }}
 metadata:
-  haha: {{ index (split "." (include "version" .)) "0" }}
-  hahi: {{ include "version" . }}
   name: {{ include "akeyless-api-gw.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
