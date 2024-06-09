@@ -1,6 +1,8 @@
 apiVersion: apps/v1
 kind: {{ include "deyploymant.type" $ }}
 metadata:
+  haha: {{ index (split "." (include "version" .)) "0" }}
+  hahi: {{ include "version" . }}
   name: {{ include "akeyless-api-gw.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
@@ -121,9 +123,9 @@ spec:
       containers:
         - name: {{ .Values.containerName }}
           {{- if .Values.akeylessStrictMode  }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}-akeyless"
+          image: "{{ .Values.image.repository }}:{{ include "version" . }}-akeyless"
           {{else}}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.image.repository }}:{{ include "version" . }}"
           {{- end}}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           {{- if .Values.deployment.containerSecurityContext }}
@@ -145,7 +147,7 @@ spec:
               containerPort: 5696
           livenessProbe:
             httpGet:
-              path: /
+              path: {{ include "gw_health_path" . }}
               port: 8080
               {{- if .Values.TLSConf.akeylessAPIServices }}
               scheme: HTTPS
@@ -153,7 +155,7 @@ spec:
 {{- toYaml .Values.livenessProbe | trim | nindent 12 }}
           readinessProbe:
             httpGet:
-              path: /
+              path: {{ include "gw_health_path" . }}
               port: 8080
               {{- if .Values.TLSConf.akeylessAPIServices }}
               scheme: HTTPS
@@ -389,7 +391,7 @@ spec:
           {{- end }}
           # end provision
             - name: VERSION
-              value: {{ .Values.version | default .Chart.AppVersion }}
+              value: {{ include "version" . }}
           {{- if .Values.httpProxySettings.http_proxy }}
             - name: HTTP_PROXY
               value: {{ .Values.httpProxySettings.http_proxy }}
