@@ -121,9 +121,9 @@ spec:
       containers:
         - name: {{ .Values.containerName }}
           {{- if .Values.akeylessStrictMode  }}
-          image: "{{ .Values.image.repository }}:{{ include "version" . }}-akeyless"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}-akeyless"
           {{else}}
-          image: "{{ .Values.image.repository }}:{{ include "version" . }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           {{- end}}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           {{- if .Values.deployment.containerSecurityContext }}
@@ -389,7 +389,7 @@ spec:
           {{- end }}
           # end provision
             - name: VERSION
-              value: {{ include "version" . }}
+              value: {{ include "gw_version" . }}
           {{- if .Values.httpProxySettings.http_proxy }}
             - name: HTTP_PROXY
               value: {{ .Values.httpProxySettings.http_proxy }}
