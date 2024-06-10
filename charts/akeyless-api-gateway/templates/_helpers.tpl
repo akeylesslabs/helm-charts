@@ -386,15 +386,15 @@ Check metrics configuration Secret
     {{- end -}}
 {{- end -}}
 
-{{- define "version" -}}
-{{ .Values.image.tag  | default .Chart.AppVersion | printf }}
+{{- define "gw_version" -}}
+{{ .Values.version  | default .Chart.AppVersion | printf }}
 {{- end }}
 
 {{- define "gw_health_path" -}}
-{{- if not (regexMatch "[0-9]+(\\.[0-9]+){2}" (include "version" .)) -}}
+{{- if not (regexMatch "^[0-9]+(\\.[0-9]+){2}$" (include "gw_version" .)) -}}
 /health
 {{- else -}}
-{{- $parts :=  split "." (include "version" .) -}}
+{{- $parts :=  split "." (include "gw_version" .) -}}
 {{- $major := index $parts "_0" | int }}
 {{- $minor := index $parts "_1" | int }}
 {{- $patch := index $parts "_2" | int }}
