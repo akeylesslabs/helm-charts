@@ -145,7 +145,7 @@ spec:
               containerPort: 5696
           livenessProbe:
             httpGet:
-              path: {{ include "gw_health_path" . }}
+              path: {{ include "health_check_path" . }}
               port: 8080
               {{- if .Values.TLSConf.akeylessAPIServices }}
               scheme: HTTPS
@@ -153,7 +153,7 @@ spec:
 {{- toYaml .Values.livenessProbe | trim | nindent 12 }}
           readinessProbe:
             httpGet:
-              path: {{ include "gw_health_path" . }}
+              path: {{ include "health_check_path" . }}
               port: 8080
               {{- if .Values.TLSConf.akeylessAPIServices }}
               scheme: HTTPS
@@ -389,7 +389,7 @@ spec:
           {{- end }}
           # end provision
             - name: VERSION
-              value: {{ include "gw_version" . }}
+              value: {{ include "version" . }}
           {{- if .Values.httpProxySettings.http_proxy }}
             - name: HTTP_PROXY
               value: {{ .Values.httpProxySettings.http_proxy }}
