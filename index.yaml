@@ -3501,6 +3501,20 @@ entries:
     version: 1.0.0
   akeyless-sra:
   - annotations:
+      ztbVersion: 2.2.0
+      ztpVersion: 1.6.0
+    apiVersion: v2
+    appVersion: 2.2.0_1.6.0
+    created: "2024-07-01T12:45:25.365609946Z"
+    description: A Helm chart for Kubernetes akeyless-zero-trust-bastion, akeyless-ssh-bastion
+      and akeyless-zero-trust-portal deployments
+    digest: e435ac76b4745e2bb4ae538105601dd796a8c3ec73b384d120090ff267a237a4
+    name: akeyless-sra
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-sra-1.2.0/akeyless-sra-1.2.0.tgz
+    version: 1.2.0
+  - annotations:
       ztbVersion: 2.1.1
       ztpVersion: 1.6.0
     apiVersion: v2
@@ -8425,4 +8439,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2024-07-01T11:23:08.550631647Z"
+generated: "2024-07-01T12:45:25.366789759Z"
