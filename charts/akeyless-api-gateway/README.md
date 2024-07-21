@@ -154,3 +154,10 @@ The following table lists the configurable parameters of the API Gateway chart a
 |---------------------------------------------------|-----------------------------------------------------------------------------|---------|
 | `loginPageAgreementLinks.endUserLicenseAgreement` | Specifies a custom end user license agreement link to be used on login page | `nil`   |
 | `loginPageAgreementLinks.privacyPolicy`           | Specifies a custom privacy policy agreement link to be used on login page   | `nil`   |
+
+### API-Gateway gRPC configuration
+
+| Parameter                                   | Description                                                                                                          | Default                                                      |
+|---------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
+| `grpcConf.enabled`            |  SShould the gRPC API be enabled enabled                                                     | false 
+
