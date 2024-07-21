@@ -159,5 +159,5 @@ The following table lists the configurable parameters of the API Gateway chart a
 
 | Parameter                                   | Description                                                                                                          | Default                                                      |
 |---------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
-| `grpcConf.enabled`            |  SShould the gRPC API be enabled enabled                                                     | false 
+| `grpcConf.enabled`            |  Should the gRPC API be enabled enabled                                                     | false 
 
