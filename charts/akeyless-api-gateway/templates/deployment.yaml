@@ -379,9 +379,9 @@ spec:
               value: "{{ .Values.cachingConf.proActiveCaching.dumpInterval }}"
           {{- end }}
            ## gRPC section
-          {{- if .Values.grpcConf.enabled }}
+          {{- if .Values.grpc.enabled }}
             - name: ENABLE_GRPC
-              value: "{{ .Values.grpcConf.enabled }}"
+              value: "{{ .Values.grpc.enabled }}"
           {{- end }}
           ## agreements section
           {{- if .Values.loginPageAgreementLinks.endUserLicenseAgreement }}
