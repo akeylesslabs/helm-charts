@@ -378,6 +378,11 @@ spec:
             - name: PROACTIVE_CACHE_DUMP_INTERVAL
               value: "{{ .Values.cachingConf.proActiveCaching.dumpInterval }}"
           {{- end }}
+           ## gRPC section
+          {{- if .Values.grpcConf.enabled }}
+            - name: ENABLE_GRPC
+              value: "{{ .Values.grpcConf.enabled }}"
+          {{- end }}
           ## agreements section
           {{- if .Values.loginPageAgreementLinks.endUserLicenseAgreement }}
             - name: END_USER_LICENSE_AGREEMENT_LINK
