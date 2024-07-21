@@ -460,6 +460,6 @@ HPA:
 
   annotations: {}
 
- grpcConf:
+grpcConf:
   enabled: false
-   
+  
