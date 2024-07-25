@@ -101,6 +101,7 @@ service:
   # 8200 - HVP vault proxy
   # 5696 - KMIP
   # 18888 - Akeyless UI
+  # 8085  - Akeyless gRPC API
   ports:
     - name: web
       port: 18888
@@ -114,6 +115,8 @@ service:
       port: 8200
     - name: kmip
       port: 5696
+    - name: grpc
+      port: 8085
 
 livenessProbe:
   initialDelaySeconds: 120
@@ -456,3 +459,7 @@ HPA:
   memAvgUtil: 50
 
   annotations: {}
+
+grpc:
+  enabled: false
+  
