@@ -129,10 +129,6 @@ Generate chart secret name
 {{- default "1gb" .Values.cachingConf.clusterCache.maxmemory -}}
 {{- end -}}
 
-{{- define "akeyless-api-gw.redisMaxmemoryPolicy" -}}
-{{- default "allkeys-lru" .Values.cachingConf.clusterCache.maxmemoryPolicy -}}
-{{- end -}}
-
 {{/*
 Check customer fragment
 */}}
