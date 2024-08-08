@@ -1,26 +1,27 @@
 {{- if or (not (eq (include "akeyless-api-gw.adminAccessUidExist" .) "")) ( .Values.cachingConf.clusterCache.enabled) }}
+{{- $deploymentName := printf "%s-cache" (include "akeyless-api-gw.fullname" .) }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "akeyless-api-gw.fullname" . }}-cache
+  name: {{ $deploymentName }}
   namespace: {{ .Release.Namespace | quote }}
   labels:
-    name: {{ template "akeyless-api-gw.fullname" . }}-cache
+    name: {{ $deploymentName }}
     component: cache
 {{- include "akeyless-api-gw.labels" . | nindent 4 }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: {{ template "akeyless-api-gw.fullname" . }}-cache
+      name: {{ $deploymentName }}
   template:
     metadata:
       labels:
-        name: {{ template "akeyless-api-gw.fullname" . }}-cache
+        name: {{ $deploymentName }}
         component: cache
     spec:
       containers:
-      - name: {{ template "akeyless-api-gw.fullname" . }}-cache
+      - name: {{ $deploymentName }}
         image: "{{ .Values.cache.image.repository }}:{{ .Values.cache.image.tag }}"
         imagePullPolicy: {{ .Values.cache.image.pullPolicy }}
         #args: ["--requirepass", "$(REDIS_PASSWORD)"]
@@ -94,6 +95,6 @@ spec:
   - port: 6379
     protocol: TCP
   selector:
-    name: {{ template "akeyless-api-gw.fullname" . }}-cache
+    name: {{ $deploymentName }}
   type: ClusterIP
 {{- end }}

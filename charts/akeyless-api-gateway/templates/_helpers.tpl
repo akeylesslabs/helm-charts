@@ -416,17 +416,9 @@ Check metrics configuration Secret
 {{- end }}
 
 {{- define "health_check_path" -}}
-{{- if not (regexMatch "^[0-9]+(\\.[0-9]+){2}$" (include "version" .)) -}}
-/health
-{{- else -}}
-{{- $parts :=  split "." (include "version" .) -}}
-{{- $major := index $parts "_0" | int }}
-{{- $minor := index $parts "_1" | int }}
-{{- $patch := index $parts "_2" | int }}
-{{- if or (gt $major 4) (and (eq $major 4) (or (gt $minor 10) (and (eq $minor 10) (ge $patch 0)))) -}}
+{{- if semverCompare ">=4.10.0" (include "version" .) -}}
 /health
 {{- else -}}
 /
-{{- end }}
 {{- end }}
 {{- end }}
