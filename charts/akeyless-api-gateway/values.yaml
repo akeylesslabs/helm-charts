@@ -393,6 +393,11 @@ cachingConf:
     # - cluster-cache-encryption-key
     encryptionKeyExistingSecret:
 
+    # The maximum memory that Redis (clusterCache) should use. Default is '1gb'.
+    maxmemory: 2gb
+    # The memory eviction policy that Redis (clusterCache) should use. Default is 'allkeys-lru'.
+    maxmemoryPolicy: allkeys-lru
+
   proActiveCaching:
     enabled: false
   

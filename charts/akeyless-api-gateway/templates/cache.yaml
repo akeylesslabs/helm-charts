@@ -72,6 +72,10 @@ spec:
         env:
         - name: REDIS_DISABLE_COMMANDS
           value: "FLUSHDB,FLUSHALL"
+        - name: REDIS_MAXMEMORY_POLICY
+          value: "{{ include "akeyless-api-gw.redisMaxmemoryPolicy" . }}"
+        - name: REDIS_MAXMEMORY
+          value: "{{ include "akeyless-api-gw.redisMaxmemory" . }}"
         - name: REDIS_PASSWORD
           valueFrom:
             secretKeyRef:
