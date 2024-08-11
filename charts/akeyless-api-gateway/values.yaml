@@ -30,7 +30,7 @@ cache:
   #   cpu: 300m
   #   memory: 1Gi
 
-  # The maximum memory that Redis (clusterCache) should use. Default is '1gb'.
+  # The maximum memory that Redis (clusterCache) should use. Default is '2gb'.
   maxmemory: 2gb
 image:
   repository: akeyless/base

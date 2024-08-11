@@ -126,7 +126,7 @@ Generate chart secret name
 {{- end -}}
 
 {{- define "akeyless-api-gw.redisMaxmemory" -}}
-{{- default "1gb" .Values.cache.maxmemory -}}
+{{- default "2gb" .Values.cache.maxmemory -}}
 {{- end -}}
 
 {{/*
