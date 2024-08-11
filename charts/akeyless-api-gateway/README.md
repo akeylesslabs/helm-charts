@@ -135,6 +135,7 @@ The following table lists the configurable parameters of the API Gateway chart a
 | `cachingConf.proActiveCaching.dumpInterval`            | To ensure service continuity in case of power cycle and network outage secrets will be backed up periodically per backup interval.                                                                                                    | `nil`         |
 | `cachingConf.clusterCache.enabled`                     | Should cluster caching be enabled                                                                                                                                                                                                     | `false`       |
 | `cachingConf.clusterCache.encryptionKeyExistingSecret` | In case clusterCache is enabled, you must specify an existing secret for the cluster cache configuration, must include the following key: cluster-cache-encryption-key                                                                | `nil`         |
+
 ### API-Gateway logand configuration
 
 | Parameter                                   | Description                                                                                                          | Default                                                      |
