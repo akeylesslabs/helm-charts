@@ -23,15 +23,13 @@ cache:
     tag: 6.2
     pullPolicy: Always
   resources:
-  # limits:
-  #   cpu: 500m
-  #   memory: 2Gi
+   limits:
+     cpu: 500m
+     memory: 2Gi
   # requests:
   #   cpu: 300m
   #   memory: 1Gi
 
-  # The maximum memory that Redis (clusterCache) should use. Default is '2gb'.
-  maxmemory: 2gb
 image:
   repository: akeyless/base
 

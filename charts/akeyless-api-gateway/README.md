@@ -51,7 +51,6 @@ The following table lists the configurable parameters of the API Gateway chart a
 | `httpProxySettings.https_proxy` | Standard linux HTTP Proxy, should contain the URLs of the proxies for HTTPS                                        | `nil`                    |  
 | `httpProxySettings.no_proxy`    | Standard linux HTTP Proxy, should contain a comma-separated list of domain extensions proxy should not be used for | `nil`                    |
 | `cache.resources.limits`        | The resources limits for the redis cluster cache                                                                   | `{}`                     |
-| `cache.maxmemory`               | The maximum memory that Redis (clusterCache) should use.                                                           | `1gb`                    |
 
 ### Exposure parameters
 

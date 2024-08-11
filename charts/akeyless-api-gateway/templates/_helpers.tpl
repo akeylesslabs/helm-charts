@@ -126,7 +126,37 @@ Generate chart secret name
 {{- end -}}
 
 {{- define "akeyless-api-gw.redisMaxmemory" -}}
-{{- default "2gb" .Values.cache.maxmemory -}}
+{{/*Calculate REDIS_MAXMEMORY as 80% of the pod's memory limit.
+    This approach leaves a buffer for Redis overhead and any other processes running in the pod.*/}}
+{{- include "calculate80PercentMemory" . -}}
+{{- end -}}
+
+{{- define "memoryToBytes" -}}
+{{- $value := . -}}
+{{- $suffixes := dict "Gi" 1073741824 "Mi" 1048576 "M" 1048576 "Gi" 1073741824 "k" 1024 "K" 1024 "G" 1073741824 "T" 1099511627776 "P" 1125899906842624 "E" 1152921504606846976 -}}
+{{- $multiplier := index $suffixes (upper (trimSuffix (regexReplaceAll "[0-9]+" "" $value))) -}}
+{{- $number := regexReplaceAll "[^0-9]+" "" $value | int -}}
+{{- mul $number $multiplier -}}
+{{- end -}}
+
+{{- define "bytesToMemory" -}}
+{{- $bytes := . -}}
+{{- if ge $bytes 1073741824 -}}
+{{- printf "%.0fGi" (div (float64 $bytes) 1073741824) -}}
+{{- else if ge $bytes 1048576 -}}
+{{- printf "%.0fMi" (div (float64 $bytes) 1048576) -}}
+{{- else if ge $bytes 1024 -}}
+{{- printf "%.0fM" (div (float64 $bytes) 1048576) -}}
+{{- else -}}
+{{- printf "%.0fK" (div (float64 $bytes) 1024) -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "calculate80PercentMemory" -}}
+{{- $memoryLimit := .Values.cache.resources.limits.memory | include "memoryToBytes" -}}
+{{- $percentage := mul $memoryLimit 0.8 -}}
+{{- $result := include "bytesToMemory" $percentage -}}
+{{- $result -}}
 {{- end -}}
 
 {{/*
