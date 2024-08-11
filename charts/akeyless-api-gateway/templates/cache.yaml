@@ -69,6 +69,8 @@ spec:
                 fi
           initialDelaySeconds: 5
           periodSeconds: 5
+        resources:
+{{- toYaml .Values.cache.resources | nindent 12 }}
         env:
         - name: REDIS_DISABLE_COMMANDS
           value: "FLUSHDB,FLUSHALL"

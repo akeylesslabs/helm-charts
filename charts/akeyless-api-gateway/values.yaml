@@ -22,7 +22,13 @@ cache:
     repository: docker.io/bitnami/redis
     tag: 6.2
     pullPolicy: Always
-
+  resources:
+  # limits:
+  #   cpu: 500m
+  #   memory: 2Gi
+  # requests:
+  #   cpu: 300m
+  #   memory: 1Gi
 image:
   repository: akeyless/base
 
@@ -45,8 +51,8 @@ httpProxySettings:
   no_proxy: ""
 
 deployment:
-  annotations: {}
-  labels: {}
+  annotations: { }
+  labels: { }
 
   ## AWS ref: https://docs.akeyless.io/docs/deploy-the-api-gateway-on-kubernetes#aws-iam
   ## GCP ref: https://docs.akeyless.io/docs/deploy-the-api-gateway-on-kubernetes#gcp-gce
@@ -57,7 +63,7 @@ deployment:
 
   # Place here any pod annotations you may need
   pod:
-    annotations: {}
+    annotations: { }
 
   affinity:
     enabled: false
@@ -72,7 +78,7 @@ deployment:
   #                  - amd64
   # ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
   nodeSelector:
-    #     iam.gke.io/gke-metadata-server-enabled: "true"
+  #     iam.gke.io/gke-metadata-server-enabled: "true"
 
   # Enabling fips will pull the fips api-gateway binary
   fips:
@@ -83,15 +89,15 @@ deployment:
     fsGroup: 0
     runAsUser: 0
 
-  containerSecurityContext: {}
+  containerSecurityContext: { }
 # Remove the {} and add any needed values to your SecurityContext
 #    runAsUser: 0
 #    seccompProfile:
 #      type: RuntimeDefault
 service:
   # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
-  annotations: {}
-  labels: {}
+  annotations: { }
+  labels: { }
   type: LoadBalancer
 
   # Here you can manage the list of ports you want to expose on the service (don't modify the port name):
@@ -140,9 +146,9 @@ ingress:
   ## A reference to an IngressClass resource
   ## ref: https://kubernetes.io/docs/concepts/services-networking/ingress/#deprecated-annotation
 
-#  ingressClassName:
+  #  ingressClassName:
 
-  labels: {}
+  labels: { }
 
   # Example for Nginx ingress
   #    annotations:
@@ -172,7 +178,7 @@ ingress:
   #    annotations:
   #      kubernetes.io/ingress.class: alb
   #      alb.ingress.kubernetes.io/scheme: internet-facing
-  annotations: {}
+  annotations: { }
 
 
   rules:
@@ -187,11 +193,11 @@ ingress:
     - servicePort: configure-app
       hostname: "conf.gateway.local"
 
-# Example for ingress external rule in AWS, mainly for overriding specific paths
-#    - servicePort: web
-#      hostname: "ui.gateway.local"
-#      serviceName: redirect-to
-#      path: "/path-to-block/*"
+  # Example for ingress external rule in AWS, mainly for overriding specific paths
+  #    - servicePort: web
+  #      hostname: "ui.gateway.local"
+  #      serviceName: redirect-to
+  #      path: "/path-to-block/*"
 
   ## Path for the default host
   ##
@@ -213,7 +219,7 @@ ingress:
 
   ## existingSecret: name-of-existing-secret
 
-resources: {}
+resources: { }
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -223,12 +229,12 @@ resources: {}
   #   memory: 128Mi
   # requests:
   #   cpu: 100m
-  #   memory: 128Mi
+#   memory: 128Mi
 
 # Akeyless API Gateway application version
 # version:
 
-env: []
+env: [ ]
 
 
 akeylessUserAuth:
@@ -261,7 +267,7 @@ akeylessUserAuth:
   configProtectionKeyName:
 
   # This variable is deprecated, please use allowedAccessPermissions
-  allowedAccessIDs: []
+  allowedAccessIDs: [ ]
   # - p-1234 subClimekey1=subClimeVal1
   # - p-1234 subClimekey2=subClimeVal2
   # - p-5678 subClimekey1=subClimeVal1
@@ -273,32 +279,32 @@ akeylessUserAuth:
   # Configure this list to add one or more allowed access to this GW, with the specified permissions and sub-claims.
   # Name must be unique.
   # Empty permissions will implicitly give the access admin permission.
-  allowedAccessPermissions: {}
-#    - name: access1
-#      access_id: p-1234
-#      sub_claims:
-#        username:
-#          - username1
-#          - username2
-#        group:
-#          - IT
-#      case_sensitive: false
-#      permissions:
-#        - admin
-#    - name: access2
-#      access_id: p-1234
-#      sub_claims:
-#        group:
-#          - group1
-#      case_sensitive: true
-#      permissions:
-#        - targets
-#        - defaults
-#    - name: access3
-#      access_id: p-5678
-#      permissions:
-#        - targets
-#        - defaults
+  allowedAccessPermissions: { }
+  #    - name: access1
+  #      access_id: p-1234
+  #      sub_claims:
+  #        username:
+  #          - username1
+  #          - username2
+  #        group:
+  #          - IT
+  #      case_sensitive: false
+  #      permissions:
+  #        - admin
+  #    - name: access2
+  #      access_id: p-1234
+  #      sub_claims:
+  #        group:
+  #          - group1
+  #      case_sensitive: true
+  #      permissions:
+  #        - targets
+  #        - defaults
+  #    - name: access3
+  #      access_id: p-5678
+  #      permissions:
+  #        - targets
+  #        - defaults
 
   # Use k8s existing secret, must include the following key: allowed-access-permissions
   allowedAccessPermissionsExistingSecret:
@@ -308,7 +314,7 @@ akeylessUserAuth:
   restrictServiceToAccessIds:
 
   # blockedAccessIds: ["p-1234", "p-5678"]
-  blockedAccessIds: []
+  blockedAccessIds: [ ]
 
   # restrict access to admin account
   restrictAccessToAdminAccount: true
@@ -318,9 +324,9 @@ akeylessUserAuth:
 
 universalIdentity:
   # interval im minutes, if empty the token will be rotated in token-ttl/3  max=10 
-  uidRotationInterval: "5m" 
+  uidRotationInterval: "5m"
   uidCreateChildTokenPerPod: "disable"   #<disable/enable>
-    
+
 # Customer Fragment is a critical component that allow customers to use a Zero-Knowledge Encryption.
 # For more information: https://docs.akeyless.io/docs/implement-zero-knowledge
 #customerFragments: |
@@ -349,7 +355,7 @@ TLSConf:
   # Comma separated list of cipher suites to exclude (e.g. "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA")
   excludeCipherSuites:
   # Specifies an existing secret for tls-certificate:
-  tlsExistingSecretName: 
+  tlsExistingSecretName:
   # Alter this property of you need to use a different INPUT file name for the certificate, like from an existing secret
   # Default value is 'akeyless-api-cert.crt' or change to your override file name
   overrideCertFileName:
@@ -365,10 +371,10 @@ TLSConf:
   #   -----BEGIN RSA PRIVATE KEY-----
   #   <key>
   #   -----END RSA PRIVATE KEY-----
-  
+
 
 # Specifies an initial configuration for the defaults section
-defaultsConf: {}
+defaultsConf: { }
   ## Default SAML Access ID to be used for initial WebUI login 
   # defaultSamlAccessId:
   ## Default OIDC Access ID to be used for initial WebUI login
@@ -378,7 +384,7 @@ defaultsConf: {}
   ## This Default Encryption Key will be selected when creating the following items: Static Secrets, Dynamic Secret Producers and Secret Migration Configurations
   # defaultEncryptionKey:
   ## The location of the default path to save secrets
-  # defaultSecretLocation:
+# defaultSecretLocation:
 
 
 # Specifies an initial configuration for the caching section
@@ -398,7 +404,7 @@ cachingConf:
 
   proActiveCaching:
     enabled: false
-  
+
     ## The minimum fetching interval in minutes (used to avoid fetching a secret too many times in a given timeframe)
     # minimumFetchingTime: 5
     
@@ -409,7 +415,7 @@ cachingConf:
   # Provide an existing secret with the metrics configuration or use the config section
   # For more details: https://docs.akeyless.io/docs/telemetry-metrics-k8s
 metrics:
-  enabled: false  
+  enabled: false
   # Specifies an existing secret for metrics must include:
   # - otel-config.yaml (base64) secret
   # - Syntax must be in YAML format
@@ -461,7 +467,7 @@ HPA:
   cpuAvgUtil: 50
   memAvgUtil: 50
 
-  annotations: {}
+  annotations: { }
 
 grpc:
   enabled: false
