@@ -125,38 +125,32 @@ Generate chart secret name
         {{- end -}}
 {{- end -}}
 
+{{/* Define REDIS_MAXMEMORY as 80% of the pod's memory limit */}}
 {{- define "akeyless-api-gw.redisMaxmemory" -}}
-{{/*Calculate REDIS_MAXMEMORY as 80% of the pod's memory limit.
-    This approach leaves a buffer for Redis overhead and any other processes running in the pod.*/}}
-{{- include "calculate80PercentMemory" . -}}
-{{- end -}}
+{{- $memoryLimit := .Values.cache.resources.limits.memory -}}
 
-{{- define "memoryToBytes" -}}
-{{- $value := . -}}
-{{- $suffixes := dict "Gi" 1073741824 "Mi" 1048576 "M" 1048576 "Gi" 1073741824 "k" 1024 "K" 1024 "G" 1073741824 "T" 1099511627776 "P" 1125899906842624 "E" 1152921504606846976 -}}
-{{- $multiplier := index $suffixes (upper (trimSuffix (regexReplaceAll "[0-9]+" "" $value))) -}}
-{{- $number := regexReplaceAll "[^0-9]+" "" $value | int -}}
-{{- mul $number $multiplier -}}
-{{- end -}}
+{{- /* Convert to string to ensure proper handling */}}
+{{- $memoryLimitStr := $memoryLimit | toString -}}
 
-{{- define "bytesToMemory" -}}
-{{- $bytes := . -}}
-{{- if ge $bytes 1073741824 -}}
-{{- printf "%.0fGi" (div (float64 $bytes) 1073741824) -}}
-{{- else if ge $bytes 1048576 -}}
-{{- printf "%.0fMi" (div (float64 $bytes) 1048576) -}}
-{{- else if ge $bytes 1024 -}}
-{{- printf "%.0fM" (div (float64 $bytes) 1048576) -}}
+{{- $memoryLimitBytes := 0 -}}
+{{- if regexMatch "^[0-9]+$" $memoryLimitStr -}}
+  {{- $memoryLimitBytes = $memoryLimitStr | mulf 1 -}} {{/* Direct byte value */}}
+{{- else if regexMatch "^[0-9]+Gi$" $memoryLimitStr -}}
+  {{- $memoryLimitBytes = (trimSuffix "Gi" $memoryLimitStr | mulf 1073741824) -}} {{/* GiB to bytes */}}
+{{- else if regexMatch "^[0-9]+Mi$" $memoryLimitStr -}}
+  {{- $memoryLimitBytes = (trimSuffix "Mi" $memoryLimitStr | mulf 1048576) -}} {{/* MiB to bytes */}}
+{{- else if regexMatch "^[0-9]+[M]$" $memoryLimitStr -}}
+    {{- $memoryLimitBytes = (trimSuffix "M" $memoryLimitStr | mulf 1048576) -}} {{/* Megabytes to bytes */}}
+{{- else if regexMatch "^[0-9]+e[0-9]+$" $memoryLimitStr -}}
+  {{- $memoryLimitBytes = $memoryLimitStr | mulf 1 -}} {{/* Handle scientific notation (e.g., 129e6) */}}
+{{- else if regexMatch "^[0-9]+[kK]$" $memoryLimitStr -}}
+  {{- $memoryLimitBytes = (trimSuffix "k" $memoryLimitStr | mulf 1024) -}} {{/* Kilobytes to bytes */}}
 {{- else -}}
-{{- printf "%.0fK" (div (float64 $bytes) 1024) -}}
-{{- end -}}
+  {{- fail "Unsupported memory format" -}}
 {{- end -}}
 
-{{- define "calculate80PercentMemory" -}}
-{{- $memoryLimit := .Values.cache.resources.limits.memory | include "memoryToBytes" -}}
-{{- $percentage := mul $memoryLimit 0.8 -}}
-{{- $result := include "bytesToMemory" $percentage -}}
-{{- $result -}}
+{{- $redisMaxmemory := $memoryLimitBytes | mulf 0.8 | floor -}}  {{/* Calculate 80% and round down */}}
+{{- $redisMaxmemory | printf "%.0f" -}}  {{/* Print the value as an integer */}}
 {{- end -}}
 
 {{/*
