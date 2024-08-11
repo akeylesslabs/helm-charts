@@ -51,6 +51,7 @@ The following table lists the configurable parameters of the API Gateway chart a
 | `httpProxySettings.https_proxy` | Standard linux HTTP Proxy, should contain the URLs of the proxies for HTTPS                                        | `nil`                    |  
 | `httpProxySettings.no_proxy`    | Standard linux HTTP Proxy, should contain a comma-separated list of domain extensions proxy should not be used for | `nil`                    |
 | `cache.resources.limits`        | The resources limits for the redis cluster cache                                                                   | `{}`                     |
+| `cache.maxmemory`               | The maximum memory that Redis (clusterCache) should use.                                                           | `1gb`                    |
 
 ### Exposure parameters
 
@@ -134,7 +135,6 @@ The following table lists the configurable parameters of the API Gateway chart a
 | `cachingConf.proActiveCaching.dumpInterval`            | To ensure service continuity in case of power cycle and network outage secrets will be backed up periodically per backup interval.                                                                                                    | `nil`         |
 | `cachingConf.clusterCache.enabled`                     | Should cluster caching be enabled                                                                                                                                                                                                     | `false`       |
 | `cachingConf.clusterCache.encryptionKeyExistingSecret` | In case clusterCache is enabled, you must specify an existing secret for the cluster cache configuration, must include the following key: cluster-cache-encryption-key                                                                | `nil`         |
-| `cachingConf.clusterCache.maxmemory`                   | The maximum memory that Redis (clusterCache) should use.                                                                                                                                                                              | `1gb`         |
 ### API-Gateway logand configuration
 
 | Parameter                                   | Description                                                                                                          | Default                                                      |
