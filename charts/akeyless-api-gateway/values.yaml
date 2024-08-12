@@ -24,7 +24,7 @@ cache:
     pullPolicy: Always
   resources:
    limits:
-     cpu: 500m
+  # cpu: 500m
      memory: 2Gi
   # requests:
   #   cpu: 300m
