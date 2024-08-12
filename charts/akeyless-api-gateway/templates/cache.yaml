@@ -69,9 +69,15 @@ spec:
                 fi
           initialDelaySeconds: 5
           periodSeconds: 5
+        resources:
+{{- toYaml .Values.cache.resources | nindent 12 }}
         env:
         - name: REDIS_DISABLE_COMMANDS
           value: "FLUSHDB,FLUSHALL"
+        - name: REDIS_MAXMEMORY_POLICY
+          value: "allkeys-lru"
+        - name: REDIS_MAXMEMORY
+          value: "{{ include "akeyless-api-gw.redisMaxmemory" . }}"
         - name: REDIS_PASSWORD
           valueFrom:
             secretKeyRef:
