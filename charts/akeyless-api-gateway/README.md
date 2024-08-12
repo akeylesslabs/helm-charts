@@ -36,21 +36,20 @@ The following table lists the configurable parameters of the API Gateway chart a
 
 ### Deployment parameters
 
-| Parameter                       | Description                                                                                                        | Default                  |
-|---------------------------------|--------------------------------------------------------------------------------------------------------------------|--------------------------|
-| `image.repository`              | API Gateway image name                                                                                             | `akeyless/base`          |
-| `image.tag`                     | API Gateway image tag                                                                                              | `latest`                 |      
-| `image.pullPolicy`              | API Gateway image pull policy                                                                                      | `Always`                 |  
-| `containerName`                 | API Gateway container name                                                                                         | `api-gateway`            |    
-| `replicaCount`                  | Number of API Gateway pods                                                                                         | `2`                      |
-| `livenessProbe`                 | Liveness probe configuration for API Gateway                                                                       | Check `values.yaml` file |                   
-| `readinessProbe`                | Readiness probe configuration for API Gateway                                                                      | Check `values.yaml` file |         
-| `resources.limits`              | The resources limits for API Gateway (If HPA is enabled these must be set)                                         | `{}`                     |
-| `resources.requests`            | The requested resources for API Gateway (If HPA is enabled these must be set)                                      | `{}`                     |
-| `httpProxySettings.http_proxy`  | Standard linux HTTP Proxy, should contain the URLs of the proxies for HTTP                                         | `nil`                    |  
-| `httpProxySettings.https_proxy` | Standard linux HTTP Proxy, should contain the URLs of the proxies for HTTPS                                        | `nil`                    |  
-| `httpProxySettings.no_proxy`    | Standard linux HTTP Proxy, should contain a comma-separated list of domain extensions proxy should not be used for | `nil`                    |
-| `cache.resources.limits`        | The resources limits for the redis cluster cache                                                                   | `{}`                     |
+| Parameter                                 | Description                                                                                                          | Default                                                      |
+|-------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
+| `image.repository`                        | API Gateway image name                                                                                               | `akeyless/base`                                              |
+| `image.tag`                               | API Gateway image tag                                                                                                | `latest`                                                     |      
+| `image.pullPolicy`                        | API Gateway image pull policy                                                                                        | `Always`                                                     |  
+| `containerName`                           | API Gateway container name                                                                                           | `api-gateway`                                                |    
+| `replicaCount`                            | Number of API Gateway pods                                                                                           | `2`                                                          |
+| `livenessProbe`                           | Liveness probe configuration for API Gateway                                                                         | Check `values.yaml` file                                     |                   
+| `readinessProbe`                          | Readiness probe configuration for API Gateway                                                                        | Check `values.yaml` file                                     |         
+| `resources.limits`                        | The resources limits for API Gateway (If HPA is enabled these must be set)                                           | `{}`                                                         |
+| `resources.requests`                      | The requested resources for API Gateway (If HPA is enabled these must be set)                                        | `{}`                                                         |
+| `httpProxySettings.http_proxy`            | Standard linux HTTP Proxy, should contain the URLs of the proxies for HTTP                                           | `nil`                                                        |  
+| `httpProxySettings.https_proxy`           | Standard linux HTTP Proxy, should contain the URLs of the proxies for HTTPS                                          | `nil`                                                        |  
+| `httpProxySettings.no_proxy`              | Standard linux HTTP Proxy, should contain a comma-separated list of domain extensions proxy should not be used for   | `nil`                                                        |
 
 ### Exposure parameters
 

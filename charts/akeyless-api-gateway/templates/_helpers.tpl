@@ -125,31 +125,6 @@ Generate chart secret name
         {{- end -}}
 {{- end -}}
 
-{{/* Define REDIS_MAXMEMORY as 80% of the pod's memory limit */}}
-{{- define "akeyless-api-gw.redisMaxmemory" -}}
-{{- $memoryLimit := .Values.cache.resources.limits.memory | toString -}}
-
-{{- $memoryLimitBytes := 0 -}}
-{{- if regexMatch "^[0-9]+$" $memoryLimit -}}
-  {{- $memoryLimitBytes = $memoryLimit | mulf 1 -}} {{/* Direct byte value */}}
-{{- else if regexMatch "^[0-9]+Gi$" $memoryLimit -}}
-  {{- $memoryLimitBytes = (trimSuffix "Gi" $memoryLimit | mulf 1073741824) -}} {{/* GiB to bytes */}}
-{{- else if regexMatch "^[0-9]+Mi$" $memoryLimit -}}
-  {{- $memoryLimitBytes = (trimSuffix "Mi" $memoryLimit | mulf 1048576) -}} {{/* MiB to bytes */}}
-{{- else if regexMatch "^[0-9]+[M]$" $memoryLimit -}}
-    {{- $memoryLimitBytes = (trimSuffix "M" $memoryLimit | mulf 1048576) -}} {{/* Megabytes to bytes */}}
-{{- else if regexMatch "^[0-9]+e[0-9]+$" $memoryLimit -}}
-  {{- $memoryLimitBytes = $memoryLimit | mulf 1 -}} {{/* Handle scientific notation (e.g., 129e6) */}}
-{{- else if regexMatch "^[0-9]+[kK]$" $memoryLimit -}}
-  {{- $memoryLimitBytes = (trimSuffix "k" $memoryLimit | mulf 1024) -}} {{/* Kilobytes to bytes */}}
-{{- else -}}
-  {{- fail "Unsupported memory format" -}}
-{{- end -}}
-
-{{- $redisMaxmemory := $memoryLimitBytes | mulf 0.8 | floor -}}  {{/* Calculate 80% and round down */}}
-{{- $redisMaxmemory | printf "%.0f" -}}  {{/* Print the value as an integer */}}
-{{- end -}}
-
 {{/*
 Check customer fragment
 */}}
