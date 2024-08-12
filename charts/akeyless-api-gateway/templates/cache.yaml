@@ -23,7 +23,15 @@ spec:
       - name: {{ template "akeyless-api-gw.fullname" . }}-cache
         image: "{{ .Values.cache.image.repository }}:{{ .Values.cache.image.tag }}"
         imagePullPolicy: {{ .Values.cache.image.pullPolicy }}
-        #args: ["--requirepass", "$(REDIS_PASSWORD)"]
+        command:
+          - /opt/bitnami/scripts/redis/run.sh
+        args:
+          - "--maxmemory"
+          - "$(REDIS_MAXMEMORY)"
+          - "--maxmemory-policy"
+          - "$(REDIS_MAXMEMORY_POLICY)"
+          - "--requirepass"
+          - "$(REDIS_PASSWORD)"
         ports:
         - containerPort: 6379
           name: cache
