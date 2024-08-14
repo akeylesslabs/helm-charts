@@ -1,3 +1,6 @@
+{{- $mountCertPaths := "/opt/akeyless/cache/certs" -}}
+{{- $tlsCACertSubPath := "ca.crt" -}}
+{{- $tlsCACertPath := printf "%s/%s" $mountCertPaths $tlsCACertSubPath }}
 apiVersion: apps/v1
 kind: {{ include "deyploymant.type" $ }}
 metadata:
@@ -159,8 +162,14 @@ spec:
               scheme: HTTPS
               {{- end }}
 {{- toYaml .Values.readinessProbe | trim | nindent 12 }}
-         {{- if or (not (eq (include "akeyless-api-gw.customerFragmentExist" .) "")) (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true") ( .Values.metrics.enabled)}}
+         {{- if or (not (eq (include "akeyless-api-gw.customerFragmentExist" .) "")) (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true") ( .Values.metrics.enabled) |  or (include "cache_enable_tls" . | eq "true") }}
           volumeMounts:
+            {{- if (include "cache_enable_tls" . | eq "true") }}
+            - name: {{ ternary .Values.cache.tls.existingSecretName "redis-certificates" (ne .Values.cache.tls.existingSecretName "") }}
+              subPath: {{ $tlsCACertSubPath }}
+              mountPath: {{ $mountCertPaths }}
+              readOnly: true
+            {{- end }}
             - name: akeyless-config
               mountPath: {{include "akeyless-api-gw.root.config.path" $}}/.akeyless
           {{- if and (.Values.metrics.enabled) (not (eq (include "akeyless-api-gw.metricsSecretExist" .) "")) }}
@@ -358,6 +367,10 @@ spec:
               value: "{{ .Values.TLSConf.excludeCipherSuites }}"
           {{- end }}
           ## caching section
+          {{- if (include "cache_enable_tls" . | eq "true") }}
+            - name: CACHE_REDIS_CA_PATH
+              value: "{{ $tlsCACertPath }}"
+          {{- end }}
           {{- if .Values.cachingConf.enabled }}
             - name: CACHE_ENABLE
               value: "{{ .Values.cachingConf.enabled }}"
@@ -416,3 +429,4 @@ spec:
           {{- if .Values.env }}
   {{- toYaml .Values.env | nindent 12 }}
           {{- end }}
+
