@@ -98,7 +98,7 @@ spec:
         {{- end }}
         {{- if (include "cache_enable_tls" . | eq "true") }}
         volumeMounts:
-            - name: {{ ternary .Values.cache.tls.secretName "redis-certificates" (ne .Values.cache.tls.secretName "") }}
+            - name: {{ ternary .Values.cache.tls.existingSecretName "redis-certificates" (ne .Values.cache.tls.existingSecretName "") }}
               mountPath: {{ $mountCertPaths }}
               readOnly: true
         {{- end }}
