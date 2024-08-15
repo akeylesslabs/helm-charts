@@ -50,8 +50,11 @@ spec:
       nodeSelector:
       {{ toYaml .Values.deployment.nodeSelector | indent 4 }}
       {{- end }}
-      {{- if or (not (eq (include "akeyless-api-gw.customerFragmentExist" .) "")) (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true" ) (.Values.metrics.enabled)}}
+      {{- if or (not (eq (include "akeyless-api-gw.customerFragmentExist" .) "")) (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true" ) (.Values.metrics.enabled)  |  or (include "cache_enable_tls" . | eq "true")  }}
       volumes:
+      - name: cache-tls
+        secret:
+          secretName: {{ include "cache_tls_secret_name" . }}
       - name: akeyless-config
         emptyDir: {}
       {{- if not (eq (include "akeyless-api-gw.customerFragmentExist" .) "") }}
@@ -165,9 +168,9 @@ spec:
          {{- if or (not (eq (include "akeyless-api-gw.customerFragmentExist" .) "")) (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true") ( .Values.metrics.enabled) |  or (include "cache_enable_tls" . | eq "true") }}
           volumeMounts:
             {{- if (include "cache_enable_tls" . | eq "true") }}
-            - name: {{ ternary .Values.cache.tls.existingSecretName "redis-certificates" (ne .Values.cache.tls.existingSecretName "") }}
+            - name: "cache-tls"
               subPath: {{ $tlsCACertSubPath }}
-              mountPath: {{ $mountCertPaths }}
+              mountPath: {{ $tlsCACertPath }}
               readOnly: true
             {{- end }}
             - name: akeyless-config
@@ -181,6 +184,8 @@ spec:
           resources:
 {{- toYaml .Values.resources | nindent 12 }}
           env:
+            # - name: DEVELOPMENT_OR_RELEASE
+            #   value: "development"
           {{- if .Values.fixedArtifactRepository }}
             - name: ARTIFACTS_REPO
               value: {{ .Values.fixedArtifactRepository  }}
