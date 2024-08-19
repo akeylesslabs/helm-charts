@@ -75,13 +75,27 @@ jobs:
           issue: ${{ env.akeyless_jira_issue }}
           comment: ${{ env.jira_description }}
 
-      - name: Transition issue
-        if: github.event_name == 'issues' && github.event.action == 'closed' && env.jira_issue_exist == 'true'
-        id: transition
-        uses: atlassian/gajira-transition@v3
-        with:
-          issue: ${{ env.akeyless_jira_issue }}
-          transition: "Done"
 
-      - name: Issue summary
-        run: echo '### Github issue automation summary -${{ steps.create-jira-issue.outputs.issue }} ${{ env.jira_description }}! :rocket:' >> $GITHUB_STEP_SUMMARY
+      - name: Prepare Slack Message On Success
+        id: slack-message-success-creator
+        run: |
+          SLACK_MESSAGE="${jira_description}
+          *Jira Ticket*: https://akeyless.atlassian.net/browse/${{steps.create-jira-issue.outputs.issue}}"
+          delimiter="$(openssl rand -hex 8)"
+          echo "slack-message<<${delimiter}" >> $GITHUB_ENV
+          echo "${SLACK_MESSAGE//$/%0A}" >> $GITHUB_ENV
+          echo "${delimiter}" >> $GITHUB_ENV
+
+      - name: Slack Success Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: 'operations'
+          SLACK_COLOR: ${{ job.status }}
+          SLACK_ICON: https://github.com/rtCamp.png?size=48
+          SLACK_TITLE: 'New Git Issue Created'
+          SLACK_MESSAGE: '${{ env.slack-message }}'
+          SLACK_USERNAME: githubBot
+          SLACK_WEBHOOK: ${{ secrets.SLACK_OPERATIONS_WEBHOOK }}
+          MSG_MINIMAL: true
+          SLACK_FOOTER: GitHub Issue To Jira Automation
+
