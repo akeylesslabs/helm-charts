@@ -56,25 +56,12 @@ jobs:
         if: steps.create-jira-issue.outcome == 'success'
         run: echo "Jira Issue ${{ steps.create-jira-issue.outputs.issue }} was created"
 
-      - name: Label Create Git Issue
-        uses: actions/github-script@v7
-        if: steps.create-jira-issue.outcome == 'success'
-        with:
-          script: |
-            github.rest.issues.addLabels({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              labels: ["${{ steps.create-jira-issue.outputs.issue }}"]
-            })
-
       - name: Add Comment On Jira issue
         if: env.jira_issue_exist == 'true' && (github.event_name == 'issue_comment' || (github.event_name == 'issues' && github.event.action == 'closed'))
         uses: atlassian/gajira-comment@v3
         with:
           issue: ${{ env.akeyless_jira_issue }}
           comment: ${{ env.jira_description }}
-
 
       - name: Prepare Slack Message On Success
         id: slack-message-success-creator
@@ -98,4 +85,3 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.SLACK_OPERATIONS_WEBHOOK }}
           MSG_MINIMAL: true
           SLACK_FOOTER: GitHub Issue To Jira Automation
-
