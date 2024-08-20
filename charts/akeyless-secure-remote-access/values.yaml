@@ -84,6 +84,13 @@ httpProxySettings:
 deployment:
   labels: {}
 
+cache:
+  image:
+    repository: docker.io/bitnami/redis
+    tag: 6.2
+    pullPolicy: Always
+
+
 ####################################################
 ## Default values for akeyless-zero-trust-bastion ##
 ####################################################
@@ -370,7 +377,13 @@ sshConfig:
     fsGroup: 0
     runAsUser: 0
 
-  env: []
+  env:
+    - name: USE_CLUSTER_CACHE
+      value: "1"
+    - name: REDIS_ADDR
+      value: "redis-xxx-cache-svc:6379"
+    - name: REDIS_PASS
+      value: "password123"
   initContainer:
     image:
       repository: busybox

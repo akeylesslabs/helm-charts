@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-xxx-cache
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    name: redis-xxx-cache
+    component: cache
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: redis-xxx-cache
+  template:
+    metadata:
+      labels:
+        name: redis-xxx-cache
+        component: cache
+    spec:
+      containers:
+        - name: redis-xxx-cache
+          image: "{{ .Values.cache.image.repository }}:{{ .Values.cache.image.tag }}"
+          imagePullPolicy: {{ .Values.cache.image.pullPolicy }}
+          #args: ["--requirepass", "$(REDIS_PASSWORD)"]
+          ports:
+            - containerPort: 6379
+              name: cache
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - |
+                  #!/usr/bin/env bash -e
+                  export REDISCLI_AUTH="$REDIS_PASSWORD"
+                  set_response=$(
+                    redis-cli set liveness_test_key "SUCCESS"
+                  )
+                  response=$(
+                    redis-cli get liveness_test_key
+                  )
+                  del_response=$(
+                      redis-cli del liveness_test_key
+                  )
+                  if [ "$response" != "SUCCESS" ] ; then
+                    echo "Unable to get keys, something is wrong"
+                    echo "$response"
+                    exit 1
+                  fi
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - |
+                  #!/usr/bin/env bash -e
+                  export REDISCLI_AUTH="$REDIS_PASSWORD"
+                  response=$(
+                      redis-cli ping
+                  )
+                  if [ "$response" != "PONG" ] ; then
+                      echo "Unable to get keys, something is wrong"
+                      echo "$response"
+                      exit 1
+                    fi
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          env:
+            - name: REDIS_DISABLE_COMMANDS
+              value: "FLUSHDB,FLUSHALL"
+            - name: REDIS_PASSWORD
+              value: password123
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-xxx-cache-svc
+spec:
+  ports:
+    - port: 6379
+      protocol: TCP
+  selector:
+    name: redis-xxx-cache
+  type: ClusterIP
