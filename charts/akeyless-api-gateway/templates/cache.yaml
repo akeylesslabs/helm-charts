@@ -23,15 +23,7 @@ spec:
       - name: {{ template "akeyless-api-gw.fullname" . }}-cache
         image: "{{ .Values.cache.image.repository }}:{{ .Values.cache.image.tag }}"
         imagePullPolicy: {{ .Values.cache.image.pullPolicy }}
-        command:
-          - /opt/bitnami/scripts/redis/run.sh
-        args:
-          - "--maxmemory"
-          - "$(REDIS_MAXMEMORY)"
-          - "--maxmemory-policy"
-          - "$(REDIS_MAXMEMORY_POLICY)"
-          - "--requirepass"
-          - "$(REDIS_PASSWORD)"
+        #args: ["--requirepass", "$(REDIS_PASSWORD)"]
         ports:
         - containerPort: 6379
           name: cache
@@ -82,10 +74,8 @@ spec:
         env:
         - name: REDIS_DISABLE_COMMANDS
           value: "FLUSHDB,FLUSHALL"
-        - name: REDIS_MAXMEMORY_POLICY
-          value: "allkeys-lru"
-        - name: REDIS_MAXMEMORY
-          value: "{{ include "akeyless-api-gw.redisMaxmemory" . }}"
+        - name: REDIS_EXTRA_FLAGS
+          value: "--maxmemory {{ include "akeyless-api-gw.redisMaxmemory" . }} --maxmemory-policy allkeys-lru"
         - name: REDIS_PASSWORD
           valueFrom:
             secretKeyRef:
