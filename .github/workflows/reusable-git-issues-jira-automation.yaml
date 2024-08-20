@@ -64,6 +64,7 @@ jobs:
           comment: ${{ env.jira_description }}
 
       - name: Prepare Slack Message On Success
+        if: env.jira_issue_exist == 'false' && github.event.action == 'opened'
         id: slack-message-success-creator
         run: |
           SLACK_MESSAGE="${jira_description}
@@ -74,6 +75,7 @@ jobs:
           echo "${delimiter}" >> $GITHUB_ENV
 
       - name: Slack Success Notification
+        if: env.jira_issue_exist == 'false' && github.event.action == 'opened'
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_CHANNEL: 'operations'
