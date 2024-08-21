@@ -184,8 +184,10 @@ spec:
           resources:
 {{- toYaml .Values.resources | nindent 12 }}
           env:
-            # - name: DEVELOPMENT_OR_RELEASE
-            #   value: "development"
+            - name: DEVELOPMENT_OR_RELEASE
+              value: "development"
+            - name: DEV_MODE
+              value: "true"
           {{- if .Values.fixedArtifactRepository }}
             - name: ARTIFACTS_REPO
               value: {{ .Values.fixedArtifactRepository  }}
