@@ -374,8 +374,6 @@ sshConfig:
   enabled: true
   replicaCount: 1
 
-  enableRedis: false
-
   ## Statefulsets rolling update update strategy
   ## Ref: https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#rolling-update
   updateStrategy: RollingUpdate
