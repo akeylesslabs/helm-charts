@@ -176,3 +176,7 @@ Get the Ingress TLS secret.
 {{- define "akeylessTenantUrl" -}}
 {{- default "akeyless.io" .Values.ztpConfig.akeylessTenantUrl -}}
 {{- end -}}
+
+{{- define "akeyless-zero-trust-portal.cacheSecretName" -}}
+        {{ $.Release.Name }}-cache-secret
+{{- end -}}

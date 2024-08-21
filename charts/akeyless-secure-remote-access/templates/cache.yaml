@@ -1,27 +1,27 @@
+{{- if .Values.redisConf.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: redis-xxx-cache
+  name: {{ template "akeyless-secure-remote-access.fullname" . }}-cache
   namespace: {{ .Release.Namespace | quote }}
   labels:
-    name: redis-xxx-cache
+    name: {{ template "akeyless-secure-remote-access.fullname" . }}-cache
     component: cache
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: redis-xxx-cache
+      name: {{ template "akeyless-secure-remote-access.fullname" . }}-cache
   template:
     metadata:
       labels:
-        name: redis-xxx-cache
+        name: {{ template "akeyless-secure-remote-access.fullname" . }}-cache
         component: cache
     spec:
       containers:
-        - name: redis-xxx-cache
+        - name: {{ template "akeyless-secure-remote-access.fullname" . }}-cache
           image: "{{ .Values.cache.image.repository }}:{{ .Values.cache.image.tag }}"
           imagePullPolicy: {{ .Values.cache.image.pullPolicy }}
-          #args: ["--requirepass", "$(REDIS_PASSWORD)"]
           ports:
             - containerPort: 6379
               name: cache
@@ -68,20 +68,24 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 5
           env:
-            - name: REDIS_DISABLE_COMMANDS
-              value: "FLUSHDB,FLUSHALL"
             - name: REDIS_PASSWORD
-              value: password123
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "akeyless-zero-trust-portal.cacheSecretName" . }}
+                  key: cache-pass
 ---
 
 apiVersion: v1
 kind: Service
 metadata:
-  name: redis-xxx-cache-svc
+  name: {{ template "akeyless-secure-remote-access.fullname" . }}-cache-svc
+  labels:
+{{- include "akeyless-secure-remote-access.labels" . | nindent 4 }}
 spec:
   ports:
     - port: 6379
       protocol: TCP
   selector:
-    name: redis-xxx-cache
+    name: {{ template "akeyless-secure-remote-access.fullname" . }}-cache
   type: ClusterIP
+  {{- end }}

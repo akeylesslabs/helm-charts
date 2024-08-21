@@ -89,6 +89,13 @@ cache:
     repository: docker.io/bitnami/redis
     tag: 6.2
     pullPolicy: Always
+#  resources:
+#    limits:
+#      # cpu: 500m
+#      memory: 2Gi
+#    requests:
+#      cpu: 250m
+#      memory: 256Mi
 
 
 ####################################################
@@ -237,6 +244,9 @@ ztbConfig:
       # Specifies an existing secret to be used for bastion, management AWS/Azure credentials
       existingSecret: ""
 
+redisConf:
+  enabled: false
+
 ####################################################
 ## Default values for akeyless-zero-trust-portal ##
 ####################################################
@@ -364,6 +374,8 @@ sshConfig:
   enabled: true
   replicaCount: 1
 
+  enableRedis: false
+
   ## Statefulsets rolling update update strategy
   ## Ref: https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#rolling-update
   updateStrategy: RollingUpdate
@@ -377,13 +389,7 @@ sshConfig:
     fsGroup: 0
     runAsUser: 0
 
-  env:
-    - name: USE_CLUSTER_CACHE
-      value: "1"
-    - name: REDIS_ADDR
-      value: "redis-xxx-cache-svc:6379"
-    - name: REDIS_PASS
-      value: "password123"
+  env: []
   initContainer:
     image:
       repository: busybox
