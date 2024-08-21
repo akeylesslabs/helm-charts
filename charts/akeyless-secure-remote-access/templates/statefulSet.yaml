@@ -192,6 +192,17 @@ spec:
           - name: no_proxy
             value: {{ .Values.httpProxySettings.no_proxy }}
 {{- end }}
+{{- if .Values.redisStorage.enabled }}
+          - name: USE_CLUSTER_CACHE
+            value: "1"
+          - name: REDIS_ADDR
+            value: {{  include "akeyless-secure-remote-access.fullname" . }}-storage-svc:6379
+          - name: REDIS_PASS
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "akeyless-zero-trust-portal.storageSecretName" . }}
+                key: storage-pass
+{{- end }}
 {{- if .Values.sshConfig.env }}
           {{- toYaml .Values.sshConfig.env | nindent 10 }}
 {{- end }}

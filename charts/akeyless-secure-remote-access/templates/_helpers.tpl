@@ -176,3 +176,17 @@ Get the Ingress TLS secret.
 {{- define "akeylessTenantUrl" -}}
 {{- default "akeyless.io" .Values.ztpConfig.akeylessTenantUrl -}}
 {{- end -}}
+
+{{- define "akeyless-zero-trust-portal.storageSecretName" -}}
+        {{ $.Release.Name }}-storage-secret
+{{- end -}}
+
+{{- define "akeyless-zero-trust-portal.redisStorageImage" -}}
+    {{- if .Values.redisStorage.image -}}
+        image: "{{ .Values.redisStorage.image.repository }}:{{ .Values.redisStorage.image.tag }}"
+        imagePullPolicy: {{ .Values.redisStorage.image.pullPolicy }}
+    {{- else }}
+        image: "docker.io/bitnami/redis:6.2"
+        imagePullPolicy: "Always"
+    {{- end -}}
+{{- end -}}

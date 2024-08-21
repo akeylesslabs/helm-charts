@@ -84,6 +84,10 @@ httpProxySettings:
 deployment:
   labels: {}
 
+redisStorage:
+  enabled: false
+
+
 ####################################################
 ## Default values for akeyless-zero-trust-bastion ##
 ####################################################
