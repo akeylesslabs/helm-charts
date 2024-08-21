@@ -78,12 +78,12 @@ jobs:
         if: env.jira_issue_exist == 'false' && github.event.action == 'opened'
         uses: rtCamp/action-slack-notify@v2
         env:
-          SLACK_CHANNEL: 'operations'
+          SLACK_CHANNEL: 'github-public-repo-issues'
           SLACK_COLOR: ${{ job.status }}
           SLACK_ICON: https://github.com/rtCamp.png?size=48
           SLACK_TITLE: 'New Git Issue Created'
           SLACK_MESSAGE: '${{ env.slack-message }}'
           SLACK_USERNAME: githubBot
-          SLACK_WEBHOOK: ${{ secrets.SLACK_OPERATIONS_WEBHOOK }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_GITHUB_ISSUES_WEBHOOK }}
           MSG_MINIMAL: true
           SLACK_FOOTER: GitHub Issue To Jira Automation
