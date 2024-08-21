@@ -1,0 +1,90 @@
+{{- if .Values.redisStorage.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "akeyless-secure-remote-access.fullname" . }}-storage
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    name: {{ template "akeyless-secure-remote-access.fullname" . }}-storage
+    component: storage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: {{ template "akeyless-secure-remote-access.fullname" . }}-storage
+  template:
+    metadata:
+      labels:
+        name: {{ template "akeyless-secure-remote-access.fullname" . }}-storage
+        component: storage
+    spec:
+      containers:
+      - name: {{ template "akeyless-secure-remote-access.fullname" . }}-storage
+        {{ include "akeyless-zero-trust-portal.redisStorageImage" $ }}
+        ports:
+          - containerPort: 6379
+            name: storage
+        livenessProbe:
+          exec:
+            command:
+              - sh
+              - -c
+              - |
+                #!/usr/bin/env bash -e
+                export REDISCLI_AUTH="$REDIS_PASSWORD"
+                set_response=$(
+                  redis-cli set liveness_test_key "SUCCESS"
+                )
+                response=$(
+                  redis-cli get liveness_test_key
+                )
+                del_response=$(
+                    redis-cli del liveness_test_key
+                )
+                if [ "$response" != "SUCCESS" ] ; then
+                  echo "Unable to get keys, something is wrong"
+                  echo "$response"
+                  exit 1
+                fi
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        readinessProbe:
+          exec:
+            command:
+              - sh
+              - -c
+              - |
+                #!/usr/bin/env bash -e
+                export REDISCLI_AUTH="$REDIS_PASSWORD"
+                response=$(
+                    redis-cli ping
+                )
+                if [ "$response" != "PONG" ] ; then
+                    echo "Unable to get keys, something is wrong"
+                    echo "$response"
+                    exit 1
+                  fi
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        env:
+          - name: REDIS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "akeyless-zero-trust-portal.storageSecretName" . }}
+                key: storage-pass
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "akeyless-secure-remote-access.fullname" . }}-storage-svc
+  labels:
+{{- include "akeyless-secure-remote-access.labels" . | nindent 4 }}
+spec:
+  ports:
+    - port: 6379
+      protocol: TCP
+  selector:
+    name: {{ template "akeyless-secure-remote-access.fullname" . }}-storage
+  type: ClusterIP
+  {{- end }}

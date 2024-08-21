@@ -84,18 +84,8 @@ httpProxySettings:
 deployment:
   labels: {}
 
-cache:
-  image:
-    repository: docker.io/bitnami/redis
-    tag: 6.2
-    pullPolicy: Always
-#  resources:
-#    limits:
-#      # cpu: 500m
-#      memory: 2Gi
-#    requests:
-#      cpu: 250m
-#      memory: 256Mi
+redisStorage:
+  enabled: false
 
 
 ####################################################
@@ -243,9 +233,6 @@ ztbConfig:
         azureTenantId: ""
       # Specifies an existing secret to be used for bastion, management AWS/Azure credentials
       existingSecret: ""
-
-redisConf:
-  enabled: false
 
 ####################################################
 ## Default values for akeyless-zero-trust-portal ##
