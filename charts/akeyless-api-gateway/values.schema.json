@@ -29,7 +29,7 @@
               },
               "then": {
                 "properties": {
-                  "encryptionKeyExistingSecret": { "pattern": "^[a-zA-Z0-9]+$" }
+                  "encryptionKeyExistingSecret": { "pattern": "^[a-zA-Z0-9-]+$" }
                 }
               }
             },
@@ -41,14 +41,14 @@
               },
               "then": {
                 "properties": {
-                  "existingCacheConnectionSecret": { "pattern": "^[a-zA-Z0-9]+$" }
+                  "existingCacheConnectionSecret": { "pattern": "^[a-zA-Z0-9-]+$" }
                 }
               }
             },
             {
               "if": {
                 "properties": {
-                  "existingCacheConnectionSecret": {  "pattern": "^[a-zA-Z0-9]+$" }
+                  "existingCacheConnectionSecret": {  "pattern": "^[a-zA-Z0-9-]+$" }
                 }
               },
               "then": {

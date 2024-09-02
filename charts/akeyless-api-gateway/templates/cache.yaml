@@ -94,8 +94,8 @@ spec:
               name: {{ include "akeyless-api-gw.cacheSecretName" . }}
               key: cache-pass
         - name: REDIS_TLS_ENABLED
-          value: {{ include "cache_enable_tls" . | quote }}
-        {{- if (include "cache_enable_tls" . | eq "true") -}}
+          value: {{ include "cache_enable_tls" . | quote -}}
+        {{- if (include "cache_enable_tls" . | eq "true") }}
         - name: REDIS_TLS_PORT
           value: "6379"
         - name: REDIS_PORT
