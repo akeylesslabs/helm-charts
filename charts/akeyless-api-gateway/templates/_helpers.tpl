@@ -444,5 +444,5 @@ Check metrics configuration Secret
 {{- end -}}
 
 {{- define "akeyless-api-gw.cache_address" }}
-{{- ternary .Values.cachingConf.clusterCache.cacheAddress (printf "%s:6379" (include "cache_address" . )) (ne .Values.cachingConf.clusterCache.cacheAddress "")}}
+{{- printf "%s:6379" (include "cache_address" . ) }}
 {{- end -}}
