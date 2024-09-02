@@ -434,3 +434,15 @@ Check metrics configuration Secret
 {{- define "cache_tls_secret_name" -}}
 {{ ternary .Values.cache.tls.existingSecretName (include "generated_cache_tls_secret_name" .) (ne .Values.cache.tls.existingSecretName "") }}
 {{- end -}}
+
+{{- define "cache_svc_name" -}}
+{{- printf "%s-cache-svc"  (include "akeyless-api-gw.fullname" . )}}
+{{- end -}}
+
+{{- define "cache_address" -}}
+{{- printf "%s.%s.svc.cluster.local" (include "cache_svc_name" .) .Release.Namespace }}
+{{- end -}}
+
+{{- define "akeyless-api-gw.cache_address" }}
+{{- ternary .Values.cachingConf.clusterCache.cacheAddress (printf "%s:6379" (include "cache_address" . )) (ne .Values.cachingConf.clusterCache.cacheAddress "")}}
+{{- end -}}
