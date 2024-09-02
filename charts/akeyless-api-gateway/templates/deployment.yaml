@@ -285,7 +285,7 @@ spec:
             - name: REDIS_PASS
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.cachingConf.clusterCache.existingCacheConnectionSecret | default (include "akeyless-api-gw.cacheSecretName" .) }}
+                  name: {{ include "akeyless-api-gw.cacheSecretName" . }}
                   key: cache-pass
           {{- end }}
           {{- if .Values.cachingConf.clusterCache.enabled }}
@@ -371,7 +371,7 @@ spec:
               value: "{{ .Values.TLSConf.excludeCipherSuites }}"
           {{- end }}
           ## caching section
-          {{- if (include "cache_enable_tls" . | eq "true") | and (eq .Values.cachingConf.clusterCache.cacheAddress "") }}
+          {{- if (include "cache_enable_tls" . | eq "true") }}
             - name: CACHE_REDIS_CA_PATH
               value: "{{ $tlsCACertPath }}"
             - name: CACHE_REDIS_KEY_PATH
