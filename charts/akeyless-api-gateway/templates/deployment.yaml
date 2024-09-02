@@ -1,6 +1,6 @@
 {{- $mountCertPaths := "/opt/akeyless/cache/certs" -}}
-{{- $tlsCACertSubPath := "ca.crt" -}}
-{{- $tlsCACertPath := printf "%s/%s" $mountCertPaths $tlsCACertSubPath }}
+{{- $tlsKeyCertPath := printf "%s/tls.key" $mountCertPaths }}
+{{- $tlsCACertPath := printf "%s/tls.crt" $mountCertPaths }}
 apiVersion: apps/v1
 kind: {{ include "deyploymant.type" $ }}
 metadata:
@@ -169,8 +169,7 @@ spec:
           volumeMounts:
             {{- if (include "cache_enable_tls" . | eq "true") }}
             - name: "cache-tls"
-              subPath: {{ $tlsCACertSubPath }}
-              mountPath: {{ $tlsCACertPath }}
+              mountPath: {{ $mountCertPaths }}
               readOnly: true
             {{- end }}
             - name: akeyless-config
@@ -184,10 +183,6 @@ spec:
           resources:
 {{- toYaml .Values.resources | nindent 12 }}
           env:
-            - name: DEVELOPMENT_OR_RELEASE
-              value: "development"
-            - name: DEV_MODE
-              value: "true"
           {{- if .Values.fixedArtifactRepository }}
             - name: ARTIFACTS_REPO
               value: {{ .Values.fixedArtifactRepository  }}
@@ -283,12 +278,14 @@ spec:
             {{- if or (eq (include "akeyless-api-gw.adminAccessUidExist" .) "true") ( .Values.cachingConf.clusterCache.enabled) }}
             - name:  GATEWAY_CLUSTER_CACHE
               value: enable
+            - name: ENABLE_CACHE_TLS
+              value: {{ include "cache_enable_tls" . | quote }}
             - name: REDIS_ADDR
-              value: {{  include "akeyless-api-gw.fullname" . }}-cache-svc:6379
+              value: {{  include "akeyless-api-gw.cache_address" . | quote }}
             - name: REDIS_PASS
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "akeyless-api-gw.cacheSecretName" . }}
+                  name: {{ .Values.cachingConf.clusterCache.existingCacheConnectionSecret | default (include "akeyless-api-gw.cacheSecretName" .) }}
                   key: cache-pass
           {{- end }}
           {{- if .Values.cachingConf.clusterCache.enabled }}
@@ -377,6 +374,8 @@ spec:
           {{- if (include "cache_enable_tls" . | eq "true") }}
             - name: CACHE_REDIS_CA_PATH
               value: "{{ $tlsCACertPath }}"
+            - name: CACHE_REDIS_KEY_PATH
+              value: "{{ $tlsKeyCertPath }}"
           {{- end }}
           {{- if .Values.cachingConf.enabled }}
             - name: CACHE_ENABLE

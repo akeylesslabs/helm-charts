@@ -11,6 +11,56 @@
         }
       }
     },
+    "cachingConf" : {
+      "properties": {
+        "clusterCache": {
+          "properties": {
+            "enabled" : { "type": "boolean" },
+            "existingCacheConnectionSecret" : { "type": "string" },
+            "cacheAddress" : { "type": "string" },
+            "encryptionKeyExistingSecret": { "type": "string" }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "enabled": { "const": true }
+                }
+              },
+              "then": {
+                "properties": {
+                  "encryptionKeyExistingSecret": { "pattern": "^[a-zA-Z0-9]+$" }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "cacheAddress": {  "minLength": 1 }
+                }
+              },
+              "then": {
+                "properties": {
+                  "existingCacheConnectionSecret": { "pattern": "^[a-zA-Z0-9]+$" }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "existingCacheConnectionSecret": {  "pattern": "^[a-zA-Z0-9]+$" }
+                }
+              },
+              "then": {
+                "properties": {
+                  "cacheAddress": { "minLength": 1 }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
     "akeylessUserAuth": {
       "description": "Container Image",
       "properties": {
