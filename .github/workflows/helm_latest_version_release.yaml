@@ -11,13 +11,16 @@ env:
   major_minor_patch: ${{ github.event.deployment.payload.major_minor_patch }}
   app_version: ${{ github.event.deployment.payload.app_version }}
 
+run-name: "Release chart for service: ${{ github.event.deployment.payload.service }} version: ${{ github.event.deployment.payload.app_version }}  ${{ github.event.deployment.payload.major_minor_patch }}"
+
 jobs:
   update-latest-helm-chart-version:
     if: github.event.deployment.task == 'update-latest-version'
     runs-on: ubuntu-20.04
     outputs:
-      new_chart_version: ${{ steps.vars.outputs.new_chart_version }}
-      chart_name: ${{ steps.vars.outputs.chart_name }}
+      new_chart_version: ${{ steps.release.outputs.new_chart_version }}
+      charts_name: ${{ steps.release.outputs.charts_name }}
+      updated_charts_summary: ${{ steps.release.outputs.updated_charts_summary }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,15 +36,10 @@ jobs:
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
       - name: Update latest helm chart version
+        id: release
         env:
           GITHUB_CONTEXT: ${{ toJson(github.event.deployment) }}
         run: .github/scripts/latest_version_release.sh
-
-      - name: Set Change Variables
-        id: vars
-        run: |
-          echo new_chart_version=${{ env.new_chart_version }} >> $GITHUB_OUTPUT
-          echo chart_name=${{ env.chart_name }} >> $GITHUB_OUTPUT
 
       - uses: actions/github-script@v7
         with:
@@ -61,7 +59,8 @@ jobs:
     if: (github.event.deployment.task == 'update-latest-version')
     env:
       new_chart_version: ${{ needs.update-latest-helm-chart-version.outputs.new_chart_version }}
-      chart_name: ${{ needs.update-latest-helm-chart-version.outputs.chart_name }}
+      charts_name: ${{ needs.update-latest-helm-chart-version.outputs.charts_name }}
+      updated_charts_summary: ${{ needs.update-latest-helm-chart-version.outputs.updated_charts_summary }}
     steps:
       - name: Prepare Slack Message On Success
         id: slack-message-success-creator
@@ -69,8 +68,8 @@ jobs:
           SLACK_MESSAGE="*Service:* $service
           *Bump version:* $major_minor_patch
           *App Version:* $app_version
-          *Chart:* $chart_name
-          *New Chart Version:* $new_chart_version
+          *Charts:* $charts_name
+          *Update summary:* $updated_charts_summary
           :helm:"
           delimiter="$(openssl rand -hex 8)"
           echo "slack-message<<${delimiter}" >> $GITHUB_ENV
@@ -96,7 +95,7 @@ jobs:
     needs: [ update-latest-helm-chart-version ]
     if: (failure() && needs.*.result != 'success') && (github.event.deployment.task == 'update-latest-version')
     env:
-      chart_name: ${{ needs.update-latest-helm-chart-version.outputs.chart_name }}
+      charts_name: ${{ needs.update-latest-helm-chart-version.outputs.charts_name }}
     steps:
       - name: Prepare Slack Message On Failure
         id: slack-message-failure-creator
@@ -104,7 +103,7 @@ jobs:
           SLACK_MESSAGE="*Service:* $service
           *Bump version:* $major_minor_patch
           *App Version:* $app_version
-          *Chart:* $chart_name
+          *Chart:* $charts_name
           *Status:* Failure
           :terminator:"
           delimiter="$(openssl rand -hex 8)"
