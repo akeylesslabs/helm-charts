@@ -23,7 +23,7 @@ cache:
     existingSecretName: ""
   image:
     repository: docker.io/bitnami/redis
-    tag: 7.4.0
+    tag: 6.2
     pullPolicy: Always
   resources:
    limits:
@@ -39,7 +39,7 @@ image:
 ##   Alternative mirror registry
 #  repository: docker.registry-2.akeyless.io/base
 
-  pullPolicy: Never
+  pullPolicy: Always
   tag: latest
 
 # Uncomment for downloading Akeyless artifacts from fixed repository
@@ -400,6 +400,8 @@ cachingConf:
   clusterCache:
     enabled: false
     cacheAddress: ""
+    # In case cacheAddress is configured, you must specify an existing secret with keys:
+    # - cache-pass
     existingCacheConnectionSecret: ""
     # In case clusterCache is enabled, you must specify an existing secret for the cluster cache configuration, must include:
     # - cluster-cache-encryption-key

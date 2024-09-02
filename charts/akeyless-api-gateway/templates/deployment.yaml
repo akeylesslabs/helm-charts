@@ -371,7 +371,7 @@ spec:
               value: "{{ .Values.TLSConf.excludeCipherSuites }}"
           {{- end }}
           ## caching section
-          {{- if (include "cache_enable_tls" . | eq "true") }}
+          {{- if (include "cache_enable_tls" . | eq "true") | and (eq .Values.cachingConf.clusterCache.cacheAddress "") }}
             - name: CACHE_REDIS_CA_PATH
               value: "{{ $tlsCACertPath }}"
             - name: CACHE_REDIS_KEY_PATH
