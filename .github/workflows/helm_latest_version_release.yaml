@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-20.04
     outputs:
       new_chart_version: ${{ steps.release.outputs.new_chart_version }}
-      charts_name: ${{ steps.release.outputs.charts_name }}
+      charts: ${{ steps.release.outputs.charts }}
       updated_charts_summary: ${{ steps.release.outputs.updated_charts_summary }}
     steps:
       - name: Checkout
@@ -59,7 +59,7 @@ jobs:
     if: (github.event.deployment.task == 'update-latest-version')
     env:
       new_chart_version: ${{ needs.update-latest-helm-chart-version.outputs.new_chart_version }}
-      charts_name: ${{ needs.update-latest-helm-chart-version.outputs.charts_name }}
+      charts: ${{ needs.update-latest-helm-chart-version.outputs.charts }}
       updated_charts_summary: ${{ needs.update-latest-helm-chart-version.outputs.updated_charts_summary }}
     steps:
       - name: Prepare Slack Message On Success
@@ -68,8 +68,8 @@ jobs:
           SLACK_MESSAGE="*Service:* $service
           *Bump version:* $major_minor_patch
           *App Version:* $app_version
-          *Charts:* $charts_name
-          *Update summary:* $updated_charts_summary
+          *Charts:* $charts
+          *Release summary:* $updated_charts_summary
           :helm:"
           delimiter="$(openssl rand -hex 8)"
           echo "slack-message<<${delimiter}" >> $GITHUB_ENV
@@ -95,7 +95,7 @@ jobs:
     needs: [ update-latest-helm-chart-version ]
     if: (failure() && needs.*.result != 'success') && (github.event.deployment.task == 'update-latest-version')
     env:
-      charts_name: ${{ needs.update-latest-helm-chart-version.outputs.charts_name }}
+      charts: ${{ needs.update-latest-helm-chart-version.outputs.charts }}
     steps:
       - name: Prepare Slack Message On Failure
         id: slack-message-failure-creator
@@ -103,7 +103,7 @@ jobs:
           SLACK_MESSAGE="*Service:* $service
           *Bump version:* $major_minor_patch
           *App Version:* $app_version
-          *Chart:* $charts_name
+          *Chart:* $charts
           *Status:* Failure
           :terminator:"
           delimiter="$(openssl rand -hex 8)"

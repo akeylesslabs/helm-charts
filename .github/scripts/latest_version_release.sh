@@ -83,7 +83,7 @@ done
 
 echo "new_chart_version=$new_chart_version" >> "${GITHUB_ENV}"
 echo "new_chart_version=$new_chart_version" >> "${GITHUB_OUTPUT}"
-echo "charts_name=${charts[*]}" >> "${GITHUB_ENV}"
-echo "charts_name=${charts[*]}" >> "${GITHUB_OUTPUT}"
+echo "charts=${charts[*]}" >> "${GITHUB_ENV}"
+echo "charts=${charts[*]}" >> "${GITHUB_OUTPUT}"
 echo "updated_charts_summary=${updated_charts_summary[*]}" >> "${GITHUB_ENV}"
 echo "updated_charts_summary=${updated_charts_summary[*]}" >> "${GITHUB_OUTPUT}"
