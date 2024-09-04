@@ -16,7 +16,7 @@
         "clusterCache": {
           "properties": {
             "enabled" : { "type": "boolean" },
-            "encryptionKeyExistingSecret": { "type": "string" }
+            "encryptionKeyExistingSecret": { "oneOf": [{ "type": "string"}, { "type": "null" }]}
           },
           "allOf": [
             {
@@ -27,7 +27,7 @@
               },
               "then": {
                 "properties": {
-                  "encryptionKeyExistingSecret": { "pattern": "^[a-zA-Z0-9-]+$" }
+                  "encryptionKeyExistingSecret": { "type": "string", "pattern": "^[a-zA-Z0-9-]+$" }
                 }
               }
             }
