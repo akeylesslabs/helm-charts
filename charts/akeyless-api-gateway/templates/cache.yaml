@@ -4,7 +4,7 @@
 {{- $tlsCertKeyPath := printf "%s/tls.key" $mountCertPaths }}
 {{- $tlsCACertPath := printf "%s/ca.crt" $mountCertPaths }}
 {{- $tlsCertPath := printf "%s/tls.crt" $mountCertPaths }}
-{{- $tlsArgs :=  ternary (printf "--tls --cacert %s --cert %s --key %s " $tlsCACertPath $tlsCertPath $tlsCertKeyPath) "" (include "cache_enable_tls" . | eq "true") -}}
+{{- $tlsArgs :=  ternary (printf "--tls --cacert %s --cert %s --key %s " $tlsCACertPath $tlsCertPath $tlsCertKeyPath) "" (include "cacheEnableTls" . | eq "true") -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -25,11 +25,11 @@ spec:
         name: {{ $deploymentName }}
         component: cache
     spec:
-      {{- if (include "cache_enable_tls" . | eq "true") }}
+      {{- if (include "cacheEnableTls" . | eq "true") }}
       volumes:
         - name: cache-tls
           secret:
-            secretName: {{ include "cache_tls_secret_name" . }}
+            secretName: {{ include "cacheTlsSecretName" . }}
       {{ end }}
       containers:
       - name: {{ $deploymentName }}
@@ -94,8 +94,8 @@ spec:
               name: {{ include "akeyless-api-gw.cacheSecretName" . }}
               key: cache-pass
         - name: REDIS_TLS_ENABLED
-          value: {{ include "cache_enable_tls" . | quote -}}
-        {{- if (include "cache_enable_tls" . | eq "true") }}
+          value: {{ include "cacheEnableTls" . | quote -}}
+        {{- if (include "cacheEnableTls" . | eq "true") }}
         - name: REDIS_TLS_PORT
           value: "6379"
         - name: REDIS_PORT
@@ -112,18 +112,18 @@ spec:
         - name: REDIS_PORT
           value: "6379"
         {{- end }}
-        {{- if (include "cache_enable_tls" . | eq "true") }}
+        {{- if (include "cacheEnableTls" . | eq "true") }}
         volumeMounts:
-            - name: cache-tls
-              mountPath: {{ $mountCertPaths }}
-              readOnly: true
+        - name: cache-tls
+          mountPath: {{ $mountCertPaths }}
+          readOnly: true
         {{- end }}
 ---
 
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "cache_svc_name" . }}
+  name: {{ include "cacheSvcName" . }}
   labels:
 {{- include "akeyless-api-gw.labels" . | nindent 4 }}
 spec:
