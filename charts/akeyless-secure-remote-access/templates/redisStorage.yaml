@@ -67,7 +67,11 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 5
           env:
-            {{- include "akeyless-secure-remote-access.password" . | nindent 10 }}
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "akeyless-secure-remote-access.storageSecretName" . }}
+                  key: storage-pass
 ---
 
 apiVersion: v1

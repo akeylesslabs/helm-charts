@@ -196,7 +196,7 @@ Get the Ingress TLS secret.
 {{- end -}}
 
 {{- define "akeyless-secure-remote-access.password" }}
-  - name: REDIS_PASSWORD
+  - name: REDIS_PASS
     valueFrom:
       secretKeyRef:
         name: {{ include "akeyless-secure-remote-access.storageSecretName" . }}
