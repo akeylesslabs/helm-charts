@@ -86,7 +86,7 @@ deployment:
 
 redisStorage:
   enabled: false
-
+  redisPasswordExistingSecret:
 
 ####################################################
 ## Default values for akeyless-zero-trust-bastion ##
