@@ -197,11 +197,7 @@ spec:
             value: "1"
           - name: REDIS_ADDR
             value: {{  include "akeyless-secure-remote-access.fullname" . }}-storage-svc:6379
-          - name: REDIS_PASS
-            valueFrom:
-              secretKeyRef:
-                name: {{ include "akeyless-zero-trust-portal.storageSecretName" . }}
-                key: storage-pass
+          {{- include "akeyless-secure-remote-access.password" . | nindent 8 }}
 {{- end }}
 {{- if .Values.sshConfig.env }}
           {{- toYaml .Values.sshConfig.env | nindent 10 }}
