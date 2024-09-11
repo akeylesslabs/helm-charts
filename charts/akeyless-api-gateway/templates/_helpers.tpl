@@ -440,7 +440,11 @@ Check metrics configuration Secret
 {{- end -}}
 
 {{- define "cacheAddress" -}}
+{{- if eq (include "cacheEnableTls" .) "true" -}}
 {{- printf "%s.%s.svc.cluster.local" (include "cacheSvcName" .) .Release.Namespace }}
+{{- else -}}
+{{- printf "%s.%s" (include "cacheSvcName" .) .Release.Namespace }}
+{{- end -}}
 {{- end -}}
 
 {{- define "akeyless-api-gw.cacheSvcName" }}
