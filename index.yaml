@@ -7136,6 +7136,20 @@ entries:
     version: 1.0.0
   akeyless-zero-trust-web-access:
   - apiVersion: v2
+    appVersion: 1.3.4
+    created: "2024-09-12T09:20:33.254856883Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-zero-trust-web-access
+    digest: 6794ec760a5f38b27f9e1c82c72c345f563a31a853bd733a22f2546eb8b60707
+    home: https://www.akeyless.io
+    icon: https://akeylesslabs.github.io/helm-charts/assets/logo/akl.jpeg
+    name: akeyless-zero-trust-web-access
+    sources:
+    - https://github.com/akeylesslabs/helm-charts/tree/feature/helm_repo/akeyless-zero-trust-web-access
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-2.5.4/akeyless-zero-trust-web-access-2.5.4.tgz
+    version: 2.5.4
+  - apiVersion: v2
     appVersion: 1.3.3
     created: "2024-08-15T07:48:14.022912211Z"
     description: A Helm chart for Kubernetes that deploys akeyless-zero-trust-web-access
@@ -8899,4 +8913,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2024-09-11T12:21:56.938805357Z"
+generated: "2024-09-12T09:20:33.255954423Z"
