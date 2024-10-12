@@ -1,7 +1,7 @@
 name: Git Issues Jira Automation Pipeline
 on:
   issues:
-    types: [opened, closed]
+    types: [opened]
   issue_comment:
     types: [created]
 
