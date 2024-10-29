@@ -36,7 +36,10 @@
         "mailto": {
           "action": "useHelperApp",
           "ask": false,
-          "handlers": []
+          "handlers": [{
+            "name": "Block",
+            "uriTemplate": "https://nowhere.block"
+          }]
         }
       }
     }
