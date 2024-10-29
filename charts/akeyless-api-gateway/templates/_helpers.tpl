@@ -120,9 +120,13 @@ Generate chart secret name
 {{- end -}}
 
 {{- define "akeyless-api-gw.clusterCacheEncryptionKeyExist" -}}
-        {{- if .Values.cachingConf.clusterCache.encryptionKeyExistingSecret -}}
-            {{- printf "%s" .Values.cachingConf.clusterCache.encryptionKeyExistingSecret -}}
+    {{- if .Values.cachingConf.clusterCache.encryptionKeyExistingSecret -}}
+        {{- printf "%s" .Values.cachingConf.clusterCache.encryptionKeyExistingSecret -}}
+    {{- else -}}
+        {{- if .Values.cachingConf.clusterCache.enabled }}
+            {{- printf "%s-cache-encryption-key" .Release.Name -}}
         {{- end -}}
+    {{- end -}}
 {{- end -}}
 
 {{/* Define REDIS_MAXMEMORY as 80% of the pod's memory limit */}}

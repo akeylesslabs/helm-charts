@@ -291,11 +291,12 @@ spec:
           {{- if .Values.cachingConf.clusterCache.enabled }}
             - name: USE_CLUSTER_CACHE
               value: "true"
-            - name: CACHE_ENCRYPTION_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "akeyless-api-gw.clusterCacheEncryptionKeyExist" . }}
-                  key: cluster-cache-encryption-key
+            - name: STORE_CACHE_ENCRYPTION_KEY_TO_K8S_SECRETS
+              value: {{ .Values.cachingConf.clusterCache.storeEncryptionKeyToK8sSecrets | quote }}
+            {{- if not (eq (include "akeyless-api-gw.clusterCacheEncryptionKeyExist" .) "") }}
+            - name: CACHE_ENCRYPTION_KEY_SECRET_NAME
+              value: {{ include "akeyless-api-gw.clusterCacheEncryptionKeyExist" . | quote }}
+            {{- end }}
           {{- end }}
           {{- if .Values.universalIdentity.uidRotationInterval }}
             - name: UID_ROTATE_INTERVAL

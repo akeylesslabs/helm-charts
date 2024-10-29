@@ -399,9 +399,14 @@ cachingConf:
 
   clusterCache:
     enabled: false
-    # In case clusterCache is enabled, you must specify an existing secret for the cluster cache configuration, must include:
-    # - cluster-cache-encryption-key
-    encryptionKeyExistingSecret: ""
+    # If clusterCache is enabled, a secret name can be specified in Kubernetes secrets. This allows the gateway
+    # to manage the secret content and store the cache encryption key. This is useful for Auto Scaling without network connectivity.
+    # If the service account not created by the chart, ensure the provided service account has permissions to create and update this secret.
+    encryptionKeyExistingSecret:
+
+    # Set to true in order to store the cache encryption key in Kubernetes secrets for Auto Scaling without network
+    # connectivity (recommended for production)
+    storeEncryptionKeyToK8sSecrets: false
 
   proActiveCaching:
     enabled: false
