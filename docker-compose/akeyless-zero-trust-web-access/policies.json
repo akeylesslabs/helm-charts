@@ -30,6 +30,15 @@
       "Exceptions": [
         "https://*.akeyless.io/*"
       ]
+    },
+    "Handlers": {
+      "schemes": {
+        "mailto": {
+          "action": "useHelperApp",
+          "ask": false,
+          "handlers": []
+        }
+      }
     }
   }
 }
