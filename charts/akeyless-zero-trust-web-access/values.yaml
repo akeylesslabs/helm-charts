@@ -275,7 +275,7 @@ webWorker:
                   "ask": false,
                   "handlers": [{
                     "name": "Block",
-                    "uriTemplate": "https://nowhere.block"
+                    "uriTemplate": "https://www.akeyless.io/"
                   }]
                 }
               }
