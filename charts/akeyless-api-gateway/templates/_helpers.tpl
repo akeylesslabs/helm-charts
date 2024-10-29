@@ -122,10 +122,8 @@ Generate chart secret name
 {{- define "akeyless-api-gw.clusterCacheEncryptionKeyExist" -}}
     {{- if .Values.cachingConf.clusterCache.encryptionKeyExistingSecret -}}
         {{- printf "%s" .Values.cachingConf.clusterCache.encryptionKeyExistingSecret -}}
-    {{- else -}}
-        {{- if .Values.cachingConf.clusterCache.enabled }}
-            {{- printf "%s-cache-encryption-key" .Release.Name -}}
-        {{- end -}}
+    {{- else if .Values.cachingConf.clusterCache.enabled -}}
+        {{- printf "%s-cache-encryption-key" .Release.Name -}}
     {{- end -}}
 {{- end -}}
 
