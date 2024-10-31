@@ -53,7 +53,7 @@ for chart in "${charts[@]}"; do
       app_version="${ztb_app_ver}_${ztp_app_ver}"
       sed -i "s/appVersion.*/appVersion: ${app_version}/g" Chart.yaml
 
-    elif [[ "${{chart}" == "akeyless-gateway" ]]; then
+    elif [[ "${chart}" == "akeyless-gateway" ]]; then
       # edit app version for akeyless-gateway
       if [[ "${service}" == "zero-trust-bastion" ]]; then
         gateway_inner_chart="sraVersion"
