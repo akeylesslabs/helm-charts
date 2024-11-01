@@ -406,7 +406,7 @@ cachingConf:
 
     # Set to true in order to store the cache encryption key in Kubernetes secrets for Scaling Up without network
     # connectivity (recommended for production)
-    storeEncryptionKeyToK8sSecrets: false
+    enableScaleOutOnDisconnectedMode: false
 
   proActiveCaching:
     enabled: false

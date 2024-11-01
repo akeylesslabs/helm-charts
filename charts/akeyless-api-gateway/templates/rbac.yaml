@@ -1,5 +1,5 @@
-{{/* RBAC rule to access the secret if storeEncryptionKeyToK8sSecrets is true and clusterCacheEncryptionKeyExist is not empty */}}
-{{- if and (eq $.Values.cachingConf.clusterCache.storeEncryptionKeyToK8sSecrets true) (not (.Values.cachingConf.clusterCache.encryptionKeyExistingSecret)) }}
+{{/* RBAC rule to access the secret if enableScaleOutOnDisconnectedMode is true and clusterCacheEncryptionKeyExist is not empty */}}
+{{- if and (eq $.Values.cachingConf.clusterCache.enableScaleOutOnDisconnectedMode true) (not (.Values.cachingConf.clusterCache.encryptionKeyExistingSecret)) }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
