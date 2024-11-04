@@ -404,10 +404,6 @@ cachingConf:
     # If the service account not created by the chart, ensure the provided service account has permissions to create and update this secret.
     encryptionKeyExistingSecret:
 
-    # Set to true in order to store the cache encryption key in Kubernetes secrets for Scaling Up without network
-    # connectivity (recommended for production)
-    enableScaleOutOnDisconnectedMode: false
-
   proActiveCaching:
     enabled: false
 
