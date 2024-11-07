@@ -399,9 +399,9 @@ cachingConf:
 
   clusterCache:
     enabled: false
-    # If clusterCache is enabled, a secret name can be specified in Kubernetes secrets. This allows the gateway
-    # to manage the secret content and store the cache encryption key. This is useful for Scaling Up without network connectivity.
-    # If the service account not created by the chart, ensure the provided service account has permissions to create and update this secret.
+    # If clusterCache is enabled, the encryptionKeyExistingSecret parameter has a value (i.e., if you specify an existing secret for the encryption key), 
+    # Akeyless will use this specified encryption key and store it securely within the Akeyless Gateway.
+    # If the encryptionKeyExistingSecret parameter is empty or not specified, Akeyless will automatically generate a new encryption key for the cache.
     encryptionKeyExistingSecret:
 
   proActiveCaching:
