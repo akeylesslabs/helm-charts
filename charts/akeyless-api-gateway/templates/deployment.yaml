@@ -1,6 +1,7 @@
 {{- $mountCertPaths := "/opt/akeyless/cache/certs" -}}
 {{- $tlsKeyCertPath := printf "%s/tls.key" $mountCertPaths }}
-{{- $tlsCACertPath := printf "%s/tls.crt" $mountCertPaths }}
+{{- $tlsCACertPath := printf "%s/ca.crt" $mountCertPaths }}
+{{- $tlsCertPath := printf "%s/tls.crt" $mountCertPaths }}
 apiVersion: apps/v1
 kind: {{ include "deyploymant.type" $ }}
 metadata:
@@ -377,6 +378,8 @@ spec:
               value: "{{ $tlsCACertPath }}"
             - name: CACHE_REDIS_KEY_PATH
               value: "{{ $tlsKeyCertPath }}"
+            - name: CACHE_REDIS_CERT_PATH
+              value: "{{ $tlsCertPath }}"
           {{- end }}
           {{- if .Values.cachingConf.enabled }}
             - name: CACHE_ENABLE
