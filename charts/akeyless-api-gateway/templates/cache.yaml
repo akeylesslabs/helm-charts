@@ -1,26 +1,38 @@
 {{- if or (not (eq (include "akeyless-api-gw.adminAccessUidExist" .) "")) ( .Values.cachingConf.clusterCache.enabled) }}
+{{- $deploymentName := printf "%s-cache" (include "akeyless-api-gw.fullname" .) }}
+{{- $mountCertPaths := "/opt/akeyless/cache/certs" -}}
+{{- $tlsCertKeyPath := printf "%s/tls.key" $mountCertPaths }}
+{{- $tlsCACertPath := printf "%s/ca.crt" $mountCertPaths }}
+{{- $tlsCertPath := printf "%s/tls.crt" $mountCertPaths }}
+{{- $tlsArgs :=  ternary (printf "--tls --cacert %s --cert %s --key %s " $tlsCACertPath $tlsCertPath $tlsCertKeyPath) "" (include "cacheEnableTls" . | eq "true") -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "akeyless-api-gw.fullname" . }}-cache
+  name: {{ $deploymentName }}
   namespace: {{ .Release.Namespace | quote }}
   labels:
-    name: {{ template "akeyless-api-gw.fullname" . }}-cache
+    name: {{ $deploymentName }}
     component: cache
 {{- include "akeyless-api-gw.labels" . | nindent 4 }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: {{ template "akeyless-api-gw.fullname" . }}-cache
+      name: {{ $deploymentName }}
   template:
     metadata:
       labels:
-        name: {{ template "akeyless-api-gw.fullname" . }}-cache
+        name: {{ $deploymentName }}
         component: cache
     spec:
+      {{- if (include "cacheEnableTls" . | eq "true") }}
+      volumes:
+        - name: cache-tls
+          secret:
+            secretName: {{ include "cacheTlsSecretName" . }}
+      {{ end }}
       containers:
-      - name: {{ template "akeyless-api-gw.fullname" . }}-cache
+      - name: {{ $deploymentName }}
         image: "{{ .Values.cache.image.repository }}:{{ .Values.cache.image.tag }}"
         imagePullPolicy: {{ .Values.cache.image.pullPolicy }}
         #args: ["--requirepass", "$(REDIS_PASSWORD)"]
@@ -36,13 +48,13 @@ spec:
                 #!/usr/bin/env bash -e
                 export REDISCLI_AUTH="$REDIS_PASSWORD"
                 set_response=$(
-                  redis-cli set liveness_test_key "SUCCESS"
+                  redis-cli {{ $tlsArgs }} set liveness_test_key "SUCCESS"
                 )
                 response=$(
-                  redis-cli get liveness_test_key
+                  redis-cli {{ $tlsArgs }} get liveness_test_key
                 )
                 del_response=$(
-                    redis-cli del liveness_test_key
+                  redis-cli {{ $tlsArgs }} del liveness_test_key
                 )
                 if [ "$response" != "SUCCESS" ] ; then
                   echo "Unable to get keys, something is wrong"
@@ -60,33 +72,58 @@ spec:
               #!/usr/bin/env bash -e
               export REDISCLI_AUTH="$REDIS_PASSWORD"
               response=$(
-                  redis-cli ping
+                redis-cli {{ $tlsArgs }} ping
               )
               if [ "$response" != "PONG" ] ; then
                   echo "Unable to get keys, something is wrong"
                   echo "$response"
                   exit 1
-                fi
+              fi
           initialDelaySeconds: 5
           periodSeconds: 5
         resources:
-{{- toYaml .Values.cache.resources | nindent 12 }}
+          {{- toYaml .Values.cache.resources | nindent 12 }}
         env:
         - name: REDIS_DISABLE_COMMANDS
           value: "FLUSHDB,FLUSHALL"
         - name: REDIS_EXTRA_FLAGS
-          value: "--maxmemory {{ include "akeyless-api-gw.redisMaxmemory" . }} --maxmemory-policy allkeys-lru"
+          value: '--maxmemory {{ include "akeyless-api-gw.redisMaxmemory" . }} --maxmemory-policy allkeys-lru'
         - name: REDIS_PASSWORD
           valueFrom:
             secretKeyRef:
               name: {{ include "akeyless-api-gw.cacheSecretName" . }}
               key: cache-pass
+        - name: REDIS_TLS_ENABLED
+          value: {{ include "cacheEnableTls" . | quote -}}
+        {{- if (include "cacheEnableTls" . | eq "true") }}
+        - name: REDIS_TLS_PORT
+          value: "6379"
+        - name: REDIS_PORT
+          value: "2001"
+        - name: REDIS_TLS_AUTH_CLIENTS
+          value: "yes"
+        - name:  REDIS_TLS_CERT_FILE
+          value: {{ $tlsCertPath }}
+        - name:  REDIS_TLS_KEY_FILE
+          value: {{ $tlsCertKeyPath }}
+        - name:  REDIS_TLS_CA_FILE
+          value: {{ $tlsCACertPath }}
+        {{ else }}
+        - name: REDIS_PORT
+          value: "6379"
+        {{- end }}
+        {{- if (include "cacheEnableTls" . | eq "true") }}
+        volumeMounts:
+        - name: cache-tls
+          mountPath: {{ $mountCertPaths }}
+          readOnly: true
+        {{- end }}
 ---
 
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{  include "akeyless-api-gw.fullname" . }}-cache-svc
+  name: {{ include "cacheSvcName" . }}
   labels:
 {{- include "akeyless-api-gw.labels" . | nindent 4 }}
 spec:
@@ -94,6 +131,6 @@ spec:
   - port: 6379
     protocol: TCP
   selector:
-    name: {{ template "akeyless-api-gw.fullname" . }}-cache
+    name: {{ $deploymentName }}
   type: ClusterIP
 {{- end }}

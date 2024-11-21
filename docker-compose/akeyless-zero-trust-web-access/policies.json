@@ -13,6 +13,12 @@
     "OfferToSaveLogins": false,
     "OfferToSaveLoginsDefault": false,
     "PasswordManagerEnabled": false,
+    "ExtensionSettings": {
+      "*": {
+        "install_sources": [],
+        "blocked_install_message": "Extension installation is blocked."
+      }
+    },
     "Proxy": {
       "Mode": "none",
       "Locked": true
@@ -30,6 +36,18 @@
       "Exceptions": [
         "https://*.akeyless.io/*"
       ]
+    },
+    "Handlers": {
+      "schemes": {
+        "mailto": {
+          "action": "useHelperApp",
+          "ask": false,
+          "handlers": [{
+            "name": "Block",
+            "uriTemplate": "https://www.akeyless.io/"
+          }]
+        }
+      }
     }
   }
 }

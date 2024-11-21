@@ -19,59 +19,59 @@ spec:
         component: storage
     spec:
       containers:
-      - name: {{ template "akeyless-secure-remote-access.fullname" . }}-storage
-        {{ include "akeyless-zero-trust-portal.redisStorageImage" $ }}
-        ports:
-          - containerPort: 6379
-            name: storage
-        livenessProbe:
-          exec:
-            command:
-              - sh
-              - -c
-              - |
-                #!/usr/bin/env bash -e
-                export REDISCLI_AUTH="$REDIS_PASSWORD"
-                set_response=$(
-                  redis-cli set liveness_test_key "SUCCESS"
-                )
-                response=$(
-                  redis-cli get liveness_test_key
-                )
-                del_response=$(
-                    redis-cli del liveness_test_key
-                )
-                if [ "$response" != "SUCCESS" ] ; then
-                  echo "Unable to get keys, something is wrong"
-                  echo "$response"
-                  exit 1
-                fi
-          initialDelaySeconds: 5
-          periodSeconds: 5
-        readinessProbe:
-          exec:
-            command:
-              - sh
-              - -c
-              - |
-                #!/usr/bin/env bash -e
-                export REDISCLI_AUTH="$REDIS_PASSWORD"
-                response=$(
-                    redis-cli ping
-                )
-                if [ "$response" != "PONG" ] ; then
+        - name: {{ template "akeyless-secure-remote-access.fullname" . }}-storage
+        {{ include "akeyless-secure-remote-access.redisStorageImage" . | nindent 6 }}
+          ports:
+            - containerPort: 6379
+              name: storage
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - |
+                  #!/usr/bin/env bash -e
+                  export REDISCLI_AUTH="$REDIS_PASSWORD"
+                  set_response=$(
+                    redis-cli set liveness_test_key "SUCCESS"
+                  )
+                  response=$(
+                    redis-cli get liveness_test_key
+                  )
+                  del_response=$(
+                      redis-cli del liveness_test_key
+                  )
+                  if [ "$response" != "SUCCESS" ] ; then
                     echo "Unable to get keys, something is wrong"
                     echo "$response"
                     exit 1
                   fi
-          initialDelaySeconds: 5
-          periodSeconds: 5
-        env:
-          - name: REDIS_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: {{ include "akeyless-zero-trust-portal.storageSecretName" . }}
-                key: storage-pass
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - |
+                  #!/usr/bin/env bash -e
+                  export REDISCLI_AUTH="$REDIS_PASSWORD"
+                  response=$(
+                      redis-cli ping
+                  )
+                  if [ "$response" != "PONG" ] ; then
+                      echo "Unable to get keys, something is wrong"
+                      echo "$response"
+                      exit 1
+                    fi
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "akeyless-secure-remote-access.storageSecretName" . }}
+                  key: storage-pass
 ---
 
 apiVersion: v1

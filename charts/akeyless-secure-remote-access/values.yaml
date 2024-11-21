@@ -87,7 +87,6 @@ deployment:
 redisStorage:
   enabled: false
 
-
 ####################################################
 ## Default values for akeyless-zero-trust-bastion ##
 ####################################################

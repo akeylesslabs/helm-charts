@@ -177,16 +177,28 @@ Get the Ingress TLS secret.
 {{- default "akeyless.io" .Values.ztpConfig.akeylessTenantUrl -}}
 {{- end -}}
 
-{{- define "akeyless-zero-trust-portal.storageSecretName" -}}
-        {{ $.Release.Name }}-storage-secret
+{{- define "akeyless-secure-remote-access.redisStorageImage" -}}
+  {{- if .Values.redisStorage.image -}}
+    image: "{{ .Values.redisStorage.image.repository }}:{{ .Values.redisStorage.image.tag }}"
+    imagePullPolicy: {{ .Values.redisStorage.image.pullPolicy }}
+  {{- else }}
+    image: "docker.io/bitnami/redis:6.2"
+    imagePullPolicy: "Always"
+  {{- end -}}
 {{- end -}}
 
-{{- define "akeyless-zero-trust-portal.redisStorageImage" -}}
-    {{- if .Values.redisStorage.image -}}
-        image: "{{ .Values.redisStorage.image.repository }}:{{ .Values.redisStorage.image.tag }}"
-        imagePullPolicy: {{ .Values.redisStorage.image.pullPolicy }}
-    {{- else }}
-        image: "docker.io/bitnami/redis:6.2"
-        imagePullPolicy: "Always"
-    {{- end -}}
+{{- define "akeyless-secure-remote-access.storageSecretName" -}}
+  {{- if empty .Values.redisStorage.redisPasswordExistingSecret }}
+  {{- printf "%s-storage-secret" $.Release.Name -}}
+  {{- else if not (empty .Values.redisStorage.redisPasswordExistingSecret) }}
+  {{- printf "%s" .Values.redisStorage.redisPasswordExistingSecret }}
+  {{- end }}
 {{- end -}}
+
+{{- define "akeyless-secure-remote-access.password" }}
+  - name: REDIS_PASS
+    valueFrom:
+      secretKeyRef:
+        name: {{ include "akeyless-secure-remote-access.storageSecretName" . }}
+        key: storage-pass
+{{- end }}

@@ -1,3 +1,6 @@
+{{- $mountCertPaths := "/opt/akeyless/cache/certs" -}}
+{{- $tlsKeyCertPath := printf "%s/tls.key" $mountCertPaths }}
+{{- $tlsCACertPath := printf "%s/tls.crt" $mountCertPaths }}
 apiVersion: apps/v1
 kind: {{ include "deyploymant.type" $ }}
 metadata:
@@ -47,8 +50,11 @@ spec:
       nodeSelector:
       {{ toYaml .Values.deployment.nodeSelector | indent 4 }}
       {{- end }}
-      {{- if or (not (eq (include "akeyless-api-gw.customerFragmentExist" .) "")) (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true" ) (.Values.metrics.enabled)}}
+      {{- if or (not (eq (include "akeyless-api-gw.customerFragmentExist" .) "")) (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true" ) (.Values.metrics.enabled)  |  or (include "cacheEnableTls" . | eq "true")  }}
       volumes:
+      - name: cache-tls
+        secret:
+          secretName: {{ include "cacheTlsSecretName" . }}
       - name: akeyless-config
         emptyDir: {}
       {{- if not (eq (include "akeyless-api-gw.customerFragmentExist" .) "") }}
@@ -159,8 +165,13 @@ spec:
               scheme: HTTPS
               {{- end }}
 {{- toYaml .Values.readinessProbe | trim | nindent 12 }}
-         {{- if or (not (eq (include "akeyless-api-gw.customerFragmentExist" .) "")) (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true") ( .Values.metrics.enabled)}}
+         {{- if or (not (eq (include "akeyless-api-gw.customerFragmentExist" .) "")) (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true") ( .Values.metrics.enabled) |  or (include "cacheEnableTls" . | eq "true") }}
           volumeMounts:
+            {{- if (include "cacheEnableTls" . | eq "true") }}
+            - name: "cache-tls"
+              mountPath: {{ $mountCertPaths }}
+              readOnly: true
+            {{- end }}
             - name: akeyless-config
               mountPath: {{include "akeyless-api-gw.root.config.path" $}}/.akeyless
           {{- if and (.Values.metrics.enabled) (not (eq (include "akeyless-api-gw.metricsSecretExist" .) "")) }}
@@ -267,8 +278,10 @@ spec:
             {{- if or (eq (include "akeyless-api-gw.adminAccessUidExist" .) "true") ( .Values.cachingConf.clusterCache.enabled) }}
             - name:  GATEWAY_CLUSTER_CACHE
               value: enable
+            - name: ENABLE_CACHE_TLS
+              value: {{ include "cacheEnableTls" . | quote }}
             - name: REDIS_ADDR
-              value: {{  include "akeyless-api-gw.fullname" . }}-cache-svc:6379
+              value: {{  include "akeyless-api-gw.cacheSvcName" . | quote }}
             - name: REDIS_PASS
               valueFrom:
                 secretKeyRef:
@@ -278,11 +291,12 @@ spec:
           {{- if .Values.cachingConf.clusterCache.enabled }}
             - name: USE_CLUSTER_CACHE
               value: "true"
-            - name: CACHE_ENCRYPTION_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "akeyless-api-gw.clusterCacheEncryptionKeyExist" . }}
-                  key: cluster-cache-encryption-key
+            - name: STORE_CACHE_ENCRYPTION_KEY_TO_K8S_SECRETS
+              value: {{ .Values.cachingConf.clusterCache.enableScaleOutOnDisconnectedMode | quote }}
+            {{- if not (eq (include "akeyless-api-gw.clusterCacheEncryptionKeyExist" .) "") }}
+            - name: CACHE_ENCRYPTION_KEY_SECRET_NAME
+              value: {{ include "akeyless-api-gw.clusterCacheEncryptionKeyExist" . | quote }}
+            {{- end }}
           {{- end }}
           {{- if .Values.universalIdentity.uidRotationInterval }}
             - name: UID_ROTATE_INTERVAL
@@ -358,6 +372,12 @@ spec:
               value: "{{ .Values.TLSConf.excludeCipherSuites }}"
           {{- end }}
           ## caching section
+          {{- if (include "cacheEnableTls" . | eq "true") }}
+            - name: CACHE_REDIS_CA_PATH
+              value: "{{ $tlsCACertPath }}"
+            - name: CACHE_REDIS_KEY_PATH
+              value: "{{ $tlsKeyCertPath }}"
+          {{- end }}
           {{- if .Values.cachingConf.enabled }}
             - name: CACHE_ENABLE
               value: "{{ .Values.cachingConf.enabled }}"
@@ -416,3 +436,4 @@ spec:
           {{- if .Values.env }}
   {{- toYaml .Values.env | nindent 12 }}
           {{- end }}
+
