@@ -1,0 +1,29 @@
+{{- if and (.Values.gateway.hpa.enabled) (eq (include "deployment.type" $) "Deployment") }}
+apiVersion: "autoscaling/v2"
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Release.Name }}-hpa
+  namespace: {{ .Release.Namespace }}
+  annotations:
+  {{- toYaml .Values.gateway.hpa.annotations | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "akeyless-gateway.fullname" . }}
+  minReplicas: {{ $.Values.gateway.hpa.minReplicas | default 1 }}
+  maxReplicas: {{ $.Values.gateway.hpa.maxReplicas | default 14 }}
+  metrics:
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ $.Values.gateway.hpa.memAvgUtil }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ $.Values.gateway.hpa.cpuAvgUtil }}
+  {{- end }}

@@ -1,0 +1,43 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "akeyless-gateway.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "akeyless-gateway.labels" . | nindent 4 }}
+  {{- if .Values.gateway.service.labels }}
+    {{- toYaml .Values.gateway.service.labels | nindent 4 }}
+  {{- end }}
+  annotations:
+  {{- toYaml .Values.gateway.service.annotations | nindent 4 }}
+spec:
+  {{- if .Values.gateway.ingress.enabled }}
+  type: {{ .Values.gateway.service.type | default "NodePort" }}
+  {{- else }}
+  type: {{ required "A valid .Values.gateway.service.type entry required!" .Values.gateway.service.type }}
+  {{- end }}
+  ports:
+    - port: {{ .Values.gateway.service.port }}
+      targetPort: gateway
+      protocol: TCP
+      name: gateway
+  selector:
+    {{- include "akeyless-gateway-sra-ssh-service.selectorLabels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ include "akeyless-gateway.fullname" . }}-internal"
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "akeyless-gateway.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: internal-gw-api
+      protocol: TCP
+      name: internal-gw-api
+  selector:
+    {{- include "akeyless-gateway-sra-ssh-service.selectorLabels" . | nindent 4 }}

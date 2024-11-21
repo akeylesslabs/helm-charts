@@ -1,0 +1,29 @@
+{{- if eq .Values.sra.enabled true }}
+{{- range .Values.sra.webConfig.persistence.volumes }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ printf "%s-%s" $.Release.Name .name | title | lower }}
+  namespace: {{ $.Release.Namespace }}
+{{- if .annotations }}
+  annotations:
+  {{- toYaml .annotations | nindent 4 }}
+{{- end }}
+  labels:
+  {{- include "akeyless-sra-web.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: {{ required "A valid .Values.sra.webConfig.persistence.volumes.storageClassName entry required!" .storageClassName }}
+  resources:
+    requests:
+      storage: {{ required "A valid .Values.sra.webConfig.persistence.volumes.size entry required!" .size }}
+{{- if .matchLabels }}
+  selector:
+    # To make sure we match the claim with the exact volume, match the label
+    matchLabels:
+{{- toYaml .matchLabels | nindent 6 }}
+{{- end }}
+{{- end }}
+{{- end }}

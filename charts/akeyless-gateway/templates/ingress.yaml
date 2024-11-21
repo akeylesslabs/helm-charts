@@ -1,0 +1,51 @@
+{{- $ingress := .Values.gateway.ingress }}
+{{- if $ingress.enabled }}
+apiVersion: "networking.k8s.io/v1"
+kind: Ingress
+metadata:
+  name: {{ include "akeyless-gateway.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+{{- include "akeyless-gateway.labels" . | nindent 4 }}
+  {{- if $ingress.labels }}
+    {{- toYaml $ingress.labels | nindent 4 }}
+  {{- end }}
+  annotations:
+    {{- if $ingress.certManager }}
+    kubernetes.io/tls-acme: "true"
+    {{- end }}
+    {{- if $ingress.annotations }}
+    {{ toYaml $ingress.annotations | nindent 4 }}
+    {{- end }}
+spec:
+{{- if $ingress.ingressClassName }}
+  ingressClassName: {{ $ingress.ingressClassName }}
+{{- end }}
+  rules:
+{{- range $ingress.rules }}
+  - host: {{ .hostname }}
+    http:
+      paths:
+      - path: {{ .path | default $.Values.gateway.ingress.path }}
+        pathType: {{ $ingress.pathType | default "ImplementationSpecific" }}
+        backend:
+         service:
+        {{- if .serviceName }}
+          name: {{ .serviceName }}
+        {{- else }}
+          name: {{ include "akeyless-gateway.fullname" $ }}
+        {{- end }}
+          port:
+           name: {{ .servicePort }}
+{{- end }}
+{{- if $ingress.tls }}
+  tls:
+    {{- range $ingress.rules }}
+    - hosts:
+      - {{ .hostname }}
+      {{- $data := dict "hostname" .hostname "existingSecret" $ingress.existingSecret}}
+      secretName: {{ include "akeyless-gateway.ingressSecretTLSName" $data }}
+    {{- end }}
+{{- end }}
+
+{{- end }}
