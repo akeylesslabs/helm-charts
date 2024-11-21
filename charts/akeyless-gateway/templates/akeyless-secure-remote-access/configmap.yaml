@@ -1,0 +1,12 @@
+{{- if eq .Values.sra.enabled true }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $.Release.Name }}-cm-creds
+  namespace: {{ .Release.Namespace }}
+  labels:
+  {{- include "akeyless-sra-ssh.labels" . | nindent 4 }}
+data:
+  ca.pub: |
+{{ required "A valid .Values.sra.sshConfig.CAPublicKey entry required!" .Values.sra.sshConfig.CAPublicKey | indent 4 }}
+{{- end }}

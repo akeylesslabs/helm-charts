@@ -1,0 +1,135 @@
+{{- if eq .Values.sra.enabled true }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ssh-{{ include "akeyless-gateway.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+  {{- include "akeyless-sra-ssh.labels" . | nindent 4 }}
+  {{- if .Values.sra.sshConfig.labels }}
+    {{- toYaml .Values.sra.sshConfig.labels | nindent 4 }}
+  {{- end }}
+  {{- if .Values.sra.sshConfig.annotations }}
+  annotations:
+  {{- toYaml .Values.sra.sshConfig.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.sra.sshConfig.hpa.enabled }}
+  replicas: {{ default 1 .Values.sra.sshConfig.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "akeyless-gateway-sra-ssh-service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- if .Values.sra.sshConfig.annotations }}
+      annotations:
+          {{- toYaml .Values.sra.sshConfig.annotations | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "akeyless-gateway-sra-ssh-service.selectorLabels" . | nindent 8 }}
+        {{- if .Values.sra.sshConfig.labels }}
+          {{- toYaml .Values.sra.sshConfig.labels | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- if .Values.sra.sshConfig.securityContext }}
+        {{- if .Values.sra.sshConfig.securityContext.enabled }}
+      securityContext:
+        runAsUser: {{ .Values.sra.sshConfig.securityContext.runAsUser }}
+        fsGroup: {{ .Values.sra.sshConfig.securityContext.fsGroup }}
+        {{- end }}
+      {{- end }}
+      serviceAccountName: {{ include "akeyless-gateway.getServiceAccountName" . }}
+      {{- if .Values.sra.sshConfig.nodeSelector }}
+      nodeSelector:
+      {{ toYaml .Values.sra.sshConfig.nodeSelector | indent 4 }}
+      {{- end }}
+      volumes:
+      - name: config
+        emptyDir: {}
+      - name: creds
+        emptyDir: {}
+      {{- if .Values.globalConfig.TLSConf.tlsExistingSecret }}
+      - name: gw-signed-ca
+        secret:
+          secretName: {{ .Values.globalConfig.TLSConf.tlsExistingSecret }}
+          items:
+            - key: tlsCertificate
+              path: gw-cert.pem
+      {{- end }}
+      {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
+      {{ include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 6}}
+      {{- end }}
+      - name: configmap-creds
+        configMap:
+          name: {{ $.Release.Name }}-cm-creds
+      containers:
+        - name: gateway-sra-ssh
+          image: "{{ .Values.sra.image.repository | default "akeyless/zero-trust-bastion" }}:{{ .Values.sra.image.tag | default .Chart.Annotations.sraVersion }}"
+          imagePullPolicy: {{ .Values.sra.image.pullPolicy }}
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["SYS_ADMIN"]
+          ports:
+          - containerPort: 22
+            name: ssh
+          - containerPort: 9900
+            name: curl-proxy
+          env:
+            {{ include "akeyless-gateway.akeylessGatewayAuthConfig" . | nindent 10 }}
+            {{ include "akeyless-gateway.unifiedGatewayConfig" . | nindent 10 }}
+            {{ include "akeyless-gateway.ClusterName" . | nindent 10 }}
+            {{- if eq "true" (include "akeyless-gateway.clusterCache.enabled" . ) }}
+            {{-  include "akeyless-gateway.clusterCacheConfig" . | nindent 10 }}
+            {{- end }}
+            {{- if .Values.globalConfig.authorizedAccessIDs }}
+            - name: GATEWAY_AUTHORIZED_ACCESS_ID
+              value: {{ .Values.globalConfig.authorizedAccessIDs | quote }}
+            {{- end }}
+            {{- if .Values.sra.sshConfig.sshHostKeysPath }}
+            - name: SSH_HOST_KEYS_PATH
+              value: {{ .Values.sra.sshConfig.sshHostKeysPath }}
+            {{- end }}
+            - name: REMOTE_ACCESS_TYPE
+              value: "ssh-proxy"
+            - name: VERSION
+              value: {{ .Chart.Annotations.sraVersion }}
+            {{ include "httpProxySettings" . | nindent 10 }}
+            {{ include "akeyless-gateway.chartMetadata" . | nindent 10 }}
+            {{- if .Values.debug }}
+            - name: DEBUG
+              value: {{ .Values.debug | quote }}
+            {{- end }}
+            {{- if .Values.sra.env }}
+            {{- toYaml .Values.sra.env | nindent 10 }}
+            {{- end }}
+            {{- if .Values.globalConfig.env }}
+            {{- toYaml .Values.globalConfig.env | nindent 12 }}
+            {{- end }}
+          resources:
+          {{- toYaml .Values.sra.sshConfig.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: 9900
+          {{- toYaml .Values.sra.sshConfig.livenessProbe | trim | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /status
+              port: 9900
+          {{- toYaml .Values.sra.sshConfig.readinessProbe | trim | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: /var/akeyless/conf
+            - name: configmap-creds
+              mountPath: /var/akeyless/creds
+            {{- if .Values.globalConfig.TLSConf.tlsExistingSecret }}
+            - name: gw-signed-ca
+              mountPath: "/etc/ssl/certs/gw-cert.pem"
+              subPath: gw-cert.pem
+            {{- end }}
+            {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
+              {{ include "akeyless-gateway.clusterCache.tlsVolumeMounts" . | nindent 12 }}
+            {{- end }}
+{{- end }}

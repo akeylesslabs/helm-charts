@@ -1,0 +1,67 @@
+{{- if eq .Values.sra.enabled true }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ssh-{{ include "akeyless-gateway.fullname" . }}
+  namespace: {{.Release.Namespace}}
+  labels:
+    {{- include "akeyless-sra-ssh.labels" . | nindent 4 }}
+  {{- if .Values.sra.sshConfig.service.labels }}
+    {{- toYaml .Values.sra.sshConfig.service.labels | nindent 4 }}
+  {{- end }}
+  annotations:
+  {{- toYaml .Values.sra.sshConfig.service.annotations | nindent 4 }}
+spec:
+  type: {{ required "A valid .Values.sra.sshConfig.service.type entry required!" .Values.sra.sshConfig.service.type }}
+  ports:
+    - port: {{ .Values.sra.sshConfig.service.port }}
+      targetPort: ssh
+      protocol: TCP
+      name: ssh
+    - port: 8000
+      targetPort: gateway
+      protocol: TCP
+      name: gateway
+  selector:
+    {{- include "akeyless-gateway-sra-ssh-service.selectorLabels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ssh-{{ include "akeyless-gateway.fullname" . }}-internal
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "akeyless-sra-ssh.labels" . | nindent 4 }}
+  {{- if .Values.sra.sshConfig.service.labels }}
+    {{- toYaml .Values.sra.sshConfig.service.labels | nindent 4 }}
+  {{- end }}
+  annotations:
+  {{- toYaml .Values.sra.sshConfig.service.annotations | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.sra.sshConfig.service.curlProxyPort | default "9900" }}
+      targetPort: curl-proxy
+      protocol: TCP
+      name: curl-proxy
+  selector:
+    {{- include "akeyless-gateway-sra-ssh-service.selectorLabels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-{{ include "akeyless-gateway.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "akeyless-sra-web.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: web
+      port: 8888
+      targetPort: web
+      protocol: TCP
+  selector:
+    {{- include "akeyless-sra-web.selectorLabels" . | nindent 4 }}
+{{- end }}

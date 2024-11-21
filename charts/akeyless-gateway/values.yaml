@@ -1,0 +1,441 @@
+############
+## Global ##
+############
+globalConfig:
+  gatewayAuth:
+    ## Supported types: access_key, certificate, universal identity, cloud identity (aws_iam/azure_ad/gcp)
+    ## If using access_key, certificate or universal identity, you must also add gatewayCredentialsExistingSecret which includes the key/certificate/token
+    ## https://docs.akeyless.io/docs/gateway-chart#authentication
+    ##
+    gatewayAccessId:
+    gatewayAccessType:
+    ## Use K8s secret to set the following types: access_key, certificate, uid
+    ## Create a K8s secret, run 'kubect apply' and add secret name (see docs for examples)
+    ## keys: gateway-access-key, gateway-certificate, gateway-certificate-key, gateway-uid-token
+    ##
+    gatewayCredentialsExistingSecret:
+
+  ## Add one or more Access IDs to give them access to this Gateway; add the specified permissions and sub-claims.
+  ## Name must be unique. Empty permissions will implicitly give the admin permission.
+  ## See docs for examples https://docs.akeyless.io/docs/gateway-chart#gateway-admins
+  ##
+  allowedAccessPermissions: {}
+
+  ## Use a K8s existing secret for Gateway Allowed Access. Must include the following key: allowed-access-permissions
+  ## https://docs.akeyless.io/docs/gateway-chart#access-permissions
+  ##
+  allowedAccessPermissionsExistingSecret:
+
+  ## List Access IDs that have access (comma separated list), if left empty all Access IDs will be authorised.
+  ## To enable only specific users to use Remote Access, make sure to add the relevant `authorizedAccessIDs` in the `Global` section.
+  ## A comma-separated list can be used for multiple IDs.
+  ## While this is not mandatory, it is a good security practice to limit user access. If not configured, a Warning message
+  ## will appear. For more information: https://docs.akeyless.io/docs/remote-access-setup-k8s#configuration
+  ##
+  authorizedAccessIDs:
+
+  ## If serviceAccount = false, please ensure the provided service account has the following permissions:
+  ## 1. Create Kubernetes Secrets - The service account must be able to create secrets within the Kubernetes cluster.
+  ## Read and Update the Gateway's Kubernetes Secret
+  ## 2. The service account must have read and update access to the Kubernetes secret used by the Gateway.
+  ## By default, this secret is named <deployment>-cache-encryption-key, unless a custom name has been specified.
+  ##
+  serviceAccount:
+    create: false
+    serviceAccountName:
+    annotations:
+
+  ## This is the actual name of the cluster as in account/access-id/clusterName
+  ##
+  clusterName:
+
+  ## This is the vanity display name of the cluster
+  ##
+  initialClusterDisplayName:
+
+  ## The key which is used to encrypt the Gateway configuration.
+  ## If left empty - the account’s default key will be used.
+  ## This key can be determined on cluster bringup only and cannot be modified afterwards
+  ##
+  configProtectionKeyName:
+
+  ## Use k8s secret to set the CF, the k8s secret must include the key: customer-fragments
+  ## See docs for examples https://docs.akeyless.io/docs/advanced-chart-configuration#customer-fragment
+  ##
+  customerFragmentsExistingSecret:
+
+  ## See docs for examples https://docs.akeyless.io/docs/advanced-chart-configuration#tls-configuration
+  ##
+  TLSConf:
+    enabled: false
+    ## Specifies an existing secret for tls-certificate:
+    tlsExistingSecret:
+
+  ## Telemetry Metrics see docs for examples https://docs.akeyless.io/docs/telemetry-metrics-k8s
+  ##
+  metrics:
+    enabled: false
+    ## Existing secret for metrics must include:
+    ## - otel-config.yaml (base64) secret
+    ##
+    metricsExistingSecret:
+
+  ## Linux system HTTP Proxy
+  httpProxySettings:
+    http_proxy: ""
+    https_proxy: ""
+    no_proxy: ""
+
+  # env: []
+
+  ## https://docs.akeyless.io/docs/advanced-chart-configuration#cache-configuration
+  ##
+  clusterCache:
+    ## In case Cache is enabled in the Gateway, and the encryptionKeyExistingSecret parameter has a value
+    ## Akeyless will use this specified encryption key and store it securely within Akeyless Gateway.
+    ## If the encryptionKeyExistingSecret parameter is empty or not specified,
+    ## Akeyless will automatically generate a new encryption key and a new ServiceAccount for K8s.
+    ## for more information: https://docs.akeyless.io/docs/advanced-chart-configuration#cache-configuration
+    ##
+    encryptionKeyExistingSecret:
+
+    # Enable/Disable TLS  between the Gateway and the cluster cache service
+    # using generated certificates and keys
+    enableTls: false
+
+    ## The resources limits for the redis cluster cache
+    ##
+    resources:
+      limits:
+        # cpu: 500m
+        memory: 2Gi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+
+####################################################
+##          Default values for Gateway            ##
+####################################################
+gateway:
+  ## Default values for akeyless-gateway.
+  deployment:
+    annotations: {}
+    labels: {}
+
+    replicaCount: 2
+    image:
+      #  repository: akeyless/base
+      #   Alternative mirror registry
+      #  repository: docker.registry-2.akeyless.io/base
+      pullPolicy: IfNotPresent
+
+    # Place here any pod annotations you may need
+    pod:
+      annotations: {}
+
+    affinity:
+      enabled: false
+      data:
+    #    nodeAffinity:
+    #      requiredDuringSchedulingIgnoredDuringExecution:
+    #        nodeSelectorTerms:
+    #          - matchExpressions:
+    #              - key: kubernetes.io/arch
+    #                operator: In
+    #                values:
+    #                  - amd64
+    # ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
+    nodeSelector:
+    #     iam.gke.io/gke-metadata-server-enabled: "true"
+
+    securityContext:
+      enabled: false
+      fsGroup: 0
+      runAsUser: 0
+
+    containerSecurityContext: {}
+    ## Remove the {} and add any needed values to your SecurityContext
+    ##
+    #  runAsUser: 0
+    #  seccompProfile:
+    #    type: RuntimeDefault
+
+    livenessProbe:
+      initialDelaySeconds: 60
+      periodSeconds: 30
+      failureThreshold: 10
+
+    readinessProbe:
+      initialDelaySeconds: 60
+      periodSeconds: 10
+      timeoutSeconds: 5
+
+  service:
+    ## Remove the {} and add any needed annotations regarding your LoadBalancer implementation
+    ##
+    annotations: {}
+    labels: {}
+    type: LoadBalancer
+
+    ## Gateway service port
+    ##
+    port: 8000
+
+  ## Configure the ingress resource that allows you to access the
+  ## akeyless-api-gateway installation. Set up the URL
+  ## ref: https://kubernetes.io/docs/concepts/services-networking/ingress/
+  ##
+  ingress:
+    ## Set to true to enable ingress record generation
+    enabled: false
+
+    ## A reference to an IngressClass resource
+    ## ref: https://kubernetes.io/docs/concepts/services-networking/ingress/#deprecated-annotation
+    #  ingressClassName:
+
+    labels: {}
+
+    annotations: {}
+    ## Example for Nginx ingress
+    ##
+    #    annotations:
+    #      kubernetes.io/ingress.class: nginx
+    #      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    #      nginx.ingress.kubernetes.io/proxy-connect-timeout: "3600"
+    #      nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    #      nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    #      nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
+    #      nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+
+    ## Example for Istio ingress
+    ##
+    #    labels:
+    #      istio-injection: enabled
+    #    annotations:
+    #      kubernetes.io/ingress.class: "istio"
+    #
+    ## You can set ingressClassName instead annotation and label
+    ##
+    #    ingressClassName: istio
+    #
+    ## In addition if you are using istio ingress, you must add the following annotation to the gateway pod annotations
+    ##
+    #  pod:
+    #    annotations:
+    #      proxy.istio.io/config: '{"holdApplicationUntilProxyStarts": true }'
+
+    ## Example for AWS ELB ingress
+    ##
+    #    annotations:
+    #      kubernetes.io/ingress.class: alb
+    #      alb.ingress.kubernetes.io/scheme: internet-facing
+
+    rules:
+      - servicePort: gateway
+        hostname: "gateway.local"
+
+    ## Path for the default host
+    path: /
+
+    ## Ingress Path type the value can be ImplementationSpecific, Exact or Prefix
+    pathType: ImplementationSpecific
+
+    ## Enable TLS configuration for the hostname defined at ingress.hostname parameter
+    ## TLS certificates will be retrieved from a TLS secret with name: {{- printf "%s-tls" .Values.gateway.ingress.hostname }}
+    ## or a custom one if you use the tls.existingSecret parameter
+    ##
+    tls: false
+
+    #  existingSecret: name-of-existing-secret
+
+    ## Set this to true in order to add the corresponding annotations for cert-manager and secret name
+    certManager: false
+
+  resources: {}
+  ##  The following resource settings represent minimum recommended requests without defined limits.
+  ##  We've set a base recommended requests of 1 vCPU and 2GB memory.
+  ##  We intentionally leave resource limits unspecified to enable customization. If you wish to set specific resource
+  ##  limits, uncomment the 'limits' section and adjust values as needed.
+  ##  If Horizontal Pod Autoscaler (HPA) usage is desired, you must set requests values.
+  ##  If you do want to specify resources, uncomment the following
+  ##  lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  ##
+  #  limits:
+  #    cpu: <your_cpu_limit>
+  #    memory: <your_memory_limit>
+  #  requests:
+  #    cpu: 1
+  #    memory: 2G
+
+  hpa:
+    ## Set the below to false in case you do not want to add Horizontal Pod AutoScaling
+    ## Note that metrics server must be installed for this to work:
+    ## https://github.com/kubernetes-sigs/metrics-server
+    ##
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+    cpuAvgUtil: 70
+    memAvgUtil: 70
+
+    annotations: {}
+
+######################################################
+## Default values for akeyless-secure-remote-access ##
+######################################################
+
+## If you are only using Akeyless Gateway, ignore this section
+##
+sra:
+  ## Enable secure-remote-access. Valid values: true/false.
+  ## For more information on a Quick Start guide for Remote Access <https://docs.akeyless.io/docs/remote-access-quick-start-guide>
+  ## Or setup SRA on K8s <https://docs.akeyless.io/docs/remote-access-setup-k8s>
+  enabled: false
+
+  image:
+    ##  Default image repository is: akeyless/zero-trust-bastion
+    ##
+    pullPolicy: IfNotPresent
+    #  tag: latest
+
+  env: []
+
+  ## The below section is for the Remote Access Web app
+  ##
+  webConfig:
+    deployment:
+      annotations: {}
+      labels: {}
+    replicaCount: 1
+
+
+    ## Persistence Volume is used to store RDP recordings when it is configured to save recordings locally
+    ## Akeyless requires data persistence to be shared within all pods in the cluster
+    ## accessMode: ReadWriteMany
+    ## Make sure to change the below values according to your environment except for the hostPath values
+    ## see docs for more information <https://docs.akeyless.io/docs/remote-access-setup-k8s#configuration>
+    ##
+    persistence:
+      volumes: {}
+      #  volumes:
+      #  - name: akeyless-data
+      #    storageClassName: efs-zero-trust-bastion-sc
+      #   #  storageClassDriver: efs.csi.aws.com
+      #    size: 100Mi
+      #    annotations:
+      #     volume.beta.kubernetes.io/storage-class: ""
+
+    livenessProbe:
+      initialDelaySeconds: 15
+      periodSeconds: 30
+      failureThreshold: 10
+
+    readinessProbe:
+      initialDelaySeconds: 15
+      periodSeconds: 30
+      timeoutSeconds: 5
+
+    resources:
+      ## The following resource settings represent minimum recommended requests without defined limits.
+      ## We've set a base recommended requests of 1 vCPU and 2GB memory.
+      ## We intentionally leave resource limits unspecified to enable customization. If you wish to set specific resource
+      ## limits, uncomment the 'limits' section and adjust values as needed.
+      ## For more information on system requirements <https://docs.akeyless.io/docs/remote-access-system-requirements>
+      ##
+      ## If Horizontal Pod Autoscaler (HPA) usage is desired, you must set requests values.
+      ## If you do want to specify resources, uncomment the following
+      ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+      ##
+      # limits:
+      #  cpu: <your_cpu_limit>
+      #  memory: <your_memory_limit>
+      requests:
+        cpu: 1
+        memory: 2G
+
+    hpa:
+      ## Set the below to false in case you do not want to add Horizontal Pod AutoScaling to the Deployment
+      ## If HPA is enabled resources requests must be set
+      ##
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 10
+      cpuAvgUtil: 70
+      memAvgUtil: 70
+
+  ## The below section is for the Remote Access SSH app
+  ## For more information: <https://docs.akeyless.io/docs/remote-access-advanced-configuration-k8s#ssh-configuration>
+  ##
+  sshConfig:
+    replicaCount: 1
+
+    ## This is a required RSA Public Key for your Akeyless SSH Cert Issuer
+    ## See docs for examples <https://docs.akeyless.io/docs/remote-access-setup-k8s#ssh--config>
+    ##
+    CAPublicKey:
+    # CAPublicKey: |
+
+    ## Use this parameter to store fingerprint information in a specific folder within your Akeyless account.
+    ## This approach prevents the need to manually re-accept the SSH host key fingerprint after upgrades or other changes.
+    ## In the example below, the fingerprints will be stored in the /MY_SSH_REMOTE_ACCESS_HOST_KEYS folder.
+    ## Note: Ensure that your Remote Access default authentication method has the necessary permissions to create, read, and list within this folder.
+    ## See docs for more information <https://docs.akeyless.io/docs/remote-access-advanced-configuration-k8s#ssh-configuration>
+    ##
+    sshHostKeysPath:
+
+    annotations: {}
+    labels: {}
+
+    nodeSelector:
+    #  iam.gke.io/gke-metadata-server-enabled: "true"
+
+    securityContext:
+      enabled: false
+      fsGroup: 0
+      runAsUser: 0
+
+    service:
+      ## Remove the {} and add any needed annotations regarding your LoadBalancer implementation
+      ##
+      annotations: {}
+      labels: {}
+      type: LoadBalancer
+      port: 22
+
+    livenessProbe:
+      failureThreshold: 5
+      periodSeconds: 30
+      timeoutSeconds: 5
+
+    readinessProbe:
+      initialDelaySeconds: 20
+      periodSeconds: 10
+      timeoutSeconds: 5
+
+    resources:
+      ## The following resource settings represent minimum recommended requests without defined limits.
+      ## We've set a base recommended requests of 1 vCPU and 2GB memory.
+      ## We intentionally leave resource limits unspecified to enable customization. If you wish to set specific resource
+      ## limits, uncomment the 'limits' section and adjust values as needed.
+      ## For more information on system requirments <https://docs.akeyless.io/docs/remote-access-system-requirements>
+
+      ## If Horizontal Pod Autoscaler (HPA) usage is desired, you must set requests values.
+      ## If you do want to specify resources, uncomment the following
+      ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+      ##
+      # limits:
+      #  cpu: <your_cpu_limit>
+      #  memory: <your_memory_limit>
+      requests:
+        cpu: 1
+        memory: 2G
+
+    hpa:
+      ## Set the below to true only when using a shared persistent storage (defined at .persistence.volumes)
+      ## If HPA is enabled resources requests must be set
+      ##
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 10
+      cpuAvgUtil: 70
+      memAvgUtil: 70

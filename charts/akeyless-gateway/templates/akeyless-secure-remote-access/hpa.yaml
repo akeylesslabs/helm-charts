@@ -1,0 +1,59 @@
+{{- if eq .Values.sra.enabled true }}
+{{- if .Values.sra.sshConfig.hpa.enabled }}
+apiVersion: "autoscaling/v2"
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ssh-{{ $.Release.Name }}-hpa
+  namespace: {{ .Release.Namespace }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ssh-{{ include "akeyless-gateway.fullname" . }}
+  minReplicas: {{ $.Values.sra.sshConfig.hpa.minReplicas | default 1 }}
+  maxReplicas: {{ $.Values.sra.sshConfig.hpa.maxReplicas | default 14 }}
+  metrics:
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ $.Values.sra.sshConfig.hpa.memAvgUtil }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ $.Values.sra.sshConfig.hpa.cpuAvgUtil }}
+{{- end }}
+{{- end }}
+---
+{{- if eq .Values.sra.enabled true }}
+{{- if .Values.sra.webConfig.hpa.enabled }}
+apiVersion: "autoscaling/v2"
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ztb-{{ $.Release.Name }}-hpa
+  namespace: {{ .Release.Namespace }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: web-{{ include "akeyless-gateway.fullname" . }}
+  minReplicas: {{ $.Values.sra.webConfig.hpa.minReplicas | default 1 }}
+  maxReplicas: {{ $.Values.sra.webConfig.hpa.maxReplicas | default 14 }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ $.Values.sra.webConfig.hpa.cpuAvgUtil }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ $.Values.sra.webConfig.hpa.memAvgUtil }}
+{{- end }}
+{{- end }}

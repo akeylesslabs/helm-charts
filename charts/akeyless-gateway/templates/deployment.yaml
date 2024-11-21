@@ -1,0 +1,255 @@
+apiVersion: apps/v1
+kind: {{ include "deployment.type" $ }}
+metadata:
+  name: {{ include "akeyless-gateway.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "akeyless-gateway.labels" . | nindent 4 }}
+  {{- if .Values.gateway.deployment.labels }}
+    {{- toYaml .Values.gateway.deployment.labels | nindent 4 }}
+  {{- end }}
+  {{- if .Values.gateway.deployment.annotations }}
+  annotations:
+  {{- toYaml .Values.gateway.deployment.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if and (eq (include "deployment.type" $) "Deployment") (not .Values.gateway.hpa.enabled) }}
+  replicas: {{ default 1 .Values.gateway.deployment.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "akeyless-gateway-sra-ssh-service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- if .Values.gateway.deployment.pod.annotations }}
+      annotations:
+          {{- toYaml .Values.gateway.deployment.pod.annotations | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "akeyless-gateway-sra-ssh-service.selectorLabels" . | nindent 8 }}
+        {{- if .Values.gateway.deployment.labels }}
+          {{- toYaml .Values.gateway.deployment.labels | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- if .Values.gateway.deployment.affinity.enabled }}
+      affinity:
+      {{- toYaml .Values.gateway.deployment.affinity.data | nindent 8 }}
+      {{- end }}
+      {{- if .Values.gateway.deployment.securityContext.enabled }}
+      securityContext:
+        runAsUser: {{ .Values.gateway.deployment.securityContext.runAsUser }}
+        fsGroup: {{ .Values.gateway.deployment.securityContext.fsGroup }}
+      {{- end }}
+      serviceAccountName: {{ include "akeyless-gateway.getServiceAccountName" . }}
+      {{- if .Values.gateway.deployment.nodeSelector }}
+      nodeSelector:
+      {{ toYaml .Values.gateway.deployment.nodeSelector | indent 4 }}
+      {{- end }}
+      {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .)}}
+      volumes:
+      - name: akeyless-config
+        emptyDir: {}
+      {{- if .Values.globalConfig.TLSConf.tlsExistingSecret }}
+      - name: tls-conf-cert
+        secret:
+          secretName: {{ .Values.globalConfig.TLSConf.tlsExistingSecret }}
+          defaultMode: 420
+          items:
+            - key: tlsCertificate
+              path: akeyless-api-cert.crt
+      - name: tls-conf-private-key
+        secret:
+          secretName: {{ .Values.globalConfig.TLSConf.tlsExistingSecret }}
+          defaultMode: 420
+          items:
+            - key: tlsPrivateKey
+              path: akeyless-api-cert.key
+      {{- end }}
+      {{- if and (.Values.globalConfig.metrics.enabled) (.Values.globalConfig.metrics.metricsExistingSecret) }}
+      - name: otelcol-metrics-config
+        secret:
+          secretName: {{ .Values.globalConfig.metrics.metricsExistingSecret }}
+      {{- end }}
+      {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
+      {{ include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 6}}
+      {{- end }}
+      {{- end }}
+      containers:
+        - name: {{ include "akeyless-gateway.containerName" . }}
+          {{- if not .Values.gatewayRootMode }}
+          image: "{{ .Values.gateway.deployment.image.repository | default "docker.registry-2.akeyless.io/base" }}:{{ .Values.gateway.deployment.image.tag | default "latest" }}-akeyless"
+          {{else}}
+          image: "{{ .Values.gateway.deployment.image.repository | default "docker.registry-2.akeyless.io/base" }}:{{ .Values.gateway.deployment.image.tag | default "latest" }}"
+          {{- end}}
+          imagePullPolicy: {{ .Values.gateway.deployment.image.pullPolicy }}
+          {{- if .Values.gateway.deployment.containerSecurityContext }}
+          securityContext:
+            {{- toYaml .Values.gateway.deployment.containerSecurityContext | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: gateway
+              containerPort: {{ .Values.gateway.service.port }}
+            - name: internal-gw-api
+              containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+          {{- toYaml .Values.gateway.deployment.livenessProbe | trim | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+          {{- toYaml .Values.gateway.deployment.readinessProbe | trim | nindent 12 }}
+          {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .)}}
+          volumeMounts:
+            - name: akeyless-config
+              mountPath: {{include "akeyless-gateway.root.config.path" $}}/.akeyless
+          {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
+            {{ include "akeyless-gateway.clusterCache.tlsVolumeMounts" . | nindent 12 }}
+          {{- end }}
+          {{- if and (.Values.globalConfig.metrics.enabled) (.Values.globalConfig.metrics.enabled) }}
+            - name: otelcol-metrics-config
+              mountPath: /akeyless/otel-config.yaml
+              subPath: otel-config.yaml
+          {{- end}}
+          {{- if .Values.globalConfig.TLSConf.tlsExistingSecret }}
+            - name: tls-conf-cert
+              mountPath: {{include "akeyless-gateway.root.config.path" $}}/.akeyless/akeyless-api-cert.crt
+              subPath: akeyless-api-cert.crt
+              readOnly: true
+            - name: tls-conf-private-key
+              mountPath: {{include "akeyless-gateway.root.config.path" $}}/.akeyless/akeyless-api-cert.key
+              subPath: akeyless-api-cert.key
+              readOnly: true
+           {{- end}}
+          {{- end}}
+          resources:
+          {{- toYaml .Values.gateway.resources | nindent 12 }}
+          env:
+            {{- if .Values.globalConfig.customerFragmentsExistingSecret }}
+            - name: CUSTOMER_FRAGMENTS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.globalConfig.customerFragmentsExistingSecret }}
+                  key: customer-fragments
+            {{- end }}
+            {{- if not .Values.fixedArtifactRepository }}
+            - name: ARTIFACTS_REPO
+              value: {{ .Values.fixedArtifactRepository | default "artifacts.site2.akeyless.io" }}
+            {{- end }}
+            {{- if .Values.fipsEnabled }}
+            - name: FIPS
+              value: {{ .Values.fipsEnabled }}
+            {{- end }}
+            {{- if .Values.globalConfig.gatewayAuth.gcpAudience }}
+            - name: GCP_AUDIENCE
+              value: {{ .Values.globalConfig.gatewayAuth.gcpAudience }}
+            {{- end }}
+            {{- if .Values.globalConfig.gatewayAuth.azureObjectID }}
+            - name: AZURE_OBJ_ID
+              value: {{ .Values.globalConfig.gatewayAuth.azureObjectID }}
+            {{- end }}
+            {{ include "akeyless-gateway.akeylessGatewayAuthConfig" . | nindent 10 }}
+            {{- if eq .Values.globalConfig.gatewayAuth.gatewayAccessType "password" }}
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.globalConfig.gatewayAuth.gatewayCredentialsExistingSecret }}
+                  key: admin-password
+            {{- end }}
+            {{- if eq .Values.globalConfig.gatewayAuth.gatewayAccessType "certificate" }}
+            - name: GATEWAY_CERTIFICATE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.globalConfig.gatewayAuth.gatewayCredentialsExistingSecret }}
+                  key: gateway-certificate
+            - name: GATEWAY_CERTIFICATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.globalConfig.gatewayAuth.gatewayCredentialsExistingSecret }}
+                  key: gateway-certificate-key
+            {{- end }}
+            {{- if not (eq (include "akeyless-gateway.allowedAccessPermissionsExist" .) "") }}
+            - name: ALLOWED_ACCESS_PERMISSIONS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "akeyless-gateway.allowedAccessPermissionsExist" . }}
+                  key: allowed-access-permissions
+            {{- end }}
+            {{ include "akeyless-gateway.ClusterName" . | nindent 10 }}
+            {{- if .Values.globalConfig.authorizedAccessIDs }}
+            - name: GATEWAY_AUTHORIZED_ACCESS_ID
+              value: {{ .Values.globalConfig.authorizedAccessIDs | quote }}
+            {{- end }}
+            {{- if .Values.globalConfig.initialClusterDisplayName }}
+            - name: INITIAL_DISPLAY_NAME
+              value: {{ .Values.globalConfig.initialClusterDisplayName }}
+            {{- end }}
+            {{- if .Values.globalConfig.configProtectionKeyName }}
+            - name: CONFIG_PROTECTION_KEY_NAME
+              value: {{ .Values.globalConfig.configProtectionKeyName }}
+            {{- end }}
+            {{- if .Values.globalConfig.gatewayAuth.redirectOIDC }}
+            - name: AKEYLESS_OIDC_GW_AUTH
+              value: "true"
+            {{- end }}
+            {{- if eq .Values.globalConfig.gatewayAuth.gatewayAccessType "uid" }}
+            - name: GATEWAY_UID_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.globalConfig.gatewayAuth.gatewayCredentialsExistingSecret }}
+                  key: gateway-uid-token
+            {{- end }}
+            {{- if (eq "true" (include "akeyless-gateway.clusterCache.enabled" . )) }}
+            - name:  GATEWAY_CLUSTER_CACHE
+              value: enable
+            {{- include "akeyless-gateway.clusterCacheConfig" . | nindent 10 }}
+            {{- end }}
+            {{- if .Values.globalConfig.clusterCache.encryptionKeyExistingSecret }}
+            - name: CACHE_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.globalConfig.clusterCache.encryptionKeyExistingSecret }}
+                  key: cluster-cache-encryption-key
+            {{- end }}
+            {{- with .Values.globalConfig.gatewayAuth.universalIdentity }}
+            - name: UID_ROTATE_INTERVAL
+              value: {{ .uidRotationInterval | default "5m" }}
+            - name: UID_CREATE_CHILD_TOKEN_PER_POD
+              value: {{ .uidCreateChildTokenPerPod | default "disable" }}
+            {{- end }}
+            {{- if .Values.globalConfig.metrics.enabled }}
+            - name: ENABLE_METRICS
+              value: {{ .Values.globalConfig.metrics.enabled | quote }}
+            - name: MEM_LIMIT
+              valueFrom:
+                resourceFieldRef:
+                  containerName: {{ include "akeyless-gateway.containerName" . }}
+                  resource: limits.memory
+            {{- end }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            {{- if .Values.sra.enabled }}
+            {{-  include "akeyless-gateway.unifiedGatewaySraGatewayConfig" . | nindent 10 }}
+            {{- end }}
+            ## tls config
+            {{- if .Values.globalConfig.TLSConf.enabled }}
+            - name: ENABLE_TLS_CONFIGURE
+              value: "{{ .Values.globalConfig.TLSConf.enabled }}"
+            {{- end }}
+            - name: MIN_TLS_VERSION
+              value: "{{ .Values.globalConfig.TLSConf.minimumTlsVersion | default "TLSv1.2" }}"
+            {{- if .Values.globalConfig.TLSConf.excludeCipherSuites }}
+            - name: EXCLUDE_CIPHER_SUITES
+              value: "{{ .Values.globalConfig.TLSConf.excludeCipherSuites }}"
+            {{- end }}
+            - name: VERSION
+              value: {{ .Values.version | default .Chart.Annotations.gatewayVersion }}
+            {{-  include "httpProxySettings" . | nindent 10 }}
+            {{ include "akeyless-gateway.chartMetadata" . | nindent 10 }}
+            {{- if .Values.globalConfig.env }}
+            {{- toYaml .Values.globalConfig.env | nindent 12 }}
+            {{- end }}
