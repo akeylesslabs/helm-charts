@@ -3057,6 +3057,26 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-csi-provider-1.0.0/akeyless-csi-provider-1.0.0.tgz
     version: 1.0.0
+  akeyless-gateway:
+  - annotations:
+      gatewayVersion: 4.23.0
+      sraVersion: 2.3.1
+    apiVersion: v2
+    appVersion: 4.23.0_2.3.1
+    created: "2024-11-21T11:22:47.040626785Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-gateway
+    digest: 62a80b364464826c8cfce6f2abeb7c8c5833176afb19e1d40da676bd3af74b3c
+    icon: https://akeyless-908832575.imgix.net/wp-content/uploads/2024/03/akeyless-2024.png?auto=format%2Ccompress&fm=webp&ixlib=php-3.3.0
+    keywords:
+    - akeyless-gateway
+    - sra
+    maintainers:
+    - name: Akeyless
+    name: akeyless-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-gateway-1.0.0/akeyless-gateway-1.0.0.tgz
+    version: 1.0.0
   akeyless-secrets-injection:
   - apiVersion: v2
     appVersion: 0.27.1
@@ -9179,4 +9199,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2024-11-21T08:04:09.930729177Z"
+generated: "2024-11-21T11:22:47.04162866Z"
