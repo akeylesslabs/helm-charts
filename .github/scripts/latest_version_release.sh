@@ -13,8 +13,7 @@ charts=()
 if [[ "${service}" == "gateway" ]]; then
   charts+=("akeyless-api-gateway" "akeyless-gateway")
 elif [[ "${service}" == "zero-trust-bastion" ]]; then
-  charts+=("akeyless-secure-remote-access")
-  charts+=("akeyless-gateway")
+  charts+=("akeyless-secure-remote-access" "akeyless-gateway")
 elif [[ "${service}" == "zt-portal" ]]; then
  charts+=("akeyless-secure-remote-access")
 elif [[ "${service}" == "zero-trust-web-access" ]]; then
