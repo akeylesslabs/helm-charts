@@ -50,6 +50,7 @@ spec:
       nodeSelector:
       {{ toYaml .Values.deployment.nodeSelector | indent 4 }}
       {{- end }}
+      {{-  include "akeyless-api-gw.imagePullSecrets" . | indent 2 }}
       {{- if or (not (eq (include "akeyless-api-gw.customerFragmentExist" .) "")) (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true" ) (.Values.metrics.enabled)  |  or (include "cacheEnableTls" . | eq "true")  }}
       volumes:
       - name: cache-tls
@@ -123,7 +124,7 @@ spec:
             - name: tls-conf
               mountPath: /tls_conf
           {{- end}}
-      {{- end }} #spec
+      {{- end }}
       containers:
         - name: {{ .Values.containerName }}
           {{- if .Values.akeylessStrictMode  }}
@@ -436,4 +437,3 @@ spec:
           {{- if .Values.env }}
   {{- toYaml .Values.env | nindent 12 }}
           {{- end }}
-
