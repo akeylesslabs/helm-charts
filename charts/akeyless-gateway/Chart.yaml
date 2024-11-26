@@ -6,8 +6,7 @@ type: application
 keywords:
   - akeyless-gateway
   - sra
-maintainers:
-  - name: Akeyless
+
 icon: https://akeyless-908832575.imgix.net/wp-content/uploads/2024/03/akeyless-2024.png?auto=format%2Ccompress&fm=webp&ixlib=php-3.3.0
 
 appVersion: 4.23.0_2.3.1

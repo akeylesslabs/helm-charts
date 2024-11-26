@@ -26,6 +26,7 @@ main() {
   pushd "$repo_root" > /dev/null
 
   local changed_charts=($(lookup_changed_charts | awk '{print $1}'))
+  echo "The following charts have been changed: ${changed_charts[*]}"
 
   if [[ -n "${changed_charts[*]}" ]]; then
       for chart in "${changed_charts[@]}"; do
