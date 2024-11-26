@@ -45,6 +45,7 @@ spec:
       nodeSelector:
       {{ toYaml .Values.gateway.deployment.nodeSelector | indent 4 }}
       {{- end }}
+      {{- include "akeyless-gateway.imagePullSecrets" . | indent 2 }}
       {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .)}}
       volumes:
       - name: akeyless-config

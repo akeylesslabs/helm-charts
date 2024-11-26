@@ -26,6 +26,7 @@ main() {
   pushd "$repo_root" > /dev/null
 
   local changed_charts=($(lookup_changed_charts | awk '{print $1}'))
+  echo "The following charts have been changed: ${changed_charts[*]}"
 
   if [[ -n "${changed_charts[*]}" ]]; then
       for chart in "${changed_charts[@]}"; do
@@ -33,6 +34,7 @@ main() {
             chart_name=$(helm show chart "$chart" | grep name: | awk '{print $2}')
             chart_version=$(helm show chart "$chart" | grep version: | awk '{print $2}')
             git tag "$chart_name-$chart_version" || die "Chart version already exists, please bump the version"
+            echo "${chart} chart version changes validated successfully"
           else
             echo "Chart '$chart' no longer exists in repo. Skipping it..."
           fi

@@ -32,6 +32,16 @@ Create chart name and version as used by the chart label.
 {{- end -}}
 
 {{/*
+Check provided imagePullSecrets
+*/}}
+{{- define "akeyless-gateway.imagePullSecrets" -}}
+  {{- if not (empty .Values.gateway.deployment.image.imagePullSecrets) }}
+    imagePullSecrets:
+      - name: {{- printf "%s" .Values.gateway.deployment.image.imagePullSecrets -}}
+  {{- end -}}
+{{- end -}}
+
+{{/*
 Common labels
 */}}
 {{- define "akeyless-gateway.labels" -}}

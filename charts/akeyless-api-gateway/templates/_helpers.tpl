@@ -89,6 +89,16 @@ Get the Ingress TLS secret.
 {{- end -}}
 
 {{/*
+Check provided imagePullSecrets
+*/}}
+{{- define "akeyless-api-gw.imagePullSecrets" -}}
+  {{- if not (empty .Values.image.imagePullSecrets) }}
+    imagePullSecrets:
+      - name: {{- printf "%s" .Values.image.imagePullSecrets -}}
+  {{- end -}}
+{{- end -}}
+
+{{/*
 Generate chart secret name
 */}}
 {{- define "akeyless-api-gw.secretName" -}}
