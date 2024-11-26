@@ -3,6 +3,16 @@ entries:
   akeyless-api-gateway:
   - apiVersion: v2
     appVersion: 4.23.0
+    created: "2024-11-26T12:26:57.631727839Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
+    digest: 7c54a83784fb36c9c9e4998e40520d88cb890c60b5f3d54c525907f78771a638
+    name: akeyless-api-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-api-gateway-1.51.1/akeyless-api-gateway-1.51.1.tgz
+    version: 1.51.1
+  - apiVersion: v2
+    appVersion: 4.23.0
     created: "2024-11-20T14:57:30.526445584Z"
     description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
     digest: 6fd91afb69618311744b9f2ba21757e5cc04b77270b0770a97afb051b2e29d92
@@ -3058,6 +3068,23 @@ entries:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-csi-provider-1.0.0/akeyless-csi-provider-1.0.0.tgz
     version: 1.0.0
   akeyless-gateway:
+  - annotations:
+      gatewayVersion: 4.23.0
+      sraVersion: 2.3.1
+    apiVersion: v2
+    appVersion: 4.23.0_2.3.1
+    created: "2024-11-26T12:26:57.72449351Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-gateway
+    digest: 42b5af9f457992dd3f5c3ccfcabf0a6ece847aa32cb3d9f9cad9a9ee872bc505
+    icon: https://akeyless-908832575.imgix.net/wp-content/uploads/2024/03/akeyless-2024.png?auto=format%2Ccompress&fm=webp&ixlib=php-3.3.0
+    keywords:
+    - akeyless-gateway
+    - sra
+    name: akeyless-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-gateway-1.0.1/akeyless-gateway-1.0.1.tgz
+    version: 1.0.1
   - annotations:
       gatewayVersion: 4.23.0
       sraVersion: 2.3.1
@@ -9199,4 +9226,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2024-11-21T11:22:47.04162866Z"
+generated: "2024-11-26T12:26:57.725796055Z"
