@@ -34,7 +34,7 @@ for chart in "${charts[@]}"; do
     sed -i "s/version:.*/version: ${new_chart_version}/g" Chart.yaml
 
     # edit app version for akeyless-secure-remote-access
-    if [[ "${{chart}" == "akeyless-secure-remote-access" ]]; then
+    if [[ "${chart}" == "akeyless-secure-remote-access" ]]; then
       # edit app service version
       if [[ "${service}" == "zero-trust-bastion" ]]; then
         sra_inner_chart="ztbVersion"
