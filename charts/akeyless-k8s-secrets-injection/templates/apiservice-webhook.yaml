@@ -1,7 +1,9 @@
-{{ $ca := genCA "svc-cat-ca" 3650 }}
+{{ $ca := genCA "webhook-ca" 3650 }}
 {{ $svcName := include "vault-secrets-webhook.fullname" . }}
 {{ $cn := printf "%s.%s.svc" $svcName .Release.Namespace }}
-{{ $server := genSignedCert $cn nil (list $cn "") 365 $ca }}
+{{ $cert := genSignedCert $cn nil (list $cn "") 365 $ca }}
+{{ $existingSecret := (lookup "v1" "Secret" .Release.Namespace (include "vault-secrets-webhook.fullname" .)).data }}
+{{ $caCert := get $existingSecret "ca.crt" | default ($ca.Cert | b64enc) }}
 
 apiVersion: v1
 kind: List
@@ -11,11 +13,12 @@ items:
 - apiVersion: v1
   kind: Secret
   metadata:
-    name: {{ template "vault-secrets-webhook.fullname" . }}
+    name: {{ include "vault-secrets-webhook.fullname" . }}
+    namespace: {{ .Release.Namespace | quote }}
   data:
-    servingCert: {{ b64enc $server.Cert }}
-    servingKey: {{ b64enc $server.Key }}
-    caCert: {{ b64enc $ca.Cert }}
+    tls.crt: {{ get $existingSecret "tls.crt" | default ($cert.Cert | b64enc) }}
+    tls.key: {{ get $existingSecret "tls.key" | default ($cert.Key | b64enc) }}
+    ca.crt: {{ $caCert }}
 
 - apiVersion: admissionregistration.k8s.io/v1
   kind: MutatingWebhookConfiguration
@@ -28,7 +31,7 @@ items:
         namespace: {{ .Release.Namespace }}
         name: {{ template "vault-secrets-webhook.fullname" . }}
         path: /pods
-      caBundle: {{ b64enc $ca.Cert }}
+      caBundle: {{ $caCert }}
     rules:
     - operations:
       - CREATE
