@@ -2,7 +2,10 @@
 {{ $svcName := include "vault-secrets-webhook.fullname" . }}
 {{ $cn := printf "%s.%s.svc" $svcName .Release.Namespace }}
 {{ $cert := genSignedCert $cn nil (list $cn "") 365 $ca }}
-{{ $existingSecret := (lookup "v1" "Secret" .Release.Namespace (include "vault-secrets-webhook.fullname" .)).data }}
+{{ $existingSecret := dict }}
+{{- if .Values.useExistingInjectorCert -}}
+  {{ $existingSecret = (lookup "v1" "Secret" .Release.Namespace (include "vault-secrets-webhook.fullname" .)).data }}
+{{- end }}
 {{ $caCert := get $existingSecret "ca.crt" | default ($ca.Cert | b64enc) }}
 
 apiVersion: v1

@@ -3,15 +3,15 @@
 # Declare variables to be passed into your templates.
 
 deployment:
-  labels: {}
+  labels: { }
   # Remove the {} and add any needed values to your SecurityContext
-  securityContext: {}
+  securityContext: { }
 #    fsGroup: 3000
 #    runAsUser: 65534
 
-replicaCount: 2
+replicaCount: 1
 openshiftEnabled: false
-useExistingInjectorCert: false
+useExistingInjectorCert: true
 debug: false
 
 gatewayCert:
@@ -20,19 +20,19 @@ gatewayCert:
   tlsCertsSecretName:
 
 #Remove the {} and add any needed values to your SecurityContext here, do not change runAsUser and allowPrivilegeEscalation
-containerSecurityContext: {}
+containerSecurityContext: { }
 #  seccompProfile:
 #    type: RuntimeDefault
 
 image:
-  repository: docker.registry-2.akeyless.io/k8s-webhook-server
-  agentImage: docker.registry-2.akeyless.io/k8s-secrets-sidecar
+  #  repository: docker.registry-2.akeyless.io/k8s-webhook-server
+  #  agentImage: docker.registry-2.akeyless.io/k8s-secrets-sidecar
 
-##   Alternative mirror registry
-#  repository: akeyless/k8s-webhook-server
-#  agentImage: akeyless/k8s-secrets-sidecar
-
-  pullPolicy: IfNotPresent
+  ##   Alternative mirror registry
+  repository: akeyless/k8s-webhook-server
+  agentImage: akeyless/k8s-secrets-sidecar
+  tag: local
+  pullPolicy: Never
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -44,7 +44,7 @@ serviceAccount:
   # annotations: {}
   # Automount API credentials for a Service Account.
   automountServiceAccountToken: true
-  labels: {}
+  labels: { }
 
 restartRollout:
   enabled: false
@@ -65,33 +65,32 @@ service:
   type: ClusterIP
   externalPort: 443
   internalPort: 8443
-  labels: {}
+  labels: { }
 
 # for EKS using custom CNI
 #hostNetwork: true
 
 env:
   AKEYLESS_URL: "https://vault.akeyless.io"
-  AKEYLESS_ACCESS_ID: "" 
-  AKEYLESS_ACCESS_TYPE: ""  # azure_ad/aws_iam/api_key/k8s
+  #  AKEYLESS_ACCESS_ID: "p-rfmykxp0rri4wm"
+  #  AKEYLESS_ACCESS_TYPE: "aws_iam"  # azure_ad//api_key/k8s
 
- # AKEYLESS_API_GW_URL: "https://api-gw-url"
- # AKEYLESS_POD_ACCESS_PATH: "<location-to-access-secrets-per-pod-name>"
- # AKEYLESS_NAMESPACE_ACCESS_PATH: "<location-to-access-secrets-per-namespace>"
- # AKEYLESS_SECRET_DIR_NAME: "<path>"
- # AKEYLESS_API_KEY: "<api_key>"
- # AKEYLESS_CRASH_POD_ON_ERROR: "enable"
- # AKEYLESS_K8S_AUTH_CONF_NAME: "K8s_conf_name"
- 
- # the gw base64 certificate file e.g: 'cat my-gw.crt | base64'
- # AKEYLESS_GW_CERTIFICATE: 
+  AKEYLESS_ACCESS_ID: "p-hinp0za46x15am"
+  AKEYLESS_ACCESS_TYPE: "api_key"  # azure_ad//api_key/k8s
+  AKEYLESS_API_KEY: "IyEspVaUy7Q30BqWd/lDSNto8QLKgORns3e3wKF/+s4="
+  AKEYLESS_API_GW_URL: "http://aba9ca748ac5a4ed990621ab330b59f2-2046007610.us-east-2.elb.amazonaws.com:8000/api/v1"
+  # AKEYLESS_CRASH_POD_ON_ERROR: "enable"
+  # AKEYLESS_K8S_AUTH_CONF_NAME: "K8s_conf_name"
+
+  # the gw base64 certificate file e.g: 'cat my-gw.crt | base64'
+  # AKEYLESS_GW_CERTIFICATE:
 
 
   AKEYLESS_AGENT_LIMITS_CPU: "500m"
   AKEYLESS_AGENT_REQUESTS_CPU: "250m"
   AKEYLESS_AGENT_LIMITS_MEM: "128Mi"
   AKEYLESS_AGENT_REQUESTS_MEM: "64Mi"
- 
+
 
 resources:
   limits:
@@ -101,9 +100,9 @@ resources:
     cpu: 0.25
     memory: 128Mi
 
-nodeSelector: {}
+nodeSelector: { }
 
-tolerations: []
+tolerations: [ ]
 
 affinity: |
   podAntiAffinity:
@@ -125,4 +124,4 @@ HPA:
   cpuAvgUtil: 50
   memAvgUtil: 50
 
-  annotations: {}
+  annotations: { }
