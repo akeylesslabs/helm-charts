@@ -48,8 +48,8 @@ for chart in "${charts[@]}"; do
       # edit sra app version
       ztb_app_ver=$(grep 'ztbVersion' Chart.yaml | awk '{print $2}')
       ztp_app_ver=$(grep 'ztpVersion' Chart.yaml | awk '{print $2}')
-      app_version="${ztb_app_ver}_${ztp_app_ver}"
-      sed -i "s/appVersion.*/appVersion: ${app_version}/g" Chart.yaml
+      new_app_version="${ztb_app_ver}_${ztp_app_ver}"
+      sed -i "s/appVersion.*/appVersion: ${new_app_version}/g" Chart.yaml
 
     elif [[ "${chart}" == "akeyless-gateway" ]]; then
       # edit app version for akeyless-gateway
@@ -65,17 +65,18 @@ for chart in "${charts[@]}"; do
       gateway_app_ver=$(grep 'gatewayVersion' Chart.yaml | awk '{print $2}')
       sra_app_ver=$(grep 'sraVersion' Chart.yaml | awk '{print $2}')
       sed -i "s/appVersion.*/appVersion: ${gateway_app_ver}_${sra_app_ver}/g" Chart.yaml
-      app_version="${gateway_app_ver}_${sra_app_ver}"
+      new_app_version="${gateway_app_ver}_${sra_app_ver}"
     else
-      sed -i "s/appVersion.*/appVersion: ${app_version}/g" Chart.yaml
+      new_app_version="${app_version}"
+      sed -i "s/appVersion.*/appVersion: ${new_app_version}/g" Chart.yaml
     fi
 
-    git add -A && git commit -m "Updated ${service} helm chart version to latest: ${app_version}" || die "Failed to commit changes to git"
+    git add -A && git commit -m "Updated ${service} helm chart version to latest: ${new_app_version}" || die "Failed to commit changes to git"
     git push origin HEAD
 
-    echo "${chart} app version was successfully updated to latest: ${app_version}"
+    echo "${chart} app version was successfully updated to latest: ${new_app_version}"
     echo "${chart} Helm chart version was updated to: ${new_chart_version}"
-    updated_charts_summary+=("${chart} app version: ${app_version} Helm chart version: ${new_chart_version}")
+    updated_charts_summary+=("${chart} app version: ${new_app_version} Helm chart version: ${new_chart_version}")
   popd
 done
 
