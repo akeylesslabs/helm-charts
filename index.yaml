@@ -3080,6 +3080,23 @@ entries:
   akeyless-gateway:
   - annotations:
       gatewayVersion: 4.24.0
+      sraVersion: 2.3.1
+    apiVersion: v2
+    appVersion: 4.24.0_2.3.1
+    created: "2024-12-18T10:52:26.937074859Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-gateway
+    digest: ba53f9260187e8b61c0ce7cc0df517855ebb68b25c1cfe00487aeb5abb0430d9
+    icon: https://akeyless-908832575.imgix.net/wp-content/uploads/2024/03/akeyless-2024.png?auto=format%2Ccompress&fm=webp&ixlib=php-3.3.0
+    keywords:
+    - akeyless-gateway
+    - sra
+    name: akeyless-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-gateway-1.0.4/akeyless-gateway-1.0.4.tgz
+    version: 1.0.4
+  - annotations:
+      gatewayVersion: 4.24.0
       sraVersion: 2.3.2_1.8.0
     apiVersion: v2
     appVersion: 4.24.0_2.3.2_1.8.0
@@ -3898,6 +3915,20 @@ entries:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-secrets-injection-1.0.0/akeyless-secrets-injection-1.0.0.tgz
     version: 1.0.0
   akeyless-sra:
+  - annotations:
+      ztbVersion: 2.3.1
+      ztpVersion: 1.8.0
+    apiVersion: v2
+    appVersion: 2.3.1_1.8.0
+    created: "2024-12-18T10:52:27.049011374Z"
+    description: A Helm chart for Kubernetes akeyless-zero-trust-bastion, akeyless-ssh-bastion
+      and akeyless-zero-trust-portal deployments
+    digest: 886e2b59086926f406da5034ed92a7aaad4762b2a4ec992c3af40b059b1fd8bd
+    name: akeyless-sra
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-sra-1.4.4/akeyless-sra-1.4.4.tgz
+    version: 1.4.4
   - annotations:
       ztbVersion: 2.3.2
       ztpVersion: 1.8.0
@@ -9312,4 +9343,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2024-12-17T09:43:29.905445335Z"
+generated: "2024-12-18T10:52:27.050260776Z"
