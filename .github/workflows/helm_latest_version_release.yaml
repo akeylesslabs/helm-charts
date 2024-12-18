@@ -4,7 +4,7 @@ on:
   deployment:
 
 concurrency:
-  group: Helm Chart Latest App Version Release
+  group: Helm-Chart-Latest-App-Version-Release-${{ github.ref }}
 
 env:
   service: ${{ github.event.deployment.payload.service }}
