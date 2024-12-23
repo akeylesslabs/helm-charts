@@ -17,7 +17,9 @@ rules:
 - apiGroups: [""]
   resources: ["events"]
   verbs: ["patch", "create"]
-
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "watch"]
 
 ---
 
