@@ -1,10 +1,13 @@
-{{- if .Values.restartRollout.enabled }}
 
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: akyeless-injector-role
 rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "watch"]
+{{- if .Values.restartRollout.enabled }}
 - apiGroups: ["apps"]
   resources: ["deployments", "daemonsets", "statefulsets"]
   verbs: ["get", "list", "patch", "watch"]
@@ -17,9 +20,7 @@ rules:
 - apiGroups: [""]
   resources: ["events"]
   verbs: ["patch", "create"]
-- apiGroups: [""]
-  resources: ["secrets"]
-  verbs: ["get", "watch"]
+{{end}}
 
 ---
 
@@ -35,5 +36,3 @@ roleRef:
   kind: ClusterRole
   name: akyeless-injector-role
   apiGroup: rbac.authorization.k8s.io
-
-{{end}}
