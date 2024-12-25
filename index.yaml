@@ -2,6 +2,16 @@ apiVersion: v1
 entries:
   akeyless-api-gateway:
   - apiVersion: v2
+    appVersion: 4.25.0
+    created: "2024-12-25T10:17:32.424274596Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
+    digest: 627b198a9775f0b9567d6ac4d2b28332b8998b4d452def0882df0493132b3d2d
+    name: akeyless-api-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-api-gateway-1.51.3/akeyless-api-gateway-1.51.3.tgz
+    version: 1.51.3
+  - apiVersion: v2
     appVersion: 4.24.0
     created: "2024-12-02T13:03:37.332134868Z"
     description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
@@ -3078,6 +3088,23 @@ entries:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-csi-provider-1.0.0/akeyless-csi-provider-1.0.0.tgz
     version: 1.0.0
   akeyless-gateway:
+  - annotations:
+      gatewayVersion: 4.25.0
+      sraVersion: 2.3.4
+    apiVersion: v2
+    appVersion: 4.25.0_2.3.4
+    created: "2024-12-25T10:17:32.600911488Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-gateway
+    digest: cf2f45c0173cb98f01ddd7e4155aebe7c243633a2c651800289a09d2675b48a1
+    icon: https://akeyless-908832575.imgix.net/wp-content/uploads/2024/03/akeyless-2024.png?auto=format%2Ccompress&fm=webp&ixlib=php-3.3.0
+    keywords:
+    - akeyless-gateway
+    - sra
+    name: akeyless-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-gateway-1.0.7/akeyless-gateway-1.0.7.tgz
+    version: 1.0.7
   - annotations:
       gatewayVersion: 4.24.0
       sraVersion: 2.3.4
@@ -9416,4 +9443,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2024-12-25T10:01:26.892382791Z"
+generated: "2024-12-25T10:17:32.602219104Z"
