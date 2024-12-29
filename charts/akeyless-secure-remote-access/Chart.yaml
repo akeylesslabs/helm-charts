@@ -14,13 +14,13 @@ type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 
-version: 1.4.7
+version: 1.4.8
 
 
-appVersion: 2.3.5_1.8.0
+appVersion: 2.3.1_1.8.0
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application.
 annotations:
-  ztbVersion: 2.3.5
+  ztbVersion: 2.3.1
   ztpVersion: 1.8.0
