@@ -77,6 +77,8 @@ spec:
           - containerPort: 9900
             name: curl-proxy
           env:
+            - name: EXTERNAL_SSH_PORT
+              value: {{ .Values.sra.sshConfig.service.port | quote }}
             {{ include "akeyless-gateway.akeylessGatewayAuthConfig" . | nindent 10 }}
             {{ include "akeyless-gateway.unifiedGatewayConfig" . | nindent 10 }}
             {{ include "akeyless-gateway.ClusterName" . | nindent 10 }}

@@ -134,6 +134,8 @@ spec:
           - containerPort: 9900
             name: curl-proxy
           env:
+          - name: EXTERNAL_SSH_PORT
+            value: {{ .Values.sshConfig.service.port | quote }}
           - name: VERSION
             value: {{ .Chart.Annotations.ztbVersion }}
 {{- if .Values.clusterName }}
