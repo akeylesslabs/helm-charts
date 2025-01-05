@@ -3090,6 +3090,23 @@ entries:
   akeyless-gateway:
   - annotations:
       gatewayVersion: 4.25.0
+      sraVersion: 2.3.7
+    apiVersion: v2
+    appVersion: 4.25.0_2.3.7
+    created: "2025-01-05T09:22:25.604772787Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-gateway
+    digest: 53fbd010ebdaf7229f9fbfa929f4f4ae265de4f9e444b116461fc9051128e95c
+    icon: https://akeyless-908832575.imgix.net/wp-content/uploads/2024/03/akeyless-2024.png?auto=format%2Ccompress&fm=webp&ixlib=php-3.3.0
+    keywords:
+    - akeyless-gateway
+    - sra
+    name: akeyless-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-gateway-1.0.11/akeyless-gateway-1.0.11.tgz
+    version: 1.0.11
+  - annotations:
+      gatewayVersion: 4.25.0
       sraVersion: 2.3.6
     apiVersion: v2
     appVersion: 4.25.0_2.3.6
@@ -4049,6 +4066,20 @@ entries:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-secrets-injection-1.0.0/akeyless-secrets-injection-1.0.0.tgz
     version: 1.0.0
   akeyless-sra:
+  - annotations:
+      ztbVersion: 2.3.7
+      ztpVersion: 1.9.0
+    apiVersion: v2
+    appVersion: 2.3.7_1.9.0
+    created: "2025-01-05T09:22:25.697528725Z"
+    description: A Helm chart for Kubernetes akeyless-zero-trust-bastion, akeyless-ssh-bastion
+      and akeyless-zero-trust-portal deployments
+    digest: ac04e251dd0d77bea37ce19b54ba1e7a6f6787668e28b3849b6fe7235f80ae97
+    name: akeyless-sra
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-sra-1.4.11/akeyless-sra-1.4.11.tgz
+    version: 1.4.11
   - annotations:
       ztbVersion: 2.3.6
       ztpVersion: 1.9.0
@@ -9561,4 +9592,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2025-01-01T13:56:01.529362754Z"
+generated: "2025-01-05T09:22:25.698767756Z"
