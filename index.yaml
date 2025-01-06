@@ -3093,6 +3093,23 @@ entries:
       sraVersion: 2.3.7
     apiVersion: v2
     appVersion: 4.25.0_2.3.7
+    created: "2025-01-06T06:30:44.946369787Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-gateway
+    digest: 60aed23efd8fff497bd599da798f4eb63314eb78c6180de784d3b2e610c77cf0
+    icon: https://akeyless-908832575.imgix.net/wp-content/uploads/2024/03/akeyless-2024.png?auto=format%2Ccompress&fm=webp&ixlib=php-3.3.0
+    keywords:
+    - akeyless-gateway
+    - sra
+    name: akeyless-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-gateway-1.0.12/akeyless-gateway-1.0.12.tgz
+    version: 1.0.12
+  - annotations:
+      gatewayVersion: 4.25.0
+      sraVersion: 2.3.7
+    apiVersion: v2
+    appVersion: 4.25.0_2.3.7
     created: "2025-01-05T09:22:25.604772787Z"
     description: A Helm chart for Kubernetes that deploys akeyless-gateway
     digest: 53fbd010ebdaf7229f9fbfa929f4f4ae265de4f9e444b116461fc9051128e95c
@@ -4066,6 +4083,20 @@ entries:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-secrets-injection-1.0.0/akeyless-secrets-injection-1.0.0.tgz
     version: 1.0.0
   akeyless-sra:
+  - annotations:
+      ztbVersion: 2.3.7
+      ztpVersion: 1.9.0
+    apiVersion: v2
+    appVersion: 2.3.7_1.9.0
+    created: "2025-01-06T06:30:45.147375003Z"
+    description: A Helm chart for Kubernetes akeyless-zero-trust-bastion, akeyless-ssh-bastion
+      and akeyless-zero-trust-portal deployments
+    digest: 1d373d5aaa10203853e1efad0cf254f280208abb1de10fc3996c586dca880f60
+    name: akeyless-sra
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-sra-1.4.12/akeyless-sra-1.4.12.tgz
+    version: 1.4.12
   - annotations:
       ztbVersion: 2.3.7
       ztpVersion: 1.9.0
@@ -9592,4 +9623,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2025-01-05T09:22:25.698767756Z"
+generated: "2025-01-06T06:30:45.148606877Z"
