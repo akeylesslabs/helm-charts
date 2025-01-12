@@ -55,6 +55,8 @@ spec:
             value: {{ .Release.Namespace | quote }}
           - name: INTERNAL_PORT
             value: "{{ .Values.service.internalPort }}"
+          - name: SERVICE_NAME
+            value: "{{ printf "%s.%s.svc" (include "vault-secrets-webhook.fullname" .) .Release.Namespace }}"
           - name: DEBUG
             value: {{ .Values.debug | quote }}
 {{- if .Values.gatewayCert.tlsCertsSecretName }}
