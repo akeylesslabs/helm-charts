@@ -18,6 +18,12 @@ spec:
       targetPort: {{ .Values.service.internalPort }}
       protocol: TCP
       name: {{ .Values.service.name }}
+  {{- if .Values.env.AKEYLESS_METRICS }}
+    - port: 8090
+      targetPort: 8090
+      protocol: TCP
+      name: metrics
+  {{- end }}
   selector:
     app: {{ template "vault-secrets-webhook.name" . }}
     release: {{ .Release.Name }}
