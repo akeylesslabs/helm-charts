@@ -26,6 +26,9 @@ spec:
         release: {{ .Release.Name }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/apiservice-webhook.yaml") . | sha256sum }}
+        {{- if and .Values.metrics.enabled .Values.metrics.promethues.enabled }}
+        {{- toYaml .Values.metrics.promethues.annotations | nindent 8 }}
+        {{- end }}
     spec:
 {{- if .Values.hostNetwork }} 
       hostNetwork: true
@@ -59,6 +62,10 @@ spec:
             value: "{{ printf "%s.%s.svc" (include "vault-secrets-webhook.fullname" .) .Release.Namespace }}"
           - name: DEBUG
             value: {{ .Values.debug | quote }}
+          {{- if and .Values.metrics.enabled .Values.metrics.promethues.enabled }}
+          - name: METRICS_ANNOTATIONS
+            value: {{ toJson .Values.metrics.promethues.annotations }}
+          {{- end }}
 {{- if .Values.gatewayCert.tlsCertsSecretName }}
           - name: AKEYLESS_GW_CERTIFICATE
             valueFrom:
@@ -81,6 +88,9 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.service.internalPort }}
+          {{- if .Values.metrics.enabled }}
+            - containerPort: {{ .Values.metrics.port }}
+          {{- end }}
           livenessProbe:
             httpGet:
               path: /health
