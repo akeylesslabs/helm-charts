@@ -67,7 +67,7 @@ spec:
             value: {{ .Values.metrics.port | quote }}
           {{- if .Values.metrics.promethues.enabled }}
           - name: METRICS_ANNOTATIONS
-            value: {{ toJson .Values.metrics.promethues.annotations }}
+            value: {{ toJson .Values.metrics.promethues.annotations | quote }}
           {{- end }}
           {{- end }}
 {{- if .Values.gatewayCert.tlsCertsSecretName }}
