@@ -124,10 +124,6 @@ metrics:
       prometheus.io/scrape: "true"
       prometheus.io/path: "/metrics"
       prometheus.io/port: "8090"
-  datadog:
-    enabled: false
-    key: 
-    secret: 
       
 
 HPA:

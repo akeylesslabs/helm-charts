@@ -62,9 +62,13 @@ spec:
             value: "{{ printf "%s.%s.svc" (include "vault-secrets-webhook.fullname" .) .Release.Namespace }}"
           - name: DEBUG
             value: {{ .Values.debug | quote }}
-          {{- if and .Values.metrics.enabled .Values.metrics.promethues.enabled }}
+          {{- if .Values.metrics.enabled }}
+          - name: METRICS_PORT
+            value: {{ .Values.metrics.port | quote }}
+          {{- if .Values.metrics.promethues.enabled }}
           - name: METRICS_ANNOTATIONS
             value: {{ toJson .Values.metrics.promethues.annotations }}
+          {{- end }}
           {{- end }}
 {{- if .Values.gatewayCert.tlsCertsSecretName }}
           - name: AKEYLESS_GW_CERTIFICATE
