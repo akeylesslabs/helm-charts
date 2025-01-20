@@ -94,7 +94,7 @@ Check provided imagePullSecrets
 {{- define "akeyless-api-gw.imagePullSecrets" -}}
   {{- if not (empty .Values.image.imagePullSecrets) }}
     imagePullSecrets:
-      - name: {{- printf "%s" .Values.image.imagePullSecrets -}}
+      - name: {{ printf "%s" .Values.image.imagePullSecrets }}
   {{- end -}}
 {{- end -}}
 

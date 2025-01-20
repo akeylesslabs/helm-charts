@@ -37,7 +37,7 @@ Check provided imagePullSecrets
 {{- define "akeyless-gateway.imagePullSecrets" -}}
   {{- if not (empty .Values.gateway.deployment.image.imagePullSecrets) }}
     imagePullSecrets:
-      - name: {{- printf "%s" .Values.gateway.deployment.image.imagePullSecrets -}}
+      - name: {{ printf "%s" .Values.gateway.deployment.image.imagePullSecrets }}
   {{- end -}}
 {{- end -}}
 
