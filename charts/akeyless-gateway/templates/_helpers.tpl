@@ -40,7 +40,12 @@ Check provided imagePullSecrets
       - name: {{ printf "%s" .Values.gateway.deployment.image.imagePullSecrets }}
   {{- end -}}
 {{- end -}}
-
+{{- define "cache.imagePullSecrets" -}}
+  {{- if not (empty .Values.globalConfig.clusterCache.imagePullSecrets) }}
+    imagePullSecrets:
+      - name: {{ printf "%s" .Values.globalConfig.clusterCache.imagePullSecrets }}
+  {{- end -}}
+{{- end -}}
 {{/*
 Common labels
 */}}

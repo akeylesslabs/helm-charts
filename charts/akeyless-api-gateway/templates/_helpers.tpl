@@ -97,7 +97,12 @@ Check provided imagePullSecrets
       - name: {{ printf "%s" .Values.image.imagePullSecrets }}
   {{- end -}}
 {{- end -}}
-
+{{- define "cache.imagePullSecrets" -}}
+  {{- if not (empty .Values.cache.imagePullSecrets) }}
+    imagePullSecrets:
+      - name: {{ printf "%s" .Values.cache.imagePullSecrets }}
+  {{- end -}}
+{{- end -}}
 {{/*
 Generate chart secret name
 */}}

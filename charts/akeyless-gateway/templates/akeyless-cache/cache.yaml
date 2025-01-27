@@ -27,6 +27,7 @@ spec:
       volumes:
       {{- include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 6}}
       {{- end }}
+      {{-  include "cache.imagePullSecrets" . | indent 2 }}
       containers:
         - name: {{ $deploymentName }}
         {{- include "akeyless-gateway.clusterCacheImage" . | nindent 6 }}
