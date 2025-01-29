@@ -58,20 +58,8 @@ deployment:
   annotations: { }
   labels: { }
 
-  # The service account to be used with the gateway pods created by deployment
-  # It can be configured to define how the gateway interacts with cloud provider service accounts.
-  
-  # - For GCP see https://docs.akeyless.io/docs/gateway-k8s#gcp-gce
-  #   ```yaml
-  #  annotations:
-  #      iam.gke.io/gcp-service-account: my-service-account@my-project.iam.gserviceaccount.com
-  #   ```
-
-  # - AWS ref: https://docs.akeyless.io/docs/gateway-k8s#aws-iam
-  #   ```yaml
-  #  annotations:
-  #    eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/MyIAMRole
-  #   ```
+  ## AWS ref: https://docs.akeyless.io/docs/deploy-the-api-gateway-on-kubernetes#aws-iam
+  ## GCP ref: https://docs.akeyless.io/docs/deploy-the-api-gateway-on-kubernetes#gcp-gce
   service_account:
     create: false
     serviceAccountName:
