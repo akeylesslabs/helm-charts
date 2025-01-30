@@ -37,10 +37,15 @@ Check provided imagePullSecrets
 {{- define "akeyless-gateway.imagePullSecrets" -}}
   {{- if not (empty .Values.gateway.deployment.image.imagePullSecrets) }}
     imagePullSecrets:
-      - name: {{- printf "%s" .Values.gateway.deployment.image.imagePullSecrets -}}
+      - name: {{ printf "%s" .Values.gateway.deployment.image.imagePullSecrets }}
   {{- end -}}
 {{- end -}}
-
+{{- define "cache.imagePullSecrets" -}}
+  {{- if not (empty .Values.globalConfig.clusterCache.imagePullSecrets) }}
+    imagePullSecrets:
+      - name: {{ printf "%s" .Values.globalConfig.clusterCache.imagePullSecrets }}
+  {{- end -}}
+{{- end -}}
 {{/*
 Common labels
 */}}
