@@ -3,6 +3,16 @@ entries:
   akeyless-api-gateway:
   - apiVersion: v2
     appVersion: 4.27.0
+    created: "2025-01-30T09:47:43.453763726Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
+    digest: 8db6924c45e9670d7304a05f14307658742ad0d3290cda5e7f442760f6a40f35
+    name: akeyless-api-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-api-gateway-1.52.2/akeyless-api-gateway-1.52.2.tgz
+    version: 1.52.2
+  - apiVersion: v2
+    appVersion: 4.27.0
     created: "2025-01-26T13:20:59.482241167Z"
     description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
     digest: 647a84c2708b65eeb14b6a250f2525215b7c09e8e95d1e3adcb2d062631a723d
@@ -3108,6 +3118,23 @@ entries:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-csi-provider-1.0.0/akeyless-csi-provider-1.0.0.tgz
     version: 1.0.0
   akeyless-gateway:
+  - annotations:
+      gatewayVersion: 4.27.0
+      sraVersion: 2.3.7
+    apiVersion: v2
+    appVersion: 4.27.0_2.3.7
+    created: "2025-01-30T09:47:43.577071581Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-gateway
+    digest: ef338b3a5fd978c690a5802debc13fa1cb115b23ec7cd098cf99b4b8e5237d34
+    icon: https://akeyless-908832575.imgix.net/wp-content/uploads/2024/03/akeyless-2024.png?auto=format%2Ccompress&fm=webp&ixlib=php-3.3.0
+    keywords:
+    - akeyless-gateway
+    - sra
+    name: akeyless-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-gateway-1.1.2/akeyless-gateway-1.1.2.tgz
+    version: 1.1.2
   - annotations:
       gatewayVersion: 4.27.0
       sraVersion: 2.3.7
@@ -9775,4 +9802,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2025-01-29T13:20:52.735562852Z"
+generated: "2025-01-30T09:47:43.578590144Z"
