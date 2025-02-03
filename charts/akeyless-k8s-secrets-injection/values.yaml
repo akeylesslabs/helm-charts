@@ -120,6 +120,7 @@ metrics:
   port: 8090
   promethues:
     enabled: true
+    podMonitor: true
     annotations:
       prometheus.io/scrape: "true"
       prometheus.io/path: "/metrics"

@@ -22,7 +22,7 @@ spec:
     - port: {{ .Values.metrics.port }}
       targetPort: {{ .Values.metrics.port }}
       protocol: TCP
-      name: metrics
+      name: akls-metrics
   {{- end }}
   selector:
     app: {{ template "vault-secrets-webhook.name" . }}

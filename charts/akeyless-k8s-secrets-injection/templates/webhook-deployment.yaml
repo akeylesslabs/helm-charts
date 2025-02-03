@@ -94,6 +94,7 @@ spec:
             - containerPort: {{ .Values.service.internalPort }}
           {{- if .Values.metrics.enabled }}
             - containerPort: {{ .Values.metrics.port }}
+              name: akls-metrics
           {{- end }}
           livenessProbe:
             httpGet:
