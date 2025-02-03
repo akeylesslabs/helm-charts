@@ -31,6 +31,7 @@ spec:
           secret:
             secretName: {{ include "cacheTlsSecretName" . }}
       {{ end }}
+      {{-  include "cache.imagePullSecrets" . | indent 2 }}
       containers:
       - name: {{ $deploymentName }}
         image: "{{ .Values.cache.image.repository }}:{{ .Values.cache.image.tag }}"
