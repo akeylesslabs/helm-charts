@@ -118,7 +118,7 @@ affinity: |
 metrics:
   enabled: true
   port: 8090
-  promethues:
+  prometheus:
     enabled: true
     podMonitor: true
     annotations:
