@@ -116,7 +116,7 @@ affinity: |
             release: {{ .Release.Name }}
 
 metrics:
-  enabled: true
+  enabled: false
   port: 8090
   prometheus:
     enabled: true
