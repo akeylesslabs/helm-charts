@@ -326,6 +326,35 @@ spec:
                   containerName: {{ .Values.containerName }}
                   resource: limits.memory
           {{- end }}
+          {{- if eq .Values.hsm.enabled true }}
+          {{- if .Values.hsm.pkcs11LibPath }}
+            - name: PKCS11_LIB_PATH
+              value: {{ .Values.hsm.pkcs11LibPath | quote }}
+            {{- end }}  
+            {{- if .Values.hsm.pinExistingSecret }}
+            - name: HSM_PIN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.hsm.pinExistingSecret }}
+                  key: pin
+            {{- end }}  
+            {{- if .Values.hsm.slot }}
+            - name: HSM_SLOT
+              value: {{ .Values.hsm.slot | quote }}
+            {{- end }}  
+            {{- if .Values.hsm.tokenLabel }}
+            - name: HSM_TOKEN_LABEL
+              value: {{ .Values.hsm.tokenLabel | quote }}
+            {{- end }}  
+            {{- if .Values.hsm.tokenSerial }}
+            - name: HSM_TOKEN_SERIAL
+              value: {{ .Values.hsm.tokenSerial | quote }}
+            {{- end }}  
+            {{- if .Values.hsm.useRand }}
+            - name: HSM_USE_RAND
+              value: {{ .Values.hsm.useRand | quote }}
+            {{- end }}
+          {{- end }}
             - name: POD_NAME
               valueFrom:
                 fieldRef:
