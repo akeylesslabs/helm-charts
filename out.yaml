@@ -1,0 +1,214 @@
+NAME: gw
+LAST DEPLOYED: Sat Feb  8 15:44:20 2025
+NAMESPACE: default
+STATUS: pending-install
+REVISION: 1
+TEST SUITE: None
+HOOKS:
+MANIFEST:
+---
+# Source: akeyless-api-gateway/templates/serviceAccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: gw-akeyless-gateway
+  namespace: "default"
+---
+# Source: akeyless-api-gateway/templates/secrets.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gw-conf-secret
+type: Opaque
+data:
+  admin-access-id: "cC02MTNwZDU2bTV5aGhhcw=="
+  admin-access-key: "ODRjUzZ1Nm1hL3E2YlNHaER4dktnZmY5WU1YREMvM0YzamFDQWdEbEZNYz0="
+  allowed-access-permissions: "eyJwZXJtaXNzaW9ucyI6bnVsbH0="
+---
+# Source: akeyless-api-gateway/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: gw-akeyless-api-gateway
+  namespace: default
+  labels:
+    helm.sh/chart: akeyless-api-gateway-1.52.2
+    app.kubernetes.io/name: akeyless-api-gateway
+    app.kubernetes.io/instance: gw
+    app.kubernetes.io/version: "4.27.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    {}
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 18888
+      targetPort: web
+      protocol: TCP
+      name: web
+    - port: 8000
+      targetPort: configure-app
+      protocol: TCP
+      name: configure-app
+    - port: 8080
+      targetPort: legacy-api
+      protocol: TCP
+      name: legacy-api
+    - port: 8081
+      targetPort: api
+      protocol: TCP
+      name: api
+    - port: 8200
+      targetPort: hvp
+      protocol: TCP
+      name: hvp
+    - port: 5696
+      targetPort: kmip
+      protocol: TCP
+      name: kmip
+  selector:
+    app.kubernetes.io/name: akeyless-api-gateway
+    app.kubernetes.io/instance: gw
+---
+# Source: akeyless-api-gateway/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gw-akeyless-api-gateway
+  namespace: default
+  labels:
+    helm.sh/chart: akeyless-api-gateway-1.52.2
+    app.kubernetes.io/name: akeyless-api-gateway
+    app.kubernetes.io/instance: gw
+    app.kubernetes.io/version: "4.27.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: akeyless-api-gateway
+      app.kubernetes.io/instance: gw
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: akeyless-api-gateway
+        app.kubernetes.io/instance: gw
+    spec:
+      serviceAccountName: gw-akeyless-gateway  
+      volumes:
+      - name: cache-tls
+        secret:
+          secretName: gw-akeyless-api-gateway-crt
+      - name: akeyless-config
+        emptyDir: {}
+      - name: persistent-storage
+        persistentVolumeClaim:
+          claimName: minikube-rwo-pvc
+      initContainers:
+        # Since k8s 1.9.4, config maps mount read-only volumes. Since the Docker image also writes to the config file,
+        # the file must be mounted as read-write. We use init containers to copy from the config map read-only
+        # path, to a read-write path
+        - name: bootstrap
+          image: "busybox:1.30.1"
+          imagePullPolicy: IfNotPresent
+          command: ['sh']
+          args:
+            - "-c"
+            - |
+              set -ex 
+          volumeMounts:
+            - name: akeyless-config
+              mountPath: /root/.akeyless
+      containers:
+        - name: api-gateway
+          image: "akeyless/base:1.0.0"
+          imagePullPolicy: Always
+          ports:
+            - name: web
+              containerPort: 18888
+            - name: configure-app
+              containerPort: 8000
+            - name: legacy-api
+              containerPort: 8080
+            - name: api
+              containerPort: 8081
+            - name: hvp
+              containerPort: 8200
+            - name: kmip
+              containerPort: 5696
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            failureThreshold: 10
+            initialDelaySeconds: 120
+            periodSeconds: 60
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 120
+            periodSeconds: 10
+            timeoutSeconds: 5
+          volumeMounts:
+            - name: akeyless-config
+              mountPath: /root/.akeyless
+            - name: persistent-storage
+              mountPath: /persistent/data
+          resources:
+            {}
+          env:
+            - name: ADMIN_ACCESS_ID
+              valueFrom:
+                secretKeyRef:
+                  name: gw-conf-secret
+                  key: admin-access-id
+            - name: ALLOWED_ACCESS_PERMISSIONS
+              valueFrom:
+                secretKeyRef:
+                  name: gw-conf-secret
+                  key: allowed-access-permissions
+            - name: ADMIN_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: gw-conf-secret
+                  key: admin-access-key
+            - name: CLUSTER_NAME
+              value: kubecluster5
+            - name: RESTRICT_ACCESS_TO_ADMIN_ACCOUNT
+              value: "true"
+            - name: INITIAL_DISPLAY_NAME
+              value: kubecluster5
+            - name: UID_ROTATE_INTERVAL
+              value: 5m
+            - name: UID_CREATE_CHILD_TOKEN_PER_POD
+              value: disable
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name         
+          # provision initial configuration
+          ## Defaults section
+          ## sni proxy
+          ## tls config
+          ## caching section
+            - name: CACHE_TTL
+              value: "60"
+           ## gRPC section
+          ## agreements section
+          # end provision
+            - name: VERSION
+              value: 4.24.2-download-center
+            - name: DEVELOPMENT_OR_RELEASE
+              value: development
+            - name: AKEYLESS_URL
+              value: https://vault.us.akeyless.dev
+            - name: PREFER_CLUSTER_CACHE_FIRST
+              value: "true"
+---
+# Source: akeyless-api-gateway/templates/secrets.yaml
+---
+---
+# Source: akeyless-api-gateway/templates/secrets.yaml
+---
+

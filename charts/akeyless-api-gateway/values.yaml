@@ -473,4 +473,11 @@ HPA:
 
 grpc:
   enabled: false
-  
+
+persistence:
+  enabled: false
+  # existingClaim: "my-existing-pvc"  # Use an externally created PVC
+  mountPath: "/persistent/data"
+  accessMode: "ReadWriteMany"
+  storageClass: "" #storage class defined by k8s host
+  size: 100Mi
