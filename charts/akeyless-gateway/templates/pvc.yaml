@@ -1,5 +1,5 @@
 {{- if and .Values.gateway.persistence.enabled (not .Values.gateway.persistence.existingClaim) }}
-{{- $deploymentName := printf "%s-pvc" (include "akeyless-api-gw.fullname" .) }}
+{{- $deploymentName := printf "%s-pvc" (include "akeyless-gateway.fullname" .) }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
