@@ -26,8 +26,8 @@ spec:
         release: {{ .Release.Name }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/apiservice-webhook.yaml") . | sha256sum }}
-        {{- if and .Values.metrics.enabled .Values.metrics.promethues.enabled }}
-        {{- toYaml .Values.metrics.promethues.annotations | nindent 8 }}
+        {{- if and .Values.metrics.enabled .Values.metrics.prometheus.enabled }}
+        {{- toYaml .Values.metrics.prometheus.annotations | nindent 8 }}
         {{- end }}
     spec:
 {{- if .Values.hostNetwork }} 
@@ -65,9 +65,9 @@ spec:
           {{- if .Values.metrics.enabled }}
           - name: METRICS_PORT
             value: {{ .Values.metrics.port | quote }}
-          {{- if .Values.metrics.promethues.enabled }}
+          {{- if .Values.metrics.prometheus.enabled }}
           - name: METRICS_ANNOTATIONS
-            value: {{ toJson .Values.metrics.promethues.annotations | quote }}
+            value: {{ toJson .Values.metrics.prometheus.annotations | quote }}
           {{- end }}
           {{- end }}
 {{- if .Values.gatewayCert.tlsCertsSecretName }}
