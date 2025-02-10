@@ -474,25 +474,23 @@ HPA:
 grpc:
   enabled: false
 
-# Specifies hsm configuration for the api GW
+# HSM configuration
 hsm:
   enabled: false
-  # In case hsm is enabled, you must specify an existing secret for the hsm pkcs11 pin
-  # the secret key is expecte to be "pin"
-  # pinExistingSecret: "my-hsm-pin"
+  # In case hsm is enabled you must add pinExistingSecret which includes the hsm pcks11 pin
+  # https://docs.akeyless.io/docs/advanced-k8s-gateway-configuration#hsm-configuration 
+  # pinExistingSecret: ""
   # pkcs11LibPath:
-  # must provide one of slot, tokenLabl or tokenSerial
   # slot:
   # tokenLabel:
   # tokenSerial: 
-  # should the gw take randomness from the hsm?
   # useRand: false
 
-# Creates a persistent volume for the api GW
+# Persistent volume section
 persistence:
   enabled: false
-  # existingClaim: "my-existing-pvc"  # Use an externally created PVC
-  # mountPath: "/persistent/data"
+  # existingClaim: ""  
+  # mountPath: ""
   # accessMode: "ReadWriteMany"
-  # storageClass: "" #storage class defined by k8s host
-  # size: 100Mi
+  # storageClass: "" 
+  # size: 100Mi 
