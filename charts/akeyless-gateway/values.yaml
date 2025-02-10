@@ -283,7 +283,7 @@ gateway:
   hsm:
     enabled: false
     ## In case hsm is enabled you must add pinExistingSecret which includes the hsm pcks11 pin
-    ## https://docs.akeyless.io/docs/advanced-chart-configuration#hsm-configuration 
+    ##  https://docs.akeyless.io/docs/k8s-hsm-integration 
     ## pinExistingSecret: ""
     ## pkcs11LibPath:
     ## slot:
