@@ -1,0 +1,16 @@
+{{- if and .Values.gateway.persistence.enabled (not .Values.gateway.persistence.existingClaim) }}
+{{- $deploymentName := printf "%s-pvc" (include "akeyless-api-gw.fullname" .) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $deploymentName }}
+  annotations:
+    "helm.sh/resource-policy": keep  # 🔹 Prevents deletion during `helm upgrade`
+spec:
+  accessModes:
+    - {{ .Values.gateway.persistence.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.gateway.persistence.size }}
+  storageClassName: {{ .Values.gateway.persistence.storageClass }}
+{{- end }}
