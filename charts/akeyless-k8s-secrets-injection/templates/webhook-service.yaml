@@ -18,6 +18,12 @@ spec:
       targetPort: {{ .Values.service.internalPort }}
       protocol: TCP
       name: {{ .Values.service.name }}
+  {{- if .Values.metrics.enabled }}
+    - port: {{ .Values.metrics.port }}
+      targetPort: {{ .Values.metrics.port }}
+      protocol: TCP
+      name: akls-metrics
+  {{- end }}
   selector:
     app: {{ template "vault-secrets-webhook.name" . }}
     release: {{ .Release.Name }}

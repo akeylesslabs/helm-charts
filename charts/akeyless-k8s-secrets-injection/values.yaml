@@ -115,6 +115,18 @@ affinity: |
             app: {{ template "vault-secrets-webhook.name" . }}
             release: {{ .Release.Name }}
 
+metrics:
+  enabled: false
+  port: 8090
+  prometheus:
+    enabled: true
+    podMonitor: true
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/metrics"
+      prometheus.io/port: "akls-metrics"
+      
+
 HPA:
   # Note that metrics server must be installed for this to work:
   # https://github.com/kubernetes-sigs/metrics-server
