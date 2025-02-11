@@ -3,6 +3,16 @@ entries:
   akeyless-api-gateway:
   - apiVersion: v2
     appVersion: 4.27.0
+    created: "2025-02-11T11:14:49.403954113Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
+    digest: 45866ce10dd6675dee8e63dda4a357e6c5d8190ade3bed37fe8e70bae9e93665
+    name: akeyless-api-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-api-gateway-1.53.0/akeyless-api-gateway-1.53.0.tgz
+    version: 1.53.0
+  - apiVersion: v2
+    appVersion: 4.27.0
     created: "2025-01-30T09:47:43.453763726Z"
     description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
     digest: 8db6924c45e9670d7304a05f14307658742ad0d3290cda5e7f442760f6a40f35
@@ -3118,6 +3128,23 @@ entries:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-csi-provider-1.0.0/akeyless-csi-provider-1.0.0.tgz
     version: 1.0.0
   akeyless-gateway:
+  - annotations:
+      gatewayVersion: 4.27.0
+      sraVersion: 2.3.8
+    apiVersion: v2
+    appVersion: 4.27.0_2.3.8
+    created: "2025-02-11T11:14:49.497095765Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-gateway
+    digest: d27e2fa8558b30a0a6f84ed4e7d071a619d4eedfea7c72d143d7e9d58d6dcb12
+    icon: https://akeyless-908832575.imgix.net/wp-content/uploads/2024/03/akeyless-2024.png?auto=format%2Ccompress&fm=webp&ixlib=php-3.3.0
+    keywords:
+    - akeyless-gateway
+    - sra
+    name: akeyless-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-gateway-1.2.0/akeyless-gateway-1.2.0.tgz
+    version: 1.2.0
   - annotations:
       gatewayVersion: 4.27.0
       sraVersion: 2.3.8
@@ -9877,4 +9904,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2025-02-10T14:14:19.224039852Z"
+generated: "2025-02-11T11:14:49.498467256Z"
