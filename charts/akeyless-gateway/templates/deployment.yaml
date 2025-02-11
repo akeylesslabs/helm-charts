@@ -46,7 +46,7 @@ spec:
       {{ toYaml .Values.gateway.deployment.nodeSelector | indent 4 }}
       {{- end }}
       {{- include "akeyless-gateway.imagePullSecrets" . | indent 2 }}
-      {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .)}}
+      {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true)}}
       volumes:
       - name: akeyless-config
         emptyDir: {}
@@ -73,6 +73,11 @@ spec:
       {{- end }}
       {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
       {{ include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 6}}
+      {{- end }}
+      {{- if eq .Values.gateway.persistence.enabled true }}
+      - name: persistent-storage
+        persistentVolumeClaim:
+          claimName: {{ .Values.gateway.persistence.existingClaim | default (printf "%s-pvc" (include "akeyless-gateway.fullname" .)) }}
       {{- end }}
       {{- end }}
       containers:
@@ -102,7 +107,7 @@ spec:
               path: /health
               port: 8080
           {{- toYaml .Values.gateway.deployment.readinessProbe | trim | nindent 12 }}
-          {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .)}}
+          {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true)}}
           volumeMounts:
             - name: akeyless-config
               mountPath: {{include "akeyless-gateway.root.config.path" $}}/.akeyless
@@ -123,7 +128,11 @@ spec:
               mountPath: {{include "akeyless-gateway.root.config.path" $}}/.akeyless/akeyless-api-cert.key
               subPath: akeyless-api-cert.key
               readOnly: true
-           {{- end}}
+          {{- end}}
+          {{- if eq .Values.gateway.persistence.enabled true }}
+            - name: persistent-storage
+              mountPath: {{ .Values.gateway.persistence.mountPath}}
+          {{- end }}
           {{- end}}
           resources:
           {{- toYaml .Values.gateway.resources | nindent 12 }}
@@ -228,6 +237,35 @@ spec:
                 resourceFieldRef:
                   containerName: {{ include "akeyless-gateway.containerName" . }}
                   resource: limits.memory
+            {{- end }}
+            {{- if eq .Values.gateway.hsm.enabled true }}
+            {{- if .Values.gateway.hsm.pkcs11LibPath }}
+            - name: PKCS11_LIB_PATH
+              value: {{ .Values.gateway.hsm.pkcs11LibPath | quote }}
+            {{- end }}  
+            {{- if .Values.gateway.hsm.pinExistingSecret }}
+            - name: HSM_PIN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.gateway.hsm.pinExistingSecret }}
+                  key: pin
+            {{- end }}  
+            {{- if .Values.gateway.hsm.slot }}
+            - name: HSM_SLOT
+              value: {{ .Values.gateway.hsm.slot | quote }}
+            {{- end }}  
+            {{- if .Values.gateway.hsm.tokenLabel }}
+            - name: HSM_TOKEN_LABEL
+              value: {{ .Values.gateway.hsm.tokenLabel | quote }}
+            {{- end }}  
+            {{- if .Values.gateway.hsm.tokenSerial }}
+            - name: HSM_TOKEN_SERIAL
+              value: {{ .Values.gateway.hsm.tokenSerial | quote }}
+            {{- end }}  
+            {{- if .Values.gateway.hsm.useRand }}
+            - name: HSM_USE_RAND
+              value: {{ .Values.gateway.hsm.useRand | quote }}
+            {{- end }}
             {{- end }}
             - name: POD_NAME
               valueFrom:
