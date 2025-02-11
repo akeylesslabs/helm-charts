@@ -279,6 +279,26 @@ gateway:
     memAvgUtil: 70
 
     annotations: {}
+  ## HSM configuration
+  hsm:
+    enabled: false
+    ## In case hsm is enabled you must add pinExistingSecret which includes the hsm pcks11 pin
+    ##  https://docs.akeyless.io/docs/k8s-hsm-integration 
+    ## pinExistingSecret: ""
+    ## pkcs11LibPath:
+    ## slot:
+    ## tokenLabel:
+    ## tokenSerial: 
+    ## useRand: false
+
+  ## Persistent volume section
+  persistence:
+    enabled: false
+    ## existingClaim: ""  
+    ## mountPath: ""
+    ## accessMode: "ReadWriteMany"
+    ## storageClass: "" 
+    ## size: 100Mi 
 
 ######################################################
 ## Default values for akeyless-secure-remote-access ##

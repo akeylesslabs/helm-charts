@@ -51,7 +51,7 @@ spec:
       {{ toYaml .Values.deployment.nodeSelector | indent 4 }}
       {{- end }}
       {{-  include "akeyless-api-gw.imagePullSecrets" . | indent 2 }}
-      {{- if or (not (eq (include "akeyless-api-gw.customerFragmentExist" .) "")) (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true" ) (.Values.metrics.enabled)  |  or (include "cacheEnableTls" . | eq "true")  }}
+      {{- if or (not (eq (include "akeyless-api-gw.customerFragmentExist" .) "")) (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true" ) (.Values.metrics.enabled) (eq .Values.persistence.enabled true) |  or (include "cacheEnableTls" . | eq "true")  }}
       volumes:
       - name: cache-tls
         secret:
@@ -84,6 +84,11 @@ spec:
       - name: otelcol-metrics-config
         secret:
           secretName: {{ include "akeyless-api-gw.metricsSecretExist" . }}
+      {{- end }}
+      {{- if eq .Values.persistence.enabled true }}
+      - name: persistent-storage
+        persistentVolumeClaim:
+          claimName: {{ .Values.persistence.existingClaim | default (printf "%s-pvc" (include "akeyless-api-gw.fullname" .)) }}
       {{- end }}
       initContainers:
         # Since k8s 1.9.4, config maps mount read-only volumes. Since the Docker image also writes to the config file,
@@ -124,6 +129,7 @@ spec:
             - name: tls-conf
               mountPath: /tls_conf
           {{- end}}
+
       {{- end }}
       containers:
         - name: {{ .Values.containerName }}
@@ -166,7 +172,7 @@ spec:
               scheme: HTTPS
               {{- end }}
 {{- toYaml .Values.readinessProbe | trim | nindent 12 }}
-         {{- if or (not (eq (include "akeyless-api-gw.customerFragmentExist" .) "")) (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true") ( .Values.metrics.enabled) |  or (include "cacheEnableTls" . | eq "true") }}
+         {{- if or (not (eq (include "akeyless-api-gw.customerFragmentExist" .) "")) (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true") ( .Values.metrics.enabled) (eq .Values.persistence.enabled true) |  or (include "cacheEnableTls" . | eq "true") }}
           volumeMounts:
             {{- if (include "cacheEnableTls" . | eq "true") }}
             - name: "cache-tls"
@@ -180,6 +186,10 @@ spec:
               mountPath: /akeyless/otel-config.yaml
               subPath: otel-config.yaml
           {{- end}}
+          {{- if eq .Values.persistence.enabled true }}
+            - name: persistent-storage
+              mountPath: {{ .Values.persistence.mountPath}}
+          {{- end }}
           {{- end}}
           resources:
 {{- toYaml .Values.resources | nindent 12 }}
@@ -315,6 +325,35 @@ spec:
                 resourceFieldRef:
                   containerName: {{ .Values.containerName }}
                   resource: limits.memory
+          {{- end }}
+          {{- if eq .Values.hsm.enabled true }}
+          {{- if .Values.hsm.pkcs11LibPath }}
+            - name: PKCS11_LIB_PATH
+              value: {{ .Values.hsm.pkcs11LibPath | quote }}
+            {{- end }}  
+            {{- if .Values.hsm.pinExistingSecret }}
+            - name: HSM_PIN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.hsm.pinExistingSecret }}
+                  key: pin
+            {{- end }}  
+            {{- if .Values.hsm.slot }}
+            - name: HSM_SLOT
+              value: {{ .Values.hsm.slot | quote }}
+            {{- end }}  
+            {{- if .Values.hsm.tokenLabel }}
+            - name: HSM_TOKEN_LABEL
+              value: {{ .Values.hsm.tokenLabel | quote }}
+            {{- end }}  
+            {{- if .Values.hsm.tokenSerial }}
+            - name: HSM_TOKEN_SERIAL
+              value: {{ .Values.hsm.tokenSerial | quote }}
+            {{- end }}  
+            {{- if .Values.hsm.useRand }}
+            - name: HSM_USE_RAND
+              value: {{ .Values.hsm.useRand | quote }}
+            {{- end }}
           {{- end }}
             - name: POD_NAME
               valueFrom:
