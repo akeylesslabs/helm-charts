@@ -105,11 +105,11 @@ Generate chart secret name
 
 {{- define "akeyless-gateway.clusterCacheImage" -}}
   {{- if .Values.globalConfig.clusterCache.image -}}
-    image: "{{ .Values.globalConfig.clusterCache.image.repository }}:{{ .Values.globalConfig.clusterCache.image.tag }}"
-    imagePullPolicy: {{ .Values.globalConfig.clusterCache.image.pullPolicy }}
-  {{- else }}
-    image: "docker.io/bitnami/redis:6.2"
-    imagePullPolicy: "Always"
+  {{- printf "image: %s:%s\n" (required "A valid .Values.globalConfig.clusterCache.image.repository entry required!" .Values.globalConfig.clusterCache.image.repository) (required "A valid .Values.globalConfig.clusterCache.image.tag entry required!" .Values.globalConfig.clusterCache.image.tag | toString)  -}}
+  {{- printf "imagePullPolicy: %s" (.Values.globalConfig.clusterCache.image.pullPolicy | default "Always"  | quote ) -}}
+  {{- else -}}
+  {{- printf "image: %s" ("docker.io/bitnami/redis:6.2" | quote) -}}
+  {{- print "imagePullPolicy: %s" ("Always" | quote) -}}
   {{- end -}}
 {{- end -}}
 
