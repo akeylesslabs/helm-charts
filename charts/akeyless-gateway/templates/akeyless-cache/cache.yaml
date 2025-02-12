@@ -25,12 +25,12 @@ spec:
     spec:
       {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
       volumes:
-      {{- include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 6}}
+      {{- include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 6 }}
       {{- end }}
       {{-  include "cache.imagePullSecrets" . | indent 2 }}
       containers:
         - name: {{ $deploymentName }}
-        {{- include "akeyless-gateway.clusterCacheImage" . | nindent 6 }}
+          {{- include "akeyless-gateway.clusterCacheImage" . | nindent 10 }}
           ports:
             - containerPort: 6379
               name: cache
