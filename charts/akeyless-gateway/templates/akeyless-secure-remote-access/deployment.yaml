@@ -59,6 +59,7 @@ spec:
         {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
         {{ include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 8}}
         {{- end }}
+      {{- include "akeyless-sra.imagePullSecrets" . | indent 2 }}
       containers:
         - name: gateway-sra-web
           image: "{{ .Values.sra.image.repository | default "akeyless/zero-trust-bastion" }}:{{ .Values.sra.image.tag | default .Chart.Annotations.sraVersion }}"

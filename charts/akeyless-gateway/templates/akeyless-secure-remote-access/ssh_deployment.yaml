@@ -63,6 +63,7 @@ spec:
       - name: configmap-creds
         configMap:
           name: {{ $.Release.Name }}-cm-creds
+      {{- include "akeyless-sra.imagePullSecrets" . | indent 2 }}
       containers:
         - name: gateway-sra-ssh
           image: "{{ .Values.sra.image.repository | default "akeyless/zero-trust-bastion" }}:{{ .Values.sra.image.tag | default .Chart.Annotations.sraVersion }}"
