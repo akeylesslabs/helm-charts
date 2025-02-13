@@ -283,7 +283,7 @@ akeylessUserAuth:
   # Configure this list to add one or more allowed access to this GW, with the specified permissions and sub-claims.
   # Name must be unique.
   # Empty permissions will implicitly give the access admin permission.
-  allowedAccessPermissions: { }
+  allowedAccessPermissions: [ ]
   #    - name: access1
   #      access_id: p-1234
   #      sub_claims:

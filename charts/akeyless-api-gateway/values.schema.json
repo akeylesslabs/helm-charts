@@ -36,7 +36,7 @@
       }
     },
     "akeylessUserAuth": {
-      "description": "Container Image",
+      "description": "Akeyless authentication configuration",
       "properties": {
         "blockedAccessIds": {
           "oneOf": [
@@ -48,6 +48,24 @@
           ],
           "uniqueItems": true,
           "default": null
+        },
+        "allowedAccessPermissions": {
+          "type": "array",
+          "description": "List of allowed access permissions",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "access_id": { "type": "string" },
+              "sub_claims": { "type": "object" },
+              "case_sensitive": { "type": "boolean" },
+              "permissions": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            },
+            "required": ["name", "access_id"]
+          }
         }
       },
       "type": "object"
