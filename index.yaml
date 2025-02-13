@@ -3,6 +3,16 @@ entries:
   akeyless-api-gateway:
   - apiVersion: v2
     appVersion: 4.27.0
+    created: "2025-02-13T08:15:19.377704907Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
+    digest: 7dc4082105363de11f8007db09ab325947645b1025768ca5d5f0137a02bdc5ca
+    name: akeyless-api-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-api-gateway-1.53.4/akeyless-api-gateway-1.53.4.tgz
+    version: 1.53.4
+  - apiVersion: v2
+    appVersion: 4.27.0
     created: "2025-02-11T11:14:49.403954113Z"
     description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
     digest: 45866ce10dd6675dee8e63dda4a357e6c5d8190ade3bed37fe8e70bae9e93665
@@ -3128,6 +3138,23 @@ entries:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-csi-provider-1.0.0/akeyless-csi-provider-1.0.0.tgz
     version: 1.0.0
   akeyless-gateway:
+  - annotations:
+      gatewayVersion: 4.27.0
+      sraVersion: 2.3.8
+    apiVersion: v2
+    appVersion: 4.27.0_2.3.8
+    created: "2025-02-13T08:15:19.547773013Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-gateway
+    digest: 80903e7163face4b7e53552350d87170dd75131c327a41327bcd80452a51555b
+    icon: https://akeyless-908832575.imgix.net/wp-content/uploads/2024/03/akeyless-2024.png?auto=format%2Ccompress&fm=webp&ixlib=php-3.3.0
+    keywords:
+    - akeyless-gateway
+    - sra
+    name: akeyless-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-gateway-1.2.2/akeyless-gateway-1.2.2.tgz
+    version: 1.2.2
   - annotations:
       gatewayVersion: 4.27.0
       sraVersion: 2.3.8
@@ -9935,4 +9962,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2025-02-12T12:29:11.713402334Z"
+generated: "2025-02-13T08:15:19.550601617Z"
