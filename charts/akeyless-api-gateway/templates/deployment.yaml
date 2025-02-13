@@ -51,8 +51,13 @@ spec:
       {{ toYaml .Values.deployment.nodeSelector | indent 4 }}
       {{- end }}
       {{-  include "akeyless-api-gw.imagePullSecrets" . | indent 2 }}
-      {{- if or (not (eq (include "akeyless-api-gw.customerFragmentExist" .) "")) (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true" ) (.Values.metrics.enabled) (eq .Values.persistence.enabled true) |  or (include "cacheEnableTls" . | eq "true")  }}
+      {{- if or (not (eq (include "akeyless-api-gw.customerFragmentExist" .) "")) (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true" ) (.Values.metrics.enabled) (eq .Values.persistence.enabled true) (.Values.customTrustedCA.enabled)|  or (include "cacheEnableTls" . | eq "true")  }}
       volumes:
+      {{- if and ($.Values.customTrustedCA.enabled) ($.Values.customTrustedCA.secretName) }}
+      - name: trusted-ca
+        secret:
+          secretName: {{ $.Values.customTrustedCA.secretName }}
+      {{- end }}
       - name: cache-tls
         secret:
           secretName: {{ include "cacheTlsSecretName" . }}
@@ -172,8 +177,14 @@ spec:
               scheme: HTTPS
               {{- end }}
 {{- toYaml .Values.readinessProbe | trim | nindent 12 }}
-         {{- if or (not (eq (include "akeyless-api-gw.customerFragmentExist" .) "")) (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true") ( .Values.metrics.enabled) (eq .Values.persistence.enabled true) |  or (include "cacheEnableTls" . | eq "true") }}
+         {{- if or (not (eq (include "akeyless-api-gw.customerFragmentExist" .) "")) (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true") ( .Values.metrics.enabled) (eq .Values.persistence.enabled true) (.Values.customTrustedCA.enabled) |  or (include "cacheEnableTls" . | eq "true") }}
           volumeMounts:
+            {{- if and (.Values.customTrustedCA.enabled) (.Values.customTrustedCA.secretName) }}
+            - name: trusted-ca
+              mountPath: "/akeyless/custom_ca.pem"
+              subPath: custom_ca.pem
+              readOnly: true
+            {{- end }}
             {{- if (include "cacheEnableTls" . | eq "true") }}
             - name: "cache-tls"
               mountPath: {{ $mountCertPaths }}
@@ -330,26 +341,26 @@ spec:
           {{- if .Values.hsm.pkcs11LibPath }}
             - name: PKCS11_LIB_PATH
               value: {{ .Values.hsm.pkcs11LibPath | quote }}
-            {{- end }}  
+            {{- end }}
             {{- if .Values.hsm.pinExistingSecret }}
             - name: HSM_PIN
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.hsm.pinExistingSecret }}
                   key: pin
-            {{- end }}  
+            {{- end }}
             {{- if .Values.hsm.slot }}
             - name: HSM_SLOT
               value: {{ .Values.hsm.slot | quote }}
-            {{- end }}  
+            {{- end }}
             {{- if .Values.hsm.tokenLabel }}
             - name: HSM_TOKEN_LABEL
               value: {{ .Values.hsm.tokenLabel | quote }}
-            {{- end }}  
+            {{- end }}
             {{- if .Values.hsm.tokenSerial }}
             - name: HSM_TOKEN_SERIAL
               value: {{ .Values.hsm.tokenSerial | quote }}
-            {{- end }}  
+            {{- end }}
             {{- if .Values.hsm.useRand }}
             - name: HSM_USE_RAND
               value: {{ .Values.hsm.useRand | quote }}

@@ -9,6 +9,9 @@ replicaCount: 2
 # Valid inputs: [Deployment, DaemonSet] # if left empty will default to Deployment (recommended)
 deploymentType: Deployment
 
+customTrustedCA:
+  enabled: false
+  secretName: ""
 # akeylessStrictMode need to be enabled when using Redhat Openshift
 akeylessStrictMode: false
 initContainer:
