@@ -148,7 +148,7 @@ spec:
               value: {{ .Values.globalConfig.gatewayAuth.gcpAudience }}
             {{- end }}
             {{- if .Values.globalConfig.gatewayAuth.azureObjectID }}
-            - name: AZURE_OBJ_ID
+            - name: AZURE_OBJECT_ID
               value: {{ .Values.globalConfig.gatewayAuth.azureObjectID }}
             {{- end }}
             {{ include "akeyless-gateway.akeylessGatewayAuthConfig" . | nindent 10 }}
