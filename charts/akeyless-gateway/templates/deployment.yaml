@@ -82,11 +82,11 @@ spec:
       {{- end }}
       containers:
         - name: {{ include "akeyless-gateway.containerName" . }}
-          {{- if not .Values.gatewayRootMode }}
+          {{- if and (not .Values.gatewayRootMode) (or (not .Values.gateway.deployment.image.repository) (eq .Values.gateway.deployment.image.repository "docker.registry-2.akeyless.io/base") (eq .Values.gateway.deployment.image.repository "akeyless/base"))}}
           image: "{{ .Values.gateway.deployment.image.repository | default "docker.registry-2.akeyless.io/base" }}:{{ .Values.gateway.deployment.image.tag | default "latest" }}-akeyless"
-          {{else}}
+          {{- else }}
           image: "{{ .Values.gateway.deployment.image.repository | default "docker.registry-2.akeyless.io/base" }}:{{ .Values.gateway.deployment.image.tag | default "latest" }}"
-          {{- end}}
+          {{- end }}
           imagePullPolicy: {{ .Values.gateway.deployment.image.pullPolicy }}
           {{- if .Values.gateway.deployment.containerSecurityContext }}
           securityContext:
