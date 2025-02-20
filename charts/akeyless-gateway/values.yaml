@@ -124,9 +124,10 @@ gateway:
 
     replicaCount: 2
     image:
-      #  repository: akeyless/base
-      #   Alternative mirror registry
-      #  repository: docker.registry-2.akeyless.io/base
+        # repository: akeyless/base
+      ##   Alternative mirror registry
+        # repository: docker.registry-2.akeyless.io/base
+        # tag: latest
       pullPolicy: IfNotPresent
 
     # Place here any pod annotations you may need
