@@ -109,7 +109,7 @@ spec:
               value: {{ .Values.globalConfig.gatewayAuth.azureObjectID }}
             {{- end }}
             {{- if .Values.sra.env }}
-            {{- toYaml .Values.sra.env | nindent 10 }}
+            {{- toYaml .Values.sra.env | nindent 12 }}
             {{- end }}
             {{- if .Values.globalConfig.env }}
             {{- toYaml .Values.globalConfig.env | nindent 12 }}
