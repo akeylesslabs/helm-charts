@@ -14,7 +14,7 @@ env:
 jobs:
   git-issues-jira-automation:
     name: ${{ inputs.caller_repo_name }}-git-issues-jira-automation
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout helm-charts code
         uses: actions/checkout@v4

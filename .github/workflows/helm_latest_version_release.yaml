@@ -16,7 +16,7 @@ run-name: "Release chart for service: ${{ github.event.deployment.payload.servic
 jobs:
   update-latest-helm-chart-version:
     if: github.event.deployment.task == 'update-latest-version'
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     outputs:
       new_chart_version: ${{ steps.release.outputs.new_chart_version }}
       charts: ${{ steps.release.outputs.charts }}
@@ -54,7 +54,7 @@ jobs:
 
   Slack-Notification-on-success:
     name: Slack-On-Success-Notification
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: [ update-latest-helm-chart-version ]
     if: (github.event.deployment.task == 'update-latest-version')
     env:
@@ -91,7 +91,7 @@ jobs:
 
   Slack-Notification-on-failure:
     name: Slack-On-Failure-Notification
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: [ update-latest-helm-chart-version ]
     if: (failure() && needs.*.result != 'success') && (github.event.deployment.task == 'update-latest-version')
     env:

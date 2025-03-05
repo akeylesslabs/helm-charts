@@ -39,7 +39,7 @@ jobs:
 
   Slack-Notification-on-failure:
     name: Slack-On-Failure-Notification
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: [ release ]
     if: (failure() && needs.*.result != 'success')
     steps:
