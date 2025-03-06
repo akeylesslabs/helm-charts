@@ -26,7 +26,7 @@ cache:
     existingSecretName: ""
   image:
     repository: docker.io/bitnami/redis
-    tag: 6.2
+    tag: 7.4.2
     pullPolicy: Always
   resources:
    limits:
