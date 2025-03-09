@@ -131,7 +131,11 @@ Generate chart secret name
 {{- end -}}
 
 {{- define "akeyless-api-gw.cacheSecretName" -}}
-        {{ $.Release.Name }}-cache-secret
+    {{- if empty .Values.cachingConf.clusterCache.cachePasswordExistingSecret }}
+        {{- printf "%s-cache-secret" $.Release.Name -}}
+    {{- else if not (empty .Values.cachingConf.clusterCache.cachePasswordExistingSecret) }}
+        {{- printf "%s" .Values.cachingConf.clusterCache.cachePasswordExistingSecret }}
+    {{- end }}
 {{- end -}}
 
 {{- define "akeyless-api-gw.clusterCacheEncryptionKeyExist" -}}
