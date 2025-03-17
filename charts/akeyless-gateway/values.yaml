@@ -422,6 +422,8 @@ sra:
       labels: {}
       type: LoadBalancer
       port: 22
+      ## Override the default port of the gateway
+      # gatewayPort: 8000
 
     livenessProbe:
       failureThreshold: 5
