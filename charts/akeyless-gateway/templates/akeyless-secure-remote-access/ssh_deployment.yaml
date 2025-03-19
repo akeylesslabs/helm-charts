@@ -69,7 +69,6 @@ spec:
           image: "{{ .Values.sra.image.repository | default "akeyless/zero-trust-bastion" }}:{{ .Values.sra.image.tag | default .Chart.Annotations.sraVersion }}"
           imagePullPolicy: {{ .Values.sra.image.pullPolicy }}
           securityContext:
-            privileged: true
             capabilities:
               add: ["SYS_ADMIN"]
           ports:
