@@ -11,7 +11,7 @@ metadata:
   {{- toYaml .annotations | nindent 4 }}
 {{- end }}
   labels:
-  {{- include "akeyless-sra-web.labels" . | nindent 4 }}
+  {{- include "akeyless-sra-web.labels" $ | nindent 4 }}
 spec:
   accessModes:
     - ReadWriteMany
