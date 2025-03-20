@@ -125,7 +125,6 @@ spec:
           image: "{{ .Values.sshConfig.image.repository | default "akeyless/zero-trust-bastion" }}:{{ .Values.sshConfig.image.tag | default .Chart.Annotations.ztbVersion }}"
           imagePullPolicy: {{ .Values.sshConfig.image.pullPolicy }}
           securityContext:
-            privileged: true
             capabilities:
               add: ["SYS_ADMIN"]
           ports:
