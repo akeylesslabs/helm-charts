@@ -54,7 +54,7 @@ globalConfig:
   initialClusterDisplayName:
 
   ## The key which is used to encrypt the Gateway configuration.
-  ## If left empty - the account’s default key will be used.
+  ## If left empty - the account's default key will be used.
   ## This key can be determined on cluster bringup only and cannot be modified afterwards
   ##
   configProtectionKeyName:
@@ -292,7 +292,6 @@ gateway:
     ## tokenSerial: 
     ## useRand: false
 
-  ## Persistent volume section
   persistence:
     enabled: false
     ## existingClaim: ""  
@@ -300,6 +299,157 @@ gateway:
     ## accessMode: "ReadWriteMany"
     ## storageClass: "" 
     ## size: 100Mi 
+
+  secretsStore:
+    # Enable Secret Store CSI integration
+    enabled: false
+    # Name of the SecretProviderClass to use
+    secretProviderClassName: ""
+    # Mount path for secrets (default: /mnt/secrets-store)
+    mountPath: "/mnt/secrets-store"
+    # Secret provider type (akeyless, aws, azure, gcp)
+    provider: "akeyless"
+    
+    # Example configurations for different providers:
+    # akeyless:
+    #   # Akeyless API URL
+    #   url: "https://api.akeyless.io"
+    #   # Access ID for authentication
+    #   accessId: "your-access-id"
+    #   # Optional: Access Key for authentication (should be provided via SecretProviderClass)
+    #   accessKey: "your-access-key"
+    #   # Optional: JWT for authentication
+    #   jwt: "your-jwt-token"
+    #   # Optional: File permission for mounted secrets (default: 0644)
+    #   filePermission: "0644"
+    #   # List of objects to fetch from Akeyless
+    #   objects: |
+    #     # Example 1: Fetch a single secret
+    #     - objectName: "my-secret"
+    #       objectType: "secret"
+    #       objectVersion: ""
+    #       objectAlias: "my-secret"
+    #
+    #     # Example 2: Fetch an SSH key
+    #     - objectName: "my-ssh-key"
+    #       objectType: "ssh"
+    #       objectVersion: ""
+    #       objectAlias: "ssh-key"
+    #
+    #     # Example 3: Fetch a certificate
+    #     - objectName: "my-cert"
+    #       objectType: "cert"
+    #       objectVersion: ""
+    #       objectAlias: "certificate"
+    #
+    # aws:
+    #   # AWS region where secrets are stored
+    #   region: "us-east-1"
+    #   # Optional: Failover region for high availability
+    #   failoverRegion: "us-east-2"
+    #   # Optional: Use FIPS endpoint
+    #   useFipsEndpoint: false
+    #   # Optional: Pod identity endpoint type (ipv4, ipv6, or auto)
+    #   podIdentityEndpointType: ""
+    #   # List of secrets to fetch from AWS Secrets Manager and SSM Parameter Store
+    #   objects: |
+    #     # Example 1: Fetch from AWS Secrets Manager with JMESPath
+    #     - objectName: "arn:aws:secretsmanager:us-east-1:123456789012:secret:MySecret"
+    #       objectType: "secretsmanager"
+    #       jmesPath:
+    #         - path: "username"
+    #           objectAlias: "MySecretUsername"
+    #         - path: "password"
+    #           objectAlias: "MySecretPassword"
+    #       # Optional: Specific version of the secret
+    #       objectVersion: "12345678-1234-1234-1234-123456789012"
+    #       # Optional: Version stage/alias
+    #       objectVersionLabel: "AWSCURRENT"
+    #       # Optional: Failover object for cross-region failover
+    #       failoverObject:
+    #         objectName: "arn:aws:secretsmanager:us-east-2:123456789012:secret:MySecret"
+    #         objectVersion: "12345678-1234-1234-1234-123456789012"
+    #         objectVersionLabel: "AWSCURRENT"
+    #
+    #     # Example 2: Fetch from AWS SSM Parameter Store
+    #     - objectName: "/my-app/credentials"
+    #       objectType: "ssmparameter"
+    #       objectAlias: "api-key"
+    #       # Optional: Specific version of the parameter
+    #       objectVersion: "1"
+    #       # Optional: Parameter label
+    #       objectVersionLabel: "prod"
+    #
+    #     # Example 3: Fetch from AWS Secrets Manager with hyphenated paths
+    #     - objectName: "arn:aws:secretsmanager:us-east-1:123456789012:secret:MySecret"
+    #       objectType: "secretsmanager"
+    #       jmesPath:
+    #         - path: '"hyphenated-path"'
+    #           objectAlias: '"hyphenated-alias"'
+    #
+    # azure:
+    #   # Azure Key Vault name
+    #   keyvaultName: "kvname"
+    #   # Azure Tenant ID
+    #   tenantID: "tid"
+    #   # Optional: Use pod identity for authentication
+    #   usePodIdentity: "false"
+    #   # Optional: Use VM managed identity
+    #   useVMManagedIdentity: "false"
+    #   # Optional: User assigned identity ID
+    #   userAssignedIdentityID: "client_id"
+    #   # Optional: Client ID for workload identity
+    #   clientID: "client_id"
+    #   # Optional: Azure cloud name (AzurePublicCloud, AzureUSGovernmentCloud, etc.)
+    #   cloudName: ""
+    #   # Optional: File permission for mounted secrets (default: 0644)
+    #   filePermission: "0644"
+    #   # List of objects to fetch from Azure Key Vault
+    #   objects: |
+    #     array:
+    #       - |
+    #         objectName: secret1
+    #         objectAlias: SECRET_1
+    #         objectType: secret
+    #         objectVersion: ""
+    #         objectVersionHistory: 5
+    #         filePermission: 0755
+    #       - |
+    #         objectName: key1
+    #         objectAlias: KEY_1
+    #         objectType: key
+    #         objectVersion: ""
+    #       - |
+    #         objectName: cert1
+    #         objectAlias: CERT_1
+    #         objectType: cert
+    #         objectVersion: ""
+    #         objectFormat: pem
+    #         objectEncoding: utf-8
+    #
+    # gcp:
+    #   # GCP project ID
+    #   projectID: "my-project"
+    #   # Optional: File permission for mounted secrets (default: 0644)
+    #   filePermission: "0644"
+    #   # List of secrets to fetch from GCP Secret Manager
+    #   secrets: |
+    #     # Example 1: Fetch a single secret
+    #     - resourceName: "projects/my-project/secrets/my-secret/versions/latest"
+    #       path: "my-secret"
+    #
+    #     # Example 2: Fetch multiple secrets
+    #     - resourceName: "projects/my-project/secrets/api-key/versions/latest"
+    #       path: "api-key"
+    #
+    #     # Example 3: Fetch a specific version of a secret
+    #     - resourceName: "projects/my-project/secrets/my-secret/versions/2"
+    #       path: "my-secret"
+    #
+    #     # Example 4: Fetch a secret with custom file permission
+    #     - resourceName: "projects/my-project/secrets/ssl-cert/versions/latest"
+    #       path: "ssl-cert"
+    #       filePermission: "0600"
 
 ######################################################
 ## Default values for akeyless-secure-remote-access ##

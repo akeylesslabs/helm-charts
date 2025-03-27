@@ -46,10 +46,13 @@ spec:
       {{ toYaml .Values.gateway.deployment.nodeSelector | indent 4 }}
       {{- end }}
       {{- include "akeyless-gateway.imagePullSecrets" . | indent 2 }}
-      {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true)}}
+      {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true) (.Values.gateway.secretsStore.enabled)}}
       volumes:
       - name: akeyless-config
         emptyDir: {}
+      {{- if .Values.gateway.secretsStore.enabled }}
+      {{- include "akeyless-gateway.secretsStore.volume" . | nindent 6 }}
+      {{- end }}
       {{- if .Values.globalConfig.TLSConf.tlsExistingSecret }}
       - name: tls-conf-cert
         secret:
@@ -107,10 +110,13 @@ spec:
               path: /health
               port: 8080
           {{- toYaml .Values.gateway.deployment.readinessProbe | trim | nindent 12 }}
-          {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true)}}
+          {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true) (.Values.gateway.secretsStore.enabled)}}
           volumeMounts:
             - name: akeyless-config
               mountPath: {{include "akeyless-gateway.root.config.path" $}}/.akeyless
+          {{- if .Values.gateway.secretsStore.enabled }}
+            {{- include "akeyless-gateway.secretsStore.volumeMount" . | nindent 6 }}
+          {{- end }}
           {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
             {{ include "akeyless-gateway.clusterCache.tlsVolumeMounts" . | nindent 12 }}
           {{- end }}
@@ -291,4 +297,7 @@ spec:
             {{ include "akeyless-gateway.chartMetadata" . | nindent 10 }}
             {{- if .Values.globalConfig.env }}
             {{- toYaml .Values.globalConfig.env | nindent 12 }}
+            {{- end }}
+            {{- if .Values.gateway.secretsStore.enabled }}
+            {{- include "akeyless-gateway.secretsStore.env" . | nindent 12 }}
             {{- end }}
