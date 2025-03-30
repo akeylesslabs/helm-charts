@@ -305,8 +305,8 @@ gateway:
     enabled: false
     # Name of the SecretProviderClass to use
     secretProviderClassName: ""
-    # Mount path for secrets (default: /mnt/secrets-store)
-    mountPath: "/mnt/secrets-store"
+    # Mount path for secrets 
+    mountPath: ""
     # Secret provider type (akeyless, aws, azure, gcp)
     provider: "akeyless"
     

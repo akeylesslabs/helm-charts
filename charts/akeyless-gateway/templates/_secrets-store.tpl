@@ -10,13 +10,10 @@ Secrets Store CSI configuration
       secretProviderClass: {{ .Values.gateway.secretsStore.secretProviderClassName }}
 {{- end }}
 
-{{- define "akeyless-gateway.secretsStore.volumeMount" -}}
-- name: secrets-store
-  mountPath: {{ .Values.gateway.secretsStore.mountPath | default "/mnt/secrets-store" }}
-  readOnly: true
+{{- define "akeyless-gateway.secretsStore.mountPath" -}}
+{{- if .Values.gateway.secretsStore.mountPath }}
+{{ .Values.gateway.secretsStore.mountPath }}
+{{- else }}
+{{ print (ternary "/root/secrets-store" "/home/akeyless/secrets-store" .Values.gatewayRootMode) }}
 {{- end }}
-
-{{- define "akeyless-gateway.secretsStore.env" -}}
-- name: SECRETS_STORE_PATH
-  value: {{ .Values.gateway.secretsStore.mountPath | default "/mnt/secrets-store" }}
 {{- end }} 

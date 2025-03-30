@@ -115,7 +115,9 @@ spec:
             - name: akeyless-config
               mountPath: {{include "akeyless-gateway.root.config.path" $}}/.akeyless
           {{- if .Values.gateway.secretsStore.enabled }}
-            {{- include "akeyless-gateway.secretsStore.volumeMount" . | nindent 6 }}
+            - name: secrets-store
+              mountPath: {{ include "akeyless-gateway.secretsStore.mountPath" . }}
+              readOnly: true
           {{- end }}
           {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
             {{ include "akeyless-gateway.clusterCache.tlsVolumeMounts" . | nindent 12 }}
