@@ -9,8 +9,8 @@ keywords:
 
 icon: https://akeyless-908832575.imgix.net/wp-content/uploads/2024/03/akeyless-2024.png?auto=format%2Ccompress&fm=webp&ixlib=php-3.3.0
 
-appVersion: 4.29.0_2.4.0
+appVersion: 4.29.0_2.4.1
 
 annotations:
   gatewayVersion: 4.29.0
-  sraVersion: 2.4.0
+  sraVersion: 2.4.1
