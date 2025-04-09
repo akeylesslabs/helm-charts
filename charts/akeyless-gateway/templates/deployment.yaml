@@ -100,6 +100,8 @@ spec:
               containerPort: {{ .Values.gateway.service.port }}
             - name: internal-gw-api
               containerPort: 8080
+            - name: kmip
+              containerPort: 5696
           livenessProbe:
             httpGet:
               path: /health
