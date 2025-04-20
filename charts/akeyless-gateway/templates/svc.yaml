@@ -22,6 +22,11 @@ spec:
       targetPort: gateway
       protocol: TCP
       name: gateway
+    - port: 5696
+      targetPort: kmip
+      protocol: TCP
+      name: kmip
+
   selector:
     {{- include "akeyless-gateway-sra-ssh-service.selectorLabels" . | nindent 4 }}
 ---
@@ -39,10 +44,6 @@ spec:
       targetPort: internal-gw-api
       protocol: TCP
       name: internal-gw-api
-    - port: 5696
-      targetPort: kmip
-      protocol: TCP
-      name: kmip
 
   selector:
     {{- include "akeyless-gateway-sra-ssh-service.selectorLabels" . | nindent 4 }}
