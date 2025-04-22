@@ -181,6 +181,8 @@ gateway:
     ## Gateway service port
     ##
     port: 8000
+    kmip:
+      enabled: false
 
   ## Configure the ingress resource that allows you to access the
   ## akeyless-api-gateway installation. Set up the URL
