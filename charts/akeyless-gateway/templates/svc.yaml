@@ -22,10 +22,12 @@ spec:
       targetPort: gateway
       protocol: TCP
       name: gateway
+  {{- if .Values.gateway.service.kmip.enabled }}
     - port: 5696
       targetPort: kmip
       protocol: TCP
       name: kmip
+  {{- end }}
 
   selector:
     {{- include "akeyless-gateway-sra-ssh-service.selectorLabels" . | nindent 4 }}
