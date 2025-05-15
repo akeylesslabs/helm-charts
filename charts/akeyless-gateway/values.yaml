@@ -311,8 +311,8 @@ gateway:
       existingClass: false
       # Name of the SecretProviderClass to use
       secretProviderClassName: ""
-    # Secret provider type (akeyless, aws, azure, gcp)
-      type: "akeyless"
+    # Secret provider type (aws, azure, gcp)
+      type: ""
 
 
 ######################################################
