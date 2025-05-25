@@ -1,0 +1,10 @@
+{{/*
+If `cache.auth.existingSecret` exists but is empty, set a dynamic default.
+Do not create `cache.auth` if it's missing.
+*/}}
+
+{{/*{{- if and (hasKey .Values.cache "auth") (hasKey .Values.cache.auth "existingSecret") (empty .Values.cache.auth.existingSecret) (.Values.cache.auth.enabled) }}*/}}
+{{/*  {{- $_ := set .Values.cache.auth "existingSecret" (printf "%s-auth" .Release.Name) }}*/}}
+{{/*{{- end }}*/}}
+
+  {{- $_ := set .Values.cache.auth "existingSecret" "ori" }}

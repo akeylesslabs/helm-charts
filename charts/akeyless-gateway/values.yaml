@@ -113,6 +113,66 @@ globalConfig:
         cpu: 250m
         memory: 256Mi
 
+cache:
+#  fullnameOverride: "cache"
+  enable: true
+  architecture: replication
+
+  auth:
+    enabled: true
+#    existingSecret: "ori"  # Optional. If defined but empty, dynamically set to "<release-name>-auth"
+
+  tls:
+    enabled: false
+    authClients: false  # 🔐 TLS enabled, but clients aren't required to present certs
+    existingSecret: cache-tls-secret  # Must exist in the cluster
+
+  sentinel:
+    enabled: true
+    masterSet: cache-main
+    service:
+      ports:
+        cache: 9736
+    podLabels:
+      app.kubernetes.io/component: cache-sentinel
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/component: cache-sentinel
+
+    master:
+      podLabels:
+        app.kubernetes.io/component: cache-master
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: cache-master
+      service:
+        ports:
+          redis: 9736
+
+    replica:
+      replicaCount: 2
+      podLabels:
+        app.kubernetes.io/component: cache-replicas
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: cache-replicas
+      service:
+        ports:
+          redis: 9736
+
+
 ####################################################
 ##          Default values for Gateway            ##
 ####################################################

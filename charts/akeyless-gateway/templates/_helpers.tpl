@@ -40,12 +40,12 @@ Check provided imagePullSecrets
       - name: {{ printf "%s" .Values.gateway.deployment.image.imagePullSecrets }}
   {{- end -}}
 {{- end -}}
-{{- define "cache.imagePullSecrets" -}}
-  {{- if not (empty .Values.globalConfig.clusterCache.imagePullSecrets) }}
-    imagePullSecrets:
-      - name: {{ printf "%s" .Values.globalConfig.clusterCache.imagePullSecrets }}
-  {{- end -}}
-{{- end -}}
+{{/*{{- define "cache.imagePullSecrets" -}}*/}}
+{{/*  {{- if not (empty .Values.globalConfig.clusterCache.imagePullSecrets) }}*/}}
+{{/*    imagePullSecrets:*/}}
+{{/*      - name: {{ printf "%s" .Values.globalConfig.clusterCache.imagePullSecrets }}*/}}
+{{/*  {{- end -}}*/}}
+{{/*{{- end -}}*/}}
 {{/*
 Common labels
 */}}
@@ -138,14 +138,14 @@ Generate chart secret name
 
 {{- define "akeyless-gateway.clusterCache.secretName" -}}
   {{- if empty .Values.globalConfig.clusterCache.cachePasswordExistingSecret }}
-  {{- printf "%s-cache-secret" $.Release.Name -}}
+  {{- printf "%s-cache" $.Release.Name -}}
   {{- else if not (empty .Values.globalConfig.clusterCache.cachePasswordExistingSecret) }}
     {{- printf "%s" .Values.globalConfig.clusterCache.cachePasswordExistingSecret }}
   {{- end }}
 {{- end }}
 
 {{- define "akeyless-gateway.clusterCache.enabled" -}}
-{{- or (eq .Values.globalConfig.gatewayAuth.gatewayAccessType "uid") (ne .Values.globalConfig.clusterCache.enabled false) -}}
+{{- or (eq .Values.globalConfig.gatewayAuth.gatewayAccessType "uid") (ne .Values.cache.enable false) -}}
 {{- end }}
 
 {{- define "akeyless-gateway.clusterCache.labels" -}}
@@ -209,7 +209,7 @@ component: cache
     valueFrom:
       secretKeyRef:
         name: {{ include "akeyless-gateway.clusterCache.secretName" . }}
-        key: cache-pass
+        key: cache-password
 {{- end }}
 
 {{- define "akeyless-gateway.clusterCacheEncryptionKeyExist" -}}
