@@ -13,4 +13,4 @@ appVersion: 4.31.0_2.5.2
 
 annotations:
   gatewayVersion: 4.31.0
-  sraVersion: 2.5.2
+  sraVersion: 2.5.3

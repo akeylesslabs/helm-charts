@@ -120,57 +120,57 @@ cache:
 
   auth:
     enabled: true
-#    existingSecret: "ori"  # Optional. If defined but empty, dynamically set to "<release-name>-auth"
+    existingSecret: "" # Optional. If defined but empty, dynamically set to "<release-name>-auth"
 
   tls:
-    enabled: false
-    authClients: false  # 🔐 TLS enabled, but clients aren't required to present certs
-    existingSecret: cache-tls-secret  # Must exist in the cluster
+    enabled: true
+    authClients: false
+    existingSecret: "" # Must exist in the cluster
+    certFilename: "tls.crt"
+    certKeyFilename: "tls.key"
+    certCAFilename: "ca.crt"
 
   sentinel:
+    persistence:
+      enabled: false
     enabled: true
     masterSet: cache-main
     service:
       ports:
         cache: 9736
+
+  master:
+    persistence:
+      enabled: false
     podLabels:
-      app.kubernetes.io/component: cache-sentinel
+      app.kubernetes.io/component: cache-master
     topologySpreadConstraints:
       - maxSkew: 1
         topologyKey: topology.kubernetes.io/zone
         whenUnsatisfiable: ScheduleAnyway
         labelSelector:
           matchLabels:
-            app.kubernetes.io/component: cache-sentinel
+            app.kubernetes.io/component: cache-master
+    service:
+      ports:
+        redis: 9736
 
-    master:
-      podLabels:
-        app.kubernetes.io/component: cache-master
-      topologySpreadConstraints:
-        - maxSkew: 1
-          topologyKey: topology.kubernetes.io/zone
-          whenUnsatisfiable: ScheduleAnyway
-          labelSelector:
-            matchLabels:
-              app.kubernetes.io/component: cache-master
-      service:
-        ports:
-          redis: 9736
-
-    replica:
-      replicaCount: 2
-      podLabels:
-        app.kubernetes.io/component: cache-replicas
-      topologySpreadConstraints:
-        - maxSkew: 1
-          topologyKey: topology.kubernetes.io/zone
-          whenUnsatisfiable: ScheduleAnyway
-          labelSelector:
-            matchLabels:
-              app.kubernetes.io/component: cache-replicas
-      service:
-        ports:
-          redis: 9736
+  replica:
+    persistence:
+      enabled: false
+    replicaCount: 2
+    podLabels:
+      app.kubernetes.io/component: cache-replicas
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/component: cache-replicas
+    service:
+      ports:
+        redis: 9736
 
 
 ####################################################
