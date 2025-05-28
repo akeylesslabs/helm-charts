@@ -1,6 +1,6 @@
 apiVersion: v2
 name: akeyless-gateway
-version: 1.6.6
+version: 1.6.7
 description: A Helm chart for Kubernetes that deploys akeyless-gateway
 type: application
 keywords:
@@ -12,5 +12,9 @@ icon: https://akeyless-908832575.imgix.net/wp-content/uploads/2024/03/akeyless-2
 appVersion: 4.32.0_2.5.2
 
 annotations:
-  gatewayVersion: 4.32.1
+  gatewayVersion: 4.32.0
   sraVersion: 2.5.2
+
+dependencies:
+  - name: cache
+    version: 21.1.6
