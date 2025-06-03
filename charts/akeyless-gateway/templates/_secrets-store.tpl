@@ -12,7 +12,7 @@ Secrets Store CSI configuration
 
 {{ define "akeyless-gateway.secretsStore.mountPath" -}}
 {{- if .Values.gateway.secretsStore.mountPath }}
-{{- printf "%s" $.Values.gateway.secretsStore.mountPath }}
+{{- .Values.gateway.secretsStore.mountPath -}}
 {{- else }}
 {{ print (ternary "/root/secrets-store" "/home/akeyless/secrets-store" .Values.gatewayRootMode) }}
 {{- end }}
