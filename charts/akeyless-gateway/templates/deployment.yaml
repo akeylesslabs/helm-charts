@@ -304,6 +304,3 @@ spec:
             {{- if .Values.globalConfig.env }}
             {{- toYaml .Values.globalConfig.env | nindent 12 }}
             {{- end }}
-            {{- if .Values.gateway.secretsStore.enabled }}
-            {{- include "akeyless-gateway.secretsStore.env" . | nindent 12 }}
-            {{- end }}
