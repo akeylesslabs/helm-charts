@@ -3233,6 +3233,23 @@ entries:
       sraVersion: 2.5.2
     apiVersion: v2
     appVersion: 4.32.1_2.5.2
+    created: "2025-06-04T08:45:55.519407798Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-gateway
+    digest: 5ca47bf1f2dc43043b084e21fea53004c8dec3f8f8dd65d7d86b3722bc51a499
+    icon: https://akeyless-908832575.imgix.net/wp-content/uploads/2024/03/akeyless-2024.png?auto=format%2Ccompress&fm=webp&ixlib=php-3.3.0
+    keywords:
+    - akeyless-gateway
+    - sra
+    name: akeyless-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-gateway-1.6.10/akeyless-gateway-1.6.10.tgz
+    version: 1.6.10
+  - annotations:
+      gatewayVersion: 4.32.1
+      sraVersion: 2.5.2
+    apiVersion: v2
+    appVersion: 4.32.1_2.5.2
     created: "2025-06-03T14:17:17.176048027Z"
     description: A Helm chart for Kubernetes that deploys akeyless-gateway
     digest: b887be6a87861aea22ebd0b3ae46158d157dec006a61a9a9f16cf48c58b6dacf
@@ -10644,4 +10661,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2025-06-03T14:17:17.177380171Z"
+generated: "2025-06-04T08:45:55.520783429Z"
