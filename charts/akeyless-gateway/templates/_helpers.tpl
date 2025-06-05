@@ -439,7 +439,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   - name: UNIFIED_GATEWAY
     value: "true"
   - name: GATEWAY_URL
-    value: "http://{{ include "akeyless-gateway.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:8000"
+    value: "http://{{ include "akeyless-gateway.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{.Values.gateway.service.port}}"
   - name: INTERNAL_GATEWAY_API
     value: "http://{{ include "akeyless-gateway.fullname" . }}-internal.{{ .Release.Namespace }}.svc.cluster.local:8080"
 {{- end -}}
