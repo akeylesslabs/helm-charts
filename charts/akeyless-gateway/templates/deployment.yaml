@@ -69,6 +69,8 @@ spec:
         {{- else if eq (.Values.gateway.custom_ca.volumeType | lower) "secret" }}
         secret:
           secretName: {{ .Values.gateway.custom_ca.volumeSourceName | required "gateway.custom_ca.volumeSourceName is required when gateway.custom_ca.enabled is true" }}
+        {{- else }}
+          {{ fail (printf "gateway.custom_ca.volumeType must be either 'configmap' or 'secret', got %s" .Values.gateway.custom_ca.volumeType) }}
         {{- end }}
       - name: shared-certs
         emptyDir: {}
