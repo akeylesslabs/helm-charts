@@ -61,6 +61,20 @@ spec:
           items:
             - key: tlsCertificate
               path: akeyless-api-cert.crt
+      {{- if .Values.gateway.custom_ca.enabled }}
+      - name: {{ .Values.gateway.custom_ca.volumeName }}
+        {{- if eq (.Values.gateway.custom_ca.volumeType| lower) "configmap" }}}}
+        configMap:
+          name: {{ .Values.gateway.custom_ca.volumeSourceName | required "gateway.custom_ca.volumeSourceName is required when gateway.custom_ca.enabled is true" }}
+        {{- else if eq (.Values.gateway.custom_ca.volumeType | lower) "secret" }}
+        secret:
+          secretName: {{ .Values.gateway.custom_ca.volumeSourceName | required "gateway.custom_ca.volumeSourceName is required when gateway.custom_ca.enabled is true" }}
+        {{- else }}
+          {{ fail (printf "gateway.custom_ca.volumeType must be either 'configmap' or 'secret', got %s" .Values.gateway.custom_ca.volumeType) }}
+        {{- end }}
+      - name: shared-certs
+        emptyDir: {}
+      {{- end }}
       - name: tls-conf-private-key
         secret:
           secretName: {{ .Values.globalConfig.TLSConf.tlsExistingSecret }}
@@ -83,6 +97,24 @@ spec:
           claimName: {{ .Values.gateway.persistence.existingClaim | default (printf "%s-pvc" (include "akeyless-gateway.fullname" .)) }}
       {{- end }}
       {{- end }}
+      {{- if .Values.gateway.custom_ca.enabled }}
+      initContainers:
+        - name: alpine-ca-setup
+          image: alpine:latest
+          command: [ "/bin/sh" ]
+          args:
+            - -c
+            - |
+              apk add --no-cache ca-certificates
+              cp /ca-mount/*.crt /usr/local/share/ca-certificates/
+              update-ca-certificates
+              cp /etc/ssl/certs/ca-certificates.crt /shared/
+          volumeMounts:
+            - name: {{ .Values.gateway.custom_ca.volumeName }}
+              mountPath: /ca-mount
+            - name: shared-certs
+              mountPath: /shared
+      {{- end}}
       containers:
         - name: {{ include "akeyless-gateway.containerName" . }}
           {{- if and (not .Values.gatewayRootMode) (or (not .Values.gateway.deployment.image.repository) (eq .Values.gateway.deployment.image.repository "docker.registry-2.akeyless.io/base") (eq .Values.gateway.deployment.image.repository "akeyless/base"))}}
@@ -303,4 +335,9 @@ spec:
             {{ include "akeyless-gateway.chartMetadata" . | nindent 10 }}
             {{- if .Values.globalConfig.env }}
             {{- toYaml .Values.globalConfig.env | nindent 12 }}
+            {{- end }}
+            {{- if .Values.gateway.custom_ca.enabled }}
+            - name: {{ .Values.gateway.custom_ca.volumeName }}
+              mountPath: /etc/ssl/certs
+              subPath: ca-certificates.crt
             {{- end }}
