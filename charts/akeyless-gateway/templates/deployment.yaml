@@ -52,7 +52,7 @@ spec:
         emptyDir: {}
         {{- if .Values.gateway.custom_ca.enabled }}
       - name: {{ .Values.gateway.custom_ca.volumeName }}
-        {{- if eq (.Values.gateway.custom_ca.volumeType| lower) "configmap" }}} }
+        {{- if eq (.Values.gateway.custom_ca.volumeType| lower) "configmap" }}
         configMap:
           name: {{ .Values.gateway.custom_ca.volumeSourceName | required "gateway.custom_ca.volumeSourceName is required when gateway.custom_ca.enabled is true" }}
         {{- else if eq (.Values.gateway.custom_ca.volumeType | lower) "secret" }}
