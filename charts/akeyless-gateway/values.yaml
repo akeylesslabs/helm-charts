@@ -115,7 +115,7 @@ globalConfig:
 
 cache:
 #  fullnameOverride: "cache"
-  enable: true
+  enable: false
   architecture: replication
 
   auth:
