@@ -50,6 +50,20 @@ spec:
       volumes:
       - name: akeyless-config
         emptyDir: {}
+        {{- if .Values.gateway.custom_ca.enabled }}
+      - name: {{ .Values.gateway.custom_ca.volumeName }}
+        {{- if eq (.Values.gateway.custom_ca.volumeType| lower) "configmap" }}} }
+        configMap:
+          name: {{ .Values.gateway.custom_ca.volumeSourceName | required "gateway.custom_ca.volumeSourceName is required when gateway.custom_ca.enabled is true" }}
+        {{- else if eq (.Values.gateway.custom_ca.volumeType | lower) "secret" }}
+        secret:
+          secretName: {{ .Values.gateway.custom_ca.volumeSourceName | required "gateway.custom_ca.volumeSourceName is required when gateway.custom_ca.enabled is true" }}
+        {{- else }}
+          {{ fail (printf "gateway.custom_ca.volumeType must be either 'configmap' or 'secret', got %s" .Values.gateway.custom_ca.volumeType) }}
+        {{- end }}
+      - name: shared-certs
+        emptyDir: { }
+      {{- end }}
       {{- if .Values.gateway.secretsStore.enabled }}
       {{- include "akeyless-gateway.secretsStore.volume" . | nindent 6 }}
       {{- end }}
@@ -61,20 +75,6 @@ spec:
           items:
             - key: tlsCertificate
               path: akeyless-api-cert.crt
-      {{- if .Values.gateway.custom_ca.enabled }}
-      - name: {{ .Values.gateway.custom_ca.volumeName }}
-        {{- if eq (.Values.gateway.custom_ca.volumeType| lower) "configmap" }}}}
-        configMap:
-          name: {{ .Values.gateway.custom_ca.volumeSourceName | required "gateway.custom_ca.volumeSourceName is required when gateway.custom_ca.enabled is true" }}
-        {{- else if eq (.Values.gateway.custom_ca.volumeType | lower) "secret" }}
-        secret:
-          secretName: {{ .Values.gateway.custom_ca.volumeSourceName | required "gateway.custom_ca.volumeSourceName is required when gateway.custom_ca.enabled is true" }}
-        {{- else }}
-          {{ fail (printf "gateway.custom_ca.volumeType must be either 'configmap' or 'secret', got %s" .Values.gateway.custom_ca.volumeType) }}
-        {{- end }}
-      - name: shared-certs
-        emptyDir: {}
-      {{- end }}
       - name: tls-conf-private-key
         secret:
           secretName: {{ .Values.globalConfig.TLSConf.tlsExistingSecret }}
@@ -150,6 +150,11 @@ spec:
           volumeMounts:
             - name: akeyless-config
               mountPath: {{include "akeyless-gateway.root.config.path" $}}/.akeyless
+            {{- if .Values.gateway.custom_ca.enabled }}
+            - name: {{ .Values.gateway.custom_ca.volumeName }}
+              mountPath: /etc/ssl/certs
+              subPath: ca-certificates.crt
+            {{- end }}
           {{- if .Values.gateway.secretsStore.enabled }}
             - name: secrets-store
               mountPath: {{ include "akeyless-gateway.secretsStore.mountPath" . }}
@@ -335,9 +340,4 @@ spec:
             {{ include "akeyless-gateway.chartMetadata" . | nindent 10 }}
             {{- if .Values.globalConfig.env }}
             {{- toYaml .Values.globalConfig.env | nindent 12 }}
-            {{- end }}
-            {{- if .Values.gateway.custom_ca.enabled }}
-            - name: {{ .Values.gateway.custom_ca.volumeName }}
-              mountPath: /etc/ssl/certs
-              subPath: ca-certificates.crt
             {{- end }}
