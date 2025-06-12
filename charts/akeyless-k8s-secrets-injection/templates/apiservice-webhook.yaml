@@ -39,7 +39,7 @@ items:
       - "*"
       resources:
       - pods
-    failurePolicy: Ignore
+    failurePolicy: {{.Values.webhookFailurePolicy}}
     namespaceSelector:
       matchExpressions:
       - key: name
