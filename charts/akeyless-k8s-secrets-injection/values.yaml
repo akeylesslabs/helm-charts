@@ -11,6 +11,7 @@ deployment:
 
 replicaCount: 2
 openshiftEnabled: false
+webhookFailurePolicy: Ignore  # Ignore or Fail
 debug: false
 
 gatewayCert:
