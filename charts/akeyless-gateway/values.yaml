@@ -294,13 +294,13 @@ gateway:
     ## tokenSerial: 
     ## useRand: false
   customCA:
-  enabled: false
-  ## Name of the volume to mount
-  volumeName: "ca-certificates"
-  ## Type of the volume to mount: either 'configMap' or 'secret'
-  volumeType: "configMap" # Valid values: 'configMap', 'secret'
-  ## Name of the ConfigMap or Secret containing the custom CA certificates
-  volumeSourceName: ""
+    enabled: false
+    ## Name of the volume to mount
+    volumeName: "ca-certificates"
+    ## Type of the volume to mount: either 'configMap' or 'secret'
+    volumeType: "configMap" # Valid values: 'configMap', 'secret'
+    ## Name of the ConfigMap or Secret containing the custom CA certificates
+    volumeSourceName: ""
 
   persistence:
     enabled: false
