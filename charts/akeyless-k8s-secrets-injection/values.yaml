@@ -11,7 +11,9 @@ deployment:
 
 replicaCount: 2
 openshiftEnabled: false
-webhookFailurePolicy: Ignore  # Ignore or Fail
+# Configure the policy below to Fail so that pod creation is blocked whenever the webhook is unreachable.
+# See https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#failure-policy
+webhookFailurePolicy: Ignore
 debug: false
 
 gatewayCert:
