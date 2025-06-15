@@ -151,7 +151,7 @@ spec:
             - name: akeyless-config
               mountPath: {{include "akeyless-gateway.root.config.path" $}}/.akeyless
             {{- if .Values.gateway.customCA.enabled }}
-            - name: {{ .Values.gateway.customCA.volumeName }}
+            - name: shared-certs
               mountPath: /etc/ssl/certs
               subPath: ca-certificates.crt
             {{- end }}
