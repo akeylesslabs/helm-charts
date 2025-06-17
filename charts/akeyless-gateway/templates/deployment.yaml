@@ -50,16 +50,16 @@ spec:
       volumes:
       - name: akeyless-config
         emptyDir: {}
-        {{- if .Values.gateway.custom_ca.enabled }}
-      - name: {{ .Values.gateway.custom_ca.volumeName }}
-        {{- if eq (.Values.gateway.custom_ca.volumeType| lower) "configmap" }}
+        {{- if .Values.gateway.customCA.enabled }}
+      - name: {{ .Values.gateway.customCA.volumeName }}
+        {{- if eq (.Values.gateway.customCA.volumeType| lower) "configmap" }}
         configMap:
-          name: {{ .Values.gateway.custom_ca.volumeSourceName | required "gateway.custom_ca.volumeSourceName is required when gateway.custom_ca.enabled is true" }}
-        {{- else if eq (.Values.gateway.custom_ca.volumeType | lower) "secret" }}
+          name: {{ .Values.gateway.customCA.volumeSourceName | required "gateway.customCA.volumeSourceName is required when gateway.customCA.enabled is true" }}
+        {{- else if eq (.Values.gateway.customCA.volumeType | lower) "secret" }}
         secret:
-          secretName: {{ .Values.gateway.custom_ca.volumeSourceName | required "gateway.custom_ca.volumeSourceName is required when gateway.custom_ca.enabled is true" }}
+          secretName: {{ .Values.gateway.customCA.volumeSourceName | required "gateway.customCA.volumeSourceName is required when gateway.customCA.enabled is true" }}
         {{- else }}
-          {{ fail (printf "gateway.custom_ca.volumeType must be either 'configmap' or 'secret', got %s" .Values.gateway.custom_ca.volumeType) }}
+          {{ fail (printf "gateway.customCA.volumeType must be either 'configmap' or 'secret', got %s" .Values.gateway.customCA.volumeType) }}
         {{- end }}
       - name: shared-certs
         emptyDir: { }
@@ -97,7 +97,7 @@ spec:
           claimName: {{ .Values.gateway.persistence.existingClaim | default (printf "%s-pvc" (include "akeyless-gateway.fullname" .)) }}
       {{- end }}
       {{- end }}
-      {{- if .Values.gateway.custom_ca.enabled }}
+      {{- if .Values.gateway.customCA.enabled }}
       initContainers:
         - name: alpine-ca-setup
           image: alpine:latest
@@ -110,7 +110,7 @@ spec:
               update-ca-certificates
               cp /etc/ssl/certs/ca-certificates.crt /shared/
           volumeMounts:
-            - name: {{ .Values.gateway.custom_ca.volumeName }}
+            - name: {{ .Values.gateway.customCA.volumeName }}
               mountPath: /ca-mount
             - name: shared-certs
               mountPath: /shared
@@ -150,8 +150,8 @@ spec:
           volumeMounts:
             - name: akeyless-config
               mountPath: {{include "akeyless-gateway.root.config.path" $}}/.akeyless
-            {{- if .Values.gateway.custom_ca.enabled }}
-            - name: {{ .Values.gateway.custom_ca.volumeName }}
+            {{- if .Values.gateway.customCA.enabled }}
+            - name: shared-certs
               mountPath: /etc/ssl/certs
               subPath: ca-certificates.crt
             {{- end }}
