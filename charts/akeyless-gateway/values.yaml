@@ -117,6 +117,11 @@ globalConfig:
 ##          Default values for Gateway            ##
 ####################################################
 gateway:
+  initContainer:
+    image:
+      repository: docker.io/alpine
+      tag: 3.22.0
+      pullPolicy: IfNotPresent
   ## Default values for akeyless-gateway.
   deployment:
     annotations: {}
