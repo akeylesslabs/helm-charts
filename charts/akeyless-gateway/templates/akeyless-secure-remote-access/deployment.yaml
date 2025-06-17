@@ -60,6 +60,15 @@ spec:
         {{ include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 8}}
         {{- end }}
       {{- include "akeyless-sra.imagePullSecrets" . | indent 2 }}
+      {{- range .Values.sra.webConfig.persistence.volumes }}
+      initContainers:
+        - name: recordings-permissions
+          image: busybox
+          command: [ "sh", "-c", "chown -R akeyless:root /home/akeyless/recordings" ]
+          volumeMounts:
+            - name: {{ .name | lower }}
+              mountPath: /home/akeyless/recordings
+        {{- end }}
       containers:
         - name: gateway-sra-web
           image: "{{ .Values.sra.image.repository | default "akeyless/zero-trust-bastion" }}:{{ .Values.sra.image.tag | default .Chart.Annotations.sraVersion }}"
