@@ -63,7 +63,8 @@ spec:
       {{- if .Values.sra.webConfig.persistence.volumes }}
       initContainers:
         - name: recordings-permissions
-          image: busybox
+          image: {{.Values.sra.initContainer.image.repository | default "docker.io/alpine" }}:{{ .Values.sra.initContainer.image.tag | default "latest" }}
+          imagePullPolicy: {{ .Values.sra.initContainer.image.pullPolicy | default "IfNotPresent" }}
           command: [ "sh", "-c", "chown -R akeyless:root /home/akeyless/recordings" ]
           volumeMounts:
             {{- range .Values.sra.webConfig.persistence.volumes }}

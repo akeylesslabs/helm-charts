@@ -335,6 +335,11 @@ gateway:
 ## If you are only using Akeyless Gateway, ignore this section
 ##
 sra:
+  initContainer:
+    image:
+      repository: docker.io/alpine
+      tag: 3.22.0
+      pullPolicy: IfNotPresent
   ## Enable secure-remote-access. Valid values: true/false.
   ## For more information on a Quick Start guide for Remote Access <https://docs.akeyless.io/docs/remote-access-quick-start-guide>
   ## Or setup SRA on K8s <https://docs.akeyless.io/docs/remote-access-setup-k8s>
