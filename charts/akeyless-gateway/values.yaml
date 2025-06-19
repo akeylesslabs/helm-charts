@@ -295,7 +295,7 @@ gateway:
     ## useRand: false
   customCA:
     enabled: false
-    # Name of the volume to mount (used in the deployment template)
+    # Name of the volume to mount
     volumeName: "ca-certificates"
     # Type of the volume to mount: either 'configMap' or 'secret'
     volumeType: "configMap" 
