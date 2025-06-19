@@ -50,7 +50,7 @@ spec:
       volumes:
       - name: akeyless-config
         emptyDir: {}
-        {{- if .Values.gateway.customCA.enabled }}
+      {{- if .Values.gateway.customCA.enabled }}
       - name: {{ .Values.gateway.customCA.volumeName }}
         {{- if eq (.Values.gateway.customCA.volumeType| lower) "configmap" }}
         configMap:
@@ -61,8 +61,6 @@ spec:
         {{- else }}
           {{ fail (printf "gateway.customCA.volumeType must be either 'configmap' or 'secret', got %s" .Values.gateway.customCA.volumeType) }}
         {{- end }}
-      - name: shared-certs
-        emptyDir: { }
       {{- end }}
       {{- if .Values.gateway.secretsStore.enabled }}
       {{- include "akeyless-gateway.secretsStore.volume" . | nindent 6 }}
@@ -97,24 +95,6 @@ spec:
           claimName: {{ .Values.gateway.persistence.existingClaim | default (printf "%s-pvc" (include "akeyless-gateway.fullname" .)) }}
       {{- end }}
       {{- end }}
-      {{- if .Values.gateway.customCA.enabled }}
-      initContainers:
-        - name: ca-bundle-setup
-          image: "{{ .Values.gateway.initContainer.image.repository }}:{{ .Values.gateway.initContainer.image.tag | default "latest" }}"
-          pullPolicy: {{ .Values.gateway.initContainer.image.pullPolicy | default "IfNotPresent" }}
-          command: [ "/bin/sh" ]
-          args:
-            - -c
-            - |
-              mkdir -p /usr/local/share/ca-certificates/
-              cp /ca-mount/*.crt /usr/local/share/ca-certificates/
-              cat /usr/local/share/ca-certificates/*.crt > /shared/ca-certificates.crt
-          volumeMounts:
-            - name: {{ .Values.gateway.customCA.volumeName }}
-              mountPath: /ca-mount
-            - name: shared-certs
-              mountPath: /shared
-      {{- end}}
       containers:
         - name: {{ include "akeyless-gateway.containerName" . }}
           {{- if and (not .Values.gatewayRootMode) (or (not .Values.gateway.deployment.image.repository) (eq .Values.gateway.deployment.image.repository "docker.registry-2.akeyless.io/base") (eq .Values.gateway.deployment.image.repository "akeyless/base"))}}
@@ -150,11 +130,9 @@ spec:
           volumeMounts:
             - name: akeyless-config
               mountPath: {{include "akeyless-gateway.root.config.path" $}}/.akeyless
-            {{- if .Values.gateway.customCA.enabled }}
-            - name: shared-certs
+            - name: {{ .Values.gateway.customCA.volumeName }}
               mountPath: /etc/ssl/certs/ca-certificates.crt
               subPath: ca-certificates.crt
-            {{- end }}
           {{- if .Values.gateway.secretsStore.enabled }}
             - name: secrets-store
               mountPath: {{ include "akeyless-gateway.secretsStore.mountPath" . }}

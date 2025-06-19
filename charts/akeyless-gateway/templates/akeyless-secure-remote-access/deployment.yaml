@@ -32,10 +32,10 @@ spec:
           {{- toYaml .Values.sra.webConfig.deployment.labels | nindent 8 }}
         {{- end }}
     spec:
-      {{- if .Values.sra.sshConfig.securityContext.enabled }}
+      {{- if .Values.sra.webConfig.securityContext.enabled }}
       securityContext:
-        runAsUser: {{ .Values.sra.sshConfig.securityContext.runAsUser }}
-        fsGroup: {{ .Values.sra.sshConfig.securityContext.fsGroup }}
+        runAsUser: {{ .Values.sra.webConfig.securityContext.runAsUser }}
+        fsGroup: {{ .Values.sra.webConfig.securityContext.fsGroup }}
       {{- end }}
       serviceAccountName: {{ include "akeyless-gateway.getServiceAccountName" . }}
       {{- if .Values.sra.sshConfig.nodeSelector }}
@@ -60,19 +60,6 @@ spec:
         {{ include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 8}}
         {{- end }}
       {{- include "akeyless-sra.imagePullSecrets" . | indent 2 }}
-      {{- if .Values.sra.webConfig.persistence.volumes }}
-      initContainers:
-        - name: recordings-permissions
-          image: {{.Values.sra.initContainer.image.repository | default "docker.io/alpine" }}:{{ .Values.sra.initContainer.image.tag | default "latest" }}
-          imagePullPolicy: {{ .Values.sra.initContainer.image.pullPolicy | default "IfNotPresent" }}
-          command: [ "sh", "-c", "chown -R akeyless:root /home/akeyless/recordings" ]
-          volumeMounts:
-            {{- range .Values.sra.webConfig.persistence.volumes }}
-            - name: {{ .name | title | lower }}
-              mountPath: /home/akeyless/recordings
-              subPath: recordings
-            {{- end }}
-        {{- end }}
       containers:
         - name: gateway-sra-web
           image: "{{ .Values.sra.image.repository | default "akeyless/zero-trust-bastion" }}:{{ .Values.sra.image.tag | default .Chart.Annotations.sraVersion }}"

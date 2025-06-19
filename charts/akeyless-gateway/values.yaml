@@ -117,11 +117,6 @@ globalConfig:
 ##          Default values for Gateway            ##
 ####################################################
 gateway:
-  initContainer:
-    image:
-      repository: docker.io/alpine
-      tag: 3.22.0
-      pullPolicy: IfNotPresent
   ## Default values for akeyless-gateway.
   deployment:
     annotations: {}
@@ -300,12 +295,12 @@ gateway:
     ## useRand: false
   customCA:
     enabled: false
-    ## Name of the volume to mount
+    # Name of the volume to mount (used in the deployment template)
     volumeName: "ca-certificates"
-    ## Type of the volume to mount: either 'configMap' or 'secret'
-    volumeType: "configMap" # Valid values: 'configMap', 'secret'
-    ## Name of the ConfigMap or Secret containing the custom CA certificates
-    volumeSourceName: ""
+    # Type of the volume to mount: either 'configMap' or 'secret'
+    volumeType: "configMap" 
+    # Name of the ConfigMap or Secret containing the custom CA certificates.
+    volumeSourceName: "" # Must have a key named 'ca-certificates.crt'.
 
   persistence:
     enabled: false
@@ -335,11 +330,6 @@ gateway:
 ## If you are only using Akeyless Gateway, ignore this section
 ##
 sra:
-  initContainer:
-    image:
-      repository: docker.io/alpine
-      tag: 3.22.0
-      pullPolicy: IfNotPresent
   ## Enable secure-remote-access. Valid values: true/false.
   ## For more information on a Quick Start guide for Remote Access <https://docs.akeyless.io/docs/remote-access-quick-start-guide>
   ## Or setup SRA on K8s <https://docs.akeyless.io/docs/remote-access-setup-k8s>
@@ -361,7 +351,11 @@ sra:
       labels: {}
     replicaCount: 1
 
-
+    # Example for enabling pod-level securityContext for volume permissions:
+#    securityContext:
+#      enabled: true
+#      runAsUser: 1000
+#      fsGroup: 1000
     ## Persistence Volume is used to store RDP recordings when it is configured to save recordings locally
     ## Akeyless requires data persistence to be shared within all pods in the cluster
     ## accessMode: ReadWriteMany
