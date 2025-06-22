@@ -293,6 +293,15 @@ gateway:
     ## tokenLabel:
     ## tokenSerial: 
     ## useRand: false
+    
+  persistence:
+    enabled: false
+    ## existingClaim: ""  
+    ## mountPath: ""
+    ## accessMode: "ReadWriteMany"
+    ## storageClass: "" 
+    ## size: 100Mi 
+    
   customCA:
     enabled: false
     # Name of the volume to mount
@@ -301,15 +310,7 @@ gateway:
     volumeType: "configMap" 
     # Name of the ConfigMap or Secret containing the custom CA certificates.
     volumeSourceName: "" # Must have a key named 'ca-certificates.crt'.
-
-  persistence:
-    enabled: false
-    ## existingClaim: ""  
-    ## mountPath: ""
-    ## accessMode: "ReadWriteMany"
-    ## storageClass: "" 
-    ## size: 100Mi 
-
+    
   secretsStore:
     # Enable Secret Store CSI integration
     enabled: false
