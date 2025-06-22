@@ -295,12 +295,12 @@ gateway:
     ## useRand: false
   customCA:
     enabled: false
-    ## Name of the volume to mount
+    # Name of the volume to mount
     volumeName: "ca-certificates"
-    ## Type of the volume to mount: either 'configMap' or 'secret'
-    volumeType: "configMap" # Valid values: 'configMap', 'secret'
-    ## Name of the ConfigMap or Secret containing the custom CA certificates
-    volumeSourceName: ""
+    # Type of the volume to mount: either 'configMap' or 'secret'
+    volumeType: "configMap" 
+    # Name of the ConfigMap or Secret containing the custom CA certificates.
+    volumeSourceName: "" # Must have a key named 'ca-certificates.crt'.
 
   persistence:
     enabled: false
@@ -351,7 +351,11 @@ sra:
       labels: {}
     replicaCount: 1
 
-
+    # Example for enabling pod-level securityContext for volume permissions:
+#    securityContext:
+#      enabled: true
+#      runAsUser: 1000
+#      fsGroup: 1000
     ## Persistence Volume is used to store RDP recordings when it is configured to save recordings locally
     ## Akeyless requires data persistence to be shared within all pods in the cluster
     ## accessMode: ReadWriteMany
