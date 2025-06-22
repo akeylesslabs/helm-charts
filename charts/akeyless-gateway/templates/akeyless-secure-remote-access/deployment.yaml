@@ -32,10 +32,12 @@ spec:
           {{- toYaml .Values.sra.webConfig.deployment.labels | nindent 8 }}
         {{- end }}
     spec:
+      {{- if .Values.sra.webConfig.securityContext }}
       {{- if .Values.sra.webConfig.securityContext.enabled }}
       securityContext:
         runAsUser: {{ .Values.sra.webConfig.securityContext.runAsUser }}
         fsGroup: {{ .Values.sra.webConfig.securityContext.fsGroup }}
+      {{- end }}
       {{- end }}
       serviceAccountName: {{ include "akeyless-gateway.getServiceAccountName" . }}
       {{- if .Values.sra.sshConfig.nodeSelector }}
