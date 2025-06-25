@@ -154,8 +154,8 @@ component: cache
 {{- end }}
 
 {{- define "akeyless-gateway.clusterCache.enableTls" -}}
-{{- $cacheEnable := include "akeyless-gateway.clusterCache.enabled" . -}}
-{{- $useTls := .Values.globalConfig.clusterCache.enableTls -}}
+{{- $cacheEnable := or (include "akeyless-gateway.clusterCache.enabled" .) (.Values.cacheHA.enabled) -}}
+{{- $useTls := (or .Values.globalConfig.clusterCache.enableTls .Values.cacheHA.tls.enabled) -}}
 {{- and $cacheEnable $useTls -}}
 {{- end }}
 
@@ -175,6 +175,18 @@ component: cache
 {{- printf "%s-cache-svc"  (include "akeyless-gateway.fullname" . )}}
 {{- end -}}
 
+{{- define "akeyless-gateway.cacheHA.Address" -}}
+    {{- with $.Values.cacheHA }}
+        {{- if and .tls.enabled -}}
+            {{- printf "%s.%s.svc.cluster.local" $.Release.Name $.Release.Namespace }}
+        {{- else -}}
+            {{- printf "%s.%s" $.Release.Name  $.Release.Namespace }}
+        {{- end -}}
+    {{- end -}}
+{{- end -}}
+
+
+
 {{- define "akeyless-gateway.clusterCache.cacheAddress" -}}
 {{- if eq (include "akeyless-gateway.clusterCache.enableTls" .) "true" -}}
 {{- printf "%s.%s.svc.cluster.local" (include "akeyless-gateway.clusterCache.SvcName" .) .Release.Namespace }}
@@ -184,7 +196,11 @@ component: cache
 {{- end -}}
 
 {{- define "akeyless-gateway.clusterCache.cacheAddressPort" -}}
-{{- printf "%s:6379" (include "akeyless-gateway.clusterCache.cacheAddress" . ) }}
+  {{- if .Values.cacheHA.enabled -}}
+    {{- printf "%s:%v" (include "akeyless-gateway.cacheHA.Address" . ) ( .Values.cacheHA.master.service.ports.redis ) }}
+  {{- else -}}
+    {{- printf "%s:6379" (include "akeyless-gateway.clusterCache.cacheAddress" . ) }}
+  {{- end -}}
 {{- end -}}
 
 {{- define "akeyless-gateway.clusterCache.tlsVolume" -}}
@@ -208,13 +224,18 @@ component: cache
   - name: REDIS_PASS
     valueFrom:
       secretKeyRef:
+{{- if .Values.cacheHA.enabled }}
+        name: {{ .Values.cacheHA.auth.existingSecret | required "cacheHA.auth.existingSecret is required when cacheHA.enabled is true" }}
+        key: redis-password
+{{- else }}
         name: {{ include "akeyless-gateway.clusterCache.secretName" . }}
         key: cache-pass
-{{- end }}
+{{- end -}}
+{{- end -}}
 
 {{- define "akeyless-gateway.clusterCacheEncryptionKeyExist" -}}
-    {{- if .Values.globalConfig.clusterCache.encryptionKeyExistingSecret -}}
-        {{- printf "%s" .Values.globalConfig.clusterCache.encryptionKeyExistingSecret -}}
+    {{- if or .Values.globalConfig.clusterCache.encryptionKeyExistingSecret .Values.cacheHA.encryptionKeyExistingSecret -}}
+        {{- printf "%s" coalesce .Values.globalConfig.clusterCache.encryptionKeyExistingSecret .Values.cacheHA.encryptionKeyExistingSecret -}}
     {{- else if (eq "true" (include "akeyless-gateway.clusterCache.enabled" . )) -}}
         {{- printf "%s-cache-encryption-key" .Release.Name -}}
     {{- end -}}
