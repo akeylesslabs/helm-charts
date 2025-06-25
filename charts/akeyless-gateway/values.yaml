@@ -113,10 +113,6 @@ globalConfig:
         cpu: 250m
         memory: 256Mi
 
-####################################################
-##          Default values for Gateway            ##
-####################################################
-
 cacheHA:
 
 
@@ -144,39 +140,45 @@ cacheHA:
 #    certCAFilename: "ca.crt"
 
   sentinel:
+    enabled: true
     service:
       ports:
         redis: 6380
-    enabled: true
-    persistence:
-      enabled: false
 
-  master:
-    persistence:
-      enabled: false
-    podLabels:
-      app.kubernetes.io/component: cache-master
-    topologySpreadConstraints:
-      - maxSkew: 1
-        topologyKey: topology.kubernetes.io/zone
-        whenUnsatisfiable: ScheduleAnyway
-        labelSelector:
-          matchLabels:
-            app.kubernetes.io/component: cache-master
+#    persistence:
+#      enabled: false
+#  master:
 
-  replica:
-    persistence:
-      enabled: false
-    replicaCount: 2
-    podLabels:
-      app.kubernetes.io/component: cache-replicas
-    topologySpreadConstraints:
-      - maxSkew: 1
-        topologyKey: topology.kubernetes.io/zone
-        whenUnsatisfiable: ScheduleAnyway
-        labelSelector:
-          matchLabels:
-            app.kubernetes.io/component: cache-replicas
+#    persistence:
+#      enabled: false
+#    podLabels:
+#      app.kubernetes.io/component: cache-master
+#    topologySpreadConstraints:
+#      - maxSkew: 1
+#        topologyKey: topology.kubernetes.io/zone
+#        whenUnsatisfiable: ScheduleAnyway
+#        labelSelector:
+#          matchLabels:
+#            app.kubernetes.io/component: cache-master
+#  replica:
+
+#    persistence:
+#      enabled: false
+#    replicaCount: 2
+#    podLabels:
+#      app.kubernetes.io/component: cache-replicas
+#    topologySpreadConstraints:
+#      - maxSkew: 1
+#        topologyKey: topology.kubernetes.io/zone
+#        whenUnsatisfiable: ScheduleAnyway
+#        labelSelector:
+#          matchLabels:
+#            app.kubernetes.io/component: cache-replicas
+
+
+####################################################
+##          Default values for Gateway            ##
+####################################################
 gateway:
   ## Default values for akeyless-gateway.
   deployment:
@@ -347,12 +349,12 @@ gateway:
   hsm:
     enabled: false
     ## In case hsm is enabled you must add pinExistingSecret which includes the hsm pcks11 pin
-    ##  https://docs.akeyless.io/docs/k8s-hsm-integration 
+    ##  https://docs.akeyless.io/docs/k8s-hsm-integration
     ## pinExistingSecret: ""
     ## pkcs11LibPath:
     ## slot:
     ## tokenLabel:
-    ## tokenSerial: 
+    ## tokenSerial:
     ## useRand: false
   persistence:
     enabled: false
@@ -366,7 +368,7 @@ gateway:
     # Name of the volume to mount
     volumeName: "ca-certificates"
     # Type of the volume to mount: either 'configMap' or 'secret'
-    volumeType: "configMap" 
+    volumeType: "configMap"
     # Name of the ConfigMap or Secret containing the custom CA certificates.
     volumeSourceName: "" # Must have a key named 'ca-certificates.crt'.
 

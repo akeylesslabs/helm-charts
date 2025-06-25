@@ -20,6 +20,19 @@ lookup_changed_charts() {
   cut -d '/' -f "$fields" <<< "$changed_files" | uniq
 }
 
+# Extract a top-level field (e.g., name, version) from Chart.yaml using yq if available, otherwise use awk as a fallback
+extract_chart_field() {
+  local chart_dir="$1"
+  local field="$2"
+  if command -v yq >/dev/null 2>&1; then
+    yq e ".$field" "$chart_dir/Chart.yaml"
+  else
+    awk -v f="$field" '
+      /^[^ ]/ && $1 == f":" { print $2; exit }
+    ' "$chart_dir/Chart.yaml"
+  fi
+}
+
 main() {
   local repo_root
   repo_root=$(git rev-parse --show-toplevel)
@@ -31,8 +44,11 @@ main() {
   if [[ -n "${changed_charts[*]}" ]]; then
       for chart in "${changed_charts[@]}"; do
           if [[ -d "$chart" ]]; then
-            chart_name=$(helm show chart "$chart" | grep name: | awk '{print $2}')
-            chart_version=$(helm show chart "$chart" | grep version: | awk '{print $2}')
+            chart_name=$(extract_chart_field "$chart" "name")
+            chart_version=$(extract_chart_field "$chart" "version")
+            if [[ -z "$chart_name" || -z "$chart_version" ]]; then
+              die "Failed to extract chart name or version for $chart"
+            fi
             git tag "$chart_name-$chart_version" || die "Chart version already exists, please bump the version"
             echo "${chart} chart version changes validated successfully"
           else
