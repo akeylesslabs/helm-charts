@@ -20,15 +20,17 @@ lookup_changed_charts() {
   cut -d '/' -f "$fields" <<< "$changed_files" | uniq
 }
 
-# Function to extract a top-level field from helm show chart output, ignoring dependencies and indented fields
+# Extract a top-level field (e.g., name, version) from Chart.yaml using yq if available, otherwise use awk as a fallback
 extract_chart_field() {
   local chart_dir="$1"
   local field="$2"
-  helm show chart "$chart_dir" | \
+  if command -v yq >/dev/null 2>&1; then
+    yq e ".$field" "$chart_dir/Chart.yaml"
+  else
     awk -v f="$field" '
-      /^[^ ]*:/ { in_deps=($1=="dependencies:") }
-      !in_deps && $1 == f":" { gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2; exit }
-    '
+      /^[^ ]/ && $1 == f":" { print $2; exit }
+    ' "$chart_dir/Chart.yaml"
+  fi
 }
 
 main() {
