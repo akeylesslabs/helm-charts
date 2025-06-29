@@ -229,7 +229,7 @@ component: cache
     valueFrom:
       secretKeyRef:
 {{- if .Values.cacheHA.enabled }}
-        name: {{ .Values.cacheHA.auth.existingSecret | required "cacheHA.auth.existingSecret is required when cacheHA.enabled is true" }}
+        name: {{ if .Values.cacheHA.auth.existingSecret }}{{.Values.cacheHA.auth.existingSecret}}{{else}}{{printf "%s-cacheHA" .Release.Name}}{{end}}
         key: redis-password
 {{- else }}
         name: {{ include "akeyless-gateway.clusterCache.secretName" . }}
