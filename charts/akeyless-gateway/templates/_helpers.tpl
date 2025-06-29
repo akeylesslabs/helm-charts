@@ -359,6 +359,21 @@ Get serviceAccountName
 {{- end -}}
 
 {{/*
+Compute the maximum number of unavailable replicas for the PodDisruptionBudget.
+This defaults to (replicaCount/2)-1 where replicaCount is the number of replicas.
+Add a special case for replicaCount=1, where it should default to 0.
+*/}}
+{{- define "akeyless-gateway.pdb.maxUnavailable" -}}
+{{- if eq (int .Values.gateway.deployment.replicaCount) 1 -}}
+{{ 0 }}
+{{- else if .Values.gateway.pdb.maxUnavailable -}}
+{{ .Values.gateway.pdb.maxUnavailable -}}
+{{- else -}}
+{{- div (sub (div (mul (int .Values.gateway.deployment.replicaCount) 10) 2) 1) 10 -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Akeyless sra imagePullSecrets
 */}}
 {{- define "akeyless-sra.imagePullSecrets" -}}

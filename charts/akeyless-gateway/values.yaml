@@ -345,6 +345,26 @@ gateway:
     memAvgUtil: 70
 
     annotations: {}
+
+  ## Pod Disruption Budget configuration
+  ## Note: PDB is only applicable to Deployments, not DaemonSets
+  ##
+  pdb:
+    ## Set to true to enable Pod Disruption Budget
+    ##
+    enabled: false
+    ## Maximum number of unavailable pods during voluntary disruptions
+    ## If not set, defaults to (replicaCount/2)-1 for replicaCount > 1, or 0 for replicaCount = 1
+    ##
+    maxUnavailable: null
+    ## Minimum number of available pods during voluntary disruptions
+    ## If set, maxUnavailable must be null
+    ##
+    minAvailable: null
+    ## Annotations to add to the Pod Disruption Budget
+    ##
+    annotations: {}
+
   ## HSM configuration
   hsm:
     enabled: false
