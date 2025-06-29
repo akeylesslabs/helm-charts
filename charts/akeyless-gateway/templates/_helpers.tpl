@@ -210,7 +210,11 @@ component: cache
 {{- end -}}
 
 {{- define "akeyless-gateway.clusterCache.tlsVolumeMountPath" -}}
+{{- if .Values.cacheHA.enabled -}}
+/opt/bitnami/redis/certs
+{{- else -}}
 /opt/akeyless/cache/certs
+{{- end -}}
 {{- end -}}
 
 {{- define "akeyless-gateway.clusterCache.tlsVolumeMounts" -}}
@@ -235,7 +239,11 @@ component: cache
 
 {{- define "akeyless-gateway.clusterCacheEncryptionKeyExist" -}}
     {{- if or .Values.globalConfig.clusterCache.encryptionKeyExistingSecret .Values.cacheHA.encryptionKeyExistingSecret -}}
-        {{- printf "%s" coalesce .Values.globalConfig.clusterCache.encryptionKeyExistingSecret .Values.cacheHA.encryptionKeyExistingSecret -}}
+        {{- if .Values.globalConfig.clusterCache.encryptionKeyExistingSecret -}}
+            {{- .Values.globalConfig.clusterCache.encryptionKeyExistingSecret -}}
+        {{- else -}}
+            {{- .Values.cacheHA.encryptionKeyExistingSecret -}}
+        {{- end -}}
     {{- else if (eq "true" (include "akeyless-gateway.clusterCache.enabled" . )) -}}
         {{- printf "%s-cache-encryption-key" .Release.Name -}}
     {{- end -}}
