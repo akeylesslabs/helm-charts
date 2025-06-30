@@ -173,15 +173,11 @@ gateway:
     affinity:
       enabled: false
       data:
-    #    nodeAffinity:
-    #      requiredDuringSchedulingIgnoredDuringExecution:
-    #        nodeSelectorTerms:
-    #          - matchExpressions:
-    #              - key: kubernetes.io/arch
-    #                operator: In
-    #                values:
-    #                  - amd64
     # ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
+    
+    ## Pod Topology Spread Constraints
+    ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
+
     nodeSelector:
     #     iam.gke.io/gke-metadata-server-enabled: "true"
 
