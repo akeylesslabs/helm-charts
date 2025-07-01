@@ -115,6 +115,7 @@ globalConfig:
 
 cacheHA:
   enabled: false
+  nameOverride: "cache-ha"
 
   ## In case cacheHA is enabled in the Gateway, and the encryptionKeyExistingSecret parameter has a value
   ## Akeyless will use this specified encryption key and store it securely within Akeyless Gateway.
