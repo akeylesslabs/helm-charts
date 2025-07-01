@@ -184,9 +184,9 @@ component: cache
 {{- define "akeyless-gateway.cacheHA.Address" -}}
     {{- with $.Values.cacheHA }}
         {{- if and .tls.enabled -}}
-            {{- printf "%s.%s.svc.cluster.local" $.Release.Name $.Release.Namespace }}
+            {{if .nameOverride }}{{- printf "%s-%s.%s.svc.cluster.local" $.Release.Name $.Values.cacheHA.nameOverride $.Release.Namespace }}{{else}}{{- printf "%s.%s.svc.cluster.local" $.Release.Name $.Release.Namespace}}{{end}}
         {{- else -}}
-            {{- printf "%s.%s" $.Release.Name  $.Release.Namespace }}
+             {{if .nameOverride }}{{- printf "%s-%s.%s" $.Release.Name $.Values.cacheHA.nameOverride $.Release.Namespace }}{{else}}{{- printf "%s.%s" $.Release.Name $.Release.Namespace}}{{end}}
         {{- end -}}
     {{- end -}}
 {{- end -}}
