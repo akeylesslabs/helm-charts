@@ -162,11 +162,19 @@ component: cache
 {{- end }}
 
 {{- define "akeyless-gateway.clusterCache.generatedCacheTlsSecretName" -}}
+{{- if .Values.cacheHA.enabled -}}
+{{- printf "%s-%s-crt" .Release.Name (.Values.cacheHA.nameOverride | default "cache-ha")}}
+{{- else -}}
 {{- printf "%s-crt" (include "akeyless-gateway.fullname" .) }}
+{{- end -}}
 {{- end -}}
 
 {{- define "akeyless-gateway.clusterCache.cacheTlsSecretName" -}}
-{{- default (include "akeyless-gateway.clusterCache.generatedCacheTlsSecretName" .) ""   }}
+{{- if .Values.cacheHA.enabled -}}
+{{- printf "%s-%s-crt" .Release.Name (.Values.cacheHA.nameOverride | default "cache-ha") }}
+{{- else -}}
+{{- default (include "akeyless-gateway.clusterCache.generatedCacheTlsSecretName" .) "" }}
+{{- end -}}
 {{- end -}}
 
 {{- define "akeyless-gateway.clusterCache.SvcName" -}}
@@ -227,7 +235,7 @@ component: cache
     valueFrom:
       secretKeyRef:
 {{- if .Values.cacheHA.enabled }}
-        name: {{ if .Values.cacheHA.auth.existingSecret }}{{.Values.cacheHA.auth.existingSecret}}{{else}}{{printf "%s-cacheHA" .Release.Name}}{{end}}
+        name: {{ if .Values.cacheHA.auth.existingSecret }}{{.Values.cacheHA.auth.existingSecret}}{{else}}{{printf "%s-%s" .Release.Name (.Values.cacheHA.nameOverride | default "cache-ha")}}{{end}}
         key: redis-password
 {{- else }}
         name: {{ include "akeyless-gateway.clusterCache.secretName" . }}
