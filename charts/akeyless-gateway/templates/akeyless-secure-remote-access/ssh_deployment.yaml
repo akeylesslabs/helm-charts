@@ -78,6 +78,12 @@ spec:
           - containerPort: 9900
             name: curl-proxy
           env:
+            {{- if and .Values.cacheHA.enabled .Values.cacheHA.sentinel.enabled }}
+            - name: REDIS_SENTINEL_ADDR
+              value: "{{ include "akeyless-gateway.cacheHA.Address" . }}:{{ index .Values "cacheHA" "sentinel" "containerPorts" "sentinel" }}"
+            - name: REDIS_SENTINEL_MASTER_NAME
+              value: {{ .Values.cacheHA.sentinel.masterSet | quote }}
+            {{- end }}
             - name: EXTERNAL_SSH_PORT
               value: {{ .Values.sra.sshConfig.service.port | quote }}
             {{ include "akeyless-gateway.akeylessGatewayAuthConfig" . | nindent 10 }}
