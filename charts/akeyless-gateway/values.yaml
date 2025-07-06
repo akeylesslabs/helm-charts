@@ -289,9 +289,9 @@ gateway:
     ## Set to true to enable Pod Disruption Budget
     ##
     enabled: false
-    ## Labels to be added to webhook service pdb
+    ## Labels to be added to gateway service pdb
     labels: {}
-    ## Annotations to be added to webhook service pdb
+    ## Annotations to be added to gateway service pdb
     annotations: {}
     ## Number of pods that are available after eviction as number or percentage (eg.: 50%)
     # @default -- `""` (defaults to 1 if not specified)
@@ -434,9 +434,9 @@ sra:
       ## Set to true to enable Pod Disruption Budget
       ##
       enabled: false
-      ## Labels to be added to webhook service pdb
+      ## Labels to be added to sre-web service pdb
       labels: { }
-      ## Annotations to be added to webhook service pdb
+      ## Annotations to be added to sre-web service pdb
       annotations: { }
       ## Number of pods that are available after eviction as number or percentage (eg.: 50%)
       # @default -- `""` (defaults to 1 if not specified)
@@ -530,9 +530,9 @@ sra:
       ## Set to true to enable Pod Disruption Budget
       ##
       enabled: false
-      ## Labels to be added to webhook service pdb
+      ## Labels to be added to ssh-web service pdb
       labels: { }
-      ## Annotations to be added to webhook service pdb
+      ## Annotations to be added to ssh-web service pdb
       annotations: { }
       ## Number of pods that are available after eviction as number or percentage (eg.: 50%)
       # @default -- `""` (defaults to 1 if not specified)
