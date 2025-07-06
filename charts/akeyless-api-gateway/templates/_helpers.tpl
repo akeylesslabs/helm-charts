@@ -420,7 +420,7 @@ Check metrics configuration Secret
     {{- end }}
 {{- end }}
 
-{{- define "deyploymant.type" -}}
+{{- define "deployment.type" -}}
     {{- if .Values.deploymentType -}}
         {{- if eq .Values.deploymentType "DaemonSet" -}}
             {{- printf "DaemonSet" -}}

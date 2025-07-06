@@ -1,4 +1,4 @@
-{{- if and (.Values.HPA.enabled) (eq (include "deyploymant.type" $) "Deployment") }}
+{{- if and (.Values.HPA.enabled) (eq (include "deployment.type" $) "Deployment") }}
 apiVersion: {{ include "hpa.api.version" $ }}
 kind: HorizontalPodAutoscaler
 metadata:
