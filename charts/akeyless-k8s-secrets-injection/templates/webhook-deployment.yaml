@@ -3,11 +3,7 @@ kind: {{ include "deyploymant.type" $ }}
 metadata:
   name: {{ template "vault-secrets-webhook.fullname" . }}
   labels:
-    app: {{ template "vault-secrets-webhook.name" . }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-    component: mutating-webhook
+    {{- include "vault-secrets-webhook.labels" . | nindent 4 }}
     {{- if .Values.deployment.labels }}
       {{- toYaml .Values.deployment.labels | nindent 4 }}
     {{- end }}
