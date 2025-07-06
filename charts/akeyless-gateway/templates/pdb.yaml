@@ -1,0 +1,22 @@
+{{- if and .Values.gateway.pdb.enabled (eq (include "deployment.type" $) "Deployment") -}}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "akeyless-gateway.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "akeyless-gateway.labels" . | nindent 4 }}
+  {{- if .Values.gateway.pdb.annotations }}
+  annotations:
+    {{- toYaml .Values.gateway.pdb.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.gateway.pdb.maxUnavailable }}
+  maxUnavailable: {{ . }}
+  {{- else }}
+  minAvailable: {{ .Values.gateway.pdb.minAvailable | default 1 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "akeyless-gateway.labels" . | nindent 6 }}
+{{- end }}
