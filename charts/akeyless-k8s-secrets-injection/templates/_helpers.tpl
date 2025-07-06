@@ -62,3 +62,22 @@ Create the name of the service account to use
         {{- printf "Deployment" -}}
     {{- end -}}
 {{- end -}}
+
+{{/*
+Common webhook labels
+*/}}
+{{- define "vault-secrets-webhook.labels" -}}
+app: {{ template "vault-secrets-webhook.fullname" . }}
+chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+release: {{ .Release.Name }}
+heritage: {{ .Release.Service }}
+component: mutating-webhook
+{{- end -}}
+
+{{/*
+Selector webhook labels
+*/}}
+{{- define "vault-secrets-webhook.selectorLabels" -}}
+app: {{ template "vault-secrets-webhook.fullname" . }}
+release: {{ .Release.Name }}
+{{- end -}}
