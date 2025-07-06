@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: {{ include "deyploymant.type" $ }}
+kind: {{ include "deployment.type" $ }}
 metadata:
   name: {{ template "vault-secrets-webhook.fullname" . }}
   labels:
@@ -8,7 +8,7 @@ metadata:
       {{- toYaml .Values.deployment.labels | nindent 4 }}
     {{- end }}
 spec:
-  {{- if and (eq (include "deyploymant.type" $) "Deployment") (not .Values.HPA.enabled) }}
+  {{- if and (eq (include "deployment.type" $) "Deployment") (not .Values.HPA.enabled) }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:

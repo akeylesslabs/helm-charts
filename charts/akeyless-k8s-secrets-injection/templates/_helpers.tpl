@@ -51,7 +51,7 @@ Create the name of the service account to use
     {{- end }}
 {{- end }}
 
-{{- define "deyploymant.type" -}}
+{{- define "deployment.type" -}}
     {{- if .Values.deploymentType -}}
         {{- if eq .Values.deploymentType "DaemonSet" -}}
             {{- printf "DaemonSet" -}}

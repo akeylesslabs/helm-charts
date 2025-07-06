@@ -142,6 +142,7 @@ HPA:
   annotations: {}
 
   ## Pod Disruption Budget configuration
+  ## Note: PDB is only applicable to Deployments, not DaemonSets
   ##
 pdb:
   ## Set to true to enable Pod Disruption Budget
