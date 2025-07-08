@@ -115,8 +115,6 @@ globalConfig:
 
 cacheHA:
   enabled: false
-## TODO: Need to find the right value to control the Redis port
-
   nameOverride: "cache-ha"
 
   ## In case cacheHA is enabled in the Gateway, and the encryptionKeyExistingSecret parameter has a value
