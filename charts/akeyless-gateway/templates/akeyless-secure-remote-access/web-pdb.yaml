@@ -1,0 +1,22 @@
+{{- if and .Values.sra.webConfig.pdb.enabled (eq (include "deployment.type" $) "Deployment") -}}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: web-{{ include "akeyless-gateway.fullname" . }}-pdb
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "akeyless-sra-web.labels" . | nindent 4 }}
+  {{- if .Values.sra.webConfig.pdb.annotations }}
+  annotations:
+    {{- toYaml .Values.sra.webConfig.pdb.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.sra.webConfig.pdb.maxUnavailable }}
+  maxUnavailable: {{ . }}
+  {{- else }}
+  minAvailable: {{ .Values.sra.webConfig.pdb.minAvailable | default 1 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "akeyless-sra-web.selectorLabels" . | nindent 6 }}
+{{- end }}

@@ -91,6 +91,7 @@ globalConfig:
   ## https://docs.akeyless.io/docs/advanced-chart-configuration#cache-configuration
   ##
   clusterCache:
+    enabled: true
     ## In case Cache is enabled in the Gateway, and the encryptionKeyExistingSecret parameter has a value
     ## Akeyless will use this specified encryption key and store it securely within Akeyless Gateway.
     ## If the encryptionKeyExistingSecret parameter is empty or not specified,
@@ -280,8 +281,26 @@ gateway:
     maxReplicas: 10
     cpuAvgUtil: 70
     memAvgUtil: 70
-
     annotations: {}
+
+  ## Pod Disruption Budget configuration
+  ## Note: PDB is only applicable to Deployments, not DaemonSets
+  ##
+  pdb:
+    ## Set to true to enable Pod Disruption Budget
+    ##
+    enabled: false
+    ## Labels to be added to gateway service pdb
+    labels: {}
+    ## Annotations to be added to gateway service pdb
+    annotations: {}
+    ## Number of pods that are available after eviction as number or percentage (eg.: 50%)
+    # @default -- `""` (defaults to 1 if not specified)
+    minAvailable: ""
+    ## Number of pods that are unavailable after eviction as number or percentage (eg.: 50%).
+    ## Has higher precedence over `pdb.minAvailable`
+    maxUnavailable: ""
+
   ## HSM configuration
   hsm:
     enabled: false
@@ -409,6 +428,24 @@ sra:
       maxReplicas: 10
       cpuAvgUtil: 70
       memAvgUtil: 70
+    ## Pod Disruption Budget configuration
+    ## Note: PDB is only applicable to Deployments, not DaemonSets
+    ##
+    pdb:
+      ## Set to true to enable Pod Disruption Budget
+      ##
+      enabled: false
+      ## Labels to be added to sre-web service pdb
+      labels: { }
+      ## Annotations to be added to sre-web service pdb
+      annotations: { }
+      ## Number of pods that are available after eviction as number or percentage (eg.: 50%)
+      # @default -- `""` (defaults to 1 if not specified)
+      minAvailable: ""
+      ## Number of pods that are unavailable after eviction as number or percentage (eg.: 50%).
+      ## Has higher precedence over `pdb.minAvailable`
+      maxUnavailable: ""
+
 
   ## The below section is for the Remote Access SSH app
   ## For more information: <https://docs.akeyless.io/docs/remote-access-advanced-configuration-k8s#ssh-configuration>
@@ -486,3 +523,21 @@ sra:
       maxReplicas: 10
       cpuAvgUtil: 70
       memAvgUtil: 70
+
+    ## Pod Disruption Budget configuration
+    ## Note: PDB is only applicable to Deployments, not DaemonSets
+    ##
+    pdb:
+      ## Set to true to enable Pod Disruption Budget
+      ##
+      enabled: false
+      ## Labels to be added to ssh-web service pdb
+      labels: { }
+      ## Annotations to be added to ssh-web service pdb
+      annotations: { }
+      ## Number of pods that are available after eviction as number or percentage (eg.: 50%)
+      # @default -- `""` (defaults to 1 if not specified)
+      minAvailable: ""
+      ## Number of pods that are unavailable after eviction as number or percentage (eg.: 50%).
+      ## Has higher precedence over `pdb.minAvailable`
+      maxUnavailable: ""

@@ -2,7 +2,7 @@
 {{- $tlsKeyCertPath := printf "%s/tls.key" $mountCertPaths }}
 {{- $tlsCACertPath := printf "%s/tls.crt" $mountCertPaths }}
 apiVersion: apps/v1
-kind: {{ include "deyploymant.type" $ }}
+kind: {{ include "deployment.type" $ }}
 metadata:
   name: {{ include "akeyless-api-gw.fullname" . }}
   namespace: {{ .Release.Namespace }}
@@ -16,7 +16,7 @@ metadata:
   {{- toYaml .Values.deployment.annotations | nindent 4 }}
   {{- end }}
 spec:
-  {{- if and (eq (include "deyploymant.type" $) "Deployment") (not .Values.HPA.enabled) }}
+  {{- if and (eq (include "deployment.type" $) "Deployment") (not .Values.HPA.enabled) }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:

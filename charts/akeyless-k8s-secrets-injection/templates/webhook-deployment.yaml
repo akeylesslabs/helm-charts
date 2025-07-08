@@ -1,18 +1,14 @@
 apiVersion: apps/v1
-kind: {{ include "deyploymant.type" $ }}
+kind: {{ include "deployment.type" $ }}
 metadata:
   name: {{ template "vault-secrets-webhook.fullname" . }}
   labels:
-    app: {{ template "vault-secrets-webhook.name" . }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-    component: mutating-webhook
+    {{- include "vault-secrets-webhook.labels" . | nindent 4 }}
     {{- if .Values.deployment.labels }}
       {{- toYaml .Values.deployment.labels | nindent 4 }}
     {{- end }}
 spec:
-  {{- if and (eq (include "deyploymant.type" $) "Deployment") (not .Values.HPA.enabled) }}
+  {{- if and (eq (include "deployment.type" $) "Deployment") (not .Values.HPA.enabled) }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:

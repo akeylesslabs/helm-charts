@@ -1,0 +1,22 @@
+{{- if and .Values.pdb.enabled (eq (include "deployment.type" $) "Deployment") -}}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "akeyless-api-gw.fullname" . }}-pdb
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "akeyless-api-gw.labels" . | nindent 4 }}
+  {{- if .Values.pdb.annotations }}
+  annotations:
+    {{- toYaml .Values.pdb.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.pdb.maxUnavailable }}
+  maxUnavailable: {{ . }}
+  {{- else }}
+  minAvailable: {{ .Values.pdb.minAvailable | default 1 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "akeyless-api-gw.labels" . | nindent 6 }}
+{{- end }}

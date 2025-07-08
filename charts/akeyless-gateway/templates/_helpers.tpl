@@ -402,9 +402,13 @@ Generate chart secret name
 {{ default (include "akeyless-gateway.fullname" .) }}
 {{- end -}}
 
+{{/*{{- define "akeyless-gateway-sra-ssh-service.selectorLabels" -}}*/}}
+{{/*app.kubernetes.io/name: {{ (include "akeyless-gateway.name" .) | trunc 38 | trimSuffix "-" }}-gateway-sra-ssh-services*/}}
+{{/*app.kubernetes.io/instance: {{ .Release.Name }}*/}}
+{{/*{{- end -}}*/}}
+
 {{- define "akeyless-gateway-sra-ssh-service.selectorLabels" -}}
-app.kubernetes.io/name: {{ (include "akeyless-gateway.name" .) | trunc 38 | trimSuffix "-" }}-gateway-sra-ssh-services
-app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/service: {{ (include "akeyless-gateway.name" .) | trunc 38 | trimSuffix "-" }}-gateway-sra-ssh-services
 {{- end -}}
 
 {{- define "httpProxySettings" -}}
