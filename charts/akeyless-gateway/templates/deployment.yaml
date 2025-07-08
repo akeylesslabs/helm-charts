@@ -34,6 +34,10 @@ spec:
       {{- if .Values.gateway.deployment.affinity.enabled }}
       affinity:
       {{- toYaml .Values.gateway.deployment.affinity.data | nindent 8 }}
+      {{- if .Values.gateway.deployment.topologySpreadConstraints }}
+      topologySpreadConstraints:
+      {{- toYaml .Values.gateway.deployment.topologySpreadConstraints | nindent 8 }}
+      {{- end }}
       {{- end }}
       {{- if .Values.gateway.deployment.securityContext.enabled }}
       securityContext:
@@ -63,7 +67,7 @@ spec:
         {{- end }}
       {{- end }}
       {{- if .Values.gateway.secretsStore.enabled }}
-      {{- include "akeyless-gateway.secretsStore.volume" . | nindent 6 }}
+      {{- include "akeyless-gateway.secretsStore.volume" . | nindent 8 }}
       {{- end }}
       {{- if .Values.globalConfig.TLSConf.tlsExistingSecret }}
         - name: tls-conf-cert
@@ -87,7 +91,7 @@ spec:
             secretName: {{ .Values.globalConfig.metrics.metricsExistingSecret }}
       {{- end }}
       {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
-      {{ include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 6}}
+      {{ include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 8}}
       {{- end }}
       {{- if eq .Values.gateway.persistence.enabled true }}
         - name: persistent-storage
@@ -166,6 +170,12 @@ spec:
           resources:
           {{- toYaml .Values.gateway.resources | nindent 12 }}
           env:
+            {{- if and .Values.cacheHA.enabled .Values.cacheHA.sentinel.enabled }}
+            - name: REDIS_SENTINEL_ADDR
+              value: "{{ include "akeyless-gateway.cacheHA.Address" . }}:{{ index .Values "cacheHA" "sentinel" "containerPorts" "sentinel" }}"
+            - name: REDIS_SENTINEL_MASTER_NAME
+              value: {{ .Values.cacheHA.sentinel.masterSet | quote }}
+            {{- end }}
             {{- if .Values.globalConfig.customerFragmentsExistingSecret }}
             - name: CUSTOMER_FRAGMENTS
               valueFrom:
@@ -240,16 +250,16 @@ spec:
                   name: {{ .Values.globalConfig.gatewayAuth.gatewayCredentialsExistingSecret }}
                   key: gateway-uid-token
             {{- end }}
-            {{- if (eq "true" (include "akeyless-gateway.clusterCache.enabled" . )) }}
+            {{- if or (eq "true" (include "akeyless-gateway.clusterCache.enabled" . )) .Values.cacheHA.enabled }}
             - name:  GATEWAY_CLUSTER_CACHE
               value: enable
             {{- include "akeyless-gateway.clusterCacheConfig" . | nindent 10 }}
             {{- end }}
-            {{- if .Values.globalConfig.clusterCache.encryptionKeyExistingSecret }}
+            {{- if or .Values.globalConfig.clusterCache.encryptionKeyExistingSecret .Values.cacheHA.encryptionKeyExistingSecret }}
             - name: CACHE_ENCRYPTION_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.globalConfig.clusterCache.encryptionKeyExistingSecret }}
+                  name: {{ if .Values.globalConfig.clusterCache.encryptionKeyExistingSecret }}{{ .Values.globalConfig.clusterCache.encryptionKeyExistingSecret }}{{ else }}{{ .Values.cacheHA.encryptionKeyExistingSecret }}{{ end }}
                   key: cluster-cache-encryption-key
             {{- end }}
             {{- with .Values.globalConfig.gatewayAuth.universalIdentity }}
