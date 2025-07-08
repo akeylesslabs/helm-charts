@@ -18,5 +18,5 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      {{- include "akeyless-gateway.labels" . | nindent 6 }}
+      {{- include "akeyless-gateway.selectorLabels" . | nindent 6 }}
 {{- end }}

@@ -19,6 +19,7 @@ spec:
   {{- end }}
   selector:
     matchLabels:
+      {{- include "akeyless-sra-ssh.selectorLabels" . | nindent 6 }}
       {{- include "akeyless-gateway-sra-ssh-service.selectorLabels" . | nindent 6 }}
   template:
     metadata:
@@ -27,6 +28,7 @@ spec:
           {{- toYaml .Values.sra.sshConfig.annotations | nindent 8 }}
       {{- end }}
       labels:
+        {{- include "akeyless-sra-ssh.selectorLabels" . | nindent 8 }}
         {{- include "akeyless-gateway-sra-ssh-service.selectorLabels" . | nindent 8 }}
         {{- if .Values.sra.sshConfig.labels }}
           {{- toYaml .Values.sra.sshConfig.labels | nindent 8 }}
