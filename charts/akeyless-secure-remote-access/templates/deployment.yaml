@@ -145,6 +145,18 @@ spec:
             - name: KEEP_LOCAL_RECORDINGS
               value: "true"
   {{- end }}
+  {{- if .Values.ztbConfig.config.rdpRecord.quality }}
+            - name: RECORDING_QUALITY
+              value: {{ default "medium" .Values.ztbConfig.config.rdpRecord.quality }}
+  {{- end }}
+  {{- if .Values.ztbConfig.config.rdpRecord.enableCompression }}
+            - name: COMPRESS_RECORDINGS
+              value: "true"
+  {{- end }}
+  {{- if .Values.ztbConfig.config.rdpRecord.encryptionKeyDisplayId }}
+            - name: ENCRYPTION_KEY_DISPLAY_ID
+              value: {{ .Values.ztbConfig.config.rdpRecord.encryptionKeyDisplayId }}
+  {{- end }}
   {{- if .Values.ztbConfig.config.rdpRecord.s3.bucketName }}
             - name: AWS_REGION
               value: {{ required "A valid .Values.ztbConfig.config.rdpRecord.s3.region required!" .Values.ztbConfig.config.rdpRecord.s3.region }}
