@@ -216,7 +216,7 @@ ztbConfig:
       keepLocalRecording: false
       quality: "" #low/medium/high
       enableCompression: false
-      encryptionKeyDisplayId: ""
+      encryptionKey: ""
       # automatically upload session recordings to S3 in your AWS account
       s3:
         region: ""
