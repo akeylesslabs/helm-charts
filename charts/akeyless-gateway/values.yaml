@@ -131,21 +131,45 @@ cacheHA:
 
   sentinel:
     enabled: true
+    resources:
+      requests:
+          cpu: "100m"        # reserve 0.1 CPU
+          memory: "128Mi"    # reserve 128 MiB
+      limits:
+          cpu: "200m"        # cap at 0.2 CPU
+          memory: "256Mi"    # cap at 256 MiB
 
   ## Required for cacheHA, a storage class with the ReadWriteOnce access mode
   global:
     defaultStorageClass: ""
+
+  commonConfiguration: |
+    maxmemory-policy allkeys-lru
 
   master:
     pdb:
       create: false
       minAvailable: ""
       maxUnavailable: ""
+    resources:
+      requests:
+        cpu: "200m"        # reserve 0.2 CPU
+        memory: "256Mi"    # reserve 256 MiB
+      limits:
+        cpu: "500m"        # cap at 0.5 CPU
+        memory: "512Mi"    # cap at 512 MiB
   replica:
     pdb:
       create: false
       maxUnavailable: ""
       minAvailable: ""
+    resources:
+      requests:
+        cpu: "200m"        # reserve 0.2 CPU
+        memory: "256Mi"    # reserve 256 MiB
+      limits:
+        cpu: "500m"        # cap at 0.5 CPU
+        memory: "512Mi"    # cap at 512 MiB
 
 ####################################################
 ##          Default values for Gateway            ##
