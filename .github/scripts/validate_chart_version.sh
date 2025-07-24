@@ -20,18 +20,7 @@ lookup_changed_charts() {
   cut -d '/' -f "$fields" <<< "$changed_files" | uniq
 }
 
-# Extract a top-level field (e.g., name, version) from Chart.yaml using yq if available, otherwise use awk as a fallback
-extract_chart_field() {
-  local chart_dir="$1"
-  local field="$2"
-  if command -v yq >/dev/null 2>&1; then
-    yq e ".$field" "$chart_dir/Chart.yaml"
-  else
-    awk -v f="$field" '
-      /^[^ ]/ && $1 == f":" { print $2; exit }
-    ' "$chart_dir/Chart.yaml"
-  fi
-}
+
 
 main() {
   local repo_root
