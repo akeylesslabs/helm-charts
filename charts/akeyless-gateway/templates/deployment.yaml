@@ -34,6 +34,10 @@ spec:
       {{- if .Values.gateway.deployment.affinity.enabled }}
       affinity:
       {{- toYaml .Values.gateway.deployment.affinity.data | nindent 8 }}
+      {{- if .Values.gateway.deployment.topologySpreadConstraints }}
+      topologySpreadConstraints:
+      {{- toYaml .Values.gateway.deployment.topologySpreadConstraints | nindent 8 }}
+      {{- end }}
       {{- end }}
       {{- if .Values.gateway.deployment.securityContext.enabled }}
       securityContext:
@@ -46,38 +50,53 @@ spec:
       {{ toYaml .Values.gateway.deployment.nodeSelector | indent 4 }}
       {{- end }}
       {{- include "akeyless-gateway.imagePullSecrets" . | indent 2 }}
-      {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true)}}
+      {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true) (.Values.gateway.secretsStore.enabled)}}
       volumes:
-      - name: akeyless-config
-        emptyDir: {}
+        - name: akeyless-config
+          emptyDir: {}
+      {{- if .Values.gateway.customCA.enabled }}
+        - name: {{ .Values.gateway.customCA.volumeName }}
+        {{- if eq (.Values.gateway.customCA.volumeType| lower) "configmap" }}
+          configMap:
+            name: {{ .Values.gateway.customCA.volumeSourceName | required "gateway.customCA.volumeSourceName is required when gateway.customCA.enabled is true" }}
+        {{- else if eq (.Values.gateway.customCA.volumeType | lower) "secret" }}
+          secret:
+            secretName: {{ .Values.gateway.customCA.volumeSourceName | required "gateway.customCA.volumeSourceName is required when gateway.customCA.enabled is true" }}
+        {{- else }}
+          {{ fail (printf "gateway.customCA.volumeType must be either 'configmap' or 'secret', got %s" .Values.gateway.customCA.volumeType) }}
+        {{- end }}
+      {{- end }}
+      {{- if .Values.gateway.secretsStore.enabled }}
+      {{- include "akeyless-gateway.secretsStore.volume" . | nindent 8 }}
+      {{- end }}
       {{- if .Values.globalConfig.TLSConf.tlsExistingSecret }}
-      - name: tls-conf-cert
-        secret:
-          secretName: {{ .Values.globalConfig.TLSConf.tlsExistingSecret }}
-          defaultMode: 420
-          items:
-            - key: tlsCertificate
-              path: akeyless-api-cert.crt
-      - name: tls-conf-private-key
-        secret:
-          secretName: {{ .Values.globalConfig.TLSConf.tlsExistingSecret }}
-          defaultMode: 420
-          items:
-            - key: tlsPrivateKey
-              path: akeyless-api-cert.key
+        - name: tls-conf-cert
+          secret:
+            secretName: {{ .Values.globalConfig.TLSConf.tlsExistingSecret }}
+            defaultMode: 420
+            items:
+              - key: tlsCertificate
+                path: akeyless-api-cert.crt
+        - name: tls-conf-private-key
+          secret:
+            secretName: {{ .Values.globalConfig.TLSConf.tlsExistingSecret }}
+            defaultMode: 420
+            items:
+              - key: tlsPrivateKey
+                path: akeyless-api-cert.key
       {{- end }}
       {{- if and (.Values.globalConfig.metrics.enabled) (.Values.globalConfig.metrics.metricsExistingSecret) }}
-      - name: otelcol-metrics-config
-        secret:
-          secretName: {{ .Values.globalConfig.metrics.metricsExistingSecret }}
+        - name: otelcol-metrics-config
+          secret:
+            secretName: {{ .Values.globalConfig.metrics.metricsExistingSecret }}
       {{- end }}
       {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
-      {{ include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 6}}
+      {{ include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 8}}
       {{- end }}
       {{- if eq .Values.gateway.persistence.enabled true }}
-      - name: persistent-storage
-        persistentVolumeClaim:
-          claimName: {{ .Values.gateway.persistence.existingClaim | default (printf "%s-pvc" (include "akeyless-gateway.fullname" .)) }}
+        - name: persistent-storage
+          persistentVolumeClaim:
+            claimName: {{ .Values.gateway.persistence.existingClaim | default (printf "%s-pvc" (include "akeyless-gateway.fullname" .)) }}
       {{- end }}
       {{- end }}
       containers:
@@ -97,6 +116,10 @@ spec:
               containerPort: {{ .Values.gateway.service.port }}
             - name: internal-gw-api
               containerPort: 8080
+          {{- if .Values.gateway.service.kmip.enabled }}
+            - name: kmip
+              containerPort: 5696
+          {{- end }}
           livenessProbe:
             httpGet:
               path: /health
@@ -107,10 +130,20 @@ spec:
               path: /health
               port: 8080
           {{- toYaml .Values.gateway.deployment.readinessProbe | trim | nindent 12 }}
-          {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true)}}
+          {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true) (.Values.gateway.secretsStore.enabled)}}
           volumeMounts:
             - name: akeyless-config
               mountPath: {{include "akeyless-gateway.root.config.path" $}}/.akeyless
+          {{- if .Values.gateway.customCA.enabled }}
+            - name: {{ .Values.gateway.customCA.volumeName }}
+              mountPath: /etc/ssl/certs/ca-certificates.crt
+              subPath: ca-certificates.crt
+          {{- end }}
+          {{- if .Values.gateway.secretsStore.enabled }}
+            - name: secrets-store
+              mountPath: {{ include "akeyless-gateway.secretsStore.mountPath" . }}
+              readOnly: true
+          {{- end }}
           {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
             {{ include "akeyless-gateway.clusterCache.tlsVolumeMounts" . | nindent 12 }}
           {{- end }}
@@ -137,6 +170,12 @@ spec:
           resources:
           {{- toYaml .Values.gateway.resources | nindent 12 }}
           env:
+            {{- if and .Values.cacheHA.enabled .Values.cacheHA.sentinel.enabled }}
+            - name: REDIS_SENTINEL_ADDR
+              value: "{{ include "akeyless-gateway.cacheHA.Address" . }}:{{ index .Values "cacheHA" "sentinel" "containerPorts" "sentinel" }}"
+            - name: REDIS_SENTINEL_MASTER_NAME
+              value: {{ .Values.cacheHA.sentinel.masterSet | quote }}
+            {{- end }}
             {{- if .Values.globalConfig.customerFragmentsExistingSecret }}
             - name: CUSTOMER_FRAGMENTS
               valueFrom:
@@ -211,16 +250,16 @@ spec:
                   name: {{ .Values.globalConfig.gatewayAuth.gatewayCredentialsExistingSecret }}
                   key: gateway-uid-token
             {{- end }}
-            {{- if (eq "true" (include "akeyless-gateway.clusterCache.enabled" . )) }}
+            {{- if or (eq "true" (include "akeyless-gateway.clusterCache.enabled" . )) .Values.cacheHA.enabled }}
             - name:  GATEWAY_CLUSTER_CACHE
               value: enable
             {{- include "akeyless-gateway.clusterCacheConfig" . | nindent 10 }}
             {{- end }}
-            {{- if .Values.globalConfig.clusterCache.encryptionKeyExistingSecret }}
+            {{- if or .Values.globalConfig.clusterCache.encryptionKeyExistingSecret .Values.cacheHA.encryptionKeyExistingSecret }}
             - name: CACHE_ENCRYPTION_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.globalConfig.clusterCache.encryptionKeyExistingSecret }}
+                  name: {{ if .Values.globalConfig.clusterCache.encryptionKeyExistingSecret }}{{ .Values.globalConfig.clusterCache.encryptionKeyExistingSecret }}{{ else }}{{ .Values.cacheHA.encryptionKeyExistingSecret }}{{ end }}
                   key: cluster-cache-encryption-key
             {{- end }}
             {{- with .Values.globalConfig.gatewayAuth.universalIdentity }}
@@ -242,26 +281,26 @@ spec:
             {{- if .Values.gateway.hsm.pkcs11LibPath }}
             - name: PKCS11_LIB_PATH
               value: {{ .Values.gateway.hsm.pkcs11LibPath | quote }}
-            {{- end }}  
+            {{- end }}
             {{- if .Values.gateway.hsm.pinExistingSecret }}
             - name: HSM_PIN
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.gateway.hsm.pinExistingSecret }}
                   key: pin
-            {{- end }}  
+            {{- end }}
             {{- if .Values.gateway.hsm.slot }}
             - name: HSM_SLOT
               value: {{ .Values.gateway.hsm.slot | quote }}
-            {{- end }}  
+            {{- end }}
             {{- if .Values.gateway.hsm.tokenLabel }}
             - name: HSM_TOKEN_LABEL
               value: {{ .Values.gateway.hsm.tokenLabel | quote }}
-            {{- end }}  
+            {{- end }}
             {{- if .Values.gateway.hsm.tokenSerial }}
             - name: HSM_TOKEN_SERIAL
               value: {{ .Values.gateway.hsm.tokenSerial | quote }}
-            {{- end }}  
+            {{- end }}
             {{- if .Values.gateway.hsm.useRand }}
             - name: HSM_USE_RAND
               value: {{ .Values.gateway.hsm.useRand | quote }}

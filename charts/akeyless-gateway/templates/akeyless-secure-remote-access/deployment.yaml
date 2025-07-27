@@ -32,10 +32,12 @@ spec:
           {{- toYaml .Values.sra.webConfig.deployment.labels | nindent 8 }}
         {{- end }}
     spec:
-      {{- if .Values.sra.sshConfig.securityContext.enabled }}
+      {{- if .Values.sra.webConfig.securityContext }}
+      {{- if .Values.sra.webConfig.securityContext.enabled }}
       securityContext:
-        runAsUser: {{ .Values.sra.sshConfig.securityContext.runAsUser }}
-        fsGroup: {{ .Values.sra.sshConfig.securityContext.fsGroup }}
+        runAsUser: {{ .Values.sra.webConfig.securityContext.runAsUser }}
+        fsGroup: {{ .Values.sra.webConfig.securityContext.fsGroup }}
+      {{- end }}
       {{- end }}
       serviceAccountName: {{ include "akeyless-gateway.getServiceAccountName" . }}
       {{- if .Values.sra.sshConfig.nodeSelector }}
@@ -68,11 +70,17 @@ spec:
             - containerPort: 8888
               name: web
           env:
+            {{- if and .Values.cacheHA.enabled .Values.cacheHA.sentinel.enabled }}
+            - name: REDIS_SENTINEL_ADDR
+              value: "{{ include "akeyless-gateway.cacheHA.Address" . }}:{{ index .Values "cacheHA" "sentinel" "containerPorts" "sentinel" }}"
+            - name: REDIS_SENTINEL_MASTER_NAME
+              value: {{ .Values.cacheHA.sentinel.masterSet | quote }}
+            {{- end }}
             {{ include "akeyless-gateway.akeylessGatewayAuthConfig" . | nindent 10 }}
             {{ include "akeyless-gateway.unifiedGatewaySraWebConfig" . | nindent 10 }}
             {{ include "akeyless-gateway.ClusterName" . | nindent 10 }}
             {{- if eq "true" (include "akeyless-gateway.clusterCache.enabled" . ) }}
-            {{-  include "akeyless-gateway.clusterCacheConfig" . | nindent 10 }}
+            {{- include "akeyless-gateway.clusterCacheConfig" . | nindent 10 }}
             {{- end }}
             {{- if .Values.globalConfig.authorizedAccessIDs }}
             - name: GATEWAY_AUTHORIZED_ACCESS_ID

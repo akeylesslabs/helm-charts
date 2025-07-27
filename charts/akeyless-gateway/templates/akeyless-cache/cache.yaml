@@ -1,4 +1,5 @@
-{{- if (eq "true" (include "akeyless-gateway.clusterCache.enabled" . )) }}
+{{- $cacheHa := index .Values "cacheHA" -}}
+{{- if and (eq "true" (include "akeyless-gateway.clusterCache.enabled" . )) (not $cacheHa.enabled) }}
 {{- $deploymentName := printf "%s-cache" (include "akeyless-gateway.fullname" .) }}
 {{- $mountCertPaths := (include "akeyless-gateway.clusterCache.tlsVolumeMountPath" .) -}}
 {{- $tlsCertKeyPath := printf "%s/tls.key" $mountCertPaths }}

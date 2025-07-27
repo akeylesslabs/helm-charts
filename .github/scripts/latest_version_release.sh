@@ -5,9 +5,24 @@ set -e
 dir_path="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 source "${dir_path}/common.sh"
 
+
+
 service=$(echo "$GITHUB_CONTEXT" | jq -r '.payload.service | select (.!=null)')
 major_minor_patch=$(echo "$GITHUB_CONTEXT" | jq -r '.payload.major_minor_patch | select (.!=null)')
 app_version=$(echo "$GITHUB_CONTEXT" | jq -r '.payload.app_version | select (.!=null)')
+
+# Validate required environment variables
+if [[ -z "${service}" ]]; then
+  die "Required environment variable 'service' is not set"
+fi
+
+if [[ -z "${major_minor_patch}" ]]; then
+  die "Required environment variable 'major_minor_patch' is not set"
+fi
+
+if [[ -z "${app_version}" ]]; then
+  die "Required environment variable 'app_version' is not set"
+fi
 
 charts=()
 if [[ "${service}" == "gateway" ]]; then
@@ -26,12 +41,23 @@ fi
 
 updated_charts_summary=()
 for chart in "${charts[@]}"; do
+  if [[ ! -d "$GITHUB_WORKSPACE/charts/${chart}" ]]; then
+    die "Chart directory not found: $GITHUB_WORKSPACE/charts/${chart}"
+  fi
+  
+  if [[ ! -f "$GITHUB_WORKSPACE/charts/${chart}/Chart.yaml" ]]; then
+    die "Chart.yaml not found in: $GITHUB_WORKSPACE/charts/${chart}"
+  fi
+  
   pushd "$GITHUB_WORKSPACE/charts/${chart}"
     # bump chart version
-    chart_version=$(grep '^version:[[:space:]][[:digit:]]' Chart.yaml | awk '{print $2}') || die "Failed to retrieve current chart version"
+    chart_version=$(extract_chart_field "." "version")
     bump_version "${chart_version}" "${major_minor_patch}"
+    if [[ -z "${new_version}" ]]; then
+      die "Failed to bump version from ${chart_version} with ${major_minor_patch}"
+    fi
     new_chart_version=${new_version} && echo "The new Chart version is: ${new_chart_version}"
-    sed -i "s/version:.*/version: ${new_chart_version}/g" Chart.yaml
+    update_chart_field "." "version" "${new_chart_version}"
 
     # edit app version for akeyless-secure-remote-access
     if [[ "${chart}" == "akeyless-secure-remote-access" ]]; then
@@ -44,12 +70,12 @@ for chart in "${charts[@]}"; do
         die "Bad SRA service name"
       fi
 
-      sed -i "s/${sra_inner_chart}.*/${sra_inner_chart}: ${app_version}/g" Chart.yaml
+      update_chart_field "." "${sra_inner_chart}" "${app_version}"
       # edit sra app version
-      ztb_app_ver=$(grep 'ztbVersion' Chart.yaml | awk '{print $2}')
-      ztp_app_ver=$(grep 'ztpVersion' Chart.yaml | awk '{print $2}')
+      ztb_app_ver=$(extract_chart_field "." "ztbVersion")
+      ztp_app_ver=$(extract_chart_field "." "ztpVersion")
       new_app_version="${ztb_app_ver}_${ztp_app_ver}"
-      sed -i "s/appVersion.*/appVersion: ${new_app_version}/g" Chart.yaml
+      update_chart_field "." "appVersion" "${new_app_version}"
 
     elif [[ "${chart}" == "akeyless-gateway" ]]; then
       # edit app version for akeyless-gateway
@@ -60,15 +86,15 @@ for chart in "${charts[@]}"; do
       else
         die "Bad gateway service name"
       fi
-      sed -i "s/${gateway_inner_chart}.*/${gateway_inner_chart}: ${app_version}/g" Chart.yaml
+      update_chart_field "." "${gateway_inner_chart}" "${app_version}"
       # edit sra app version
-      gateway_app_ver=$(grep 'gatewayVersion' Chart.yaml | awk '{print $2}')
-      sra_app_ver=$(grep 'sraVersion' Chart.yaml | awk '{print $2}')
-      sed -i "s/appVersion.*/appVersion: ${gateway_app_ver}_${sra_app_ver}/g" Chart.yaml
+      gateway_app_ver=$(extract_chart_field "." "gatewayVersion")
+      sra_app_ver=$(extract_chart_field "." "sraVersion")
+      update_chart_field "." "appVersion" "${gateway_app_ver}_${sra_app_ver}"
       new_app_version="${gateway_app_ver}_${sra_app_ver}"
     else
       new_app_version="${app_version}"
-      sed -i "s/appVersion.*/appVersion: ${new_app_version}/g" Chart.yaml
+      update_chart_field "." "appVersion" "${new_app_version}"
     fi
 
     git add -A && git commit -m "Updated ${service} helm chart version to latest: ${new_app_version}" || die "Failed to commit changes to git"
