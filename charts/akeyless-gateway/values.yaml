@@ -139,12 +139,12 @@ cacheHA:
           cpu: "200m"        # cap at 0.2 CPU
           memory: "256Mi"    # cap at 256 MiB
 
-  ## Required for cacheHA, a storage class with the ReadWriteOnce access mode
-  global:
-    defaultStorageClass: ""
 
   commonConfiguration: |
     maxmemory-policy allkeys-lru
+  ## Required for cacheHA, a storage class with the ReadWriteOnce access mode
+  global:
+    defaultStorageClass: ""
 
   master:
     pdb:
