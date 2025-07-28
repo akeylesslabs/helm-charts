@@ -10,11 +10,10 @@ icon: https://akeyless-908832575.imgix.net/wp-content/uploads/2024/03/akeyless-2
 appVersion: 4.35.1_2.6.0
 annotations:
   gatewayVersion: 4.35.1
-  sraVersion: 2.5.3
+  sraVersion: 2.6.0
 dependencies:
   - name: redis
     version: "21.2.x"
     repository: "https://charts.bitnami.com/bitnami"
     condition: cacheHA.enabled
     alias: cacheHA
-sraVersion: 2.6.0
