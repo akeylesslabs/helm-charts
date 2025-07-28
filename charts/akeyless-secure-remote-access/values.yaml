@@ -214,6 +214,9 @@ ztbConfig:
     rdpRecord:
       enabled: false
       keepLocalRecording: false
+      quality: "" #low/medium/high
+      enableCompression: false
+      encryptionKey: ""
       # automatically upload session recordings to S3 in your AWS account
       s3:
         region: ""

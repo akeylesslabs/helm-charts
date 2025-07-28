@@ -1,7 +1,6 @@
 apiVersion: v2
 name: akeyless-sra
 description: A Helm chart for Kubernetes akeyless-zero-trust-bastion, akeyless-ssh-bastion and akeyless-zero-trust-portal deployments
-
 # A chart can be either an 'application' or a 'library' chart.
 #
 # Application charts are a collection of templates that can be packaged into versioned archives
@@ -14,13 +13,11 @@ type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 
-version: 1.8.6
-
-
-appVersion: 2.5.3_1.12.2
-
+version: 1.9.1
+appVersion: 2.6.0_1.12.2
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application.
 annotations:
   ztbVersion: 2.5.3
   ztpVersion: 1.12.2
+ztbVersion: 2.6.0

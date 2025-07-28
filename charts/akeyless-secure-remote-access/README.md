@@ -125,15 +125,18 @@ The following table lists the configurable parameters of the Zero Trust Bastion 
 
 ### configuration parameters
 
-| Parameter                                          | Description                                                                     | Default |
-|----------------------------------------------------|---------------------------------------------------------------------------------|---------|
-| `ztbConfig.config.rdpRecord.enabled`               | Enable RDP session recording                                                    | `false` |
-| `ztbConfig.config.rdpRecord.s3.bucketName`         | AWS S3 bucket name to store RDP recording                                       | `nil`   |
-| `ztbConfig.config.rdpRecord.s3.bucketPrefix`       | AWS S3 bucket prefix                                                            | `nil`   |
-| `ztbConfig.config.rdpRecord.s3.region`             | AWS S3 bucket region                                                            | `nil`   |
-| `ztbConfig.config.rdpRecord.s3.awsAccessKeyId`     | AWS Access Key ID, not required if using EC2 IAM roles                          | `nil`   |
-| `ztbConfig.config.rdpRecord.s3.awsSecretAccessKey` | AWS Secret Access Key, not required if using EC2 IAM roles                      | `nil`   |
-| `ztbConfig.config.rdpRecord.existingSecret`        | Specifies an existing secret to be used for bastion, management AWS credentials | `nil`   |
+| Parameter                                          | Description                                                                     | Default  |
+|----------------------------------------------------|---------------------------------------------------------------------------------|----------|
+| `ztbConfig.config.rdpRecord.enabled`               | Enable RDP session recording                                                    | `false`  |
+| `ztbConfig.config.rdpRecord.quality`               | Recording video quality. Possible value: [low, medium, high]                    | `medium` |
+| `ztbConfig.config.rdpRecord.enableCompression`     | Enable gzip compression for uploaded recordings                                 | `false`  |
+| `ztbConfig.config.rdpRecord.encryptionKey`         | If provided, this key will be used to encrypt uploaded recordings.              | `""`     |
+| `ztbConfig.config.rdpRecord.s3.bucketName`         | AWS S3 bucket name to store RDP recording                                       | `nil`    |
+| `ztbConfig.config.rdpRecord.s3.bucketPrefix`       | AWS S3 bucket prefix                                                            | `nil`    |
+| `ztbConfig.config.rdpRecord.s3.region`             | AWS S3 bucket region                                                            | `nil`    |
+| `ztbConfig.config.rdpRecord.s3.awsAccessKeyId`     | AWS Access Key ID, not required if using EC2 IAM roles                          | `nil`    |
+| `ztbConfig.config.rdpRecord.s3.awsSecretAccessKey` | AWS Secret Access Key, not required if using EC2 IAM roles                      | `nil`    |
+| `ztbConfig.config.rdpRecord.existingSecret`        | Specifies an existing secret to be used for bastion, management AWS credentials | `nil`    |
 
 ### HPA parameters
 
