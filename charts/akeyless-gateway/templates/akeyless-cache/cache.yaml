@@ -28,10 +28,22 @@ spec:
       volumes:
       {{- include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 6 }}
       {{- end }}
-      {{-  include "cache.imagePullSecrets" . | indent 2 }}
+      {{- include "cache.imagePullSecrets" . | indent 2 }}
+      {{- if .Values.gateway.deployment.tolerations }}
+      tolerations:
+        {{- toYaml .Values.gateway.deployment.tolerations | nindent 8 }}
+      {{- end }}
+      {{- if .Values.gateway.deployment.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.gateway.deployment.nodeSelector | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ $deploymentName }}
           {{- include "akeyless-gateway.clusterCacheImage" . | nindent 10 }}
+          {{- if .Values.gateway.deployment.containerSecurityContext }}
+          securityContext:
+            {{- toYaml .Values.gateway.deployment.containerSecurityContext | nindent 12 }}
+          {{- end }}
           ports:
             - containerPort: 6379
               name: cache

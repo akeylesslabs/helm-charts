@@ -179,6 +179,12 @@ gateway:
     nodeSelector:
     #     iam.gke.io/gke-metadata-server-enabled: "true"
 
+    tolerations: []
+    # - key: "key"
+    #   operator: "Equal"
+    #   value: "value"
+    #   effect: "NoSchedule"
+
     securityContext:
       enabled: false
       fsGroup: 0
