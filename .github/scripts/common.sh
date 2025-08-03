@@ -127,20 +127,54 @@ update_chart_field() {
   
   if command -v yq >/dev/null 2>&1; then
     # Use yq for YAML-aware operations
-    # Check if field exists first
-    local field_exists=$(yq e ".$field // .annotations.$field" "$chart_dir/Chart.yaml" 2>/dev/null)
-    if [[ -n "$field_exists" ]] && [[ "$field_exists" != "null" ]]; then
-      # Try to update root level first, then annotations if needed
+    # Check if field exists first and determine its location
+    local root_field_exists=$(yq e ".$field" "$chart_dir/Chart.yaml" 2>/dev/null)
+    local annotation_field_exists=$(yq e ".annotations.$field" "$chart_dir/Chart.yaml" 2>/dev/null)
+    
+    # Only proceed if the field actually exists (not null or empty)
+    if [[ -n "$root_field_exists" ]] && [[ "$root_field_exists" != "null" ]]; then
+      # Field exists at root level - update only existing field
       if yq e ".$field = \"$new_value\"" "$chart_dir/Chart.yaml" > "$chart_dir/Chart.yaml.tmp" 2>/dev/null; then
         mv "$chart_dir/Chart.yaml.tmp" "$chart_dir/Chart.yaml"
         field_found=true
-      elif yq e ".annotations.$field = \"$new_value\"" "$chart_dir/Chart.yaml" > "$chart_dir/Chart.yaml.tmp" 2>/dev/null; then
+      fi
+    elif [[ -n "$annotation_field_exists" ]] && [[ "$annotation_field_exists" != "null" ]]; then
+      # Field exists in annotations - update only existing field
+      if yq e ".annotations.$field = \"$new_value\"" "$chart_dir/Chart.yaml" > "$chart_dir/Chart.yaml.tmp" 2>/dev/null; then
         mv "$chart_dir/Chart.yaml.tmp" "$chart_dir/Chart.yaml"
         field_found=true
       fi
+    else
+      # Field doesn't exist anywhere - don't create it
+      die "Field '$field' does not exist in $chart_dir/Chart.yaml. Cannot create new fields."
     fi
   else
     # Fallback to awk for environments without yq
+    # First check if field exists before attempting update
+    local field_exists_check=$(awk -v f="$field" '
+      # Track if we are in annotations section
+      /^annotations:/ { in_annotations = 1; next }
+      /^[^ ]/ && !/^annotations:/ { in_annotations = 0 }
+      
+      # Match root level field (not indented, not in annotations)
+      /^[^ ]/ && $1 == f":" && !in_annotations { 
+        print "root"; 
+        exit 
+      }
+      
+      # Match annotation field (indented, in annotations section)
+      in_annotations && /^[[:space:]]+[^[:space:]]/ && $1 == f":" { 
+        print "annotation"; 
+        exit 
+      }
+    ' "$chart_dir/Chart.yaml")
+    
+    if [[ -z "$field_exists_check" ]]; then
+      # Field doesn't exist anywhere - don't create it
+      die "Field '$field' does not exist in $chart_dir/Chart.yaml. Cannot create new fields."
+    fi
+    
+    # Now update the existing field
     awk -v field="$field" -v new_val="$new_value" '
       # Track if we are in annotations section
       /^annotations:/ { in_annotations = 1; next }

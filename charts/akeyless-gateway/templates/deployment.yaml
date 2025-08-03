@@ -47,7 +47,11 @@ spec:
       serviceAccountName: {{ include "akeyless-gateway.getServiceAccountName" . }}
       {{- if .Values.gateway.deployment.nodeSelector }}
       nodeSelector:
-      {{ toYaml .Values.gateway.deployment.nodeSelector | indent 4 }}
+        {{- toYaml .Values.gateway.deployment.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if .Values.gateway.deployment.tolerations }}
+      tolerations:
+        {{- toYaml .Values.gateway.deployment.tolerations | nindent 8 }}
       {{- end }}
       {{- include "akeyless-gateway.imagePullSecrets" . | indent 2 }}
       {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true) (.Values.gateway.secretsStore.enabled)}}
