@@ -51,7 +51,7 @@ Create the name of the service account to use
     {{- end }}
 {{- end }}
 
-{{- define "deyploymant.type" -}}
+{{- define "deployment.type" -}}
     {{- if .Values.deploymentType -}}
         {{- if eq .Values.deploymentType "DaemonSet" -}}
             {{- printf "DaemonSet" -}}
@@ -61,4 +61,23 @@ Create the name of the service account to use
     {{- else -}}
         {{- printf "Deployment" -}}
     {{- end -}}
+{{- end -}}
+
+{{/*
+Common webhook labels
+*/}}
+{{- define "vault-secrets-webhook.labels" -}}
+app: {{ template "vault-secrets-webhook.fullname" . }}
+chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+release: {{ .Release.Name }}
+heritage: {{ .Release.Service }}
+component: mutating-webhook
+{{- end -}}
+
+{{/*
+Selector webhook labels
+*/}}
+{{- define "vault-secrets-webhook.selectorLabels" -}}
+app: {{ template "vault-secrets-webhook.fullname" . }}
+release: {{ .Release.Name }}
 {{- end -}}
