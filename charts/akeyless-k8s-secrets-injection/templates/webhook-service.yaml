@@ -3,11 +3,7 @@ kind: Service
 metadata:
   name: {{ template "vault-secrets-webhook.fullname" . }}
   labels:
-    app: {{ template "vault-secrets-webhook.fullname" . }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-    component: mutating-webhook
+    {{- include "vault-secrets-webhook.labels" . | nindent 4 }}
     {{- if .Values.service.labels }}
       {{- toYaml .Values.service.labels | nindent 4 }}
     {{- end }}
@@ -25,5 +21,4 @@ spec:
       name: akls-metrics
   {{- end }}
   selector:
-    app: {{ template "vault-secrets-webhook.name" . }}
-    release: {{ .Release.Name }}
+    {{- include "vault-secrets-webhook.selectorLabels" . | nindent 4 }}
