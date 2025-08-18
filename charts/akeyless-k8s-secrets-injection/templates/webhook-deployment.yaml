@@ -13,12 +13,12 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      app: {{ template "vault-secrets-webhook.name" . }}
+      app: {{ template "vault-secrets-webhook.fullname" . }}
       release: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app: {{ template "vault-secrets-webhook.name" . }}
+        app: {{ template "vault-secrets-webhook.fullname" . }}
         release: {{ .Release.Name }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/apiservice-webhook.yaml") . | sha256sum }}

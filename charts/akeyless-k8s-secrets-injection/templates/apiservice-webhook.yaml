@@ -23,7 +23,7 @@ items:
   metadata:
     name: {{ template "vault-secrets-webhook.fullname" . }}
   webhooks:
-  - name: pods.{{ template "vault-secrets-webhook.name" . }}.admission
+  - name: pods.{{ template "vault-secrets-webhook.fullname" . }}.admission
     clientConfig:
       service:
         namespace: {{ .Release.Namespace }}
