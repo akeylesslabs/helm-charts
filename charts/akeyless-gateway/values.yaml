@@ -131,35 +131,15 @@ cacheHA:
 
   sentinel:
     enabled: true
+    image:
+      repository: bitnamilegacy/redis-sentinel  # Changed from bitnami/redis-sentinel
 
   ## Required for cacheHA, a storage class with the ReadWriteOnce access mode
   global:
     defaultStorageClass: ""
     security:
       allowInsecureImages: true  # Required for custom image repositories
-  
-  metrics:
-    image:
-      repository: bitnamilegacy/redis-exporter  # Changed from bitnami/redis-exporter
-  
-  # Redis Sentinel
-  sentinel:
-    image:
-      repository: bitnamilegacy/redis-sentinel  # Changed from bitnami/redis-sentinel
-  
-  # Volume Permissions init container
-  volumePermissions:
-    image:
-      repository: bitnamilegacy/os-shell  # Changed from bitnami/os-shell
-  
-  sysctl:
-    image:
-      repository: bitnamilegacy/os-shell  # Changed from bitnami/os-shell
-  
-  kubectl:
-    image:
-      repository: bitnamilegacy/kubectl  # Changed from bitnami/kubectl
-  
+    
   image:
     repository: bitnamilegacy/redis  # Changed from bitnami/redis
 
