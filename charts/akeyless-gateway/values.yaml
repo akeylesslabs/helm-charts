@@ -138,9 +138,6 @@ cacheHA:
     security:
       allowInsecureImages: true  # Required for custom image repositories
   
-  rbac:
-    create: true
-
   metrics:
     image:
       repository: bitnamilegacy/redis-exporter  # Changed from bitnami/redis-exporter
