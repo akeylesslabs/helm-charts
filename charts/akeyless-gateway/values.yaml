@@ -114,7 +114,7 @@ globalConfig:
         memory: 256Mi
 
 cacheHA:
-  enabled: true
+  enabled: false
   nameOverride: "cache-ha"
 
   ## In case cacheHA is enabled in the Gateway, and the encryptionKeyExistingSecret parameter has a value
