@@ -114,7 +114,7 @@ globalConfig:
         memory: 256Mi
 
 cacheHA:
-  enabled: false
+  enabled: true
   nameOverride: "cache-ha"
 
   ## In case cacheHA is enabled in the Gateway, and the encryptionKeyExistingSecret parameter has a value
@@ -135,6 +135,37 @@ cacheHA:
   ## Required for cacheHA, a storage class with the ReadWriteOnce access mode
   global:
     defaultStorageClass: ""
+    security:
+      allowInsecureImages: true  # Required for custom image repositories
+  
+  rbac:
+    create: true
+
+  metrics:
+    image:
+      repository: bitnamilegacy/redis-exporter  # Changed from bitnami/redis-exporter
+  
+  # Redis Sentinel
+  sentinel:
+    image:
+      repository: bitnamilegacy/redis-sentinel  # Changed from bitnami/redis-sentinel
+  
+  # Volume Permissions init container
+  volumePermissions:
+    image:
+      repository: bitnamilegacy/os-shell  # Changed from bitnami/os-shell
+  
+  sysctl:
+    image:
+      repository: bitnamilegacy/os-shell  # Changed from bitnami/os-shell
+  
+  kubectl:
+    image:
+      repository: bitnamilegacy/kubectl  # Changed from bitnami/kubectl
+  
+  image:
+    repository: bitnamilegacy/redis  # Changed from bitnami/redis
+
 
   master:
     pdb:
