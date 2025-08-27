@@ -182,7 +182,7 @@ Get the Ingress TLS secret.
     image: "{{ .Values.redisStorage.image.repository }}:{{ .Values.redisStorage.image.tag }}"
     imagePullPolicy: {{ .Values.redisStorage.image.pullPolicy }}
   {{- else }}
-    image: "docker.io/bitnami/redis:6.2"
+    image: "docker.io/bitnamilegacy/redis:6.2"
     imagePullPolicy: "Always"
   {{- end -}}
 {{- end -}}

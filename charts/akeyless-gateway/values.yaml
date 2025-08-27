@@ -131,10 +131,18 @@ cacheHA:
 
   sentinel:
     enabled: true
+    image:
+      repository: bitnamilegacy/redis-sentinel  # Changed from bitnami/redis-sentinel
 
   ## Required for cacheHA, a storage class with the ReadWriteOnce access mode
   global:
     defaultStorageClass: ""
+    security:
+      allowInsecureImages: true  # Required for custom image repositories
+    
+  image:
+    repository: bitnamilegacy/redis  # Changed from bitnami/redis
+
 
   master:
     pdb:
