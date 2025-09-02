@@ -183,7 +183,7 @@ gateway:
     
     ## Pod Topology Spread Constraints
     ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
-
+    topologySpreadConstraints: []
     nodeSelector:
     #     iam.gke.io/gke-metadata-server-enabled: "true"
 
@@ -392,6 +392,12 @@ sra:
     deployment:
       annotations: {}
       labels: {}
+      nodeSelector:
+      tolerations: []
+      affinity:
+        enabled: false
+        data:
+      topologySpreadConstraints: []
     replicaCount: 1
 
     # Example for enabling pod-level securityContext for volume permissions:

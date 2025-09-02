@@ -40,9 +40,21 @@ spec:
       {{- end }}
       {{- end }}
       serviceAccountName: {{ include "akeyless-gateway.getServiceAccountName" . }}
-      {{- if .Values.sra.sshConfig.nodeSelector }}
+      {{- if .Values.sra.webConfig.deployment.nodeSelector }}
       nodeSelector:
-      {{ toYaml .Values.sra.sshConfig.nodeSelector | indent 4 }}
+        {{- toYaml .Values.sra.webConfig.deployment.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if .Values.sra.webConfig.deployment.tolerations }}
+      tolerations:
+        {{- toYaml .Values.sra.webConfig.deployment.tolerations | nindent 8 }}
+      {{- end }}
+      {{- if and .Values.sra.webConfig.deployment.affinity .Values.sra.webConfig.deployment.affinity.enabled }}
+      affinity:
+        {{- toYaml .Values.sra.webConfig.deployment.affinity.data | nindent 8 }}
+      {{- if .Values.sra.webConfig.deployment.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml .Values.sra.webConfig.deployment.topologySpreadConstraints | nindent 8 }}
+      {{- end }}
       {{- end }}
       volumes:
         {{- range .Values.sra.webConfig.persistence.volumes }}
