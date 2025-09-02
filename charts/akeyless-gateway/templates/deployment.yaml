@@ -117,7 +117,7 @@ spec:
           {{- end }}
           ports:
             - name: gateway
-              containerPort: {{ .Values.gateway.service.port }}
+              containerPort: 8000
             - name: internal-gw-api
               containerPort: 8080
           {{- if .Values.gateway.service.kmip.enabled }}
