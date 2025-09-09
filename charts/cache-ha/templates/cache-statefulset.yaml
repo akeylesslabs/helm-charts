@@ -6,10 +6,10 @@ SPDX-License-Identifier: Apache-2.0
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "cache-ha.fullname" . }}
+  name: {{ include "cache-ha.fullname" . }}-cache
   namespace: {{ include "cache-ha.namespace" . }}
   labels: {{- include "cache-ha.labels" . | nindent 4 }}
-    app.kubernetes.io/component: node
+    app.kubernetes.io/component: cache
   {{- if .Values.commonAnnotations }}
   annotations: {{- include "cache-ha.commonAnnotations" . | nindent 4 }}
   {{- end }}
@@ -18,7 +18,7 @@ spec:
   revisionHistoryLimit: {{ .Values.cache.revisionHistoryLimit | default 10 }}
   selector:
     matchLabels: {{- include "cache-ha.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: node
+      app.kubernetes.io/component: cache
   serviceName: {{ include "cache-ha.headlessServiceName" . }}
   {{- if .Values.cache.updateStrategy }}
   updateStrategy: {{- toYaml .Values.cache.updateStrategy | nindent 4 }}
@@ -29,7 +29,7 @@ spec:
   template:
     metadata:
       labels: {{- include "cache-ha.labels" . | nindent 8 }}
-        app.kubernetes.io/component: node
+        app.kubernetes.io/component: cache
       {{- if .Values.cache.podAnnotations }}
       annotations: {{- toYaml .Values.cache.podAnnotations | nindent 8 }}
       {{- end }}
@@ -128,6 +128,14 @@ spec:
                   name: {{ include "cache-ha.secretName" . }}
                   key: {{ include "cache-ha.secretPasswordKey" . }}
             {{- end }}
+            {{- if .Values.tls.enabled }}
+            - name: REDIS_TLS_CERT_FILE
+              value: {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }}
+            - name: REDIS_TLS_KEY_FILE
+              value: {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }}
+            - name: REDIS_TLS_CA_FILE
+              value: {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }}
+            {{- end }}
             {{- if .Values.cache.extraEnvVars }}
             {{- toYaml .Values.cache.extraEnvVars | nindent 12 }}
             {{- end }}
@@ -156,7 +164,7 @@ spec:
               command:
                 - /bin/sh
                 - -c
-                - timeout {{ .Values.healthCheck.timeoutSeconds }} redis-cli --tls --cert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --key {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --cacert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} -p {{ .Values.cache.ports.cache }} ping
+                - timeout {{ .Values.healthCheck.timeoutSeconds }} redis-cli --tls -p {{ .Values.cache.ports.cache }} ping
             {{- else }}
             tcpSocket:
               port: cache
@@ -178,7 +186,7 @@ spec:
               command:
                 - /bin/sh
                 - -c
-                - timeout {{ .Values.healthCheck.timeoutSeconds }} redis-cli --tls --cert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --key {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --cacert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} -p {{ .Values.cache.ports.cache }} ping
+                - timeout {{ .Values.healthCheck.timeoutSeconds }} redis-cli --tls -p {{ .Values.cache.ports.cache }} ping
             {{- else }}
             tcpSocket:
               port: cache
@@ -200,7 +208,7 @@ spec:
               command:
                 - /bin/sh
                 - -c
-                - timeout {{ .Values.healthCheck.timeoutSeconds }} redis-cli --tls --cert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --key {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --cacert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} -p {{ .Values.cache.ports.cache }} ping
+                - timeout {{ .Values.healthCheck.timeoutSeconds }} redis-cli --tls -p {{ .Values.cache.ports.cache }} ping
             {{- else }}
             tcpSocket:
               port: cache
@@ -210,101 +218,6 @@ spec:
             timeoutSeconds: {{ .Values.cache.startupProbe.timeoutSeconds }}
             successThreshold: {{ .Values.cache.startupProbe.successThreshold }}
             failureThreshold: {{ .Values.cache.startupProbe.failureThreshold }}
-            {{- end }}
-          {{- end }}
-          {{- if .Values.cache.resources }}
-          resources: {{- toYaml .Values.cache.resources | nindent 12 }}
-          {{- end }}
-          volumeMounts:
-            - name: cache-data
-              mountPath: /data
-            - name: scripts
-              mountPath: /scripts
-            {{- if .Values.tls.enabled }}
-            - name: tls-certs
-              mountPath: {{ .Values.paths.tlsDir }}
-              readOnly: true
-            {{- end }}
-            {{- if .Values.cache.extraVolumeMounts }}
-            {{- toYaml .Values.cache.extraVolumeMounts | nindent 12 }}
-            {{- end }}
-        - name: sentinel
-          image: {{ include "cache-ha.cache.image" . }}
-          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
-          {{- if and .Values.cache.containerSecurityContext .Values.cache.containerSecurityContext.enabled }}
-          securityContext: {{- toYaml .Values.cache.containerSecurityContext | nindent 12 }}
-          {{- end }}
-          {{- if .Values.cache.lifecycleHooks }}
-          lifecycle: {{- toYaml .Values.cache.lifecycleHooks | nindent 12 }}
-          {{- else }}
-          lifecycle:
-            preStop:
-              exec:
-                command:
-                  - /bin/sh
-                  - -ec
-                  - /scripts/prestop-sentinel.sh
-          {{- end }}
-          command:
-            - /bin/sh
-            - -ec
-            - /scripts/start-sentinel.sh
-          env:
-            - name: POD_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-            - name: POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-            - name: CACHE_MASTER_SET
-              value: {{ .Values.sentinel.masterSet | quote }}
-            - name: CACHE_QUORUM
-              value: {{ .Values.sentinel.quorum | quote }}
-            - name: CACHE_DOWN_AFTER_MS
-              value: {{ .Values.sentinel.downAfterMilliseconds | quote }}
-            - name: CACHE_FAILOVER_TIMEOUT
-              value: {{ .Values.sentinel.failoverTimeout | quote }}
-            - name: CACHE_PARALLEL_SYNCS
-              value: {{ .Values.sentinel.parallelSyncs | quote }}
-            {{- if .Values.auth.enabled }}
-            - name: REDIS_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "cache-ha.secretName" . }}
-                  key: {{ include "cache-ha.secretPasswordKey" . }}
-            {{- end }}
-          ports:
-            - name: sentinel-port
-              containerPort: {{ .Values.cache.ports.sentinel }}
-              protocol: TCP
-          {{- if .Values.cache.livenessProbe.enabled }}
-          livenessProbe:
-            {{- if .Values.cache.livenessProbe.customLivenessProbe }}
-            {{- toYaml .Values.cache.livenessProbe.customLivenessProbe | nindent 12 }}
-            {{- else }}
-            tcpSocket:
-              port: sentinel-port
-            initialDelaySeconds: {{ .Values.cache.livenessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.cache.livenessProbe.periodSeconds }}
-            timeoutSeconds: {{ .Values.cache.livenessProbe.timeoutSeconds }}
-            successThreshold: {{ .Values.cache.livenessProbe.successThreshold }}
-            failureThreshold: {{ .Values.cache.livenessProbe.failureThreshold }}
-            {{- end }}
-          {{- end }}
-          {{- if .Values.cache.readinessProbe.enabled }}
-          readinessProbe:
-            {{- if .Values.cache.readinessProbe.customReadinessProbe }}
-            {{- toYaml .Values.cache.readinessProbe.customReadinessProbe | nindent 12 }}
-            {{- else }}
-            tcpSocket:
-              port: sentinel-port
-            initialDelaySeconds: {{ .Values.cache.readinessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.cache.readinessProbe.periodSeconds }}
-            timeoutSeconds: {{ .Values.cache.readinessProbe.timeoutSeconds }}
-            successThreshold: {{ .Values.cache.readinessProbe.successThreshold }}
-            failureThreshold: {{ .Values.cache.readinessProbe.failureThreshold }}
             {{- end }}
           {{- end }}
           {{- if .Values.cache.resources }}
@@ -355,7 +268,7 @@ spec:
       metadata:
         name: cache-data
         labels: {{- include "cache-ha.labels" . | nindent 10 }}
-          app.kubernetes.io/component: node
+          app.kubernetes.io/component: cache
         {{- if .Values.cache.persistence.annotations }}
         annotations: {{- toYaml .Values.cache.persistence.annotations | nindent 10 }}
         {{- end }}

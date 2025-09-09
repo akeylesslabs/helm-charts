@@ -156,7 +156,14 @@ Cache configmap name
 Cache headless service name
 */}}
 {{- define "cache-ha.headlessServiceName" -}}
-{{- printf "%s-headless" (include "cache-ha.fullname" .) -}}
+{{- printf "%s-cache-headless" (include "cache-ha.fullname" .) -}}
+{{- end -}}
+
+{{/*
+Cache sentinel headless service name
+*/}}
+{{- define "cache-ha.sentinelHeadlessServiceName" -}}
+{{- printf "%s-sentinel-headless" (include "cache-ha.fullname" .) -}}
 {{- end -}}
 
 {{/*

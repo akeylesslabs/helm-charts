@@ -1,0 +1,45 @@
+{{- /*
+Copyright Akeyless, Inc. All Rights Reserved.
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cache-ha.fullname" . }}-cache
+  namespace: {{ include "cache-ha.namespace" . }}
+  labels: {{- include "cache-ha.labels" . | nindent 4 }}
+    app.kubernetes.io/component: cache
+  {{- if .Values.service.annotations }}
+  annotations: {{- toYaml .Values.service.annotations | nindent 4 }}
+  {{- end }}
+  {{- if .Values.commonAnnotations }}
+  {{- include "cache-ha.commonAnnotations" . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  {{- if .Values.service.clusterIP }}
+  clusterIP: {{ .Values.service.clusterIP | quote }}
+  {{- end }}
+  {{- if .Values.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.service.loadBalancerIP | quote }}
+  {{- end }}
+  {{- if .Values.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges:
+    {{- range .Values.service.loadBalancerSourceRanges }}
+    - {{ . | quote }}
+    {{- end }}
+  {{- end }}
+  {{- if .Values.service.sessionAffinity }}
+  sessionAffinity: {{ .Values.service.sessionAffinity | quote }}
+  {{- end }}
+  {{- if .Values.service.sessionAffinityConfig }}
+  sessionAffinityConfig: {{- toYaml .Values.service.sessionAffinityConfig | nindent 4 }}
+  {{- end }}
+  ports:
+    - name: cache
+      port: {{ .Values.service.ports.cache }}
+      targetPort: cache
+      protocol: TCP
+  selector: {{- include "cache-ha.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: cache

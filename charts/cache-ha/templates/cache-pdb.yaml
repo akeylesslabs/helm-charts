@@ -1,25 +1,27 @@
-{{/*
+{{- /*
 Copyright Akeyless, Inc. All Rights Reserved.
-SPDX-License-Identifier: APACHE-2.0
+SPDX-License-Identifier: Apache-2.0
 */}}
 
 {{- if .Values.cache.pdb.enabled }}
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: {{ include "cache-ha.fullname" . }}
+  name: {{ include "cache-ha.fullname" . }}-cache
   namespace: {{ include "cache-ha.namespace" . }}
   labels: {{- include "cache-ha.labels" . | nindent 4 }}
+    app.kubernetes.io/component: cache
   {{- if .Values.commonAnnotations }}
-  annotations: {{- toYaml .Values.commonAnnotations | nindent 4 }}
+  annotations: {{- include "cache-ha.commonAnnotations" . | nindent 4 }}
   {{- end }}
 spec:
   {{- if .Values.cache.pdb.minAvailable }}
   minAvailable: {{ .Values.cache.pdb.minAvailable }}
-  {{- else }}
+  {{- end }}
+  {{- if .Values.cache.pdb.maxUnavailable }}
   maxUnavailable: {{ .Values.cache.pdb.maxUnavailable }}
   {{- end }}
   selector:
     matchLabels: {{- include "cache-ha.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: node
+      app.kubernetes.io/component: cache
 {{- end }}

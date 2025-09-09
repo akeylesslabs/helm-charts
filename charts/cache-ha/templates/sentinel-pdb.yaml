@@ -1,0 +1,31 @@
+{{- /*
+Copyright Akeyless, Inc. All Rights Reserved.
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+{{- if .Values.sentinel.pdb.enabled | default .Values.cache.pdb.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "cache-ha.fullname" . }}-sentinel
+  namespace: {{ include "cache-ha.namespace" . }}
+  labels: {{- include "cache-ha.labels" . | nindent 4 }}
+    app.kubernetes.io/component: sentinel
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "cache-ha.commonAnnotations" . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.sentinel.pdb.minAvailable }}
+  minAvailable: {{ .Values.sentinel.pdb.minAvailable }}
+  {{- else if .Values.cache.pdb.minAvailable }}
+  minAvailable: {{ .Values.cache.pdb.minAvailable }}
+  {{- end }}
+  {{- if .Values.sentinel.pdb.maxUnavailable }}
+  maxUnavailable: {{ .Values.sentinel.pdb.maxUnavailable }}
+  {{- else if .Values.cache.pdb.maxUnavailable }}
+  maxUnavailable: {{ .Values.cache.pdb.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels: {{- include "cache-ha.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: sentinel
+{{- end }}
