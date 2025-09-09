@@ -18,25 +18,25 @@ data:
     set -e
     set -u
 
-    # Redis configuration
-    REDIS_PORT="{{ .Values.cache.ports.cache }}"
-    REDIS_BIND="0.0.0.0"
-    REDIS_APPENDONLY="yes"
-    REDIS_PROTECTED_MODE="no"
+    # Cache configuration
+    CACHE_PORT="{{ .Values.cache.ports.cache }}"
+    CACHE_BIND="0.0.0.0"
+    CACHE_APPENDONLY="yes"
+    CACHE_PROTECTED_MODE="no"
 
     # Get pod information
     POD_NAME="${POD_NAME:-$(hostname)}"
     POD_NAMESPACE="${POD_NAMESPACE:-default}"
 
-    # Create Redis configuration directory
-    mkdir -p /etc/redis
+    # Create cache configuration directory
+    mkdir -p {{ .Values.paths.configDir }}
     
-    # Create Redis configuration
-    cat > /etc/redis/redis.conf << EOF
-    port {{ .Values.cache.ports.cache }}
-    bind ${REDIS_BIND}
-    appendonly ${REDIS_APPENDONLY}
-    protected-mode ${REDIS_PROTECTED_MODE}
+    # Create cache configuration
+    cat > {{ .Values.paths.configDir }}/{{ .Values.paths.configFile }} << EOF
+    # User-supplied common configuration
+    bind ${CACHE_BIND}
+    appendonly ${CACHE_APPENDONLY}
+    protected-mode ${CACHE_PROTECTED_MODE}
     # Configure replica announcement to use hostname only
     replica-announce-ip ${POD_NAME}.{{ include "cache-ha.fullname" . }}-headless.${POD_NAMESPACE}.svc.cluster.local
     replica-announce-port {{ .Values.cache.ports.cache }}
@@ -48,25 +48,27 @@ data:
     {{ . }}
     {{- end }}
     {{- end }}
+    # End of common configuration
     EOF
 
-    # Start Redis with TLS if enabled
-    echo "Starting Redis server on port ${REDIS_PORT}"
+    # Start cache with TLS if enabled (following Bitnami approach)
+    echo "Starting cache server on port ${CACHE_PORT}"
     {{- if .Values.tls.enabled }}
-    # For Sentinel compatibility, use plain port for Sentinel and TLS port for clients
-    redis-server /etc/redis/redis.conf --port {{ .Values.cache.ports.cache }} --tls-port {{ .Values.cache.ports.cacheTls }} --tls-cert-file /etc/redis/tls/tls.crt --tls-key-file /etc/redis/tls/tls.key --tls-ca-cert-file /etc/redis/tls/ca.crt &
+    # Start Redis with TLS-only mode using command line args (Bitnami approach)
+    redis-server --port 0 --tls-port {{ .Values.cache.ports.cache }} --tls-cert-file {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --tls-key-file {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --tls-ca-cert-file {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} --tls-replication yes{{- if .Values.tls.authClients }} --tls-auth-clients yes{{- end }} --include {{ .Values.paths.configDir }}/{{ .Values.paths.configFile }} &
     {{- else }}
-    redis-server /etc/redis/redis.conf &
+    # Start Redis in plain mode
+    redis-server --port {{ .Values.cache.ports.cache }} --include {{ .Values.paths.configDir }}/{{ .Values.paths.configFile }} &
     {{- end }}
-    
-    # Wait for Redis to start
+
+    # Wait for cache to start
     sleep 5
     
     # Let Sentinel handle master election - don't configure replication here
     # Sentinel will automatically configure master-replica relationships
-    echo "Redis started - Sentinel will configure replication automatically"
+    echo "Cache started - Sentinel will configure replication automatically"
     
-    # Wait for Redis to finish
+    # Wait for cache to finish
     wait
 
   start-sentinel.sh: |
@@ -87,15 +89,15 @@ data:
     POD_NAME="${POD_NAME:-$(hostname)}"
     POD_NAMESPACE="${POD_NAMESPACE:-default}"
     
-    # Redis Sentinel approach: Monitor all Redis instances and let Sentinel elect master
+    # Cache Sentinel approach: Monitor all cache instances and let Sentinel elect master
     # Start by monitoring the first pod as potential master
     MASTER_HOST="{{ include "cache-ha.fullname" . }}-0.{{ include "cache-ha.fullname" . }}-headless.${POD_NAMESPACE}.svc.cluster.local"
 
     # Create Sentinel configuration directory
-    mkdir -p /etc/redis
+    mkdir -p {{ .Values.paths.configDir }}
     
     # Create Sentinel configuration
-    cat > /etc/redis/sentinel.conf << EOF
+    cat > {{ .Values.paths.configDir }}/{{ .Values.paths.sentinelConfigFile }} << EOF
     port ${SENTINEL_PORT}
     bind ${SENTINEL_BIND}
     sentinel announce-hostnames yes
@@ -114,12 +116,21 @@ data:
     # Add known replicas for failover (dynamic based on replica count)
     REPLICA_COUNT="{{ .Values.cache.replicaCount }}"
     for i in $(seq 1 $((REPLICA_COUNT - 1))); do
-        echo "sentinel known-replica ${MASTER_SET} {{ include "cache-ha.fullname" . }}-${i}.{{ include "cache-ha.fullname" . }}-headless.${POD_NAMESPACE}.svc.cluster.local {{ .Values.cache.ports.cache }}" >> /etc/redis/sentinel.conf
+        echo "sentinel known-replica ${MASTER_SET} {{ include "cache-ha.fullname" . }}-${i}.{{ include "cache-ha.fullname" . }}-headless.${POD_NAMESPACE}.svc.cluster.local {{ .Values.cache.ports.cache }}" >> {{ .Values.paths.configDir }}/{{ .Values.paths.sentinelConfigFile }}
     done
 
     # Start Sentinel
-    echo "Starting Redis Sentinel on port ${SENTINEL_PORT}"
-    exec redis-sentinel /etc/redis/sentinel.conf
+    echo "Starting Cache Sentinel on port ${SENTINEL_PORT}"
+    {{- if .Values.tls.enabled }}
+    # Build TLS arguments for sh (POSIX compliant)
+    TLS_ARGS="--port 0 --tls-port {{ .Values.cache.ports.sentinel }} --tls-cert-file {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --tls-key-file {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --tls-ca-cert-file {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} --tls-replication yes"
+    {{- if .Values.tls.authClients }}
+    TLS_ARGS="${TLS_ARGS} --tls-auth-clients yes"
+    {{- end }}
+    exec redis-server {{ .Values.paths.configDir }}/{{ .Values.paths.sentinelConfigFile }} ${TLS_ARGS} --sentinel
+    {{- else }}
+    exec redis-sentinel {{ .Values.paths.configDir }}/{{ .Values.paths.sentinelConfigFile }}
+    {{- end }}
 
   prestop-cache.sh: |
     #!/bin/sh
@@ -127,7 +138,7 @@ data:
     set -u
 
     # Graceful shutdown
-    echo "Stopping Redis server gracefully"
+    echo "Stopping cache server gracefully"
     redis-cli -p {{ .Values.cache.ports.cache }} SHUTDOWN SAVE
 
   prestop-sentinel.sh: |
@@ -136,5 +147,5 @@ data:
     set -u
 
     # Graceful shutdown
-    echo "Stopping Redis Sentinel gracefully"
+    echo "Stopping Cache Sentinel gracefully"
     redis-cli -p {{ .Values.cache.ports.sentinel }} SHUTDOWN

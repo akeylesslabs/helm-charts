@@ -82,7 +82,7 @@ spec:
       {{- end }}
       containers:
         - name: cache
-          image: {{ include "cache-ha.redis.image" . }}
+          image: {{ include "cache-ha.cache.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
           {{- if and .Values.cache.containerSecurityContext .Values.cache.containerSecurityContext.enabled }}
           securityContext: {{- toYaml .Values.cache.containerSecurityContext | nindent 12 }}
@@ -146,18 +146,21 @@ spec:
             - name: cache
               containerPort: {{ .Values.cache.ports.cache }}
               protocol: TCP
-            {{- if .Values.tls.enabled }}
-            - name: cache-tls
-              containerPort: {{ .Values.cache.ports.cacheTls }}
-              protocol: TCP
-            {{- end }}
           {{- if .Values.cache.livenessProbe.enabled }}
           livenessProbe:
             {{- if .Values.cache.livenessProbe.customLivenessProbe }}
             {{- toYaml .Values.cache.livenessProbe.customLivenessProbe | nindent 12 }}
             {{- else }}
+            {{- if .Values.tls.enabled }}
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - timeout {{ .Values.healthCheck.timeoutSeconds }} redis-cli --tls --cert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --key {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --cacert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} -p {{ .Values.cache.ports.cache }} ping
+            {{- else }}
             tcpSocket:
               port: cache
+            {{- end }}
             initialDelaySeconds: {{ .Values.cache.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.cache.livenessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.cache.livenessProbe.timeoutSeconds }}
@@ -170,8 +173,16 @@ spec:
             {{- if .Values.cache.readinessProbe.customReadinessProbe }}
             {{- toYaml .Values.cache.readinessProbe.customReadinessProbe | nindent 12 }}
             {{- else }}
+            {{- if .Values.tls.enabled }}
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - timeout {{ .Values.healthCheck.timeoutSeconds }} redis-cli --tls --cert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --key {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --cacert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} -p {{ .Values.cache.ports.cache }} ping
+            {{- else }}
             tcpSocket:
               port: cache
+            {{- end }}
             initialDelaySeconds: {{ .Values.cache.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.cache.readinessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.cache.readinessProbe.timeoutSeconds }}
@@ -184,8 +195,16 @@ spec:
             {{- if .Values.cache.startupProbe.customStartupProbe }}
             {{- toYaml .Values.cache.startupProbe.customStartupProbe | nindent 12 }}
             {{- else }}
+            {{- if .Values.tls.enabled }}
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - timeout {{ .Values.healthCheck.timeoutSeconds }} redis-cli --tls --cert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --key {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --cacert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} -p {{ .Values.cache.ports.cache }} ping
+            {{- else }}
             tcpSocket:
               port: cache
+            {{- end }}
             initialDelaySeconds: {{ .Values.cache.startupProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.cache.startupProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.cache.startupProbe.timeoutSeconds }}
@@ -203,14 +222,14 @@ spec:
               mountPath: /scripts
             {{- if .Values.tls.enabled }}
             - name: tls-certs
-              mountPath: /etc/redis/tls
+              mountPath: {{ .Values.paths.tlsDir }}
               readOnly: true
             {{- end }}
             {{- if .Values.cache.extraVolumeMounts }}
             {{- toYaml .Values.cache.extraVolumeMounts | nindent 12 }}
             {{- end }}
         - name: sentinel
-          image: {{ include "cache-ha.redis.image" . }}
+          image: {{ include "cache-ha.cache.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
           {{- if and .Values.cache.containerSecurityContext .Values.cache.containerSecurityContext.enabled }}
           securityContext: {{- toYaml .Values.cache.containerSecurityContext | nindent 12 }}
@@ -296,6 +315,11 @@ spec:
               mountPath: /data
             - name: scripts
               mountPath: /scripts
+            {{- if .Values.tls.enabled }}
+            - name: tls-certs
+              mountPath: {{ .Values.paths.tlsDir }}
+              readOnly: true
+            {{- end }}
             {{- if .Values.cache.extraVolumeMounts }}
             {{- toYaml .Values.cache.extraVolumeMounts | nindent 12 }}
             {{- end }}

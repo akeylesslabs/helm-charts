@@ -40,7 +40,6 @@ cache:
   # Ports
   ports:
     cache: 6379
-    cacheTls: 6380
     sentinel: 26379
   
   # Pod configuration
@@ -156,7 +155,22 @@ auth:
 # TLS configuration
 tls:
   enabled: false
+  authClients: false
   existingSecret: ""
+
+# Paths configuration
+paths:
+  configDir: /etc/cache
+  configFile: cache.conf
+  sentinelConfigFile: sentinel.conf
+  tlsDir: /etc/cache/tls
+  tlsCertFile: tls.crt
+  tlsKeyFile: tls.key
+  tlsCaCertFile: ca.crt
+
+# Health check configuration
+healthCheck:
+  timeoutSeconds: 10
 
 # Service configuration
 service:

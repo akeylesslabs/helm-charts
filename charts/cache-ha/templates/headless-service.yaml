@@ -28,12 +28,6 @@ spec:
       port: {{ .Values.headless.service.ports.cache }}
       targetPort: cache
       protocol: TCP
-    {{- if .Values.tls.enabled }}
-    - name: cache-tls
-      port: {{ .Values.cache.ports.cacheTls }}
-      targetPort: cache-tls
-      protocol: TCP
-    {{- end }}
     - name: sentinel
       port: {{ .Values.headless.service.ports.sentinel }}
       targetPort: sentinel-port

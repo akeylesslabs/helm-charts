@@ -62,9 +62,9 @@ Create the name of the service account to use
 {{- end }}
 
 {{/*
-Cache image (using Redis as underlying engine)
+Cache image
 */}}
-{{- define "cache-ha.redis.image" -}}
+{{- define "cache-ha.cache.image" -}}
 {{- $registryName := .Values.image.registry -}}
 {{- $repositoryName := .Values.image.repository -}}
 {{- $tag := .Values.image.tag | default .Chart.AppVersion -}}
@@ -210,35 +210,35 @@ Cache sentinel configmap name
 
 
 {{/*
-Redis TLS cert file path
+Cache TLS cert file path
 */}}
 {{- define "cache-ha.tlsCert" -}}
-{{- printf "/opt/bitnami/redis/certs/tls.crt" -}}
+{{- printf "/etc/cache/certs/tls.crt" -}}
 {{- end -}}
 
 {{/*
-Redis TLS cert key file path
+Cache TLS cert key file path
 */}}
 {{- define "cache-ha.tlsCertKey" -}}
-{{- printf "/opt/bitnami/redis/certs/tls.key" -}}
+{{- printf "/etc/cache/certs/tls.key" -}}
 {{- end -}}
 
 {{/*
-Redis TLS CA cert file path
+Cache TLS CA cert file path
 */}}
 {{- define "cache-ha.tlsCACert" -}}
 {{- if .Values.tls.certCAFilename }}
-{{- printf "/opt/bitnami/redis/certs/%s" .Values.tls.certCAFilename -}}
+{{- printf "/etc/cache/certs/%s" .Values.tls.certCAFilename -}}
 {{- else -}}
-{{- printf "/opt/bitnami/redis/certs/ca.crt" -}}
+{{- printf "/etc/cache/certs/ca.crt" -}}
 {{- end -}}
 {{- end -}}
 
 {{/*
-Redis TLS DH params file path
+Cache TLS DH params file path
 */}}
 {{- define "cache-ha.tlsDHParams" -}}
-{{- printf "/opt/bitnami/redis/certs/%s" .Values.tls.dhParamsFilename -}}
+{{- printf "/etc/cache/certs/%s" .Values.tls.dhParamsFilename -}}
 {{- end -}}
 
 {{/*

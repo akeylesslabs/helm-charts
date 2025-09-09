@@ -1,6 +1,6 @@
 apiVersion: v2
 name: cache-ha
-description: Cache Sentinel High Availability based on Redis approach
+description: Cache Sentinel High Availability
 type: application
 version: 0.1.0
 appVersion: "8.2.1"
