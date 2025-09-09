@@ -1,0 +1,202 @@
+# Default values for cache-ha
+# Simple Cache Sentinel High Availability
+
+# Global settings
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  defaultStorageClass: ""
+
+# Image configuration
+image:
+  registry: docker.io
+  repository: redis
+  tag: 8.2.1-alpine3.22
+  pullPolicy: IfNotPresent
+
+# Cache configuration
+cache:
+  # Number of cache nodes (each runs Cache + Sentinel)
+  replicaCount: 3
+  
+  # Resources
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  
+  # Storage
+  persistence:
+    enabled: true
+    size: 8Gi
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    annotations: {}
+  
+  # Ports
+  ports:
+    cache: 6379
+    cacheTls: 6380
+    sentinel: 26379
+  
+  # Pod configuration
+  podLabels: {}
+  podAnnotations: {}
+  podSecurityContext:
+    enabled: false
+    fsGroup: 1001
+  containerSecurityContext:
+    enabled: false
+    runAsUser: 1001
+    runAsGroup: 1001
+    runAsNonRoot: true
+    readOnlyRootFilesystem: false
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+  
+  # Probes
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 5
+    customLivenessProbe: {}
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    successThreshold: 1
+    failureThreshold: 5
+    customReadinessProbe: {}
+  startupProbe:
+    enabled: false
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 15
+    customStartupProbe: {}
+  
+  # StatefulSet configuration
+  revisionHistoryLimit: 10
+  updateStrategy:
+    type: RollingUpdate
+  podManagementPolicy: OrderedReady
+  persistentVolumeClaimRetentionPolicy:
+    enabled: false
+    whenDeleted: Delete
+    whenScaled: Delete
+  
+  # Pod configuration
+  affinity: {}
+  nodeSelector: {}
+  tolerations: []
+  topologySpreadConstraints: []
+  priorityClassName: ""
+  schedulerName: ""
+  terminationGracePeriodSeconds: 30
+  dnsPolicy: ""
+  dnsConfig: {}
+  hostAliases: []
+  shareProcessNamespace: false
+  automountServiceAccountToken: true
+  enableServiceLinks: true
+  
+  # Extra configuration
+  extraFlags: []
+  command: []
+  args: []
+  extraEnvVars: []
+  extraEnvVarsCM: ""
+  extraEnvVarsSecret: ""
+  extraVolumes: []
+  extraVolumeMounts: []
+  sidecars: []
+  initContainers: []
+  lifecycleHooks: {}
+  # Pod Disruption Budget
+  pdb:
+    enabled: true
+    minAvailable: ""
+    maxUnavailable: 1
+
+# Network Policy
+networkPolicy:
+  enabled: false
+  ingressRules: []
+  egressRules: []
+
+# Sentinel configuration
+sentinel:
+  # Master set name
+  masterSet: "mymaster"
+  
+  # Quorum (minimum number of sentinels to agree on failover)
+  quorum: 2
+  
+  # Timeouts
+  downAfterMilliseconds: 3000
+  failoverTimeout: 5000
+  parallelSyncs: 2
+
+# Authentication
+auth:
+  enabled: false
+  password: ""
+
+# TLS configuration
+tls:
+  enabled: false
+  existingSecret: ""
+
+# Service configuration
+service:
+  type: ClusterIP
+  ports:
+    cache: 6379
+    sentinel: 26379
+  annotations: {}
+  loadBalancerIP: ""
+  loadBalancerSourceRanges: []
+  clusterIP: ""
+  sessionAffinity: ""
+  sessionAffinityConfig: {}
+
+# Headless service for StatefulSet (required for Sentinel)
+headless:
+  service:
+    clusterIP: None
+    ports:
+      cache: 6379
+      sentinel: 26379
+    annotations: {}
+
+# Service account
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+# Secret configuration
+secretAnnotations: {}
+
+# Common labels and annotations
+commonLabels: {}
+commonAnnotations: {}
+
+# Namespace override
+namespaceOverride: ""
+
+# Name overrides
+nameOverride: ""
+fullnameOverride: ""

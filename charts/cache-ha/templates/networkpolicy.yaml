@@ -1,0 +1,49 @@
+{{/*
+Copyright Akeyless, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "cache-ha.fullname" . }}
+  namespace: {{ include "cache-ha.namespace" . }}
+  labels: {{- include "cache-ha.labels" . | nindent 4 }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- toYaml .Values.commonAnnotations | nindent 4 }}
+  {{- end }}
+spec:
+  podSelector:
+    matchLabels: {{- include "cache-ha.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: node
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: {{- include "cache-ha.selectorLabels" . | nindent 12 }}
+              app.kubernetes.io/component: node
+      ports:
+        - protocol: TCP
+          port: {{ .Values.cache.ports.cache }}
+        - protocol: TCP
+          port: {{ .Values.cache.ports.sentinel }}
+    {{- if .Values.networkPolicy.ingressRules }}
+    {{- toYaml .Values.networkPolicy.ingressRules | nindent 4 }}
+    {{- end }}
+  egress:
+    - to:
+        - podSelector:
+            matchLabels: {{- include "cache-ha.selectorLabels" . | nindent 12 }}
+              app.kubernetes.io/component: node
+      ports:
+        - protocol: TCP
+          port: {{ .Values.cache.ports.cache }}
+        - protocol: TCP
+          port: {{ .Values.cache.ports.sentinel }}
+    {{- if .Values.networkPolicy.egressRules }}
+    {{- toYaml .Values.networkPolicy.egressRules | nindent 4 }}
+    {{- end }}
+{{- end }}

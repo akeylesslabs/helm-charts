@@ -1,0 +1,18 @@
+apiVersion: v2
+name: cache-ha
+description: Cache Sentinel High Availability based on Redis approach
+type: application
+version: 0.1.0
+appVersion: "8.2.1"
+keywords:
+  - cache
+  - sentinel
+  - ha
+  - high-availability
+home: https://github.com/akeyless/helm-charts
+sources:
+  - https://github.com/akeyless/helm-charts
+maintainers:
+  - name: Akeyless Team
+    email: support@akeyless.io
+# No external dependencies - implementing common functions ourselves

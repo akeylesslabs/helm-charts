@@ -1,0 +1,140 @@
+ {{/*
+Copyright Akeyless, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "cache-ha.fullname" . }}-scripts
+  namespace: {{ include "cache-ha.namespace" . }}
+  labels: {{- include "cache-ha.labels" . | nindent 4 }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+data:
+  start-cache.sh: |
+    #!/bin/sh
+    set -e
+    set -u
+
+    # Redis configuration
+    REDIS_PORT="{{ .Values.cache.ports.cache }}"
+    REDIS_BIND="0.0.0.0"
+    REDIS_APPENDONLY="yes"
+    REDIS_PROTECTED_MODE="no"
+
+    # Get pod information
+    POD_NAME="${POD_NAME:-$(hostname)}"
+    POD_NAMESPACE="${POD_NAMESPACE:-default}"
+
+    # Create Redis configuration directory
+    mkdir -p /etc/redis
+    
+    # Create Redis configuration
+    cat > /etc/redis/redis.conf << EOF
+    port {{ .Values.cache.ports.cache }}
+    bind ${REDIS_BIND}
+    appendonly ${REDIS_APPENDONLY}
+    protected-mode ${REDIS_PROTECTED_MODE}
+    # Configure replica announcement to use hostname only
+    replica-announce-ip ${POD_NAME}.{{ include "cache-ha.fullname" . }}-headless.${POD_NAMESPACE}.svc.cluster.local
+    replica-announce-port {{ .Values.cache.ports.cache }}
+    {{- if .Values.auth.enabled }}
+    requirepass \${REDIS_PASSWORD}
+    {{- end }}
+    {{- if .Values.cache.extraFlags }}
+    {{- range .Values.cache.extraFlags }}
+    {{ . }}
+    {{- end }}
+    {{- end }}
+    EOF
+
+    # Start Redis with TLS if enabled
+    echo "Starting Redis server on port ${REDIS_PORT}"
+    {{- if .Values.tls.enabled }}
+    # For Sentinel compatibility, use plain port for Sentinel and TLS port for clients
+    redis-server /etc/redis/redis.conf --port {{ .Values.cache.ports.cache }} --tls-port {{ .Values.cache.ports.cacheTls }} --tls-cert-file /etc/redis/tls/tls.crt --tls-key-file /etc/redis/tls/tls.key --tls-ca-cert-file /etc/redis/tls/ca.crt &
+    {{- else }}
+    redis-server /etc/redis/redis.conf &
+    {{- end }}
+    
+    # Wait for Redis to start
+    sleep 5
+    
+    # Let Sentinel handle master election - don't configure replication here
+    # Sentinel will automatically configure master-replica relationships
+    echo "Redis started - Sentinel will configure replication automatically"
+    
+    # Wait for Redis to finish
+    wait
+
+  start-sentinel.sh: |
+    #!/bin/sh
+    set -e
+    set -u
+
+    # Sentinel configuration
+    SENTINEL_PORT="{{ .Values.cache.ports.sentinel }}"
+    SENTINEL_BIND="0.0.0.0"
+    MASTER_SET="{{ .Values.sentinel.masterSet }}"
+    QUORUM="{{ .Values.sentinel.quorum }}"
+    DOWN_AFTER_MS="{{ .Values.sentinel.downAfterMilliseconds }}"
+    FAILOVER_TIMEOUT="{{ .Values.sentinel.failoverTimeout }}"
+    PARALLEL_SYNCS="{{ .Values.sentinel.parallelSyncs }}"
+
+    # Get pod information
+    POD_NAME="${POD_NAME:-$(hostname)}"
+    POD_NAMESPACE="${POD_NAMESPACE:-default}"
+    
+    # Redis Sentinel approach: Monitor all Redis instances and let Sentinel elect master
+    # Start by monitoring the first pod as potential master
+    MASTER_HOST="{{ include "cache-ha.fullname" . }}-0.{{ include "cache-ha.fullname" . }}-headless.${POD_NAMESPACE}.svc.cluster.local"
+
+    # Create Sentinel configuration directory
+    mkdir -p /etc/redis
+    
+    # Create Sentinel configuration
+    cat > /etc/redis/sentinel.conf << EOF
+    port ${SENTINEL_PORT}
+    bind ${SENTINEL_BIND}
+    sentinel announce-hostnames yes
+    sentinel resolve-hostnames yes
+    sentinel announce-port ${SENTINEL_PORT}
+    sentinel announce-ip ${POD_NAME}.{{ include "cache-ha.fullname" . }}-headless.${POD_NAMESPACE}.svc.cluster.local
+    sentinel monitor ${MASTER_SET} ${MASTER_HOST} {{ .Values.cache.ports.cache }} ${QUORUM}
+    sentinel down-after-milliseconds ${MASTER_SET} ${DOWN_AFTER_MS}
+    sentinel failover-timeout ${MASTER_SET} ${FAILOVER_TIMEOUT}
+    sentinel parallel-syncs ${MASTER_SET} ${PARALLEL_SYNCS}
+    {{- if .Values.auth.enabled }}
+    sentinel auth-pass ${MASTER_SET} \${REDIS_PASSWORD}
+    {{- end }}
+    EOF
+
+    # Add known replicas for failover (dynamic based on replica count)
+    REPLICA_COUNT="{{ .Values.cache.replicaCount }}"
+    for i in $(seq 1 $((REPLICA_COUNT - 1))); do
+        echo "sentinel known-replica ${MASTER_SET} {{ include "cache-ha.fullname" . }}-${i}.{{ include "cache-ha.fullname" . }}-headless.${POD_NAMESPACE}.svc.cluster.local {{ .Values.cache.ports.cache }}" >> /etc/redis/sentinel.conf
+    done
+
+    # Start Sentinel
+    echo "Starting Redis Sentinel on port ${SENTINEL_PORT}"
+    exec redis-sentinel /etc/redis/sentinel.conf
+
+  prestop-cache.sh: |
+    #!/bin/sh
+    set -e
+    set -u
+
+    # Graceful shutdown
+    echo "Stopping Redis server gracefully"
+    redis-cli -p {{ .Values.cache.ports.cache }} SHUTDOWN SAVE
+
+  prestop-sentinel.sh: |
+    #!/bin/sh
+    set -e
+    set -u
+
+    # Graceful shutdown
+    echo "Stopping Redis Sentinel gracefully"
+    redis-cli -p {{ .Values.cache.ports.sentinel }} SHUTDOWN

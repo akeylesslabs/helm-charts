@@ -1,0 +1,351 @@
+{{- /*
+Copyright Akeyless, Inc. All Rights Reserved.
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "cache-ha.fullname" . }}
+  namespace: {{ include "cache-ha.namespace" . }}
+  labels: {{- include "cache-ha.labels" . | nindent 4 }}
+    app.kubernetes.io/component: node
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "cache-ha.commonAnnotations" . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.cache.replicaCount }}
+  revisionHistoryLimit: {{ .Values.cache.revisionHistoryLimit | default 10 }}
+  selector:
+    matchLabels: {{- include "cache-ha.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: node
+  serviceName: {{ include "cache-ha.headlessServiceName" . }}
+  {{- if .Values.cache.updateStrategy }}
+  updateStrategy: {{- toYaml .Values.cache.updateStrategy | nindent 4 }}
+  {{- end }}
+  {{- if .Values.cache.podManagementPolicy }}
+  podManagementPolicy: {{ .Values.cache.podManagementPolicy | quote }}
+  {{- end }}
+  template:
+    metadata:
+      labels: {{- include "cache-ha.labels" . | nindent 8 }}
+        app.kubernetes.io/component: node
+      {{- if .Values.cache.podAnnotations }}
+      annotations: {{- toYaml .Values.cache.podAnnotations | nindent 8 }}
+      {{- end }}
+      {{- if .Values.commonAnnotations }}
+      {{- include "cache-ha.commonAnnotations" . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- if and .Values.cache.podSecurityContext .Values.cache.podSecurityContext.enabled }}
+      securityContext: {{- toYaml .Values.cache.podSecurityContext | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "cache-ha.serviceAccountName" . }}
+      {{- if .Values.cache.affinity }}
+      affinity: {{- toYaml .Values.cache.affinity | nindent 8 }}
+      {{- end }}
+      {{- if .Values.cache.nodeSelector }}
+      nodeSelector: {{- toYaml .Values.cache.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if .Values.cache.tolerations }}
+      tolerations: {{- toYaml .Values.cache.tolerations | nindent 8 }}
+      {{- end }}
+      {{- if .Values.cache.topologySpreadConstraints }}
+      topologySpreadConstraints: {{- toYaml .Values.cache.topologySpreadConstraints | nindent 8 }}
+      {{- end }}
+      {{- if .Values.cache.priorityClassName }}
+      priorityClassName: {{ .Values.cache.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.cache.schedulerName }}
+      schedulerName: {{ .Values.cache.schedulerName | quote }}
+      {{- end }}
+      {{- if .Values.cache.dnsPolicy }}
+      dnsPolicy: {{ .Values.cache.dnsPolicy }}
+      {{- end }}
+      {{- if .Values.cache.dnsConfig }}
+      dnsConfig: {{- toYaml .Values.cache.dnsConfig | nindent 8 }}
+      {{- end }}
+      {{- if .Values.cache.hostAliases }}
+      hostAliases: {{- toYaml .Values.cache.hostAliases | nindent 8 }}
+      {{- end }}
+      {{- if .Values.cache.shareProcessNamespace }}
+      shareProcessNamespace: {{ .Values.cache.shareProcessNamespace }}
+      {{- end }}
+      {{- if .Values.cache.automountServiceAccountToken }}
+      automountServiceAccountToken: {{ .Values.cache.automountServiceAccountToken }}
+      {{- end }}
+      {{- if .Values.cache.enableServiceLinks }}
+      enableServiceLinks: {{ .Values.cache.enableServiceLinks }}
+      {{- end }}
+      {{- if .Values.cache.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ .Values.cache.terminationGracePeriodSeconds }}
+      {{- end }}
+      containers:
+        - name: cache
+          image: {{ include "cache-ha.redis.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          {{- if and .Values.cache.containerSecurityContext .Values.cache.containerSecurityContext.enabled }}
+          securityContext: {{- toYaml .Values.cache.containerSecurityContext | nindent 12 }}
+          {{- end }}
+          {{- if .Values.cache.lifecycleHooks }}
+          lifecycle: {{- toYaml .Values.cache.lifecycleHooks | nindent 12 }}
+          {{- else }}
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -ec
+                  - /scripts/prestop-cache.sh
+          {{- end }}
+          command:
+            - /bin/sh
+            - -ec
+            - /scripts/start-cache.sh
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: CACHE_MASTER_SET
+              value: {{ .Values.sentinel.masterSet | quote }}
+            - name: CACHE_QUORUM
+              value: {{ .Values.sentinel.quorum | quote }}
+            - name: CACHE_DOWN_AFTER_MS
+              value: {{ .Values.sentinel.downAfterMilliseconds | quote }}
+            - name: CACHE_FAILOVER_TIMEOUT
+              value: {{ .Values.sentinel.failoverTimeout | quote }}
+            - name: CACHE_PARALLEL_SYNCS
+              value: {{ .Values.sentinel.parallelSyncs | quote }}
+            {{- if .Values.auth.enabled }}
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "cache-ha.secretName" . }}
+                  key: {{ include "cache-ha.secretPasswordKey" . }}
+            {{- end }}
+            {{- if .Values.cache.extraEnvVars }}
+            {{- toYaml .Values.cache.extraEnvVars | nindent 12 }}
+            {{- end }}
+          {{- if or .Values.cache.extraEnvVarsCM .Values.cache.extraEnvVarsSecret }}
+          envFrom:
+            {{- if .Values.cache.extraEnvVarsCM }}
+            - configMapRef:
+                name: {{ .Values.cache.extraEnvVarsCM }}
+            {{- end }}
+            {{- if .Values.cache.extraEnvVarsSecret }}
+            - secretRef:
+                name: {{ .Values.cache.extraEnvVarsSecret }}
+            {{- end }}
+          {{- end }}
+          ports:
+            - name: cache
+              containerPort: {{ .Values.cache.ports.cache }}
+              protocol: TCP
+            {{- if .Values.tls.enabled }}
+            - name: cache-tls
+              containerPort: {{ .Values.cache.ports.cacheTls }}
+              protocol: TCP
+            {{- end }}
+          {{- if .Values.cache.livenessProbe.enabled }}
+          livenessProbe:
+            {{- if .Values.cache.livenessProbe.customLivenessProbe }}
+            {{- toYaml .Values.cache.livenessProbe.customLivenessProbe | nindent 12 }}
+            {{- else }}
+            tcpSocket:
+              port: cache
+            initialDelaySeconds: {{ .Values.cache.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.cache.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.cache.livenessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.cache.livenessProbe.successThreshold }}
+            failureThreshold: {{ .Values.cache.livenessProbe.failureThreshold }}
+            {{- end }}
+          {{- end }}
+          {{- if .Values.cache.readinessProbe.enabled }}
+          readinessProbe:
+            {{- if .Values.cache.readinessProbe.customReadinessProbe }}
+            {{- toYaml .Values.cache.readinessProbe.customReadinessProbe | nindent 12 }}
+            {{- else }}
+            tcpSocket:
+              port: cache
+            initialDelaySeconds: {{ .Values.cache.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.cache.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.cache.readinessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.cache.readinessProbe.successThreshold }}
+            failureThreshold: {{ .Values.cache.readinessProbe.failureThreshold }}
+            {{- end }}
+          {{- end }}
+          {{- if .Values.cache.startupProbe.enabled }}
+          startupProbe:
+            {{- if .Values.cache.startupProbe.customStartupProbe }}
+            {{- toYaml .Values.cache.startupProbe.customStartupProbe | nindent 12 }}
+            {{- else }}
+            tcpSocket:
+              port: cache
+            initialDelaySeconds: {{ .Values.cache.startupProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.cache.startupProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.cache.startupProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.cache.startupProbe.successThreshold }}
+            failureThreshold: {{ .Values.cache.startupProbe.failureThreshold }}
+            {{- end }}
+          {{- end }}
+          {{- if .Values.cache.resources }}
+          resources: {{- toYaml .Values.cache.resources | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: cache-data
+              mountPath: /data
+            - name: scripts
+              mountPath: /scripts
+            {{- if .Values.tls.enabled }}
+            - name: tls-certs
+              mountPath: /etc/redis/tls
+              readOnly: true
+            {{- end }}
+            {{- if .Values.cache.extraVolumeMounts }}
+            {{- toYaml .Values.cache.extraVolumeMounts | nindent 12 }}
+            {{- end }}
+        - name: sentinel
+          image: {{ include "cache-ha.redis.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          {{- if and .Values.cache.containerSecurityContext .Values.cache.containerSecurityContext.enabled }}
+          securityContext: {{- toYaml .Values.cache.containerSecurityContext | nindent 12 }}
+          {{- end }}
+          {{- if .Values.cache.lifecycleHooks }}
+          lifecycle: {{- toYaml .Values.cache.lifecycleHooks | nindent 12 }}
+          {{- else }}
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -ec
+                  - /scripts/prestop-sentinel.sh
+          {{- end }}
+          command:
+            - /bin/sh
+            - -ec
+            - /scripts/start-sentinel.sh
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: CACHE_MASTER_SET
+              value: {{ .Values.sentinel.masterSet | quote }}
+            - name: CACHE_QUORUM
+              value: {{ .Values.sentinel.quorum | quote }}
+            - name: CACHE_DOWN_AFTER_MS
+              value: {{ .Values.sentinel.downAfterMilliseconds | quote }}
+            - name: CACHE_FAILOVER_TIMEOUT
+              value: {{ .Values.sentinel.failoverTimeout | quote }}
+            - name: CACHE_PARALLEL_SYNCS
+              value: {{ .Values.sentinel.parallelSyncs | quote }}
+            {{- if .Values.auth.enabled }}
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "cache-ha.secretName" . }}
+                  key: {{ include "cache-ha.secretPasswordKey" . }}
+            {{- end }}
+          ports:
+            - name: sentinel-port
+              containerPort: {{ .Values.cache.ports.sentinel }}
+              protocol: TCP
+          {{- if .Values.cache.livenessProbe.enabled }}
+          livenessProbe:
+            {{- if .Values.cache.livenessProbe.customLivenessProbe }}
+            {{- toYaml .Values.cache.livenessProbe.customLivenessProbe | nindent 12 }}
+            {{- else }}
+            tcpSocket:
+              port: sentinel-port
+            initialDelaySeconds: {{ .Values.cache.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.cache.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.cache.livenessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.cache.livenessProbe.successThreshold }}
+            failureThreshold: {{ .Values.cache.livenessProbe.failureThreshold }}
+            {{- end }}
+          {{- end }}
+          {{- if .Values.cache.readinessProbe.enabled }}
+          readinessProbe:
+            {{- if .Values.cache.readinessProbe.customReadinessProbe }}
+            {{- toYaml .Values.cache.readinessProbe.customReadinessProbe | nindent 12 }}
+            {{- else }}
+            tcpSocket:
+              port: sentinel-port
+            initialDelaySeconds: {{ .Values.cache.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.cache.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.cache.readinessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.cache.readinessProbe.successThreshold }}
+            failureThreshold: {{ .Values.cache.readinessProbe.failureThreshold }}
+            {{- end }}
+          {{- end }}
+          {{- if .Values.cache.resources }}
+          resources: {{- toYaml .Values.cache.resources | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: cache-data
+              mountPath: /data
+            - name: scripts
+              mountPath: /scripts
+            {{- if .Values.cache.extraVolumeMounts }}
+            {{- toYaml .Values.cache.extraVolumeMounts | nindent 12 }}
+            {{- end }}
+        {{- if .Values.cache.sidecars }}
+        {{- toYaml .Values.cache.sidecars | nindent 8 }}
+        {{- end }}
+      {{- if .Values.cache.initContainers }}
+      initContainers:
+        {{- toYaml .Values.cache.initContainers | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: scripts
+          configMap:
+            name: {{ include "cache-ha.fullname" . }}-scripts
+            defaultMode: 0755
+        {{- if .Values.tls.enabled }}
+        - name: tls-certs
+          secret:
+            secretName: {{ include "cache-ha.tlsSecretName" . }}
+        {{- end }}
+        {{- if .Values.cache.extraVolumes }}
+        {{- toYaml .Values.cache.extraVolumes | nindent 8 }}
+        {{- end }}
+  {{- if .Values.cache.persistentVolumeClaimRetentionPolicy.enabled }}
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: {{ .Values.cache.persistentVolumeClaimRetentionPolicy.whenDeleted }}
+    whenScaled: {{ .Values.cache.persistentVolumeClaimRetentionPolicy.whenScaled }}
+  {{- end }}
+  {{- if .Values.cache.persistence.enabled }}
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: cache-data
+        labels: {{- include "cache-ha.labels" . | nindent 10 }}
+          app.kubernetes.io/component: node
+        {{- if .Values.cache.persistence.annotations }}
+        annotations: {{- toYaml .Values.cache.persistence.annotations | nindent 10 }}
+        {{- end }}
+      spec:
+        accessModes:
+          {{- range .Values.cache.persistence.accessModes }}
+          - {{ . | quote }}
+          {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.cache.persistence.size | quote }}
+        {{- if .Values.cache.persistence.storageClass }}
+        storageClassName: {{ .Values.cache.persistence.storageClass | quote }}
+        {{- else if .Values.global.defaultStorageClass }}
+        storageClassName: {{ .Values.global.defaultStorageClass | quote }}
+        {{- end }}
+  {{- end }}
