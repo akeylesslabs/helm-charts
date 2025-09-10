@@ -152,7 +152,7 @@ spec:
             - name: CACHE_MASTER_SET
               value: {{ .Values.sentinel.masterSet | quote }}
             - name: CACHE_QUORUM
-              value: {{ .Values.sentinel.quorum | quote }}
+              value: {{ include "cache-ha.sentinelQuorum" . | quote }}
             - name: CACHE_DOWN_AFTER_MS
               value: {{ .Values.sentinel.downAfterMilliseconds | quote }}
             - name: CACHE_FAILOVER_TIMEOUT
@@ -165,14 +165,6 @@ spec:
                 secretKeyRef:
                   name: {{ include "cache-ha.secretName" . }}
                   key: {{ include "cache-ha.secretPasswordKey" . }}
-            {{- end }}
-            {{- if .Values.tls.enabled }}
-            - name: REDIS_SENTINEL_TLS_CERT_FILE
-              value: {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }}
-            - name: REDIS_SENTINEL_TLS_KEY_FILE
-              value: {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }}
-            - name: REDIS_SENTINEL_TLS_CA_FILE
-              value: {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }}
             {{- end }}
             {{- if .Values.sentinel.extraEnvVars }}
             {{- toYaml .Values.sentinel.extraEnvVars | nindent 12 }}
@@ -197,8 +189,16 @@ spec:
             {{- if .Values.sentinel.livenessProbe.customLivenessProbe }}
             {{- toYaml .Values.sentinel.livenessProbe.customLivenessProbe | nindent 12 }}
             {{- else }}
+            {{- if .Values.tls.enabled }}
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - redis-cli --tls --cert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --key {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --cacert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} -p {{ .Values.cache.ports.sentinel }} ping
+            {{- else }}
             tcpSocket:
               port: sentinel-port
+            {{- end }}
             initialDelaySeconds: {{ .Values.sentinel.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.sentinel.livenessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.sentinel.livenessProbe.timeoutSeconds }}
@@ -210,8 +210,16 @@ spec:
             {{- if .Values.cache.livenessProbe.customLivenessProbe }}
             {{- toYaml .Values.cache.livenessProbe.customLivenessProbe | nindent 12 }}
             {{- else }}
+            {{- if .Values.tls.enabled }}
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - redis-cli --tls --cert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --key {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --cacert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} -p {{ .Values.cache.ports.sentinel }} ping
+            {{- else }}
             tcpSocket:
               port: sentinel-port
+            {{- end }}
             initialDelaySeconds: {{ .Values.cache.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.cache.livenessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.cache.livenessProbe.timeoutSeconds }}
@@ -224,8 +232,16 @@ spec:
             {{- if .Values.sentinel.readinessProbe.customReadinessProbe }}
             {{- toYaml .Values.sentinel.readinessProbe.customReadinessProbe | nindent 12 }}
             {{- else }}
+            {{- if .Values.tls.enabled }}
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - redis-cli --tls --cert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --key {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --cacert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} -p {{ .Values.cache.ports.sentinel }} ping
+            {{- else }}
             tcpSocket:
               port: sentinel-port
+            {{- end }}
             initialDelaySeconds: {{ .Values.sentinel.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.sentinel.readinessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.sentinel.readinessProbe.timeoutSeconds }}
@@ -237,8 +253,16 @@ spec:
             {{- if .Values.cache.readinessProbe.customReadinessProbe }}
             {{- toYaml .Values.cache.readinessProbe.customReadinessProbe | nindent 12 }}
             {{- else }}
+            {{- if .Values.tls.enabled }}
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - redis-cli --tls --cert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --key {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --cacert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} -p {{ .Values.cache.ports.sentinel }} ping
+            {{- else }}
             tcpSocket:
               port: sentinel-port
+            {{- end }}
             initialDelaySeconds: {{ .Values.cache.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.cache.readinessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.cache.readinessProbe.timeoutSeconds }}

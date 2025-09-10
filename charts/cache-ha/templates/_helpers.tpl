@@ -294,13 +294,24 @@ imagePullSecrets:
 {{- end }}
 
 {{/*
-Storage class
+Storage class validation - ensures at least one storage class is provided
+*/}}
+{{- define "cache-ha.validateStorageClass" -}}
+{{- $hasCacheStorageClass := .Values.cache.persistence.storageClass -}}
+{{- $hasGlobalStorageClass := .Values.global.defaultStorageClass -}}
+{{- if not (or $hasCacheStorageClass $hasGlobalStorageClass) -}}
+{{- fail "Storage class is required. Please set either cache.persistence.storageClass or global.defaultStorageClass" -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Storage class selection - returns the appropriate storage class
 */}}
 {{- define "cache-ha.storageClass" -}}
-{{- if .Values.global.defaultStorageClass }}
+{{- if .Values.cache.persistence.storageClass }}
+{{- printf "storageClassName: %s" .Values.cache.persistence.storageClass -}}
+{{- else if .Values.global.defaultStorageClass }}
 {{- printf "storageClassName: %s" .Values.global.defaultStorageClass -}}
-{{- else if .Values.global.storageClass }}
-{{- printf "storageClassName: %s" .Values.global.storageClass -}}
 {{- end -}}
 {{- end -}}
 
@@ -333,4 +344,14 @@ Common annotations for all resources
 {{- if $commonAnnotations }}
 {{- toYaml $commonAnnotations }}
 {{- end }}
+{{- end -}}
+
+{{/*
+Calculate Redis Sentinel quorum based on sentinel count
+Formula: quorum = (sentinel_count / 2) + 1
+This ensures majority consensus for failover decisions among sentinels
+*/}}
+{{- define "cache-ha.sentinelQuorum" -}}
+{{- $sentinelCount := .Values.sentinel.replicaCount -}}
+{{- add (div $sentinelCount 2) 1 -}}
 {{- end -}}

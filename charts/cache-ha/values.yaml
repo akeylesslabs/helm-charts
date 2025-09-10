@@ -5,6 +5,7 @@
 global:
   imageRegistry: ""
   imagePullSecrets: []
+  # Default storage class (required if cache.persistence.storageClass is not set)
   defaultStorageClass: ""
 
 # Image configuration
@@ -19,6 +20,7 @@ cache:
   # Number of cache nodes (each runs Cache + Sentinel)
   replicaCount: 3
   
+  
   # Resources
   resources:
     limits:
@@ -32,6 +34,7 @@ cache:
   persistence:
     enabled: true
     size: 8Gi
+    # Storage class (if not set, will use global.defaultStorageClass)
     storageClass: ""
     accessModes:
       - ReadWriteOnce
@@ -142,8 +145,12 @@ sentinel:
   # Master set name
   masterSet: "mymaster"
   
-  # Quorum (minimum number of sentinels to agree on failover)
-  quorum: 2
+  # Sentinel quorum is calculated automatically using formula: (sentinel_count / 2) + 1
+  # This ensures majority consensus among sentinels for failover decisions
+  # Examples:
+  #   - 3 sentinels → quorum = 2
+  #   - 5 sentinels → quorum = 3  
+  #   - 7 sentinels → quorum = 4
   
   # Timeouts
   downAfterMilliseconds: 3000
@@ -305,3 +312,6 @@ namespaceOverride: ""
 # Name overrides
 nameOverride: ""
 fullnameOverride: ""
+
+# Log level configuration (suppress SSL errors when set to warning)
+logLevel: "warning"  # notice, warning, verbose, debug

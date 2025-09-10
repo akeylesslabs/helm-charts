@@ -3,6 +3,8 @@ Copyright Akeyless, Inc. All Rights Reserved.
 SPDX-License-Identifier: Apache-2.0
 */}}
 
+{{- include "cache-ha.validateStorageClass" . -}}
+
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -114,7 +116,7 @@ spec:
             - name: CACHE_MASTER_SET
               value: {{ .Values.sentinel.masterSet | quote }}
             - name: CACHE_QUORUM
-              value: {{ .Values.sentinel.quorum | quote }}
+              value: {{ include "cache-ha.sentinelQuorum" . | quote }}
             - name: CACHE_DOWN_AFTER_MS
               value: {{ .Values.sentinel.downAfterMilliseconds | quote }}
             - name: CACHE_FAILOVER_TIMEOUT
@@ -127,14 +129,6 @@ spec:
                 secretKeyRef:
                   name: {{ include "cache-ha.secretName" . }}
                   key: {{ include "cache-ha.secretPasswordKey" . }}
-            {{- end }}
-            {{- if .Values.tls.enabled }}
-            - name: REDIS_TLS_CERT_FILE
-              value: {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }}
-            - name: REDIS_TLS_KEY_FILE
-              value: {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }}
-            - name: REDIS_TLS_CA_FILE
-              value: {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }}
             {{- end }}
             {{- if .Values.cache.extraEnvVars }}
             {{- toYaml .Values.cache.extraEnvVars | nindent 12 }}
@@ -164,7 +158,7 @@ spec:
               command:
                 - /bin/sh
                 - -c
-                - timeout {{ .Values.healthCheck.timeoutSeconds }} redis-cli --tls -p {{ .Values.cache.ports.cache }} ping
+                - redis-cli --tls --cert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --key {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --cacert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} -p {{ .Values.cache.ports.cache }} ping
             {{- else }}
             tcpSocket:
               port: cache
@@ -186,7 +180,7 @@ spec:
               command:
                 - /bin/sh
                 - -c
-                - timeout {{ .Values.healthCheck.timeoutSeconds }} redis-cli --tls -p {{ .Values.cache.ports.cache }} ping
+                - redis-cli --tls --cert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --key {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --cacert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} -p {{ .Values.cache.ports.cache }} ping
             {{- else }}
             tcpSocket:
               port: cache
@@ -208,7 +202,7 @@ spec:
               command:
                 - /bin/sh
                 - -c
-                - timeout {{ .Values.healthCheck.timeoutSeconds }} redis-cli --tls -p {{ .Values.cache.ports.cache }} ping
+                - redis-cli --tls --cert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --key {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --cacert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} -p {{ .Values.cache.ports.cache }} ping
             {{- else }}
             tcpSocket:
               port: cache
@@ -280,9 +274,5 @@ spec:
         resources:
           requests:
             storage: {{ .Values.cache.persistence.size | quote }}
-        {{- if .Values.cache.persistence.storageClass }}
-        storageClassName: {{ .Values.cache.persistence.storageClass | quote }}
-        {{- else if .Values.global.defaultStorageClass }}
-        storageClassName: {{ .Values.global.defaultStorageClass | quote }}
-        {{- end }}
+        {{- include "cache-ha.storageClass" . | nindent 8 }}
   {{- end }}
