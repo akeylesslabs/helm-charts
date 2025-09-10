@@ -9,35 +9,29 @@ metadata:
   name: {{ include "cache-ha.fullname" . }}-sentinel
   namespace: {{ include "cache-ha.namespace" . }}
   labels: {{- include "cache-ha.labels" . | nindent 4 }}
-    app.kubernetes.io/component: sentinel
+    app.kubernetes.io/component: {{ .Values.componentNames.sentinel | default "sentinel" }}
   {{- if .Values.commonAnnotations }}
   annotations: {{- include "cache-ha.commonAnnotations" . | nindent 4 }}
   {{- end }}
 spec:
-  replicas: {{ .Values.sentinel.replicaCount | default .Values.cache.replicaCount }}
+  replicas: {{ .Values.sentinel.replicaCount }}
   revisionHistoryLimit: {{ .Values.sentinel.revisionHistoryLimit | default 10 }}
   selector:
     matchLabels: {{- include "cache-ha.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: sentinel
+      app.kubernetes.io/component: {{ .Values.componentNames.sentinel | default "sentinel" }}
   serviceName: {{ include "cache-ha.sentinelHeadlessServiceName" . }}
   {{- if .Values.sentinel.updateStrategy }}
   updateStrategy: {{- toYaml .Values.sentinel.updateStrategy | nindent 4 }}
-  {{- else if .Values.cache.updateStrategy }}
-  updateStrategy: {{- toYaml .Values.cache.updateStrategy | nindent 4 }}
   {{- end }}
   {{- if .Values.sentinel.podManagementPolicy }}
   podManagementPolicy: {{ .Values.sentinel.podManagementPolicy | quote }}
-  {{- else if .Values.cache.podManagementPolicy }}
-  podManagementPolicy: {{ .Values.cache.podManagementPolicy | quote }}
   {{- end }}
   template:
     metadata:
       labels: {{- include "cache-ha.labels" . | nindent 8 }}
-        app.kubernetes.io/component: sentinel
+        app.kubernetes.io/component: {{ .Values.componentNames.sentinel | default "sentinel" }}
       {{- if .Values.sentinel.podAnnotations }}
       annotations: {{- toYaml .Values.sentinel.podAnnotations | nindent 8 }}
-      {{- else if .Values.cache.podAnnotations }}
-      annotations: {{- toYaml .Values.cache.podAnnotations | nindent 8 }}
       {{- end }}
       {{- if .Values.commonAnnotations }}
       {{- include "cache-ha.commonAnnotations" . | nindent 8 }}
@@ -45,88 +39,56 @@ spec:
     spec:
       {{- if and .Values.sentinel.podSecurityContext .Values.sentinel.podSecurityContext.enabled }}
       securityContext: {{- toYaml .Values.sentinel.podSecurityContext | nindent 8 }}
-      {{- else if and .Values.cache.podSecurityContext .Values.cache.podSecurityContext.enabled }}
-      securityContext: {{- toYaml .Values.cache.podSecurityContext | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "cache-ha.serviceAccountName" . }}
       {{- if .Values.sentinel.affinity }}
       affinity: {{- toYaml .Values.sentinel.affinity | nindent 8 }}
-      {{- else if .Values.cache.affinity }}
-      affinity: {{- toYaml .Values.cache.affinity | nindent 8 }}
       {{- end }}
       {{- if .Values.sentinel.nodeSelector }}
       nodeSelector: {{- toYaml .Values.sentinel.nodeSelector | nindent 8 }}
-      {{- else if .Values.cache.nodeSelector }}
-      nodeSelector: {{- toYaml .Values.cache.nodeSelector | nindent 8 }}
       {{- end }}
       {{- if .Values.sentinel.tolerations }}
       tolerations: {{- toYaml .Values.sentinel.tolerations | nindent 8 }}
-      {{- else if .Values.cache.tolerations }}
-      tolerations: {{- toYaml .Values.cache.tolerations | nindent 8 }}
       {{- end }}
       {{- if .Values.sentinel.topologySpreadConstraints }}
       topologySpreadConstraints: {{- toYaml .Values.sentinel.topologySpreadConstraints | nindent 8 }}
-      {{- else if .Values.cache.topologySpreadConstraints }}
-      topologySpreadConstraints: {{- toYaml .Values.cache.topologySpreadConstraints | nindent 8 }}
       {{- end }}
       {{- if .Values.sentinel.priorityClassName }}
       priorityClassName: {{ .Values.sentinel.priorityClassName | quote }}
-      {{- else if .Values.cache.priorityClassName }}
-      priorityClassName: {{ .Values.cache.priorityClassName | quote }}
       {{- end }}
       {{- if .Values.sentinel.schedulerName }}
       schedulerName: {{ .Values.sentinel.schedulerName | quote }}
-      {{- else if .Values.cache.schedulerName }}
-      schedulerName: {{ .Values.cache.schedulerName | quote }}
       {{- end }}
       {{- if .Values.sentinel.dnsPolicy }}
       dnsPolicy: {{ .Values.sentinel.dnsPolicy }}
-      {{- else if .Values.cache.dnsPolicy }}
-      dnsPolicy: {{ .Values.cache.dnsPolicy }}
       {{- end }}
       {{- if .Values.sentinel.dnsConfig }}
       dnsConfig: {{- toYaml .Values.sentinel.dnsConfig | nindent 8 }}
-      {{- else if .Values.cache.dnsConfig }}
-      dnsConfig: {{- toYaml .Values.cache.dnsConfig | nindent 8 }}
       {{- end }}
       {{- if .Values.sentinel.hostAliases }}
       hostAliases: {{- toYaml .Values.sentinel.hostAliases | nindent 8 }}
-      {{- else if .Values.cache.hostAliases }}
-      hostAliases: {{- toYaml .Values.cache.hostAliases | nindent 8 }}
       {{- end }}
       {{- if .Values.sentinel.shareProcessNamespace }}
       shareProcessNamespace: {{ .Values.sentinel.shareProcessNamespace }}
-      {{- else if .Values.cache.shareProcessNamespace }}
-      shareProcessNamespace: {{ .Values.cache.shareProcessNamespace }}
       {{- end }}
       {{- if .Values.sentinel.automountServiceAccountToken }}
       automountServiceAccountToken: {{ .Values.sentinel.automountServiceAccountToken }}
-      {{- else if .Values.cache.automountServiceAccountToken }}
-      automountServiceAccountToken: {{ .Values.cache.automountServiceAccountToken }}
       {{- end }}
       {{- if .Values.sentinel.enableServiceLinks }}
       enableServiceLinks: {{ .Values.sentinel.enableServiceLinks }}
-      {{- else if .Values.cache.enableServiceLinks }}
-      enableServiceLinks: {{ .Values.cache.enableServiceLinks }}
       {{- end }}
       {{- if .Values.sentinel.terminationGracePeriodSeconds }}
       terminationGracePeriodSeconds: {{ .Values.sentinel.terminationGracePeriodSeconds }}
-      {{- else if .Values.cache.terminationGracePeriodSeconds }}
-      terminationGracePeriodSeconds: {{ .Values.cache.terminationGracePeriodSeconds }}
       {{- end }}
       containers:
         - name: sentinel
-          image: {{ include "cache-ha.cache.image" . }}
+          image: {{ include "cache-ha.node.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
           {{- if and .Values.sentinel.containerSecurityContext .Values.sentinel.containerSecurityContext.enabled }}
           securityContext: {{- toYaml .Values.sentinel.containerSecurityContext | nindent 12 }}
-          {{- else if and .Values.cache.containerSecurityContext .Values.cache.containerSecurityContext.enabled }}
-          securityContext: {{- toYaml .Values.cache.containerSecurityContext | nindent 12 }}
           {{- end }}
           {{- if .Values.sentinel.lifecycleHooks }}
           lifecycle: {{- toYaml .Values.sentinel.lifecycleHooks | nindent 12 }}
-          {{- else if .Values.cache.lifecycleHooks }}
-          lifecycle: {{- toYaml .Values.cache.lifecycleHooks | nindent 12 }}
           {{- else }}
           lifecycle:
             preStop:
@@ -182,7 +144,7 @@ spec:
           {{- end }}
           ports:
             - name: sentinel-port
-              containerPort: {{ .Values.cache.ports.sentinel }}
+              containerPort: {{ .Values.node.ports.sentinel }}
               protocol: TCP
           {{- if .Values.sentinel.livenessProbe.enabled }}
           livenessProbe:
@@ -194,7 +156,7 @@ spec:
               command:
                 - /bin/sh
                 - -c
-                - redis-cli --tls --cert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --key {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --cacert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} -p {{ .Values.cache.ports.sentinel }} ping
+                - redis-cli --tls --cert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --key {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --cacert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} -p {{ .Values.node.ports.sentinel }} ping
             {{- else }}
             tcpSocket:
               port: sentinel-port
@@ -204,27 +166,6 @@ spec:
             timeoutSeconds: {{ .Values.sentinel.livenessProbe.timeoutSeconds }}
             successThreshold: {{ .Values.sentinel.livenessProbe.successThreshold }}
             failureThreshold: {{ .Values.sentinel.livenessProbe.failureThreshold }}
-            {{- end }}
-          {{- else if .Values.cache.livenessProbe.enabled }}
-          livenessProbe:
-            {{- if .Values.cache.livenessProbe.customLivenessProbe }}
-            {{- toYaml .Values.cache.livenessProbe.customLivenessProbe | nindent 12 }}
-            {{- else }}
-            {{- if .Values.tls.enabled }}
-            exec:
-              command:
-                - /bin/sh
-                - -c
-                - redis-cli --tls --cert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --key {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --cacert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} -p {{ .Values.cache.ports.sentinel }} ping
-            {{- else }}
-            tcpSocket:
-              port: sentinel-port
-            {{- end }}
-            initialDelaySeconds: {{ .Values.cache.livenessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.cache.livenessProbe.periodSeconds }}
-            timeoutSeconds: {{ .Values.cache.livenessProbe.timeoutSeconds }}
-            successThreshold: {{ .Values.cache.livenessProbe.successThreshold }}
-            failureThreshold: {{ .Values.cache.livenessProbe.failureThreshold }}
             {{- end }}
           {{- end }}
           {{- if .Values.sentinel.readinessProbe.enabled }}
@@ -237,7 +178,7 @@ spec:
               command:
                 - /bin/sh
                 - -c
-                - redis-cli --tls --cert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --key {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --cacert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} -p {{ .Values.cache.ports.sentinel }} ping
+                - redis-cli --tls --cert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --key {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --cacert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} -p {{ .Values.node.ports.sentinel }} ping
             {{- else }}
             tcpSocket:
               port: sentinel-port
@@ -248,32 +189,9 @@ spec:
             successThreshold: {{ .Values.sentinel.readinessProbe.successThreshold }}
             failureThreshold: {{ .Values.sentinel.readinessProbe.failureThreshold }}
             {{- end }}
-          {{- else if .Values.cache.readinessProbe.enabled }}
-          readinessProbe:
-            {{- if .Values.cache.readinessProbe.customReadinessProbe }}
-            {{- toYaml .Values.cache.readinessProbe.customReadinessProbe | nindent 12 }}
-            {{- else }}
-            {{- if .Values.tls.enabled }}
-            exec:
-              command:
-                - /bin/sh
-                - -c
-                - redis-cli --tls --cert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --key {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --cacert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} -p {{ .Values.cache.ports.sentinel }} ping
-            {{- else }}
-            tcpSocket:
-              port: sentinel-port
-            {{- end }}
-            initialDelaySeconds: {{ .Values.cache.readinessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.cache.readinessProbe.periodSeconds }}
-            timeoutSeconds: {{ .Values.cache.readinessProbe.timeoutSeconds }}
-            successThreshold: {{ .Values.cache.readinessProbe.successThreshold }}
-            failureThreshold: {{ .Values.cache.readinessProbe.failureThreshold }}
-            {{- end }}
           {{- end }}
           {{- if .Values.sentinel.resources }}
           resources: {{- toYaml .Values.sentinel.resources | nindent 12 }}
-          {{- else if .Values.cache.resources }}
-          resources: {{- toYaml .Values.cache.resources | nindent 12 }}
           {{- end }}
           volumeMounts:
             - name: scripts
@@ -285,8 +203,6 @@ spec:
             {{- end }}
             {{- if .Values.sentinel.extraVolumeMounts }}
             {{- toYaml .Values.sentinel.extraVolumeMounts | nindent 12 }}
-            {{- else if .Values.cache.extraVolumeMounts }}
-            {{- toYaml .Values.cache.extraVolumeMounts | nindent 12 }}
             {{- end }}
         {{- if .Values.sentinel.sidecars }}
         {{- toYaml .Values.sentinel.sidecars | nindent 8 }}
@@ -307,15 +223,9 @@ spec:
         {{- end }}
         {{- if .Values.sentinel.extraVolumes }}
         {{- toYaml .Values.sentinel.extraVolumes | nindent 8 }}
-        {{- else if .Values.cache.extraVolumes }}
-        {{- toYaml .Values.cache.extraVolumes | nindent 8 }}
         {{- end }}
   {{- if .Values.sentinel.persistentVolumeClaimRetentionPolicy.enabled }}
   persistentVolumeClaimRetentionPolicy:
     whenDeleted: {{ .Values.sentinel.persistentVolumeClaimRetentionPolicy.whenDeleted }}
     whenScaled: {{ .Values.sentinel.persistentVolumeClaimRetentionPolicy.whenScaled }}
-  {{- else if .Values.cache.persistentVolumeClaimRetentionPolicy.enabled }}
-  persistentVolumeClaimRetentionPolicy:
-    whenDeleted: {{ .Values.cache.persistentVolumeClaimRetentionPolicy.whenDeleted }}
-    whenScaled: {{ .Values.cache.persistentVolumeClaimRetentionPolicy.whenScaled }}
   {{- end }}

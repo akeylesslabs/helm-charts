@@ -15,9 +15,9 @@ image:
   tag: 8.2.1-alpine3.22
   pullPolicy: IfNotPresent
 
-# Cache configuration
-cache:
-  # Number of cache nodes (each runs Cache + Sentinel)
+# Node configuration
+node:
+  # Number of Redis nodes (each runs Redis + Sentinel)
   replicaCount: 3
   
   
@@ -100,9 +100,44 @@ cache:
   
   # Pod configuration
   affinity: {}
+  # affinity:
+  #   # Pod anti-affinity example - spread cache pods across different nodes
+  #   podAntiAffinity:
+  #     preferredDuringSchedulingIgnoredDuringExecution:
+  #     - weight: 100
+  #       podAffinityTerm:
+  #         labelSelector:
+  #           matchExpressions:
+  #           - key: app.kubernetes.io/component
+  #             operator: In
+  #             values:
+  #             - cache
+  #         topologyKey: kubernetes.io/hostname
+  #   # Pod affinity example - ensure cache pods are co-located with sentinel pods
+  #   podAffinity:
+  #     preferredDuringSchedulingIgnoredDuringExecution:
+  #     - weight: 50
+  #       podAffinityTerm:
+  #         labelSelector:
+  #           matchExpressions:
+  #           - key: app.kubernetes.io/component
+  #             operator: In
+  #             values:
+  #             - sentinel
+  #         topologyKey: kubernetes.io/hostname
   nodeSelector: {}
   tolerations: []
   topologySpreadConstraints: []
+  # topologySpreadConstraints:
+  # - maxSkew: 1
+  #   topologyKey: kubernetes.io/hostname
+  #   whenUnsatisfiable: DoNotSchedule
+  #   labelSelector:
+  #     matchExpressions:
+  #     - key: app.kubernetes.io/component
+  #       operator: In
+  #       values:
+  #       - cache
   priorityClassName: ""
   schedulerName: ""
   terminationGracePeriodSeconds: 30
@@ -115,8 +150,6 @@ cache:
   
   # Extra configuration
   extraFlags: []
-  command: []
-  args: []
   extraEnvVars: []
   extraEnvVarsCM: ""
   extraEnvVarsSecret: ""
@@ -127,7 +160,7 @@ cache:
   lifecycleHooks: {}
   # Pod Disruption Budget
   pdb:
-    enabled: true
+    enabled: false
     minAvailable: ""
     maxUnavailable: 1
 
@@ -139,7 +172,7 @@ networkPolicy:
 
 # Sentinel configuration
 sentinel:
-  # Number of sentinel instances (defaults to cache replicaCount if not set)
+  # Number of sentinel instances (defaults to node replicaCount if not set)
   replicaCount: 3
   
   # Master set name
@@ -153,8 +186,8 @@ sentinel:
   #   - 7 sentinels → quorum = 4
   
   # Timeouts
-  downAfterMilliseconds: 3000
-  failoverTimeout: 5000
+  downAfterMilliseconds: 10000  # Increased from 3000ms to 10s for better Kubernetes tolerance
+  failoverTimeout: 15000        # Increased from 5000ms to 15s for better Kubernetes tolerance
   parallelSyncs: 2
   
   # Sentinel-specific pod configuration (inherits from cache if not set)
@@ -204,9 +237,44 @@ sentinel:
   
   # Sentinel-specific pod configuration
   affinity: {}
+  # affinity:
+  #   # Pod anti-affinity example - spread sentinel pods across different nodes
+  #   podAntiAffinity:
+  #     preferredDuringSchedulingIgnoredDuringExecution:
+  #     - weight: 100
+  #       podAffinityTerm:
+  #         labelSelector:
+  #           matchExpressions:
+  #           - key: app.kubernetes.io/component
+  #             operator: In
+  #             values:
+  #             - sentinel
+  #         topologyKey: kubernetes.io/hostname
+  #   # Pod affinity example - ensure sentinel pods are co-located with cache pods
+  #   podAffinity:
+  #    preferredDuringSchedulingIgnoredDuringExecution:
+  #    - weight: 50
+  #      podAffinityTerm:
+  #        labelSelector:
+  #          matchExpressions:
+  #          - key: app.kubernetes.io/component
+  #            operator: In
+  #            values:
+  #            - cache
+  #        topologyKey: kubernetes.io/hostname
   nodeSelector: {}
   tolerations: []
   topologySpreadConstraints: []
+  # topologySpreadConstraints:
+  # - maxSkew: 1
+  #   topologyKey: kubernetes.io/hostname
+  #   whenUnsatisfiable: DoNotSchedule
+  #   labelSelector:
+  #     matchExpressions:
+  #     - key: app.kubernetes.io/component
+  #       operator: In
+  #       values:
+  #       - sentinel
   priorityClassName: ""
   schedulerName: ""
   terminationGracePeriodSeconds: 30
@@ -228,8 +296,6 @@ sentinel:
   
   # Extra configuration
   extraFlags: []
-  command: []
-  args: []
   extraEnvVars: []
   extraEnvVarsCM: ""
   extraEnvVarsSecret: ""
@@ -241,7 +307,7 @@ sentinel:
   
   # Pod Disruption Budget
   pdb:
-    enabled: true
+    enabled: false
     minAvailable: ""
     maxUnavailable: 1
 
@@ -266,9 +332,6 @@ paths:
   tlsKeyFile: tls.key
   tlsCaCertFile: ca.crt
 
-# Health check configuration
-healthCheck:
-  timeoutSeconds: 10
 
 # Service configuration
 service:
@@ -299,12 +362,18 @@ serviceAccount:
   annotations: {}
   name: ""
 
+
 # Secret configuration
 secretAnnotations: {}
 
 # Common labels and annotations
 commonLabels: {}
 commonAnnotations: {}
+
+# Component names (configurable)
+componentNames:
+  cache: "cache"
+  sentinel: "sentinel"
 
 # Namespace override
 namespaceOverride: ""

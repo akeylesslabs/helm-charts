@@ -203,10 +203,20 @@ component: cache
 
 {{- define "akeyless-gateway.cacheHA.Address" -}}
     {{- with $.Values.cacheHA }}
-        {{- if and .tls.enabled -}}
-            {{if .nameOverride }}{{- printf "%s-headless.%s.svc.cluster.local" (include "akeyless-gateway.cache-ha.fullname" $) $.Release.Namespace }}{{else}}{{- printf "%s.%s-headless.svc.cluster.local" $.Release.Name $.Release.Namespace}}{{end}}
+        {{- if and (index . "tls" "enabled") -}}
+            {{if (index . "nameOverride") }}{{- printf "%s-cache-headless.%s.svc.cluster.local" (include "akeyless-gateway.cache-ha.fullname" $) $.Release.Namespace }}{{else}}{{- printf "%s-cache-headless.%s.svc.cluster.local" $.Release.Name $.Release.Namespace}}{{end}}
         {{- else -}}
-             {{if .nameOverride }}{{- printf "%s.%s" (include "akeyless-gateway.cache-ha.fullname" $) $.Release.Namespace }}{{else}}{{- printf "%s.%s" $.Release.Name $.Release.Namespace}}{{end}}
+             {{if (index . "nameOverride") }}{{- printf "%s-cache-headless.%s.svc.cluster.local" (include "akeyless-gateway.cache-ha.fullname" $) $.Release.Namespace }}{{else}}{{- printf "%s-cache-headless.%s.svc.cluster.local" $.Release.Name $.Release.Namespace}}{{end}}
+        {{- end -}}
+    {{- end -}}
+{{- end -}}
+
+{{- define "akeyless-gateway.cacheHA.SentinelAddress" -}}
+    {{- with $.Values.cacheHA }}
+        {{- if and (index . "tls" "enabled") -}}
+            {{if (index . "nameOverride") }}{{- printf "%s-sentinel-headless.%s.svc.cluster.local" (include "akeyless-gateway.cache-ha.fullname" $) $.Release.Namespace }}{{else}}{{- printf "%s-sentinel-headless.%s.svc.cluster.local" $.Release.Name $.Release.Namespace}}{{end}}
+        {{- else -}}
+             {{if (index . "nameOverride") }}{{- printf "%s-sentinel-headless.%s.svc.cluster.local" (include "akeyless-gateway.cache-ha.fullname" $) $.Release.Namespace }}{{else}}{{- printf "%s-sentinel-headless.%s.svc.cluster.local" $.Release.Name $.Release.Namespace}}{{end}}
         {{- end -}}
     {{- end -}}
 {{- end -}}
@@ -223,7 +233,7 @@ component: cache
 
 {{- define "akeyless-gateway.clusterCache.cacheAddressPort" -}}
   {{- if .Values.cacheHA.enabled -}}
-    {{- printf "%s:%v" (include "akeyless-gateway.cacheHA.Address" . ) ( .Values.cacheHA.master.service.ports.redis ) }}
+    {{- printf "%s:%v" (include "akeyless-gateway.cacheHA.Address" . ) ( index .Values "cacheHA" "node" "ports" "cache" ) }}
   {{- else -}}
     {{- printf "%s:6379" (include "akeyless-gateway.clusterCache.cacheAddress" . ) }}
   {{- end -}}
@@ -248,7 +258,7 @@ component: cache
   mountPath: {{ include "akeyless-gateway.clusterCache.tlsVolumeMountPath" . }}
   readOnly: true
 {{- end -}}
-
+ 
 {{- define "akeyless-gateway.clusterCache.password" }}
 {{- /*### REDIS_PASS instead of REDIS_PASSWORD due to bc*/}}
   - name: REDIS_PASS

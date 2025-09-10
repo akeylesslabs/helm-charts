@@ -3,25 +3,35 @@ Copyright Akeyless, Inc. All Rights Reserved.
 SPDX-License-Identifier: Apache-2.0
 */}}
 
-{{- if .Values.cache.pdb.enabled }}
+{{- $nodeCount := .Values.node.replicaCount -}}
+{{- $quorum := add (div $nodeCount 2) 1 -}}
+{{- if and (gt (int $nodeCount) 1) .Values.node.pdb.enabled }}
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: {{ include "cache-ha.fullname" . }}-cache
   namespace: {{ include "cache-ha.namespace" . }}
   labels: {{- include "cache-ha.labels" . | nindent 4 }}
-    app.kubernetes.io/component: cache
+    app.kubernetes.io/component: {{ .Values.componentNames.cache | default "cache" }}
   {{- if .Values.commonAnnotations }}
   annotations: {{- include "cache-ha.commonAnnotations" . | nindent 4 }}
   {{- end }}
 spec:
-  {{- if .Values.cache.pdb.minAvailable }}
-  minAvailable: {{ .Values.cache.pdb.minAvailable }}
+  {{- if .Values.node.pdb.minAvailable }}
+  minAvailable: {{ .Values.node.pdb.minAvailable }}
+  {{- else if .Values.node.pdb.maxUnavailable }}
+  maxUnavailable: {{ .Values.node.pdb.maxUnavailable }}
+  {{- else }}
+  # Smart default: ensure quorum is maintained for Redis nodes
+  minAvailable: {{ sub $nodeCount $quorum }}
   {{- end }}
-  {{- if .Values.cache.pdb.maxUnavailable }}
-  maxUnavailable: {{ .Values.cache.pdb.maxUnavailable }}
+  {{- if and .Values.node.pdb.minAvailable .Values.node.pdb.maxUnavailable }}
+  {{- fail "Cannot specify both minAvailable and maxUnavailable in PDB" -}}
+  {{- end }}
+  {{- if and .Values.node.pdb.maxUnavailable (gt .Values.node.pdb.maxUnavailable $nodeCount) }}
+  {{- fail "maxUnavailable cannot be greater than replicaCount" -}}
   {{- end }}
   selector:
     matchLabels: {{- include "cache-ha.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: cache
+      app.kubernetes.io/component: {{ .Values.componentNames.cache | default "cache" }}
 {{- end }}

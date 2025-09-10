@@ -9,7 +9,7 @@ metadata:
   name: {{ include "cache-ha.fullname" . }}-cache-headless
   namespace: {{ include "cache-ha.namespace" . }}
   labels: {{- include "cache-ha.labels" . | nindent 4 }}
-    app.kubernetes.io/component: cache
+    app.kubernetes.io/component: {{ .Values.componentNames.cache | default "cache" }}
   {{- if .Values.headless.service.annotations }}
   annotations: {{- toYaml .Values.headless.service.annotations | nindent 4 }}
   {{- end }}
@@ -24,4 +24,4 @@ spec:
       targetPort: cache
       protocol: TCP
   selector: {{- include "cache-ha.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: cache
+    app.kubernetes.io/component: {{ .Values.componentNames.cache | default "cache" }}

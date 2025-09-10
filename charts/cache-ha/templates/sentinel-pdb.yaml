@@ -3,29 +3,35 @@ Copyright Akeyless, Inc. All Rights Reserved.
 SPDX-License-Identifier: Apache-2.0
 */}}
 
-{{- if .Values.sentinel.pdb.enabled | default .Values.cache.pdb.enabled }}
+{{- $sentinelCount := .Values.sentinel.replicaCount -}}
+{{- $quorum := add (div $sentinelCount 2) 1 -}}
+{{- if and (gt (int $sentinelCount) 1) .Values.sentinel.pdb.enabled }}
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: {{ include "cache-ha.fullname" . }}-sentinel
   namespace: {{ include "cache-ha.namespace" . }}
   labels: {{- include "cache-ha.labels" . | nindent 4 }}
-    app.kubernetes.io/component: sentinel
+    app.kubernetes.io/component: {{ .Values.componentNames.sentinel | default "sentinel" }}
   {{- if .Values.commonAnnotations }}
   annotations: {{- include "cache-ha.commonAnnotations" . | nindent 4 }}
   {{- end }}
 spec:
   {{- if .Values.sentinel.pdb.minAvailable }}
   minAvailable: {{ .Values.sentinel.pdb.minAvailable }}
-  {{- else if .Values.cache.pdb.minAvailable }}
-  minAvailable: {{ .Values.cache.pdb.minAvailable }}
-  {{- end }}
-  {{- if .Values.sentinel.pdb.maxUnavailable }}
+  {{- else if .Values.sentinel.pdb.maxUnavailable }}
   maxUnavailable: {{ .Values.sentinel.pdb.maxUnavailable }}
-  {{- else if .Values.cache.pdb.maxUnavailable }}
-  maxUnavailable: {{ .Values.cache.pdb.maxUnavailable }}
+  {{- else }}
+  # Smart default: ensure quorum is maintained for Sentinel nodes
+  minAvailable: {{ sub $sentinelCount $quorum }}
+  {{- end }}
+  {{- if and .Values.sentinel.pdb.minAvailable .Values.sentinel.pdb.maxUnavailable }}
+  {{- fail "Cannot specify both minAvailable and maxUnavailable in PDB" -}}
+  {{- end }}
+  {{- if and .Values.sentinel.pdb.maxUnavailable (gt .Values.sentinel.pdb.maxUnavailable $sentinelCount) }}
+  {{- fail "maxUnavailable cannot be greater than replicaCount" -}}
   {{- end }}
   selector:
     matchLabels: {{- include "cache-ha.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: sentinel
+      app.kubernetes.io/component: {{ .Values.componentNames.sentinel | default "sentinel" }}
 {{- end }}

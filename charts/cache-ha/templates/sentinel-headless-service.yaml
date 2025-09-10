@@ -9,7 +9,7 @@ metadata:
   name: {{ include "cache-ha.fullname" . }}-sentinel-headless
   namespace: {{ include "cache-ha.namespace" . }}
   labels: {{- include "cache-ha.labels" . | nindent 4 }}
-    app.kubernetes.io/component: sentinel
+    app.kubernetes.io/component: {{ .Values.componentNames.sentinel | default "sentinel" }}
   {{- if .Values.headless.service.annotations }}
   annotations: {{- toYaml .Values.headless.service.annotations | nindent 4 }}
   {{- end }}
@@ -24,4 +24,4 @@ spec:
       targetPort: sentinel-port
       protocol: TCP
   selector: {{- include "cache-ha.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: sentinel
+    app.kubernetes.io/component: {{ .Values.componentNames.sentinel | default "sentinel" }}

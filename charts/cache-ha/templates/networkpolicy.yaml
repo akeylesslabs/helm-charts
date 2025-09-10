@@ -16,7 +16,13 @@ metadata:
 spec:
   podSelector:
     matchLabels: {{- include "cache-ha.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: node
+    matchExpressions:
+      - key: app.kubernetes.io/component
+        operator: In
+        values:
+          {{- range $key, $value := .Values.componentNames }}
+          - {{ $value }}
+          {{- end }}
   policyTypes:
     - Ingress
     - Egress
@@ -24,12 +30,18 @@ spec:
     - from:
         - podSelector:
             matchLabels: {{- include "cache-ha.selectorLabels" . | nindent 12 }}
-              app.kubernetes.io/component: node
+            matchExpressions:
+              - key: app.kubernetes.io/component
+                operator: In
+                values:
+                  {{- range $key, $value := .Values.componentNames }}
+                  - {{ $value }}
+                  {{- end }}
       ports:
         - protocol: TCP
-          port: {{ .Values.cache.ports.cache }}
+          port: {{ .Values.node.ports.cache }}
         - protocol: TCP
-          port: {{ .Values.cache.ports.sentinel }}
+          port: {{ .Values.node.ports.sentinel }}
     {{- if .Values.networkPolicy.ingressRules }}
     {{- toYaml .Values.networkPolicy.ingressRules | nindent 4 }}
     {{- end }}
@@ -37,12 +49,18 @@ spec:
     - to:
         - podSelector:
             matchLabels: {{- include "cache-ha.selectorLabels" . | nindent 12 }}
-              app.kubernetes.io/component: node
+            matchExpressions:
+              - key: app.kubernetes.io/component
+                operator: In
+                values:
+                  {{- range $key, $value := .Values.componentNames }}
+                  - {{ $value }}
+                  {{- end }}
       ports:
         - protocol: TCP
-          port: {{ .Values.cache.ports.cache }}
+          port: {{ .Values.node.ports.cache }}
         - protocol: TCP
-          port: {{ .Values.cache.ports.sentinel }}
+          port: {{ .Values.node.ports.sentinel }}
     {{- if .Values.networkPolicy.egressRules }}
     {{- toYaml .Values.networkPolicy.egressRules | nindent 4 }}
     {{- end }}

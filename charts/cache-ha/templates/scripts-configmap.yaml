@@ -19,7 +19,7 @@ data:
     set -u
 
     # Cache configuration
-    CACHE_PORT="{{ .Values.cache.ports.cache }}"
+    CACHE_PORT="{{ .Values.node.ports.cache }}"
     CACHE_BIND="0.0.0.0"
     CACHE_APPENDONLY="yes"
     CACHE_PROTECTED_MODE="no"
@@ -39,12 +39,12 @@ data:
     protected-mode ${CACHE_PROTECTED_MODE}
     # Configure replica announcement to use hostname only
     replica-announce-ip ${POD_NAME}.{{ include "cache-ha.fullname" . }}-cache-headless.${POD_NAMESPACE}.svc.cluster.local
-    replica-announce-port {{ .Values.cache.ports.cache }}
+    replica-announce-port {{ .Values.node.ports.cache }}
     {{- if .Values.auth.enabled }}
-    requirepass \${REDIS_PASSWORD}
+    requirepass ${REDIS_PASSWORD}
     {{- end }}
-    {{- if .Values.cache.extraFlags }}
-    {{- range .Values.cache.extraFlags }}
+    {{- if .Values.node.extraFlags }}
+    {{- range .Values.node.extraFlags }}
     {{ . }}
     {{- end }}
     {{- end }}
@@ -58,7 +58,7 @@ data:
     retry_count=0
     while [ $retry_count -lt $timeout ]; do
       all_resolved=true
-      for i in $(seq 0 $(({{ .Values.cache.replicaCount }} - 1))); do
+      for i in $(seq 0 $(({{ .Values.node.replicaCount }} - 1))); do
         if [ "$i" != "${POD_NAME##*-}" ]; then
           if ! nslookup "{{ include "cache-ha.fullname" . }}-cache-${i}.{{ include "cache-ha.fullname" . }}-cache-headless.${POD_NAMESPACE}.svc.cluster.local" >/dev/null 2>&1; then
             all_resolved=false
@@ -81,10 +81,10 @@ data:
     echo "Starting cache server on port ${CACHE_PORT}"
     {{- if .Values.tls.enabled }}
     # Start Redis with TLS-only mode using command line args (Bitnami approach)
-    redis-server --port 0 --tls-port {{ .Values.cache.ports.cache }} --tls-cert-file {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --tls-key-file {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --tls-ca-cert-file {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} --tls-replication yes{{- if .Values.tls.authClients }} --tls-auth-clients yes{{- end }} --include {{ .Values.paths.configDir }}/{{ .Values.paths.configFile }} &
+    redis-server --port 0 --tls-port {{ .Values.node.ports.cache }} --tls-cert-file {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --tls-key-file {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --tls-ca-cert-file {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} --tls-replication yes{{- if .Values.tls.authClients }} --tls-auth-clients yes{{- end }} --include {{ .Values.paths.configDir }}/{{ .Values.paths.configFile }} &
     {{- else }}
     # Start Redis in plain mode
-    redis-server --port {{ .Values.cache.ports.cache }} --include {{ .Values.paths.configDir }}/{{ .Values.paths.configFile }} &
+    redis-server --port {{ .Values.node.ports.cache }} --include {{ .Values.paths.configDir }}/{{ .Values.paths.configFile }} &
     {{- end }}
 
     # Wait for cache to start
@@ -103,7 +103,7 @@ data:
     set -u
 
     # Sentinel configuration
-    SENTINEL_PORT="{{ .Values.cache.ports.sentinel }}"
+    SENTINEL_PORT="{{ .Values.node.ports.sentinel }}"
     SENTINEL_BIND="0.0.0.0"
     MASTER_SET="{{ .Values.sentinel.masterSet }}"
     QUORUM="{{ include "cache-ha.sentinelQuorum" . }}"
@@ -130,33 +130,41 @@ data:
     sentinel resolve-hostnames yes
     sentinel announce-port ${SENTINEL_PORT}
     sentinel announce-ip ${POD_NAME}.{{ include "cache-ha.fullname" . }}-sentinel-headless.${POD_NAMESPACE}.svc.cluster.local
-    sentinel monitor ${MASTER_SET} ${MASTER_HOST} {{ .Values.cache.ports.cache }} ${QUORUM}
+    sentinel monitor ${MASTER_SET} ${MASTER_HOST} {{ .Values.node.ports.cache }} ${QUORUM}
     sentinel down-after-milliseconds ${MASTER_SET} ${DOWN_AFTER_MS}
     sentinel failover-timeout ${MASTER_SET} ${FAILOVER_TIMEOUT}
     sentinel parallel-syncs ${MASTER_SET} ${PARALLEL_SYNCS}
     {{- if .Values.auth.enabled }}
-    sentinel auth-pass ${MASTER_SET} \${REDIS_PASSWORD}
+    sentinel auth-pass ${MASTER_SET} ${REDIS_PASSWORD}
     {{- end }}
     # Set log level (suppress SSL errors when set to warning)
     loglevel {{ .Values.logLevel }}
+    # Reduce connection timeouts to fail faster and retry more frequently
+    timeout 0
+    # Disable protected mode to avoid connection issues during startup
+    protected-mode no
+    # Increase TCP keepalive to detect dead connections faster
+    tcp-keepalive 60
+    # Suppress startup connection errors during cluster formation
+    tcp-backlog 511
     EOF
 
     # Add known replicas for failover (dynamic based on replica count)
-    REPLICA_COUNT="{{ .Values.cache.replicaCount }}"
+    REPLICA_COUNT="{{ .Values.node.replicaCount }}"
     for i in $(seq 1 $((REPLICA_COUNT - 1))); do
-        echo "sentinel known-replica ${MASTER_SET} {{ include "cache-ha.fullname" . }}-cache-${i}.{{ include "cache-ha.fullname" . }}-cache-headless.${POD_NAMESPACE}.svc.cluster.local {{ .Values.cache.ports.cache }}" >> {{ .Values.paths.configDir }}/{{ .Values.paths.sentinelConfigFile }}
+        echo "sentinel known-replica ${MASTER_SET} {{ include "cache-ha.fullname" . }}-cache-${i}.{{ include "cache-ha.fullname" . }}-cache-headless.${POD_NAMESPACE}.svc.cluster.local {{ .Values.node.ports.cache }}" >> {{ .Values.paths.configDir }}/{{ .Values.paths.sentinelConfigFile }}
     done
 
 
-    # Wait for cache DNS to stabilize before starting Sentinel (blocking with timeout)
+    # Wait for cache DNS to stabilize before starting Sentinel (non-blocking approach)
     # Only wait for cache pods, not sentinel pods (to avoid circular dependency)
     echo "Waiting for cache DNS to stabilize..."
-    timeout=60
+    timeout=30
     retry_count=0
     while [ $retry_count -lt $timeout ]; do
       all_resolved=true
       # Only check cache pods (sentinels will discover each other dynamically)
-      for i in $(seq 0 $(({{ .Values.cache.replicaCount }} - 1))); do
+      for i in $(seq 0 $(({{ .Values.node.replicaCount }} - 1))); do
         if ! nslookup "{{ include "cache-ha.fullname" . }}-cache-${i}.{{ include "cache-ha.fullname" . }}-cache-headless.${POD_NAMESPACE}.svc.cluster.local" >/dev/null 2>&1; then
           all_resolved=false
           break
@@ -166,18 +174,18 @@ data:
         echo "Cache DNS ready, starting Sentinel..."
         break
       fi
-      sleep 3
+      sleep 2
       retry_count=$((retry_count + 1))
     done
     if [ $retry_count -eq $timeout ]; then
-      echo "Cache DNS timeout reached, starting Sentinel anyway..."
+      echo "Cache DNS timeout reached, starting Sentinel anyway (will retry connections internally)..."
     fi
 
     # Start Sentinel
     echo "Starting Cache Sentinel on port ${SENTINEL_PORT}"
     {{- if .Values.tls.enabled }}
     # Build TLS arguments for sh (POSIX compliant)
-    set -- --port 0 --tls-port {{ .Values.cache.ports.sentinel }} --tls-cert-file {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --tls-key-file {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --tls-ca-cert-file {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} --tls-replication yes
+    set -- --port 0 --tls-port {{ .Values.node.ports.sentinel }} --tls-cert-file {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --tls-key-file {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --tls-ca-cert-file {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} --tls-replication yes
     {{- if .Values.tls.authClients }}
     set -- "$@" --tls-auth-clients yes
     {{- end }}
@@ -194,9 +202,9 @@ data:
     # Graceful shutdown
     echo "Stopping cache server gracefully"
     {{- if .Values.tls.enabled }}
-    redis-cli --tls --cert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --key {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --cacert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} -p {{ .Values.cache.ports.cache }} SHUTDOWN SAVE
+    redis-cli --tls --cert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --key {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --cacert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} -p {{ .Values.node.ports.cache }} SHUTDOWN SAVE
     {{- else }}
-    redis-cli -p {{ .Values.cache.ports.cache }} SHUTDOWN SAVE
+    redis-cli -p {{ .Values.node.ports.cache }} SHUTDOWN SAVE
     {{- end }}
 
   prestop-sentinel.sh: |
@@ -207,7 +215,7 @@ data:
     # Graceful shutdown
     echo "Stopping Cache Sentinel gracefully"
     {{- if .Values.tls.enabled }}
-    redis-cli --tls --cert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --key {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --cacert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} -p {{ .Values.cache.ports.sentinel }} SHUTDOWN
+    redis-cli --tls --cert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --key {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --cacert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} -p {{ .Values.node.ports.sentinel }} SHUTDOWN
     {{- else }}
-    redis-cli -p {{ .Values.cache.ports.sentinel }} SHUTDOWN
+    redis-cli -p {{ .Values.node.ports.sentinel }} SHUTDOWN
     {{- end }}

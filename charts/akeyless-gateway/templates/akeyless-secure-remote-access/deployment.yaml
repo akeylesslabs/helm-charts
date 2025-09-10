@@ -70,11 +70,11 @@ spec:
             - containerPort: 8888
               name: web
           env:
-            {{- if and .Values.cacheHA.enabled .Values.cacheHA.sentinel.enabled }}
+            {{- if and .Values.cacheHA.enabled (index .Values "cacheHA" "sentinel" "enabled") }}
             - name: REDIS_SENTINEL_ADDR
-              value: "{{ include "akeyless-gateway.cacheHA.Address" . }}:{{ index .Values "cacheHA" "sentinel" "containerPorts" "sentinel" }}"
+              value: "{{ include "akeyless-gateway.cacheHA.SentinelAddress" . }}:{{ index .Values "cacheHA" "sentinel" "ports" "sentinel" }}"
             - name: REDIS_SENTINEL_MASTER_NAME
-              value: {{ .Values.cacheHA.sentinel.masterSet | quote }}
+              value: {{ index .Values "cacheHA" "sentinel" "masterSet" | quote }}
             {{- end }}
             {{ include "akeyless-gateway.akeylessGatewayAuthConfig" . | nindent 10 }}
             {{ include "akeyless-gateway.unifiedGatewaySraWebConfig" . | nindent 10 }}

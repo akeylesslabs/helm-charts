@@ -64,7 +64,7 @@ Create the name of the service account to use
 {{/*
 Cache image
 */}}
-{{- define "cache-ha.cache.image" -}}
+{{- define "cache-ha.node.image" -}}
 {{- $registryName := .Values.image.registry -}}
 {{- $repositoryName := .Values.image.repository -}}
 {{- $tag := .Values.image.tag | default .Chart.AppVersion -}}
@@ -297,10 +297,10 @@ imagePullSecrets:
 Storage class validation - ensures at least one storage class is provided
 */}}
 {{- define "cache-ha.validateStorageClass" -}}
-{{- $hasCacheStorageClass := .Values.cache.persistence.storageClass -}}
+{{- $hasNodeStorageClass := .Values.node.persistence.storageClass -}}
 {{- $hasGlobalStorageClass := .Values.global.defaultStorageClass -}}
-{{- if not (or $hasCacheStorageClass $hasGlobalStorageClass) -}}
-{{- fail "Storage class is required. Please set either cache.persistence.storageClass or global.defaultStorageClass" -}}
+{{- if not (or $hasNodeStorageClass $hasGlobalStorageClass) -}}
+{{- fail "Storage class is required. Please set either node.persistence.storageClass or global.defaultStorageClass" -}}
 {{- end -}}
 {{- end -}}
 
@@ -308,8 +308,8 @@ Storage class validation - ensures at least one storage class is provided
 Storage class selection - returns the appropriate storage class
 */}}
 {{- define "cache-ha.storageClass" -}}
-{{- if .Values.cache.persistence.storageClass }}
-{{- printf "storageClassName: %s" .Values.cache.persistence.storageClass -}}
+{{- if .Values.node.persistence.storageClass }}
+{{- printf "storageClassName: %s" .Values.node.persistence.storageClass -}}
 {{- else if .Values.global.defaultStorageClass }}
 {{- printf "storageClassName: %s" .Values.global.defaultStorageClass -}}
 {{- end -}}
@@ -354,4 +354,21 @@ This ensures majority consensus for failover decisions among sentinels
 {{- define "cache-ha.sentinelQuorum" -}}
 {{- $sentinelCount := .Values.sentinel.replicaCount -}}
 {{- add (div $sentinelCount 2) 1 -}}
+{{- end -}}
+
+{{/*
+Generate Redis password following Bitnami pattern
+Priority:
+1. Use existing secret if provided
+2. Use provided password if not empty
+3. Generate random password if both are empty
+*/}}
+{{- define "cache-ha.password" -}}
+{{- if and .Values.auth.password (ne .Values.auth.password "") -}}
+{{- /* Use provided password */ -}}
+{{- .Values.auth.password -}}
+{{- else -}}
+{{- /* Generate random password */ -}}
+{{- randAlphaNum 32 -}}
+{{- end -}}
 {{- end -}}
