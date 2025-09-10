@@ -2,6 +2,16 @@ apiVersion: v1
 entries:
   akeyless-api-gateway:
   - apiVersion: v2
+    appVersion: 4.37.0
+    created: "2025-09-10T13:49:34.792750939Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
+    digest: 0a59d75d9f0f4c4888c5dcc608d712b7d986632a6e9b72dd3f640af348f8eb0e
+    name: akeyless-api-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-api-gateway-1.57.4/akeyless-api-gateway-1.57.4.tgz
+    version: 1.57.4
+  - apiVersion: v2
     appVersion: 4.36.1
     created: "2025-08-27T11:42:37.939405391Z"
     description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
@@ -3278,6 +3288,29 @@ entries:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-csi-provider-1.0.0/akeyless-csi-provider-1.0.0.tgz
     version: 1.0.0
   akeyless-gateway:
+  - annotations:
+      gatewayVersion: 4.37.0
+      sraVersion: 2.6.3
+    apiVersion: v2
+    appVersion: 4.37.0_2.6.3
+    created: "2025-09-10T13:49:35.064155098Z"
+    dependencies:
+    - alias: cacheHA
+      condition: cacheHA.enabled
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      version: 21.2.x
+    description: A Helm chart for Kubernetes that deploys akeyless-gateway
+    digest: 84c2613ae69c5502f857b0105b9fc6ad5df24bba9e9b45d31a7bad386bf0bf60
+    icon: https://akeyless-908832575.imgix.net/wp-content/uploads/2024/03/akeyless-2024.png?auto=format%2Ccompress&fm=webp&ixlib=php-3.3.0
+    keywords:
+    - akeyless-gateway
+    - sra
+    name: akeyless-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-gateway-1.9.9/akeyless-gateway-1.9.9.tgz
+    version: 1.9.9
   - annotations:
       gatewayVersion: 4.36.1
       sraVersion: 2.6.3
@@ -11360,4 +11393,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2025-09-10T07:52:29.637774536Z"
+generated: "2025-09-10T13:49:35.065650198Z"
