@@ -6,12 +6,12 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
   {{- include "akeyless-sra-ssh.labels" . | nindent 4 }}
-  {{- if .Values.sra.sshConfig.labels }}
-    {{- toYaml .Values.sra.sshConfig.labels | nindent 4 }}
+  {{- if .Values.sra.sshConfig.deployment.labels }}
+    {{- toYaml .Values.sra.sshConfig.deployment.labels | nindent 4 }}
   {{- end }}
-  {{- if .Values.sra.sshConfig.annotations }}
+  {{- if .Values.sra.sshConfig.deployment.annotations }}
   annotations:
-  {{- toYaml .Values.sra.sshConfig.annotations | nindent 4 }}
+  {{- toYaml .Values.sra.sshConfig.deployment.annotations | nindent 4 }}
   {{- end }}
 spec:
   {{- if .Values.sra.sshConfig.hpa.enabled }}
@@ -40,9 +40,21 @@ spec:
         {{- end }}
       {{- end }}
       serviceAccountName: {{ include "akeyless-gateway.getServiceAccountName" . }}
-      {{- if .Values.sra.sshConfig.nodeSelector }}
+      {{- if .Values.sra.sshConfig.deployment.nodeSelector }}
       nodeSelector:
-      {{ toYaml .Values.sra.sshConfig.nodeSelector | indent 4 }}
+      {{ toYaml .Values.sra.sshConfig.deployment.nodeSelector | indent 4 }}
+      {{- end }}
+      {{- if .Values.sra.sshConfig.deployment.tolerations }}
+      tolerations:
+        {{- toYaml .Values.sra.sshConfig.deployment.tolerations | nindent 8 }}
+      {{- end }}
+      {{- if and .Values.sra.sshConfig.deployment.affinity .Values.sra.sshConfig.deployment.affinity.enabled }}
+      affinity:
+        {{- toYaml .Values.sra.sshConfig.deployment.affinity.data | nindent 8 }}
+      {{- end }}
+      {{- if .Values.sra.sshConfig.deployment.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml .Values.sra.sshConfig.deployment.topologySpreadConstraints | nindent 8 }}
       {{- end }}
       volumes:
       - name: config

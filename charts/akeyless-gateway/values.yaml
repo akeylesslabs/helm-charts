@@ -463,6 +463,15 @@ sra:
   ## For more information: <https://docs.akeyless.io/docs/remote-access-advanced-configuration-k8s#ssh-configuration>
   ##
   sshConfig:
+    deployment:
+      annotations: {}
+      labels: {}
+      nodeSelector:
+      tolerations: []
+      affinity:
+        enabled: false
+        data:
+      topologySpreadConstraints: []
     replicaCount: 1
 
     ## This is a required RSA Public Key for your Akeyless SSH Cert Issuer

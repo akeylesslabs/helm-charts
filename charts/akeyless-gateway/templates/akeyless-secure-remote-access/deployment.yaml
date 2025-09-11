@@ -51,10 +51,10 @@ spec:
       {{- if and .Values.sra.webConfig.deployment.affinity .Values.sra.webConfig.deployment.affinity.enabled }}
       affinity:
         {{- toYaml .Values.sra.webConfig.deployment.affinity.data | nindent 8 }}
+      {{- end }}
       {{- if .Values.sra.webConfig.deployment.topologySpreadConstraints }}
       topologySpreadConstraints:
         {{- toYaml .Values.sra.webConfig.deployment.topologySpreadConstraints | nindent 8 }}
-      {{- end }}
       {{- end }}
       volumes:
         {{- range .Values.sra.webConfig.persistence.volumes }}
