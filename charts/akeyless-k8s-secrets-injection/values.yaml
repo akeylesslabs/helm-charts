@@ -9,6 +9,20 @@ deployment:
 #    fsGroup: 3000
 #    runAsUser: 65534
 
+  # Scheduling configuration (mirrors akeyless-gateway pattern)
+  nodeSelector:
+  tolerations:
+    enabled: false
+    data: []
+  affinity:
+    enabled: false
+    data:
+  # Pod Topology Spread Constraints
+  # ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
+  topologySpreadConstraints:
+    enabled: false
+    data: []
+
 replicaCount: 2
 openshiftEnabled: false
 # Configure the policy below to Fail so that injected pod creation is blocked whenever the webhook is unreachable.
@@ -103,20 +117,7 @@ resources:
     cpu: 0.25
     memory: 128Mi
 
-nodeSelector: {}
 
-tolerations: []
-
-affinity: |
-  podAntiAffinity:
-    preferredDuringSchedulingIgnoredDuringExecution:
-    - weight: 100
-      podAffinityTerm:
-        topologyKey: kubernetes.io/hostname
-        labelSelector:
-          matchLabels:
-            app: {{ template "vault-secrets-webhook.name" . }}
-            release: {{ .Release.Name }}
 
 metrics:
   enabled: false
