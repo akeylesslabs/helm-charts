@@ -3293,6 +3293,29 @@ entries:
       sraVersion: 2.6.3
     apiVersion: v2
     appVersion: 4.37.0_2.6.3
+    created: "2025-09-15T10:30:26.597217543Z"
+    dependencies:
+    - alias: cacheHA
+      condition: cacheHA.enabled
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      version: 21.2.x
+    description: A Helm chart for Kubernetes that deploys akeyless-gateway
+    digest: 9f3fb36530a91ba32b43426b24abe95229aa567c7a4581d8917dcb2c662afc0b
+    icon: https://akeyless-908832575.imgix.net/wp-content/uploads/2024/03/akeyless-2024.png?auto=format%2Ccompress&fm=webp&ixlib=php-3.3.0
+    keywords:
+    - akeyless-gateway
+    - sra
+    name: akeyless-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-gateway-1.9.10/akeyless-gateway-1.9.10.tgz
+    version: 1.9.10
+  - annotations:
+      gatewayVersion: 4.37.0
+      sraVersion: 2.6.3
+    apiVersion: v2
+    appVersion: 4.37.0_2.6.3
     created: "2025-09-10T13:49:35.064155098Z"
     dependencies:
     - alias: cacheHA
@@ -4519,6 +4542,17 @@ entries:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-gateway-1.0.0/akeyless-gateway-1.0.0.tgz
     version: 1.0.0
   akeyless-secrets-injection:
+  - apiVersion: v2
+    appVersion: 0.32.0
+    created: "2025-09-15T10:30:26.765929804Z"
+    description: A Helm chart that deploys a mutating admission webhook that configures
+      applications to request env vars from Akeyless Vault Secrets
+    digest: 4be09b96d59c6a89d0f1015089b448a8425264fc8a016661c2ffe6e263763b9c
+    name: akeyless-secrets-injection
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-secrets-injection-1.17.4/akeyless-secrets-injection-1.17.4.tgz
+    version: 1.17.4
   - apiVersion: v2
     appVersion: 0.32.0
     created: "2025-08-18T12:54:40.85259169Z"
@@ -11393,4 +11427,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2025-09-10T13:49:35.065650198Z"
+generated: "2025-09-15T10:30:26.768358073Z"
