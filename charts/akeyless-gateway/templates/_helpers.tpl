@@ -181,19 +181,18 @@ component: cache
   {{- end -}}
 {{- end -}}
 
-{{- define "akeyless-gateway.clusterCache.generatedCacheTlsSecretName" -}}
+{{/*- define "akeyless-gateway.clusterCache.generatedCacheTlsSecretName" -}}
 {{- if .Values.cacheHA.enabled -}}
 {{- printf "%s-crt" (include "akeyless-gateway.cache-ha.fullname" .) }}
 {{- else -}}
 {{- printf "%s-crt" (include "akeyless-gateway.fullname" .) }}
 {{- end -}}
-{{- end -}}
+{{- end -*/}}
+
 
 {{- define "akeyless-gateway.clusterCache.cacheTlsSecretName" -}}
 {{- if .Values.cacheHA.enabled -}}
-{{- printf "%s-crt" (include "akeyless-gateway.cache-ha.fullname" .) }}
-{{- else -}}
-{{- default (include "akeyless-gateway.clusterCache.generatedCacheTlsSecretName" .) "" }}
+{{- .Values.cacheHA.tlsSecretName | default (include "cache-ha.tlsSecretName" .Subcharts.cacheHA) }}
 {{- end -}}
 {{- end -}}
 
@@ -247,8 +246,6 @@ component: cache
 
 {{- define "akeyless-gateway.clusterCache.tlsVolumeMountPath" -}}
 {{- if .Values.cacheHA.enabled -}}
-/opt/bitnami/redis/certs
-{{- else -}}
 /opt/akeyless/cache/certs
 {{- end -}}
 {{- end -}}

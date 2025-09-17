@@ -2,7 +2,7 @@ apiVersion: v2
 name: cache-ha
 description: Cache Sentinel High Availability
 type: application
-version: 0.1.0
+version: 1.0.0
 appVersion: "8.2.1"
 keywords:
   - cache

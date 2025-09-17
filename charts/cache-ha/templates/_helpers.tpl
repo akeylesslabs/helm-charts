@@ -31,6 +31,17 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
+Namespace
+*/}}
+{{- define "cache-ha.namespace" -}}
+{{- if .Values.namespaceOverride }}
+{{- .Values.namespaceOverride }}
+{{- else -}}
+{{- .Release.Namespace }}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Common labels
 */}}
 {{- define "cache-ha.labels" -}}
@@ -126,13 +137,34 @@ Cache secret key for password
 {{- end -}}
 
 {{/*
+Generate Redis password following pattern priority:
+1. Use existing secret if provided
+2. Use provided password if not empty
+3. Generate random password if both are empty
+*/}}
+{{- define "cache-ha.password" -}}
+{{- if and .Values.auth.password (ne .Values.auth.password "") -}}
+{{- /* Use provided password */ -}}
+{{- .Values.auth.password -}}
+{{- else -}}
+{{- $secret := (lookup "v1" "Secret" (include "cache-ha.namespace" .) (include "cache-ha.secretName" .)) }}
+{{- if $secret }}
+{{- get $secret.data (include "cache-ha.secretPasswordKey" .) | b64dec -}}
+{{- else -}}
+{{- /* Generate random password */ -}}
+{{- randAlphaNum 32 -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Create TLS secret name
 */}}
 {{- define "cache-ha.tlsSecretName" -}}
 {{- if .Values.tls.existingSecret }}
 {{- printf "%s" .Values.tls.existingSecret -}}
 {{- else -}}
-{{- printf "%s-crt" (include "cache-ha.fullname" .) -}}
+{{- printf "%s-tls-crt" (include "cache-ha.fullname" .) -}}
 {{- end -}}
 {{- end -}}
 
@@ -293,16 +325,6 @@ imagePullSecrets:
 {{- end }}
 {{- end }}
 
-{{/*
-Storage class validation - ensures at least one storage class is provided
-*/}}
-{{- define "cache-ha.validateStorageClass" -}}
-{{- $hasNodeStorageClass := .Values.node.persistence.storageClass -}}
-{{- $hasGlobalStorageClass := .Values.global.defaultStorageClass -}}
-{{- if not (or $hasNodeStorageClass $hasGlobalStorageClass) -}}
-{{- fail "Storage class is required. Please set either node.persistence.storageClass or global.defaultStorageClass" -}}
-{{- end -}}
-{{- end -}}
 
 {{/*
 Storage class selection - returns the appropriate storage class
@@ -312,19 +334,11 @@ Storage class selection - returns the appropriate storage class
 {{- printf "storageClassName: %s" .Values.node.persistence.storageClass -}}
 {{- else if .Values.global.defaultStorageClass }}
 {{- printf "storageClassName: %s" .Values.global.defaultStorageClass -}}
+{{- else -}}
+{{- printf ""}}
 {{- end -}}
 {{- end -}}
 
-{{/*
-Namespace
-*/}}
-{{- define "cache-ha.namespace" -}}
-{{- if .Values.namespaceOverride }}
-{{- .Values.namespaceOverride }}
-{{- else -}}
-{{- .Release.Namespace }}
-{{- end -}}
-{{- end -}}
 
 {{/*
 Common labels for all resources
@@ -352,6 +366,9 @@ Default formula: quorum = (sentinel_count / 2) + 1
 Allows user override with safety validation
 */}}
 {{- define "cache-ha.sentinelQuorum" -}}
+{{- if .Values.sentinel.quorum }}
+{{- .Values.sentinel.quorum -}}
+{{- else -}}
 {{- $sentinelCount := .Values.sentinel.replicaCount -}}
 {{- $userQuorum := .Values.sentinel.quorum -}}
 {{- if $userQuorum -}}
@@ -365,21 +382,5 @@ Allows user override with safety validation
   {{- /* Use automatic calculation */ -}}
   {{- add (div $sentinelCount 2) 1 -}}
 {{- end -}}
-{{- end -}}
-
-{{/*
-Generate Redis password following Bitnami pattern
-Priority:
-1. Use existing secret if provided
-2. Use provided password if not empty
-3. Generate random password if both are empty
-*/}}
-{{- define "cache-ha.password" -}}
-{{- if and .Values.auth.password (ne .Values.auth.password "") -}}
-{{- /* Use provided password */ -}}
-{{- .Values.auth.password -}}
-{{- else -}}
-{{- /* Generate random password */ -}}
-{{- randAlphaNum 32 -}}
 {{- end -}}
 {{- end -}}

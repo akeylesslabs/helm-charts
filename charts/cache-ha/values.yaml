@@ -38,6 +38,8 @@ node:
   
   podLabels: {}
   podAnnotations: {}
+  secretChecksumAnnotations: true
+  configChecksumAnnotations: true
   podSecurityContext:
     enabled: false
     fsGroup: 1001
@@ -84,7 +86,7 @@ node:
     type: RollingUpdate
   podManagementPolicy: OrderedReady
   persistentVolumeClaimRetentionPolicy:
-    enabled: false
+    enabled: true
     whenDeleted: Delete
     whenScaled: Delete
   
@@ -175,6 +177,8 @@ sentinel:
   
   podLabels: {}
   podAnnotations: {}
+  secretChecksumAnnotations: true
+  configChecksumAnnotations: true
   podSecurityContext:
     enabled: false
     fsGroup: 1001
@@ -295,6 +299,7 @@ tls:
   enabled: false
   authClients: false
   existingSecret: ""
+  # certValidityDays: 1825
 
 paths:
   configDir: /etc/cache
@@ -327,7 +332,8 @@ serviceAccount:
 
 secretAnnotations: {}
 commonLabels: {}
-commonAnnotations: {}
+commonAnnotations:
+  aaa: bb
 
 componentNames:
   cache: "cache"

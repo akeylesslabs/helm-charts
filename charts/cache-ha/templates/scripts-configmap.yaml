@@ -10,7 +10,8 @@ metadata:
   namespace: {{ include "cache-ha.namespace" . }}
   labels: {{- include "cache-ha.labels" . | nindent 4 }}
   {{- if .Values.commonAnnotations }}
-  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  annotations:
+    {{- include "cache-ha.commonAnnotations" . | nindent 4 }}
   {{- end }}
 data:
   start-cache.sh: |
@@ -59,6 +60,7 @@ data:
     tcp-backlog 511
     {{- if .Values.auth.enabled }}
     requirepass ${REDIS_PASSWORD}
+    masterauth ${REDIS_PASSWORD}
     {{- end }}
     {{- if .Values.node.extraFlags }}
     {{- range .Values.node.extraFlags }}
@@ -95,7 +97,7 @@ data:
       echo "DNS timeout reached, starting Redis anyway..."
     fi
 
-    # Start cache with TLS if enabled
+    # Start cache
     echo "Starting cache server on port ${CACHE_PORT}"
     {{- if .Values.tls.enabled }}
     # Start Redis with TLS-only mode using command line args (Bitnami approach)
@@ -106,13 +108,14 @@ data:
     {{- end }}
 
     # Wait for cache to start
+    echo "Waiting for cache to start..."
     sleep 10
     
     # Let Sentinel handle master election - don't configure replication here
     # Sentinel will automatically configure master-replica relationships
     echo "Cache started - Sentinel will configure replication automatically"
     
-    # Wait for cache to finish
+    # Keep process in foreground
     wait
 
   start-sentinel.sh: |
