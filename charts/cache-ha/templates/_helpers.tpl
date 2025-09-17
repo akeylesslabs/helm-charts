@@ -293,16 +293,6 @@ imagePullSecrets:
 {{- end }}
 {{- end }}
 
-{{/*
-Storage class validation - ensures at least one storage class is provided
-*/}}
-{{- define "cache-ha.validateStorageClass" -}}
-{{- $hasNodeStorageClass := .Values.node.persistence.storageClass -}}
-{{- $hasGlobalStorageClass := .Values.global.defaultStorageClass -}}
-{{- if not (or $hasNodeStorageClass $hasGlobalStorageClass) -}}
-{{- fail "Storage class is required. Please set either node.persistence.storageClass or global.defaultStorageClass" -}}
-{{- end -}}
-{{- end -}}
 
 {{/*
 Storage class selection - returns the appropriate storage class
@@ -312,6 +302,8 @@ Storage class selection - returns the appropriate storage class
 {{- printf "storageClassName: %s" .Values.node.persistence.storageClass -}}
 {{- else if .Values.global.defaultStorageClass }}
 {{- printf "storageClassName: %s" .Values.global.defaultStorageClass -}}
+{{- else -}}
+{{- printf ""}}
 {{- end -}}
 {{- end -}}
 

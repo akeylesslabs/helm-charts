@@ -318,9 +318,10 @@ auth:
 
 # TLS configuration
 tls:
-  enabled: false
+  enabled: true
   authClients: false
   existingSecret: ""
+  # certValidityDays: 1825
 
 # Paths configuration
 paths:
