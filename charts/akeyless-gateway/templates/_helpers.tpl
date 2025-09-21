@@ -161,7 +161,7 @@ component: cache
         (not .Values.cacheHA.enabled)
       )
       (and
-        .Values.cacheHA.tls.enabled
+        .Values.cacheHA.redis.tlsPort
         .Values.cacheHA.enabled
       )
   }}
@@ -191,7 +191,7 @@ component: cache
 
 {{- define "akeyless-gateway.clusterCache.cacheTlsSecretName" -}}
 {{- if .Values.cacheHA.enabled -}}
-{{- printf "%s-crt" (include "akeyless-gateway.cache-ha.fullname" .) }}
+{{- printf "%s" (tpl .Values.cacheHA.tls.secretName .) }}
 {{- else -}}
 {{- default (include "akeyless-gateway.clusterCache.generatedCacheTlsSecretName" .) "" }}
 {{- end -}}
@@ -201,26 +201,37 @@ component: cache
 {{- printf "%s-cache-svc"  (include "akeyless-gateway.fullname" . )}}
 {{- end -}}
 
+{{/*
 {{- define "akeyless-gateway.cacheHA.Address" -}}
     {{- with $.Values.cacheHA }}
         {{- if and .tls.enabled -}}
             {{if .nameOverride }}{{- printf "%s-headless.%s.svc.cluster.local" (include "akeyless-gateway.cache-ha.fullname" $) $.Release.Namespace }}{{else}}{{- printf "%s.%s-headless.svc.cluster.local" $.Release.Name $.Release.Namespace}}{{end}}
         {{- else -}}
-             {{if .nameOverride }}{{- printf "%s.%s" (include "akeyless-gateway.cache-ha.fullname" $) $.Release.Namespace }}{{else}}{{- printf "%s.%s" $.Release.Name $.Release.Namespace}}{{end}}
+            {{if .nameOverride }}{{- printf "%s.%s" (include "akeyless-gateway.cache-ha.fullname" $) $.Release.Namespace }}{{else}}{{- printf "%s.%s" $.Release.Name $.Release.Namespace}}{{end}}
         {{- end -}}
     {{- end -}}
 {{- end -}}
-
-
+*/}}
 
 {{- define "akeyless-gateway.clusterCache.cacheAddress" -}}
 {{- if eq (include "akeyless-gateway.clusterCache.enableTls" .) "true" -}}
-{{- printf "%s.%s.svc.cluster.local" (include "akeyless-gateway.clusterCache.SvcName" .) .Release.Namespace }}
+{{- $serviceName := (include "redis-ha.fullname" .Subcharts.cacheHA) }}
+{{- printf "%s.%s.svc:%v" $serviceName .Release.Namespace .Values.cacheHA.redis.tlsPort }}
 {{- else -}}
 {{- printf "%s.%s" (include "akeyless-gateway.clusterCache.SvcName" .) .Release.Namespace }}
 {{- end -}}
 {{- end -}}
 
+{{- define "akeyless-gateway.clusterCache.sentinelAddress" -}}
+{{- if eq (include "akeyless-gateway.clusterCache.enableTls" .) "true" -}}
+{{- $serviceName := (include "redis-ha.fullname" .Subcharts.cacheHA) }}
+{{- printf "%s.%s.svc:%v" $serviceName .Release.Namespace .Values.cacheHA.sentinel.tlsPort }}
+{{- else -}}
+{{- printf "%s.%s" (include "akeyless-gateway.clusterCache.SvcName" .) .Release.Namespace }}
+{{- end -}}
+{{- end -}}
+
+{{/*
 {{- define "akeyless-gateway.clusterCache.cacheAddressPort" -}}
   {{- if .Values.cacheHA.enabled -}}
     {{- printf "%s:%v" (include "akeyless-gateway.cacheHA.Address" . ) ( .Values.cacheHA.master.service.ports.redis ) }}
@@ -228,6 +239,7 @@ component: cache
     {{- printf "%s:6379" (include "akeyless-gateway.clusterCache.cacheAddress" . ) }}
   {{- end -}}
 {{- end -}}
+*/}}
 
 {{- define "akeyless-gateway.clusterCache.tlsVolume" -}}
 - name: cache-tls
@@ -255,7 +267,7 @@ component: cache
     valueFrom:
       secretKeyRef:
 {{- if .Values.cacheHA.enabled }}
-        name: {{ if .Values.cacheHA.auth.existingSecret }}{{.Values.cacheHA.auth.existingSecret}}{{else}}{{ printf "%s" (include "akeyless-gateway.cache-ha.fullname" .) }}{{end}}
+        name: {{ if .Values.cacheHA.existingSecret }}{{.Values.cacheHA.existingSecret}}{{else}}{{ printf "%s" (include "akeyless-gateway.cache-ha.fullname" .) }}{{end}}
         key: redis-password
 {{- else }}
         name: {{ include "akeyless-gateway.clusterCache.secretName" . }}
@@ -279,7 +291,7 @@ component: cache
   - name: USE_CLUSTER_CACHE
     value: "true"
   - name: REDIS_ADDR
-    value: {{ include "akeyless-gateway.clusterCache.cacheAddressPort" . }}
+    value: {{ include "akeyless-gateway.clusterCache.cacheAddress" . }}
   - name: ENABLE_CACHE_TLS
     value: {{ include "akeyless-gateway.clusterCache.enableTls" . | quote }}
   {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
