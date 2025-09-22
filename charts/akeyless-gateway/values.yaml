@@ -117,6 +117,14 @@ cacheHA:
   enabled: true
   nameOverride: "cache-ha"
 
+  ## In case cacheHA is enabled in the Gateway, and the encryptionKeyExistingSecret parameter has a value
+  ## Akeyless will use this specified encryption key and store it securely within Akeyless Gateway.
+  ## If the encryptionKeyExistingSecret parameter is empty or not specified,
+  ## Akeyless will automatically generate a new encryption key and a new ServiceAccount for K8s.
+  ## for more information: https://docs.akeyless.io/docs/advanced-chart-configuration#cache-configuration
+  ##
+  encryptionKeyExistingSecret:
+
   image:
     repository: public.ecr.aws/docker/library/redis
     tag: 8.2.1-alpine
@@ -204,7 +212,7 @@ gateway:
     ##
     annotations: {}
     labels: {}
-    type: ClusterIP #LoadBalancer
+    type: LoadBalancer
 
     ## Gateway service port
     ##
@@ -488,7 +496,7 @@ sra:
       ##
       annotations: {}
       labels: {}
-      type: ClusterIP #LoadBalancer
+      type: LoadBalancer
       port: 22
 
     livenessProbe:
