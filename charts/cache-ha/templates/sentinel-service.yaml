@@ -38,7 +38,7 @@ spec:
   {{- end }}
   ports:
     - name: sentinel
-      port: {{ .Values.service.ports.sentinel }}
+      port: {{ .Values.ports.sentinel }}
       targetPort: sentinel-port
       protocol: TCP
   selector: {{- include "cache-ha.selectorLabels" . | nindent 4 }}

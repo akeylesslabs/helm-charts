@@ -38,7 +38,7 @@ spec:
   {{- end }}
   ports:
     - name: cache
-      port: {{ .Values.service.ports.cache }}
+      port: {{ .Values.ports.cache }}
       targetPort: cache
       protocol: TCP
   selector: {{- include "cache-ha.selectorLabels" . | nindent 4 }}

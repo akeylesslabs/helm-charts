@@ -20,7 +20,7 @@ spec:
   clusterIP: {{ .Values.headless.service.clusterIP }}
   ports:
     - name: cache
-      port: {{ .Values.headless.service.ports.cache }}
+      port: {{ .Values.ports.cache }}
       targetPort: cache
       protocol: TCP
   selector: {{- include "cache-ha.selectorLabels" . | nindent 4 }}

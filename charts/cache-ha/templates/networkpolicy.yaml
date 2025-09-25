@@ -39,9 +39,9 @@ spec:
                   {{- end }}
       ports:
         - protocol: TCP
-          port: {{ .Values.node.ports.cache }}
+          port: {{ .Values.ports.cache }}
         - protocol: TCP
-          port: {{ .Values.node.ports.sentinel }}
+          port: {{ .Values.ports.sentinel }}
     {{- if .Values.networkPolicy.ingressRules }}
     {{- toYaml .Values.networkPolicy.ingressRules | nindent 4 }}
     {{- end }}
@@ -58,9 +58,9 @@ spec:
                   {{- end }}
       ports:
         - protocol: TCP
-          port: {{ .Values.node.ports.cache }}
+          port: {{ .Values.ports.cache }}
         - protocol: TCP
-          port: {{ .Values.node.ports.sentinel }}
+          port: {{ .Values.ports.sentinel }}
     {{- if .Values.networkPolicy.egressRules }}
     {{- toYaml .Values.networkPolicy.egressRules | nindent 4 }}
     {{- end }}

@@ -144,7 +144,7 @@ spec:
           {{- end }}
           ports:
             - name: sentinel-port
-              containerPort: {{ .Values.node.ports.sentinel }}
+              containerPort: {{ .Values.ports.sentinel }}
               protocol: TCP
           {{- if .Values.sentinel.livenessProbe.enabled }}
           livenessProbe:
@@ -156,7 +156,7 @@ spec:
               command:
                 - /bin/sh
                 - -c
-                - redis-cli --tls --cert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --key {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --cacert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} -p {{ .Values.node.ports.sentinel }} ping
+                - redis-cli --tls --cert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --key {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --cacert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} -p {{ .Values.ports.sentinel }} ping
             {{- else }}
             tcpSocket:
               port: sentinel-port
@@ -178,7 +178,7 @@ spec:
               command:
                 - /bin/sh
                 - -c
-                - redis-cli --tls --cert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --key {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --cacert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} -p {{ .Values.node.ports.sentinel }} ping
+                - redis-cli --tls --cert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCertFile }} --key {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsKeyFile }} --cacert {{ .Values.paths.tlsDir }}/{{ .Values.paths.tlsCaCertFile }} -p {{ .Values.ports.sentinel }} ping
             {{- else }}
             tcpSocket:
               port: sentinel-port

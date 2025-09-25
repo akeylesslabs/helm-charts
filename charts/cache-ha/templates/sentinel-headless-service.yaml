@@ -20,7 +20,7 @@ spec:
   clusterIP: {{ .Values.headless.service.clusterIP }}
   ports:
     - name: sentinel
-      port: {{ .Values.headless.service.ports.sentinel }}
+      port: {{ .Values.ports.sentinel }}
       targetPort: sentinel-port
       protocol: TCP
   selector: {{- include "cache-ha.selectorLabels" . | nindent 4 }}

@@ -347,13 +347,24 @@ Common annotations for all resources
 {{- end -}}
 
 {{/*
-Calculate Redis Sentinel quorum based on sentinel count
-Formula: quorum = (sentinel_count / 2) + 1
-This ensures majority consensus for failover decisions among sentinels
+Calculate Redis Sentinel quorum with optional override and validation
+Default formula: quorum = (sentinel_count / 2) + 1
+Allows user override with safety validation
 */}}
 {{- define "cache-ha.sentinelQuorum" -}}
 {{- $sentinelCount := .Values.sentinel.replicaCount -}}
-{{- add (div $sentinelCount 2) 1 -}}
+{{- $userQuorum := .Values.sentinel.quorum -}}
+{{- if $userQuorum -}}
+  {{- /* User provided quorum - validate it */ -}}
+  {{- if or (lt (int $userQuorum) 1) (gt (int $userQuorum) (int $sentinelCount)) -}}
+    {{- fail (printf "Invalid quorum value %d: must be between 1 and %d (sentinel count)" (int $userQuorum) (int $sentinelCount)) -}}
+  {{- end -}}
+  {{- /* User provided quorum - use it as-is (validation already done above) */ -}}
+  {{- $userQuorum -}}
+{{- else -}}
+  {{- /* Use automatic calculation */ -}}
+  {{- add (div $sentinelCount 2) 1 -}}
+{{- end -}}
 {{- end -}}
 
 {{/*

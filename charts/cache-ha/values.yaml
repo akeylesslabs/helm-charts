@@ -1,12 +1,13 @@
 # Default values for cache-ha
-# Simple Cache Sentinel High Availability
-
-# Global settings
 global:
   imageRegistry: ""
   imagePullSecrets: []
-  # Default storage class (required if cache.persistence.storageClass is not set)
   defaultStorageClass: ""
+
+# Port configuration
+ports:
+  cache: 6379
+  sentinel: 26379
 
 # Image configuration
 image:
@@ -17,11 +18,8 @@ image:
 
 # Node configuration
 node:
-  # Number of Redis nodes (each runs Redis + Sentinel)
   replicaCount: 3
   
-  
-  # Resources
   resources:
     limits:
       cpu: 500m
@@ -30,22 +28,14 @@ node:
       cpu: 250m
       memory: 256Mi
   
-  # Storage
   persistence:
     enabled: true
     size: 8Gi
-    # Storage class (if not set, will use global.defaultStorageClass)
     storageClass: ""
     accessModes:
       - ReadWriteOnce
     annotations: {}
   
-  # Ports
-  ports:
-    cache: 6379
-    sentinel: 26379
-  
-  # Pod configuration
   podLabels: {}
   podAnnotations: {}
   podSecurityContext:
@@ -98,7 +88,6 @@ node:
     whenDeleted: Delete
     whenScaled: Delete
   
-  # Pod configuration
   affinity: {}
   # affinity:
   #   # Pod anti-affinity example - spread cache pods across different nodes
@@ -148,7 +137,6 @@ node:
   automountServiceAccountToken: true
   enableServiceLinks: true
   
-  # Extra configuration
   extraFlags: []
   extraEnvVars: []
   extraEnvVarsCM: ""
@@ -158,13 +146,11 @@ node:
   sidecars: []
   initContainers: []
   lifecycleHooks: {}
-  # Pod Disruption Budget
   pdb:
     enabled: false
     minAvailable: ""
     maxUnavailable: 1
 
-# Network Policy
 networkPolicy:
   enabled: false
   ingressRules: []
@@ -172,25 +158,21 @@ networkPolicy:
 
 # Sentinel configuration
 sentinel:
-  # Number of sentinel instances (defaults to node replicaCount if not set)
   replicaCount: 3
-  
-  # Master set name
   masterSet: "mymaster"
-  
-  # Sentinel quorum is calculated automatically using formula: (sentinel_count / 2) + 1
-  # This ensures majority consensus among sentinels for failover decisions
+  # Quorum override (optional) - must be between 1 and sentinel count
+  # If not set, will use automatic calculation: (sentinel_count / 2) + 1
+  # 
+  # WARNING: Setting quorum below ceil(sentinel_count / 2) increases split-brain risk
   # Examples:
-  #   - 3 sentinels → quorum = 2
-  #   - 5 sentinels → quorum = 3  
-  #   - 7 sentinels → quorum = 4
-  
-  # Timeouts
-  downAfterMilliseconds: 10000  # Increased from 3000ms to 10s for better Kubernetes tolerance
-  failoverTimeout: 15000        # Increased from 5000ms to 15s for better Kubernetes tolerance
+  #   - 3 sentinels: recommended quorum = 2, minimum safe = 2
+  #   - 5 sentinels: recommended quorum = 3, minimum safe = 3
+  #   - 7 sentinels: recommended quorum = 4, minimum safe = 4
+  quorum: null
+  downAfterMilliseconds: 15000
+  failoverTimeout: 30000
   parallelSyncs: 2
   
-  # Sentinel-specific pod configuration (inherits from cache if not set)
   podLabels: {}
   podAnnotations: {}
   podSecurityContext:
@@ -207,7 +189,6 @@ sentinel:
       drop:
         - ALL
   
-  # Sentinel-specific probes (inherits from cache if not set)
   livenessProbe:
     enabled: true
     initialDelaySeconds: 30
@@ -225,7 +206,6 @@ sentinel:
     failureThreshold: 5
     customReadinessProbe: {}
   
-  # Sentinel-specific StatefulSet configuration
   revisionHistoryLimit: 10
   updateStrategy:
     type: RollingUpdate
@@ -235,7 +215,6 @@ sentinel:
     whenDeleted: Delete
     whenScaled: Delete
   
-  # Sentinel-specific pod configuration
   affinity: {}
   # affinity:
   #   # Pod anti-affinity example - spread sentinel pods across different nodes
@@ -285,7 +264,6 @@ sentinel:
   automountServiceAccountToken: true
   enableServiceLinks: true
   
-  # Sentinel-specific resources
   resources:
     limits:
       cpu: 200m
@@ -294,7 +272,6 @@ sentinel:
       cpu: 100m
       memory: 128Mi
   
-  # Extra configuration
   extraFlags: []
   extraEnvVars: []
   extraEnvVarsCM: ""
@@ -305,24 +282,20 @@ sentinel:
   initContainers: []
   lifecycleHooks: {}
   
-  # Pod Disruption Budget
   pdb:
     enabled: false
     minAvailable: ""
     maxUnavailable: 1
 
-# Authentication
 auth:
   enabled: false
   password: ""
 
-# TLS configuration
 tls:
   enabled: false
   authClients: false
   existingSecret: ""
 
-# Paths configuration
 paths:
   configDir: /etc/cache
   configFile: cache.conf
@@ -332,13 +305,8 @@ paths:
   tlsKeyFile: tls.key
   tlsCaCertFile: ca.crt
 
-
-# Service configuration
 service:
   type: ClusterIP
-  ports:
-    cache: 6379
-    sentinel: 26379
   annotations: {}
   loadBalancerIP: ""
   loadBalancerSourceRanges: []
@@ -346,39 +314,26 @@ service:
   sessionAffinity: ""
   sessionAffinityConfig: {}
 
-# Headless service for StatefulSet (required for Sentinel)
 headless:
   service:
     clusterIP: None
-    ports:
-      cache: 6379
-      sentinel: 26379
     annotations: {}
 
-# Service account
 serviceAccount:
   create: true
   automount: true
   annotations: {}
   name: ""
 
-
-# Secret configuration
 secretAnnotations: {}
-
-# Common labels and annotations
 commonLabels: {}
 commonAnnotations: {}
 
-# Component names (configurable)
 componentNames:
   cache: "cache"
   sentinel: "sentinel"
 
-# Namespace override
 namespaceOverride: ""
-
-# Name overrides
 nameOverride: ""
 fullnameOverride: ""
 
