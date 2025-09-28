@@ -7,13 +7,13 @@ globalConfig:
     ## If using access_key, certificate or universal identity, you must also add gatewayCredentialsExistingSecret which includes the key/certificate/token
     ## https://docs.akeyless.io/docs/gateway-chart#authentication
     ##
-    gatewayAccessId: p-c2je69oe8zymam
-    gatewayAccessType: access_key
+    gatewayAccessId:
+    gatewayAccessType:
     ## Use K8s secret to set the following types: access_key, certificate, uid
     ## Create a K8s secret, run 'kubect apply' and add secret name (see docs for examples)
     ## keys: gateway-access-key, gateway-certificate, gateway-certificate-key, gateway-uid-token
     ##
-    gatewayCredentialsExistingSecret: access-key
+    gatewayCredentialsExistingSecret:
 
   ## Add one or more Access IDs to give them access to this Gateway; add the specified permissions and sub-claims.
   ## Name must be unique. Empty permissions will implicitly give the admin permission.
@@ -47,11 +47,11 @@ globalConfig:
 
   ## This is the actual name of the cluster as in account/access-id/clusterName
   ##
-  clusterName: alex-local
+  clusterName:
 
   ## This is the vanity display name of the cluster
   ##
-  initialClusterDisplayName: alex-local
+  initialClusterDisplayName:
 
   ## The key which is used to encrypt the Gateway configuration.
   ## If left empty - the account's default key will be used.
@@ -114,7 +114,7 @@ globalConfig:
         memory: 256Mi
 
 cacheHA:
-  enabled: true
+  enabled: false
   nameOverride: "cache-ha"
 
   ## In case cacheHA is enabled in the Gateway, and the encryptionKeyExistingSecret parameter has a value
@@ -146,6 +146,11 @@ cacheHA:
 
   sentinel:
     tlsPort: 26385
+
+  podDisruptionBudget: {}
+    # Use only one of the two
+    # maxUnavailable: 1
+    # minAvailable: 1
 
 ####################################################
 ##          Default values for Gateway            ##
