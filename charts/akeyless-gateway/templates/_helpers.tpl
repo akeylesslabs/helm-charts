@@ -267,8 +267,8 @@ component: cache
     valueFrom:
       secretKeyRef:
 {{- if .Values.cacheHA.enabled }}
-        name: {{ if .Values.cacheHA.existingSecret }}{{.Values.cacheHA.existingSecret}}{{else}}{{ printf "%s" (include "akeyless-gateway.cache-ha.fullname" .) }}{{end}}
-        key: redis-password
+        name: {{ if .Values.cacheHA.existingSecret }}{{ tpl .Values.cacheHA.existingSecret . }}{{else}}{{ printf "%s" (include "akeyless-gateway.cache-ha.fullname" .) }}{{end}}
+        key: {{ .Values.cacheHA.authKey }}
 {{- else }}
         name: {{ include "akeyless-gateway.clusterCache.secretName" . }}
         key: cache-pass

@@ -130,8 +130,8 @@ cacheHA:
     tag: 8.2.1-alpine
 
   auth: true
-  authKey: "redis-password"
-  existingSecret: access-key
+  authKey: password
+  existingSecret: "{{ .Release.Name }}-cache-ha-credentials"
 
   tls:
     secretName: "{{ .Release.Name }}-cache-ha-tls"
