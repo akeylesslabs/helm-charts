@@ -141,10 +141,12 @@ cacheHA:
     # certValidityDays: 1825
 
   redis:
+    port: 6379
     tlsPort: 6385
     masterGroupName: "mymaster"
 
   sentinel:
+    port: 26379
     tlsPort: 26385
 
   podDisruptionBudget: {}

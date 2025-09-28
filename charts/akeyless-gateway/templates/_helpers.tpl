@@ -197,24 +197,27 @@ component: cache
 {{- end -}}
 {{- end -}}
 
+
+{{- define "akeyless-gateway.clusterCache.SvcName" -}}
+{{- printf "%s-cache-svc" (include "akeyless-gateway.fullname" .) -}}
+{{- end -}}
+
 {{- define "akeyless-gateway.clusterCache.cacheAddress" -}}
+{{- $port := .Values.cacheHA.redis.port }}
+{{- $serviceName := (include "akeyless-gateway.clusterCache.SvcName" .) }}
 {{- if eq (include "akeyless-gateway.clusterCache.enableTls" .) "true" -}}
 {{- $port := .Values.cacheHA.redis.tlsPort }}
 {{- $serviceName := (include "redis-ha.fullname" .Subcharts.cacheHA) }}
-{{- else -}}
-{{- $port := .Values.cacheHA.redis.port }}
-{{- $serviceName :=  (printf "%s-cache-svc" (include "akeyless-gateway.fullname" .)) }}
 {{- end -}}
 {{- printf "%s.%s.svc:%v" $serviceName .Release.Namespace $port }}
 {{- end -}}
 
 {{- define "akeyless-gateway.clusterCache.sentinelAddress" -}}
+{{- $port := .Values.cacheHA.sentinel.port }}
+{{- $serviceName := (include "akeyless-gateway.clusterCache.SvcName" .) }}
 {{- if eq (include "akeyless-gateway.clusterCache.enableTls" .) "true" -}}
 {{- $port := .Values.cacheHA.sentinel.tlsPort }}
 {{- $serviceName := (include "redis-ha.fullname" .Subcharts.cacheHA) }}
-{{- else -}}
-{{- $port := .Values.cacheHA.sentinel.port }}
-{{- $serviceName :=  (printf "%s-cache-svc" (include "akeyless-gateway.fullname" .)) }}
 {{- end -}}
 {{- printf "%s.%s.svc:%v" $serviceName .Release.Namespace $port }}
 {{- end -}}
@@ -226,11 +229,7 @@ component: cache
 {{- end -}}
 
 {{- define "akeyless-gateway.clusterCache.tlsVolumeMountPath" -}}
-{{- if .Values.cacheHA.enabled -}}
-/opt/bitnami/redis/certs
-{{- else -}}
 /opt/akeyless/cache/certs
-{{- end -}}
 {{- end -}}
 
 {{- define "akeyless-gateway.clusterCache.tlsVolumeMounts" -}}
@@ -274,11 +273,11 @@ component: cache
     value: {{ include "akeyless-gateway.clusterCache.enableTls" . | quote }}
   {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
   - name: CACHE_REDIS_CA_PATH
-    value: "{{ printf "%s/ca.crt" (include "akeyless-gateway.clusterCache.tlsVolumeMountPath" .) }}"
+    value: "{{ printf "%s/%s" (include "akeyless-gateway.clusterCache.tlsVolumeMountPath" .) .Values.cacheHA.tls.caCertFile }}"
   - name: CACHE_REDIS_KEY_PATH
-    value: "{{ printf "%s/tls.key" (include "akeyless-gateway.clusterCache.tlsVolumeMountPath" .) }}"
+    value: "{{ printf "%s/%s" (include "akeyless-gateway.clusterCache.tlsVolumeMountPath" .) .Values.cacheHA.tls.keyFile }}"
   - name: CACHE_REDIS_CERT_PATH
-    value: "{{ printf "%s/tls.crt" (include "akeyless-gateway.clusterCache.tlsVolumeMountPath" .) }}"
+    value: "{{ printf "%s/%s" (include "akeyless-gateway.clusterCache.tlsVolumeMountPath" .) .Values.cacheHA.tls.certFile }}"
   {{- end }}
   - name: STORE_CACHE_ENCRYPTION_KEY_TO_K8S_SECRETS
     value: {{ .Values.globalConfig.clusterCache.enableScaleOutOnDisconnectedMode | default false | quote }}
