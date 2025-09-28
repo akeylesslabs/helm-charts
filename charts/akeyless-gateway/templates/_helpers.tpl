@@ -207,6 +207,8 @@ component: cache
 {{- $serviceName := (include "akeyless-gateway.clusterCache.SvcName" .) }}
 {{- if eq (include "akeyless-gateway.clusterCache.enableTls" .) "true" -}}
 {{- $port := .Values.cacheHA.redis.tlsPort }}
+{{- end -}}
+{{- if .Values.cacheHA.enabled -}}
 {{- $serviceName := (include "redis-ha.fullname" .Subcharts.cacheHA) }}
 {{- end -}}
 {{- printf "%s.%s.svc:%v" $serviceName .Release.Namespace $port }}
@@ -217,6 +219,8 @@ component: cache
 {{- $serviceName := (include "akeyless-gateway.clusterCache.SvcName" .) }}
 {{- if eq (include "akeyless-gateway.clusterCache.enableTls" .) "true" -}}
 {{- $port := .Values.cacheHA.sentinel.tlsPort }}
+{{- end -}}
+{{- if .Values.cacheHA.enabled -}}
 {{- $serviceName := (include "redis-ha.fullname" .Subcharts.cacheHA) }}
 {{- end -}}
 {{- printf "%s.%s.svc:%v" $serviceName .Release.Namespace $port }}
