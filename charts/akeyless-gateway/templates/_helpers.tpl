@@ -197,49 +197,27 @@ component: cache
 {{- end -}}
 {{- end -}}
 
-{{- define "akeyless-gateway.clusterCache.SvcName" -}}
-{{- printf "%s-cache-svc"  (include "akeyless-gateway.fullname" . )}}
-{{- end -}}
-
-{{/*
-{{- define "akeyless-gateway.cacheHA.Address" -}}
-    {{- with $.Values.cacheHA }}
-        {{- if and .tls.enabled -}}
-            {{if .nameOverride }}{{- printf "%s-headless.%s.svc.cluster.local" (include "akeyless-gateway.cache-ha.fullname" $) $.Release.Namespace }}{{else}}{{- printf "%s.%s-headless.svc.cluster.local" $.Release.Name $.Release.Namespace}}{{end}}
-        {{- else -}}
-            {{if .nameOverride }}{{- printf "%s.%s" (include "akeyless-gateway.cache-ha.fullname" $) $.Release.Namespace }}{{else}}{{- printf "%s.%s" $.Release.Name $.Release.Namespace}}{{end}}
-        {{- end -}}
-    {{- end -}}
-{{- end -}}
-*/}}
-
 {{- define "akeyless-gateway.clusterCache.cacheAddress" -}}
 {{- if eq (include "akeyless-gateway.clusterCache.enableTls" .) "true" -}}
+{{- $port := .Values.cacheHA.redis.tlsPort }}
 {{- $serviceName := (include "redis-ha.fullname" .Subcharts.cacheHA) }}
-{{- printf "%s.%s.svc:%v" $serviceName .Release.Namespace .Values.cacheHA.redis.tlsPort }}
 {{- else -}}
-{{- printf "%s.%s" (include "akeyless-gateway.clusterCache.SvcName" .) .Release.Namespace }}
+{{- $port := .Values.cacheHA.redis.port }}
+{{- $serviceName :=  (printf "%s-cache-svc" (include "akeyless-gateway.fullname" .)) }}
 {{- end -}}
+{{- printf "%s.%s.svc:%v" $serviceName .Release.Namespace $port }}
 {{- end -}}
 
 {{- define "akeyless-gateway.clusterCache.sentinelAddress" -}}
 {{- if eq (include "akeyless-gateway.clusterCache.enableTls" .) "true" -}}
+{{- $port := .Values.cacheHA.sentinel.tlsPort }}
 {{- $serviceName := (include "redis-ha.fullname" .Subcharts.cacheHA) }}
-{{- printf "%s.%s.svc:%v" $serviceName .Release.Namespace .Values.cacheHA.sentinel.tlsPort }}
 {{- else -}}
-{{- printf "%s.%s" (include "akeyless-gateway.clusterCache.SvcName" .) .Release.Namespace }}
+{{- $port := .Values.cacheHA.sentinel.port }}
+{{- $serviceName :=  (printf "%s-cache-svc" (include "akeyless-gateway.fullname" .)) }}
 {{- end -}}
+{{- printf "%s.%s.svc:%v" $serviceName .Release.Namespace $port }}
 {{- end -}}
-
-{{/*
-{{- define "akeyless-gateway.clusterCache.cacheAddressPort" -}}
-  {{- if .Values.cacheHA.enabled -}}
-    {{- printf "%s:%v" (include "akeyless-gateway.cacheHA.Address" . ) ( .Values.cacheHA.master.service.ports.redis ) }}
-  {{- else -}}
-    {{- printf "%s:6379" (include "akeyless-gateway.clusterCache.cacheAddress" . ) }}
-  {{- end -}}
-{{- end -}}
-*/}}
 
 {{- define "akeyless-gateway.clusterCache.tlsVolume" -}}
 - name: cache-tls
