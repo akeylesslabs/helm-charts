@@ -130,8 +130,8 @@ cacheHA:
     tag: 8.2.1-alpine
 
   auth: true
-  authKey: password
-  existingSecret: "{{ .Release.Name }}-cache-ha-credentials"
+  authKey: redis-password
+  existingSecret: "{{ .Release.Name }}-cache-ha"
 
   ## TLS is enabled by default when cacheHA is enabled
   ## if you want to disable it, set tls ports (cacheHA.redis.tlsPort and cacheHA.sentinel.tlsPort) to null
