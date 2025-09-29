@@ -8,3 +8,8 @@
 
 #Ignore manifest work directory
 manifest_work_dir/
+
+Chart.lock
+**/charts/*.tgz
+**/tmpcharts-*/
+values.yaml.tmp

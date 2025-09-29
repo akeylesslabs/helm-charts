@@ -133,6 +133,8 @@ cacheHA:
   authKey: password
   existingSecret: "{{ .Release.Name }}-cache-ha-credentials"
 
+  ## TLS is enabled by default when cacheHA is enabled
+  ## if you want to disable it, set tls ports (cacheHA.redis.tlsPort and cacheHA.sentinel.tlsPort) to null
   tls:
     secretName: "{{ .Release.Name }}-cache-ha-tls"
     certFile: tls.crt
