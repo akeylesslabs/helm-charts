@@ -507,6 +507,10 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- define "akeyless-gateway.SraSshServiceConfig" }}
   - name: REMOTE_ACCESS_SSH_SERVICE_INTERNAL_URL
     value: "http://ssh-{{ include "akeyless-gateway.fullname" . }}-internal.{{ .Release.Namespace }}.svc.cluster.local:9900"
+  {{- if .Values.sra.sshHost }}
+  - name: GW_SRA_SSH_HOST
+    value: {{ .Values.sra.sshHost | quote }}
+  {{- end }}
 {{- end -}}
 
 {{- define "akeyless-gateway.unifiedGatewaySraWebConfig" }}

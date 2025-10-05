@@ -378,6 +378,11 @@ sra:
   ## Or setup SRA on K8s <https://docs.akeyless.io/docs/remote-access-setup-k8s>
   enabled: false
 
+  ## SRA SSH host (infra-owned). Optional. If set, injected to GW as GW_SRA_SSH_HOST.
+  ## Example: ssh-akeyless-gateway.example.com or ssh-akeyless-gateway.example.com:22
+  ## When unset, clients will fallback to the general GW host via discovery.
+  sshHost: ""
+
   image:
     ##  Default image repository is: akeyless/zero-trust-bastion
     ##
