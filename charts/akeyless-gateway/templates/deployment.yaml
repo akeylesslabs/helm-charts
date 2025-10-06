@@ -155,7 +155,7 @@ spec:
           {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
             {{ include "akeyless-gateway.clusterCache.tlsVolumeMounts" . | nindent 12 }}
           {{- end }}
-          {{- if and (.Values.globalConfig.metrics.enabled) (.Values.globalConfig.metrics.enabled) }}
+          {{- if and (.Values.globalConfig.metrics.enabled) (.Values.globalConfig.metrics.metricsExistingSecret) }}
             - name: otelcol-metrics-config
               mountPath: /akeyless/otel-config.yaml
               subPath: otel-config.yaml
