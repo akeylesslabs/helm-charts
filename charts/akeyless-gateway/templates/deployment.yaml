@@ -168,17 +168,17 @@ spec:
           {{- end}}
           {{- if eq .Values.gateway.persistence.enabled true }}
             - name: persistent-storage
-              mountPath: {{ .Values.gateway.persistence.mountPath}}
+              mountPath: {{ .Values.gateway.persistence.mountPath }}
           {{- end }}
           {{- end}}
           resources:
           {{- toYaml .Values.gateway.resources | nindent 12 }}
           env:
-            {{- if and .Values.cacheHA.enabled .Values.cacheHA.sentinel.enabled }}
+            {{- if .Values.cacheHA.enabled }}
             - name: REDIS_SENTINEL_ADDR
-              value: "{{ include "akeyless-gateway.cacheHA.Address" . }}:{{ index .Values "cacheHA" "sentinel" "containerPorts" "sentinel" }}"
+              value: {{ include "akeyless-gateway.clusterCache.sentinelAddress" . }}
             - name: REDIS_SENTINEL_MASTER_NAME
-              value: {{ .Values.cacheHA.sentinel.masterSet | quote }}
+              value: {{ .Values.cacheHA.redis.masterGroupName | quote }}
             {{- end }}
             {{- if .Values.globalConfig.customerFragmentsExistingSecret }}
             - name: CUSTOMER_FRAGMENTS
