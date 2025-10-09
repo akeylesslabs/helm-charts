@@ -145,7 +145,7 @@ Generate chart secret name
 {{- end }}
 
 {{- define "akeyless-gateway.clusterCache.enabled" -}}
-{{- or (eq .Values.globalConfig.gatewayAuth.gatewayAccessType "uid") (ne .Values.globalConfig.clusterCache.enabled false) -}}
+{{- or (eq .Values.globalConfig.gatewayAuth.gatewayAccessType "uid") .Values.globalConfig.clusterCache.enabled .Values.cacheHA.enabled -}}
 {{- end }}
 
 {{- define "akeyless-gateway.clusterCache.labels" -}}
@@ -154,17 +154,11 @@ component: cache
 {{- end }}
 
 {{- define "akeyless-gateway.clusterCache.enableTls" -}}
-  {{ or
-      (and
-        .Values.globalConfig.clusterCache.enableTls
-        (include "akeyless-gateway.clusterCache.enabled" .)
-        (not .Values.cacheHA.enabled)
-      )
-      (and
-        .Values.cacheHA.redis.tlsPort
-        .Values.cacheHA.enabled
-      )
-  }}
+  {{ if .Values.cacheHA.enabled }}
+    {{ .Values.cacheHA.redis.tlsPort }}
+  {{ else }}
+    {{ and .Values.globalConfig.clusterCache.enableTls (include "akeyless-gateway.clusterCache.enabled" .) }}
+  {{ end }}
 {{- end }}
 
 {{- define "akeyless-gateway.cache-ha.fullname" -}}
