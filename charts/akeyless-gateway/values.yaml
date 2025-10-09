@@ -139,7 +139,7 @@ cacheHA:
     defaultStorageClass: ""
     security:
       allowInsecureImages: true  # Required for custom image repositories
-    
+
   image:
     repository: bitnamilegacy/redis  # Changed from bitnami/redis
 
@@ -180,7 +180,7 @@ gateway:
       enabled: false
       data:
     # ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
-    
+
     ## Pod Topology Spread Constraints
     ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
     topologySpreadConstraints: []

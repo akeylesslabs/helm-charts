@@ -94,7 +94,7 @@ Checks persistent volume
     {{- $used := .name -}}
     {{- if $used }}
       {{- printf "true" }}
-    {{- end }}  
+    {{- end }}
   {{- end }}
 {{- end }}
 
@@ -182,7 +182,7 @@ Get the Ingress TLS secret.
     image: "{{ .Values.redisStorage.image.repository }}:{{ .Values.redisStorage.image.tag }}"
     imagePullPolicy: {{ .Values.redisStorage.image.pullPolicy }}
   {{- else }}
-    image: "docker.io/bitnamilegacy/redis:6.2"
+    image: "public.ecr.aws/docker/library/redis:8.2.2-alpine"
     imagePullPolicy: "Always"
   {{- end -}}
 {{- end -}}
