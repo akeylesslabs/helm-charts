@@ -30,22 +30,21 @@ spec:
                 - sh
                 - -c
                 - |
-                  #!/usr/bin/env bash -e
-                  export REDISCLI_AUTH="$REDIS_PASSWORD"
-                  set_response=$(
-                    redis-cli set liveness_test_key "SUCCESS"
-                  )
-                  response=$(
-                    redis-cli get liveness_test_key
-                  )
-                  del_response=$(
-                      redis-cli del liveness_test_key
-                  )
-                  if [ "$response" != "SUCCESS" ] ; then
-                    echo "Unable to get keys, something is wrong"
-                    echo "$response"
-                    exit 1
-                  fi
+                    #!/usr/bin/env bash -e
+                    set_response=$(
+                      redis-cli {{ $tlsArgs }} -a "$REDIS_PASSWORD" set liveness_test_key "SUCCESS"
+                    )
+                    response=$(
+                      redis-cli {{ $tlsArgs }} -a "$REDIS_PASSWORD" get liveness_test_key
+                    )
+                    del_response=$(
+                      redis-cli {{ $tlsArgs }} -a "$REDIS_PASSWORD" del liveness_test_key
+                    )
+                    if [ "$response" != "SUCCESS" ] ; then
+                      echo "Unable to get keys, something is wrong"
+                      echo "$response"
+                      exit 1
+                    fi
             initialDelaySeconds: 5
             periodSeconds: 5
           readinessProbe:
@@ -54,15 +53,14 @@ spec:
                 - sh
                 - -c
                 - |
-                  #!/usr/bin/env bash -e
-                  export REDISCLI_AUTH="$REDIS_PASSWORD"
-                  response=$(
-                      redis-cli ping
-                  )
-                  if [ "$response" != "PONG" ] ; then
-                      echo "Unable to get keys, something is wrong"
-                      echo "$response"
-                      exit 1
+                    #!/usr/bin/env bash -e
+                    response=$(
+                      redis-cli {{ $tlsArgs }} -a "$REDIS_PASSWORD" ping
+                    )
+                    if [ "$response" != "PONG" ] ; then
+                        echo "Unable to get keys, something is wrong"
+                        echo "$response"
+                        exit 1
                     fi
             initialDelaySeconds: 5
             periodSeconds: 5
