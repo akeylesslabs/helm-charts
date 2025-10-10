@@ -33,4 +33,32 @@ detailed installation instructions.
 To install the chart run the following:
 ```bash
 helm install gateway akeyless/akeyless-gateway
-``` 
+```
+
+## Argo CD Instructions
+When deploying the Akeyless Gateway with Argo CD, you need to ignore the following differences in the secrets.
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+spec:
+  ...
+  ignoreDifferences:
+  - kind: Secret
+    name: <release-name>-cache-ha-credentials
+    namespace: <namespace>
+    jsonPointers:
+      - /data/password
+  - kind: Secret
+    name: <release-name>-cache-ha-tls
+    namespace: <namespace>
+    jsonPointers:
+      - /data/ca.crt
+      - /data/tls.crt
+      - /data/tls.key
+```
+
+## Changing the password or TLS certificates for Cache HA
+After changing the password or TLS certificates for Cache HA, you need to recreate the pods to apply the changes.
+```shell
+kubectl -n <namespace> get pods -l app=cache-ha -o name | while read pod; do kubectl -n <namespace> delete pod $pod; done
+```
