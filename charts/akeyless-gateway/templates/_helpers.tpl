@@ -106,10 +106,10 @@ Generate chart secret name
 {{- define "akeyless-gateway.clusterCacheImage" -}}
   {{- if .Values.globalConfig.clusterCache.image -}}
   {{- printf "image: %s:%s\n" (required "A valid .Values.globalConfig.clusterCache.image.repository entry required!" .Values.globalConfig.clusterCache.image.repository) (required "A valid .Values.globalConfig.clusterCache.image.tag entry required!" .Values.globalConfig.clusterCache.image.tag | toString)  -}}
-  {{- printf "imagepullpolicy: %s" (.Values.globalConfig.clusterCache.image.imagePullPolicy | default "IfNotPresent"  | quote ) -}}
+  {{- printf "imagePullPolicy: %s" (.Values.globalConfig.clusterCache.image.imagePullPolicy | default "IfNotPresent"  | quote ) -}}
   {{- else -}}
   {{- printf "image: %s\n" ("public.ecr.aws/docker/library/redis:8.2.2-alpine" | quote) -}}
-  {{- printf "imagepullpolicy: %s\n" ("IfNotPresent" | quote) -}}
+  {{- printf "imagePullPolicy: %s\n" ("IfNotPresent" | quote) -}}
   {{- end -}}
 {{- end -}}
 

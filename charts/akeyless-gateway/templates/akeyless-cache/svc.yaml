@@ -1,5 +1,4 @@
-{{- $cacheHa := index .Values "cacheHA" -}}
-{{- if and (eq "true" (include "akeyless-gateway.clusterCache.enabled" . )) (not $cacheHa.enabled) }}
+{{- if and (eq "true" (include "akeyless-gateway.clusterCache.enabled" . )) (not .Values.cacheHA.enabled) }}
 apiVersion: v1
 kind: Service
 metadata:
