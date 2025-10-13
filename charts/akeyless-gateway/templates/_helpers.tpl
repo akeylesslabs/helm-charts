@@ -292,7 +292,7 @@ component: cache
   {{- end }}
   - name: STORE_CACHE_ENCRYPTION_KEY_TO_K8S_SECRETS
     value: {{ .Values.globalConfig.clusterCache.enableScaleOutOnDisconnectedMode | default false | quote }}
-  {{- if not (eq (include "akeyless-gateway.clusterCacheEncryptionKeyExist" .) "") }}
+  {{- if or .Values.globalConfig.clusterCache.encryptionKeyExistingSecret .Values.cacheHA.encryptionKeyExistingSecret }}
   - name: CACHE_ENCRYPTION_KEY_SECRET_NAME
     value: {{ include "akeyless-gateway.clusterCacheEncryptionKeyExist" . | quote }}
   {{- end }}
