@@ -7,8 +7,10 @@ metadata:
 {{- include "akeyless-gateway.labels" . | nindent 4 }}
 spec:
   ports:
-    - port: 6379
+    - name: cache
+      port: 6379
       protocol: TCP
+      targetPort: cache
   selector:
     {{- include "akeyless-gateway.clusterCache.labels" . | nindent 4 }}
   type: ClusterIP
