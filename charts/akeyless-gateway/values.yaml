@@ -163,7 +163,23 @@ cacheHA:
     # minAvailable: 1
 
   # allow cache-ha pods to be scheduled on the same node by setting hardAntiAffinity to false
-  # hardAntiAffinity: false
+  hardAntiAffinity: true
+
+  persistentVolume:
+    enabled: true
+    ## cacheHA data Persistent Volume Storage Class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack)
+    # storageClass: "-"
+    storageClass: ~
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+    annotations: {}
+    labels: {}
 
 ####################################################
 ##          Default values for Gateway            ##
