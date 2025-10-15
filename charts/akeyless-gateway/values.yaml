@@ -136,9 +136,9 @@ cacheHA:
   existingSecret: "{{ .Release.Name }}-cluster-cache-ha"
 
   ## TLS is enabled by default when cacheHA is enabled
-  ## if you want to disable TLS, set tls ports (cacheHA.redis.tlsPort and cacheHA.sentinel.tlsPort) to 0
+  ## To disable TLS, set tls ports (cacheHA.redis.tlsPort and cacheHA.sentinel.tlsPort) to 0
   ## and set cacheHA.redis.port to 6379 and cacheHA.sentinel.port to 26379
-  tls:
+  tls: 
     secretName: "{{ .Release.Name }}-cluster-cache-ha-tls"
     certFile: tls.crt
     keyFile: tls.key
