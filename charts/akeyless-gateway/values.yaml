@@ -102,7 +102,7 @@ globalConfig:
     # Enable/Disable TLS  between the Gateway and the cluster cache service
     # using generated certificates and keys
     enableTls: false
-    certValidityDays: 1825
+    # certValidityDays: 1825
 
     ## The resources limits for the redis cluster cache
     ##
@@ -143,13 +143,13 @@ cacheHA:
     certFile: tls.crt
     keyFile: tls.key
     caCertFile: ca.crt
-    certValidityDays: 1825
+    # certValidityDays: 1825
 
   redis:
     port: 0
     tlsPort: 6379
     tlsReplication: true
-    masterGroupName: "mymaster"
+    masterGroupName: "akeyless-cache"
 
     resources: {}
     #  requests:
@@ -184,17 +184,19 @@ cacheHA:
     enabled: true
     ## cacheHA data Persistent Volume Storage Class
     ## If defined, storageClassName: <storageClass>
-    ## If set to "-", storageClassName: "", which disables dynamic provisioning
-    ## If undefined (the default) or set to null, no storageClassName spec is
-    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
-    ##   GKE, AWS & OpenStack)
-    # storageClass: "-"
+    ## If undefined, the default storage class will be used.
     storageClass: ~
     accessModes:
       - ReadWriteOnce
     size: 10Gi
     annotations: {}
     labels: {}
+
+  topologySpreadConstraints:
+    enabled: false
+    # maxSkew: "1"
+    # topologyKey: "topology.kubernetes.io/zone"
+    # whenUnsatisfiable: "ScheduleAnyway"
 
 ####################################################
 ##          Default values for Gateway            ##
