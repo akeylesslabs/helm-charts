@@ -193,13 +193,14 @@ component: cache
 {{- end -}}
 
 {{- define "akeyless-gateway.clusterCache.cacheAddress" -}}
-{{- $port := .Values.cacheHA.redis.port }}
 {{- $serviceName := (include "akeyless-gateway.clusterCache.SvcName" .) }}
+{{- $port := 6379 }}
+{{- if .Values.cacheHA.enabled -}}
+{{- $serviceName = (include "redis-ha.fullname" .Subcharts.cacheHA) }}
+{{- $port = .Values.cacheHA.redis.port }}
 {{- if eq (include "akeyless-gateway.clusterCache.enableTls" .) "true" -}}
 {{- $port = .Values.cacheHA.redis.tlsPort }}
 {{- end -}}
-{{- if .Values.cacheHA.enabled -}}
-{{- $serviceName = (include "redis-ha.fullname" .Subcharts.cacheHA) }}
 {{- end -}}
 {{- printf "%s.%s.svc:%v" $serviceName .Release.Namespace $port }}
 {{- end -}}
