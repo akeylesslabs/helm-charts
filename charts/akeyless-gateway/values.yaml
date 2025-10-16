@@ -138,7 +138,7 @@ cacheHA:
   ## TLS is enabled by default when cacheHA is enabled
   ## To disable TLS, set tls ports (cacheHA.redis.tlsPort and cacheHA.sentinel.tlsPort) to 0
   ## and set cacheHA.redis.port to 6379 and cacheHA.sentinel.port to 26379
-  tls: 
+  tls:
     secretName: "{{ .Release.Name }}-cluster-cache-ha-tls"
     certFile: tls.crt
     keyFile: tls.key
@@ -177,8 +177,8 @@ cacheHA:
     # maxUnavailable: 1
     # minAvailable: 1
 
-  # allow cache-ha pods to be scheduled on the same node by setting hardAntiAffinity to false
-  hardAntiAffinity: true
+  # prevent cache-ha pods scheduling on the same node by setting hardAntiAffinity to true
+  hardAntiAffinity: false
 
   persistentVolume:
     enabled: true
