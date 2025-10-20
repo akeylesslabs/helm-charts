@@ -2,6 +2,16 @@ apiVersion: v1
 entries:
   akeyless-api-gateway:
   - apiVersion: v2
+    appVersion: 4.38.0
+    created: "2025-10-20T14:41:37.752045341Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
+    digest: 3af276f120d228d22d5584f43612d0a7faa375385373b3e2c43199d32aa41d89
+    name: akeyless-api-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-api-gateway-1.58.0/akeyless-api-gateway-1.58.0.tgz
+    version: 1.58.0
+  - apiVersion: v2
     appVersion: 4.37.0
     created: "2025-09-10T13:49:34.792750939Z"
     description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
@@ -3288,6 +3298,29 @@ entries:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-csi-provider-1.0.0/akeyless-csi-provider-1.0.0.tgz
     version: 1.0.0
   akeyless-gateway:
+  - annotations:
+      gatewayVersion: 4.38.0
+      sraVersion: 2.6.3
+    apiVersion: v2
+    appVersion: 4.38.0_2.6.3
+    created: "2025-10-20T14:41:37.981647047Z"
+    dependencies:
+    - alias: cacheHA
+      condition: cacheHA.enabled
+      name: redis-ha
+      repository: file://charts/redis-ha
+      version: 4.35.0
+    description: A Helm chart for Kubernetes that deploys akeyless-gateway
+    digest: a98912b7840bb07db0d897903cceb6a48c0fe4df55106c86a6bbe89136f1c347
+    icon: https://akeyless-908832575.imgix.net/wp-content/uploads/2024/03/akeyless-2024.png?auto=format%2Ccompress&fm=webp&ixlib=php-3.3.0
+    keywords:
+    - akeyless-gateway
+    - sra
+    name: akeyless-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-gateway-1.11.0/akeyless-gateway-1.11.0.tgz
+    version: 1.11.0
   - annotations:
       gatewayVersion: 4.37.0
       sraVersion: 2.6.3
@@ -11450,4 +11483,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2025-10-20T07:34:26.130879106Z"
+generated: "2025-10-20T14:41:37.98486296Z"
