@@ -145,7 +145,7 @@ Generate chart secret name
 {{- end }}
 
 {{- define "akeyless-gateway.clusterCache.enabled" -}}
-{{- or (eq .Values.globalConfig.gatewayAuth.gatewayAccessType "uid") (ne .Values.globalConfig.clusterCache.enabled false) -}}
+{{- or (eq .Values.globalConfig.gatewayAuth.gatewayAccessType "uid") (ne .Values.globalConfig.clusterCache.enabled false) .Values.cacheHA.enabled -}}
 {{- end }}
 
 {{- define "akeyless-gateway.clusterCache.labels" -}}
@@ -154,17 +154,11 @@ component: cache
 {{- end }}
 
 {{- define "akeyless-gateway.clusterCache.enableTls" -}}
-  {{ or
-      (and
-        .Values.globalConfig.clusterCache.enableTls
-        (include "akeyless-gateway.clusterCache.enabled" .)
-        (not .Values.cacheHA.enabled)
-      )
-      (and
-        .Values.cacheHA.redis.tlsPort
-        .Values.cacheHA.enabled
-      )
-  }}
+  {{- if .Values.cacheHA.enabled -}}
+    {{- and .Values.cacheHA.redis.tlsPort .Values.cacheHA.enabled -}}
+  {{- else -}}
+    {{- and .Values.globalConfig.clusterCache.enableTls (include "akeyless-gateway.clusterCache.enabled" .) -}}
+  {{- end -}}
 {{- end }}
 
 {{- define "akeyless-gateway.cache-ha.fullname" -}}
@@ -199,13 +193,18 @@ component: cache
 {{- end -}}
 
 {{- define "akeyless-gateway.clusterCache.cacheAddress" -}}
-{{- $port := .Values.cacheHA.redis.port }}
 {{- $serviceName := (include "akeyless-gateway.clusterCache.SvcName" .) }}
+{{- $port := 6379 }}
+{{- if .Values.cacheHA.enabled -}}
+{{- $serviceName = (include "redis-ha.fullname" .Subcharts.cacheHA) }}
+{{- $port = .Values.cacheHA.redis.port }}
 {{- if eq (include "akeyless-gateway.clusterCache.enableTls" .) "true" -}}
 {{- $port = .Values.cacheHA.redis.tlsPort }}
 {{- end -}}
 {{- if .Values.cacheHA.enabled -}}
 {{- $serviceName = (include "redis-ha.fullname" .Subcharts.cacheHA) }}
+{{- end -}}
+{{- printf "%s.%s.svc:%v" $serviceName .Release.Namespace $port }}
 {{- end -}}
 {{- printf "%s.%s.svc:%v" $serviceName .Release.Namespace $port }}
 {{- end -}}
