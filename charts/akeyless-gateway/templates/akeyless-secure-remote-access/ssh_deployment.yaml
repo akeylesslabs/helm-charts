@@ -90,11 +90,11 @@ spec:
           - containerPort: 9900
             name: curl-proxy
           env:
-            {{- if and .Values.cacheHA.enabled .Values.cacheHA.sentinel.enabled }}
+            {{- if .Values.cacheHA.enabled }}
             - name: REDIS_SENTINEL_ADDR
-              value: "{{ include "akeyless-gateway.cacheHA.Address" . }}:{{ index .Values "cacheHA" "sentinel" "containerPorts" "sentinel" }}"
+              value: {{ include "akeyless-gateway.clusterCache.sentinelAddress" . }}
             - name: REDIS_SENTINEL_MASTER_NAME
-              value: {{ .Values.cacheHA.sentinel.masterSet | quote }}
+              value: {{ .Values.cacheHA.redis.masterGroupName | quote }}
             {{- end }}
             - name: EXTERNAL_SSH_PORT
               value: {{ .Values.sra.sshConfig.service.port | quote }}
