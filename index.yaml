@@ -3293,6 +3293,29 @@ entries:
       sraVersion: 2.6.3
     apiVersion: v2
     appVersion: 4.37.0_2.6.3
+    created: "2025-10-20T07:34:26.12962284Z"
+    dependencies:
+    - alias: cacheHA
+      condition: cacheHA.enabled
+      name: redis-ha
+      repository: file://charts/redis-ha
+      version: 4.35.0
+    description: A Helm chart for Kubernetes that deploys akeyless-gateway
+    digest: fe6a627dd19c8bfc02e5ed2e2decdc310d867fa5f6d0ab10d9e6f79b4460af7a
+    icon: https://akeyless-908832575.imgix.net/wp-content/uploads/2024/03/akeyless-2024.png?auto=format%2Ccompress&fm=webp&ixlib=php-3.3.0
+    keywords:
+    - akeyless-gateway
+    - sra
+    name: akeyless-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-gateway-1.10.0/akeyless-gateway-1.10.0.tgz
+    version: 1.10.0
+  - annotations:
+      gatewayVersion: 4.37.0
+      sraVersion: 2.6.3
+    apiVersion: v2
+    appVersion: 4.37.0_2.6.3
     created: "2025-09-15T10:30:26.597217543Z"
     dependencies:
     - alias: cacheHA
@@ -11427,4 +11450,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2025-09-15T10:30:26.768358073Z"
+generated: "2025-10-20T07:34:26.130879106Z"
