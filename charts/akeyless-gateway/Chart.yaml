@@ -12,8 +12,8 @@ annotations:
   gatewayVersion: 4.37.0
   sraVersion: 2.6.3
 dependencies:
-  - name: redis
-    version: "21.2.x"
-    repository: "https://charts.bitnami.com/bitnami"
+  - name: redis-ha
+    version: 4.35.0
+    repository: file://charts/redis-ha # https://dandydeveloper.github.io/charts/
     condition: cacheHA.enabled
     alias: cacheHA
