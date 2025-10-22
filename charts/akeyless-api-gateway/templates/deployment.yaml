@@ -112,13 +112,13 @@ spec:
             {{- end }}
             {{- if eq (include "akeyless-api-gw.logandConfExist" .) "true"}}
               cp /logand_conf/logand.conf {{include "akeyless-api-gw.root.config.path" $}}/.akeyless/logand.conf
-            {{- end }} 
+            {{- end }}
             {{- if eq (include "akeyless-api-gw.tlsCertificateExist" .) "true"}}
               cp /tls_conf/{{ include "akeyless-api-gw.certFileName" . }} {{include "akeyless-api-gw.root.config.path" $}}/.akeyless/akeyless-api-cert.crt
-            {{- end }} 
+            {{- end }}
             {{- if eq (include "akeyless-api-gw.tlsPrivateKeyExist" .) "true"}}
               cp /tls_conf/{{ include "akeyless-api-gw.keyFileName" . }} {{include "akeyless-api-gw.root.config.path" $}}/.akeyless/akeyless-api-cert.key
-            {{- end }} 
+            {{- end }}
           volumeMounts:
           {{- if not (eq (include "akeyless-api-gw.customerFragmentExist" .) "") }}
             - name: customer-fragments-secret
@@ -242,21 +242,21 @@ spec:
                   key: admin-access-key
           {{- end }}
           {{- if not (eq (include "akeyless-api-gw.adminPasswordExist" .) "") }}
-            - name: ADMIN_PASSWORD 
+            - name: ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ include "akeyless-api-gw.adminPasswordExist" . }}
                   key: admin-password
           {{- end }}
           {{- if not (eq (include "akeyless-api-gw.adminAccessCertExist" .) "") }}
-            - name: ADMIN_CERTIFICATE 
+            - name: ADMIN_CERTIFICATE
               valueFrom:
                 secretKeyRef:
                   name: {{ include "akeyless-api-gw.adminAccessCertExist" . }}
-                  key: admin-certificate 
+                  key: admin-certificate
           {{- end }}
           {{- if not (eq (include "akeyless-api-gw.adminAccessCertKeyExist" .) "") }}
-            - name: ADMIN_CERTIFICATE_KEY 
+            - name: ADMIN_CERTIFICATE_KEY
               valueFrom:
                 secretKeyRef:
                   name: {{ include "akeyless-api-gw.adminAccessCertKeyExist" . }}
@@ -369,7 +369,7 @@ spec:
             - name: POD_NAME
               valueFrom:
                 fieldRef:
-                  fieldPath: metadata.name         
+                  fieldPath: metadata.name
           # provision initial configuration
           ## Defaults section
           {{- if .Values.defaultsConf.defaultSamlAccessId }}
@@ -416,7 +416,7 @@ spec:
           {{- end }}
           {{- if .Values.TLSConf.minimumTlsVersion }}
             - name: MIN_TLS_VERSION
-              value: "{{ .Values.TLSConf.minimumTlsVersion }}"
+              value: "{{ .Values.TLSConf.minimumTlsVersion | default "TLSv1.2" }}"
           {{- end }}
           {{- if .Values.TLSConf.excludeCipherSuites }}
             - name: EXCLUDE_CIPHER_SUITES

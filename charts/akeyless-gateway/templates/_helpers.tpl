@@ -106,10 +106,10 @@ Generate chart secret name
 {{- define "akeyless-gateway.clusterCacheImage" -}}
   {{- if .Values.globalConfig.clusterCache.image -}}
   {{- printf "image: %s:%s\n" (required "A valid .Values.globalConfig.clusterCache.image.repository entry required!" .Values.globalConfig.clusterCache.image.repository) (required "A valid .Values.globalConfig.clusterCache.image.tag entry required!" .Values.globalConfig.clusterCache.image.tag | toString)  -}}
-  {{- printf "imagePullPolicy: %s" (.Values.globalConfig.clusterCache.image.imagePullPolicy | default "Always"  | quote ) -}}
+  {{- printf "imagePullPolicy: %s" (.Values.globalConfig.clusterCache.image.imagePullPolicy | default "IfNotPresent"  | quote ) -}}
   {{- else -}}
-  {{- printf "image: %s\n" ("docker.io/bitnamilegacy/redis:6.2" | quote) -}}
-  {{- printf "imagePullPolicy: %s\n" ("Always" | quote) -}}
+  {{- printf "image: %s\n" ("public.ecr.aws/docker/library/redis:8.2.2-alpine" | quote) -}}
+  {{- printf "imagePullPolicy: %s\n" ("IfNotPresent" | quote) -}}
   {{- end -}}
 {{- end -}}
 
@@ -276,7 +276,7 @@ component: cache
   {{- end }}
   - name: STORE_CACHE_ENCRYPTION_KEY_TO_K8S_SECRETS
     value: {{ .Values.globalConfig.clusterCache.enableScaleOutOnDisconnectedMode | default false | quote }}
-  {{- if not (eq (include "akeyless-gateway.clusterCacheEncryptionKeyExist" .) "") }}
+  {{- if or .Values.globalConfig.clusterCache.encryptionKeyExistingSecret .Values.cacheHA.encryptionKeyExistingSecret }}
   - name: CACHE_ENCRYPTION_KEY_SECRET_NAME
     value: {{ include "akeyless-gateway.clusterCacheEncryptionKeyExist" . | quote }}
   {{- end }}

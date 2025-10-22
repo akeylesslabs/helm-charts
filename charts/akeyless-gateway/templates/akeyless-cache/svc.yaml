@@ -1,5 +1,4 @@
-{{- $cacheHa := index .Values "cacheHA" -}}
-{{- if and (eq "true" (include "akeyless-gateway.clusterCache.enabled" . )) (not $cacheHa.enabled) }}
+{{- if and (eq "true" (include "akeyless-gateway.clusterCache.enabled" . )) (not .Values.cacheHA.enabled) }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -8,8 +7,10 @@ metadata:
 {{- include "akeyless-gateway.labels" . | nindent 4 }}
 spec:
   ports:
-    - port: 6379
+    - name: cache
+      port: 6379
       protocol: TCP
+      targetPort: cache
   selector:
     {{- include "akeyless-gateway.clusterCache.labels" . | nindent 4 }}
   type: ClusterIP
