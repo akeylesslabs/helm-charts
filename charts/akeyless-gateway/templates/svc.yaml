@@ -28,6 +28,12 @@ spec:
       protocol: TCP
       name: kmip
   {{- end }}
+  {{- if .Values.gateway.service.hvp.enabled }}
+    - port: 8200
+      targetPort: hvp
+      protocol: TCP
+      name: hvp
+  {{- end }}
 
   selector:
     {{- include "akeyless-gateway-sra-ssh-service.selectorLabels" . | nindent 4 }}

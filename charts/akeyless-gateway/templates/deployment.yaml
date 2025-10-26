@@ -124,6 +124,10 @@ spec:
             - name: kmip
               containerPort: 5696
           {{- end }}
+          {{- if .Values.gateway.service.hvp.enabled }}
+            - name: hvp
+              containerPort: 8200
+          {{- end }}
           livenessProbe:
             httpGet:
               path: /health
@@ -314,6 +318,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            {{ include "akeyless-gateway.unifiedGatewayConfig" . | nindent 10 }}
             {{- if .Values.sra.enabled }}
             {{-  include "akeyless-gateway.unifiedGatewaySraGatewayConfig" . | nindent 10 }}
             {{- end }}
