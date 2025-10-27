@@ -318,7 +318,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-            {{ include "akeyless-gateway.unifiedGatewayConfig" . | nindent 10 }}
+            {{ include "akeyless-gateway.unifiedGatewayFlag" . | nindent 10 }}
             {{- if .Values.sra.enabled }}
             {{-  include "akeyless-gateway.unifiedGatewaySraGatewayConfig" . | nindent 10 }}
             {{- end }}
