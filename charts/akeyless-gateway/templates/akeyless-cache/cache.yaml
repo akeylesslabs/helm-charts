@@ -1,5 +1,4 @@
-{{- $cacheHa := index .Values "cacheHA" -}}
-{{- if and (eq "true" (include "akeyless-gateway.clusterCache.enabled" . )) (not $cacheHa.enabled) }}
+{{- if and (eq "true" (include "akeyless-gateway.clusterCache.enabled" . )) (not .Values.cacheHA.enabled) }}
 {{- $deploymentName := printf "%s-cache" (include "akeyless-gateway.fullname" .) }}
 {{- $mountCertPaths := (include "akeyless-gateway.clusterCache.tlsVolumeMountPath" .) -}}
 {{- $tlsCertKeyPath := printf "%s/tls.key" $mountCertPaths }}
@@ -52,6 +51,37 @@ spec:
           securityContext:
             {{- toYaml .Values.gateway.deployment.containerSecurityContext | nindent 12 }}
           {{- end }}
+          args:
+          - redis-server
+          - --requirepass
+          - $(REDIS_PASSWORD)
+          - --rename-command
+          - FLUSHDB
+          - ""
+          - --rename-command
+          - FLUSHALL
+          - ""
+          - --maxmemory
+          - {{ include "akeyless-gateway.redisMaxmemory" . | quote }}
+          - --maxmemory-policy
+          - allkeys-lru
+          {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
+          - --port
+          - "0"
+          - --tls-port
+          - "6379"
+          - --tls-auth-clients
+          - "yes"
+          - --tls-cert-file
+          - {{ $tlsCertPath }}
+          - --tls-key-file
+          - {{ $tlsCertKeyPath }}
+          - --tls-ca-cert-file
+          - {{ $tlsCACertPath }}
+          {{- else }}
+          - --port
+          - "6379"
+          {{- end }}
           ports:
             - containerPort: 6379
               name: cache
@@ -62,15 +92,14 @@ spec:
                 - -c
                 - |
                   #!/usr/bin/env bash -e
-                  export REDISCLI_AUTH="$REDIS_PASSWORD"
                   set_response=$(
-                    redis-cli {{ $tlsArgs }} set liveness_test_key "SUCCESS"
+                    redis-cli {{ $tlsArgs }} -a "$REDIS_PASSWORD" --no-auth-warning set liveness_test_key "SUCCESS"
                   )
                   response=$(
-                    redis-cli {{ $tlsArgs }} get liveness_test_key
+                    redis-cli {{ $tlsArgs }} -a "$REDIS_PASSWORD" --no-auth-warning get liveness_test_key
                   )
                   del_response=$(
-                      redis-cli {{ $tlsArgs }} del liveness_test_key
+                    redis-cli {{ $tlsArgs }} -a "$REDIS_PASSWORD" --no-auth-warning del liveness_test_key
                   )
                   if [ "$response" != "SUCCESS" ] ; then
                     echo "Unable to get keys, something is wrong"
@@ -86,46 +115,24 @@ spec:
                 - -c
                 - |
                   #!/usr/bin/env bash -e
-                  export REDISCLI_AUTH="$REDIS_PASSWORD"
                   response=$(
-                      redis-cli {{ $tlsArgs }} ping
+                    redis-cli {{ $tlsArgs }} -a "$REDIS_PASSWORD" --no-auth-warning ping
                   )
                   if [ "$response" != "PONG" ] ; then
                       echo "Unable to get keys, something is wrong"
                       echo "$response"
                       exit 1
-                    fi
+                  fi
             initialDelaySeconds: 5
             periodSeconds: 5
           resources:
           {{- toYaml .Values.globalConfig.clusterCache.resources | nindent 12 }}
           env:
-            - name: REDIS_DISABLE_COMMANDS
-              value: "FLUSHDB,FLUSHALL"
-            - name: REDIS_EXTRA_FLAGS
-              value: "--maxmemory {{ include "akeyless-gateway.redisMaxmemory" . }} --maxmemory-policy allkeys-lru"
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ include "akeyless-gateway.clusterCache.secretName" . }}
                   key: cache-pass
-            {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
-            - name: REDIS_TLS_PORT
-              value: "6379"
-            - name: REDIS_TLS_AUTH_CLIENTS
-              value: "no"
-            - name: REDIS_TLS_ENABLED
-              value: "yes"
-            - name:  REDIS_TLS_CERT_FILE
-              value: {{ $tlsCertPath }}
-            - name:  REDIS_TLS_KEY_FILE
-              value: {{ $tlsCertKeyPath }}
-            - name:  REDIS_TLS_CA_FILE
-              value: {{ $tlsCACertPath }}
-            {{ else }}
-            - name: REDIS_PORT
-              value: "6379"
-            {{- end }}
           {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
           volumeMounts:
             {{- include "akeyless-gateway.clusterCache.tlsVolumeMounts" . | nindent 12 -}}
