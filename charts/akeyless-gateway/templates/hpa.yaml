@@ -10,7 +10,7 @@ spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "akeyless-gateway.fullname" . }}
+    name: {{ include "akeyless-gateway.namePrefix" . }}-{{ include "akeyless-gateway.fullname" . }}
   minReplicas: {{ $.Values.gateway.hpa.minReplicas | default 1 }}
   maxReplicas: {{ $.Values.gateway.hpa.maxReplicas | default 14 }}
   metrics:

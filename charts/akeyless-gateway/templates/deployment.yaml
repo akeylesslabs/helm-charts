@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: {{ include "deployment.type" $ }}
 metadata:
-  name: {{ include "akeyless-gateway.fullname" . }}
+  name: {{ include "akeyless-gateway.namePrefix" . }}-{{ include "akeyless-gateway.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "akeyless-gateway.labels" . | nindent 4 }}
@@ -18,7 +18,7 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      {{- include "akeyless-gateway-sra-ssh-service.selectorLabels" . | nindent 6 }}
+      {{- include "akeyless-gateway.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- if .Values.gateway.deployment.pod.annotations }}
@@ -26,7 +26,7 @@ spec:
           {{- toYaml .Values.gateway.deployment.pod.annotations | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "akeyless-gateway-sra-ssh-service.selectorLabels" . | nindent 8 }}
+        {{- include "akeyless-gateway.selectorLabels" . | nindent 8 }}
         {{- if .Values.gateway.deployment.labels }}
           {{- toYaml .Values.gateway.deployment.labels | nindent 8 }}
         {{- end }}
