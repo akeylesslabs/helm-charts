@@ -7,10 +7,10 @@ keywords:
   - akeyless-gateway
   - sra
 icon: https://akeyless-908832575.imgix.net/wp-content/uploads/2024/03/akeyless-2024.png?auto=format%2Ccompress&fm=webp&ixlib=php-3.3.0
-appVersion: 4.37.0_2.6.3
+appVersion: 4.39.0_2.6.4
 annotations:
-  gatewayVersion: 4.37.0
-  sraVersion: 2.6.3
+  gatewayVersion: 4.39.0
+  sraVersion: 2.6.4
 dependencies:
   - name: redis-ha
     version: 4.35.0
