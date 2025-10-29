@@ -474,9 +474,13 @@ app.kubernetes.io/instance: {{ .Release.Name }}
     value: {{ .Chart.Version }}
 {{- end -}}
 
-{{- define "akeyless-gateway.unifiedGatewayConfig" }}
+{{- define "akeyless-gateway.unifiedGatewayFlag" }}
   - name: UNIFIED_GATEWAY
     value: "true"
+{{- end -}}
+
+{{- define "akeyless-gateway.unifiedGatewayConfig" }}
+  {{ include "akeyless-gateway.unifiedGatewayFlag" . }}
   - name: GATEWAY_URL
     value: "http://{{ include "akeyless-gateway.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:8000"
   - name: INTERNAL_GATEWAY_API

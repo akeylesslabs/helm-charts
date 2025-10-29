@@ -270,6 +270,8 @@ gateway:
     port: 8000
     kmip:
       enabled: false
+    hvp:
+      enabled: false
 
   ## Configure the ingress resource that allows you to access the
   ## akeyless-api-gateway installation. Set up the URL
