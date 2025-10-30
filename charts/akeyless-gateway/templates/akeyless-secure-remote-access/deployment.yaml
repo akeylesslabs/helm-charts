@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: web-{{ include "akeyless-gateway.fullname" . }}
+  name: {{ include "akeyless-sra-ssh.webNamePrefix" . }}-{{ include "akeyless-gateway.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
   {{- include "akeyless-sra-web.labels" . | nindent 4 }}
