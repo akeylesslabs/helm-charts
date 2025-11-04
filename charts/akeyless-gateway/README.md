@@ -36,21 +36,38 @@ helm install gateway akeyless/akeyless-gateway
 ```
 
 ## Argo CD Instructions
-When deploying the Akeyless Gateway with Argo CD, you need to ignore the following differences in the secrets.
+When deploying the Akeyless Gateway with Argo CD, follow these instructions:
 ```yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 spec:
+  project: <argocd project>
+  source:  
+    chart: akeyless-gateway
+    repoURL: https://akeylesslabs.github.io/helm-charts
+    targetRevision: <chart version>
   ...
+  destination:
+    name: <k8s destination cluster name>
+    namespace: <k8s destination namespace>
+  ...
+  syncPolicy:
+    # automated:
+    #   # prune: true
+    #   # selfHeal: true
+    syncOptions:
+    - RespectIgnoreDifferences=true
+    - ApplyOutOfSyncOnly=true # optional
+    # - CreateNamespace=true # optional
   ignoreDifferences:
   - kind: Secret
-    name: <release-name>-cache-ha-credentials
-    namespace: <namespace>
+    name: <release-name>-cluster-cache-ha
+    namespace: <k8s destination namespace>
     jsonPointers:
-      - /data/password
+      - /data/redis-password
   - kind: Secret
-    name: <release-name>-cache-ha-tls
-    namespace: <namespace>
+    name: <release-name>-cluster-cache-ha-tls
+    namespace: <k8s destination namespace>
     jsonPointers:
       - /data/ca.crt
       - /data/tls.crt
