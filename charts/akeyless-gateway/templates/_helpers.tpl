@@ -31,6 +31,14 @@ Create chart name and version as used by the chart label.
     {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
+{{- define "akeyless-gateway.namePrefix" -}}
+{{- if .Values.gateway.namePrefix -}}
+{{- .Values.gateway.namePrefix -}}
+{{- else -}}
+unified
+{{- end -}}
+{{- end -}}
+
 {{/*
 Check provided imagePullSecrets
 */}}
@@ -507,4 +515,22 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- define "akeyless-gateway.unifiedGatewaySraGatewayConfig" }}
   {{ include "akeyless-gateway.SraWebServiceConfig" . }}
   {{ include "akeyless-gateway.SraSshServiceConfig" . }}
+{{- end -}}
+
+
+{{- define "akeyless-sra-ssh.webNamePrefix" -}}
+{{- if .Values.sra.webConfig.namePrefix -}}
+{{- .Values.sra.webConfig.namePrefix -}}
+{{- else -}}
+web
+{{- end -}}
+{{- end -}}
+
+
+{{- define "akeyless-sra-ssh.sshNamePrefix" -}}
+{{- if .Values.sra.sshConfig.namePrefix -}}
+{{- .Values.sra.sshConfig.namePrefix -}}
+{{- else -}}
+ssh
+{{- end -}}
 {{- end -}}

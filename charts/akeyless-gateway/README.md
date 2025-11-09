@@ -61,6 +61,11 @@ spec:
     # - CreateNamespace=true # optional
   ignoreDifferences:
   - kind: Secret
+    name: <release-name>-cache-secret
+    namespace: <k8s destination namespace>
+    jsonPointers:
+      - /data/cache-pass
+  - kind: Secret
     name: <release-name>-cluster-cache-ha
     namespace: <k8s destination namespace>
     jsonPointers:

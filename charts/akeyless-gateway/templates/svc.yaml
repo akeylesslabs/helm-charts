@@ -36,7 +36,7 @@ spec:
   {{- end }}
 
   selector:
-    {{- include "akeyless-gateway-sra-ssh-service.selectorLabels" . | nindent 4 }}
+    {{- include "akeyless-gateway.selectorLabels" . | nindent 4 }}
 ---
 apiVersion: v1
 kind: Service
@@ -54,4 +54,4 @@ spec:
       name: internal-gw-api
 
   selector:
-    {{- include "akeyless-gateway-sra-ssh-service.selectorLabels" . | nindent 4 }}
+    {{- include "akeyless-gateway.selectorLabels" . | nindent 4 }}
