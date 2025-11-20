@@ -81,3 +81,13 @@ Selector webhook labels
 app: {{ template "vault-secrets-webhook.fullname" . }}
 release: {{ .Release.Name }}
 {{- end -}}
+
+{{/*
+Check provided imagePullSecrets
+*/}}
+{{- define "vault-secrets-webhook.imagePullSecrets" -}}
+  {{- if not (empty .Values.image.imagePullSecrets) }}
+    imagePullSecrets:
+      - name: {{ printf "%s" .Values.image.imagePullSecrets }}
+  {{- end -}}
+{{- end -}}
