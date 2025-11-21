@@ -91,6 +91,7 @@ globalConfig:
   ## https://docs.akeyless.io/docs/advanced-chart-configuration#cache-configuration
   ##
   clusterCache:
+    enabled: true
     ## In case Cache is enabled in the Gateway, and the encryptionKeyExistingSecret parameter has a value
     ## Akeyless will use this specified encryption key and store it securely within Akeyless Gateway.
     ## If the encryptionKeyExistingSecret parameter is empty or not specified,
@@ -104,7 +105,7 @@ globalConfig:
     enableTls: false
     # certValidityDays: 1825
 
-    ## The resources limits for the redis cluster cache
+    ## The resources limits for the standalone cluster cache
     ##
     resources:
       limits:
@@ -113,6 +114,15 @@ globalConfig:
       requests:
         cpu: 250m
         memory: 256Mi
+
+    ## Persistent volume configuration for standalone cluster cache
+    persistence:
+      enabled: false
+      # existingClaim: ""
+      # accessMode: "ReadWriteOnce"
+      # storageClass: ""
+      # size: 10Gi
+
 
 cacheHA:
   enabled: false
