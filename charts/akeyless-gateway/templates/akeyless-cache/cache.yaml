@@ -23,10 +23,6 @@ spec:
       labels:
         {{- include "akeyless-gateway.clusterCache.labels" . | nindent 8 }}
     spec:
-      {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
-      volumes:
-      {{- include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 6 }}
-      {{- end }}
       {{- include "cache.imagePullSecrets" . | indent 2 }}
       {{- if .Values.gateway.deployment.tolerations }}
       tolerations:
@@ -133,8 +129,21 @@ spec:
                 secretKeyRef:
                   name: {{ include "akeyless-gateway.clusterCache.secretName" . }}
                   key: cache-pass
-          {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
           volumeMounts:
+            - name: cache-data
+              mountPath: /data
+          {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
             {{- include "akeyless-gateway.clusterCache.tlsVolumeMounts" . | nindent 12 -}}
           {{- end }}
+      volumes:
+        - name: cache-data
+        {{- if .Values.globalConfig.clusterCache.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.globalConfig.clusterCache.persistence.existingClaim | default (include "akeyless-gateway.clusterCache.pvcName" .) }}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}
+      {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
+      {{- include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 6 }}
+      {{- end }}          
 {{- end }}

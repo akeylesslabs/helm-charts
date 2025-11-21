@@ -1,0 +1,25 @@
+{{- if and (eq "true" (include "akeyless-gateway.clusterCache.enabled" . )) (not .Values.cacheHA.enabled) }}
+{{- if and .Values.globalConfig.clusterCache.persistence.enabled (not .Values.globalConfig.clusterCache.persistence.existingClaim) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "akeyless-gateway.clusterCache.pvcName" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "akeyless-gateway.clusterCache.labels" . | nindent 4 }}
+  {{- if .Values.globalConfig.clusterCache.persistence.annotations }}
+  annotations:
+  {{- toYaml .Values.globalConfig.clusterCache.persistence.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  accessModes:
+    - {{ .Values.globalConfig.clusterCache.persistence.accessMode | default "ReadWriteOnce" }}
+  resources:
+    requests:
+      storage: {{ .Values.globalConfig.clusterCache.persistence.size | default "10Gi" }}
+  {{- if .Values.globalConfig.clusterCache.persistence.storageClass }}
+  storageClassName: {{ .Values.globalConfig.clusterCache.persistence.storageClass }}
+  {{- end }}
+{{- end }}
+{{- end }}
+
