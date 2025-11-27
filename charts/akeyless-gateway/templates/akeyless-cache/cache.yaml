@@ -23,10 +23,6 @@ spec:
       labels:
         {{- include "akeyless-gateway.clusterCache.labels" . | nindent 8 }}
     spec:
-      {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
-      volumes:
-      {{- include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 6 }}
-      {{- end }}
       {{- include "cache.imagePullSecrets" . | indent 2 }}
       {{- if .Values.gateway.deployment.tolerations }}
       tolerations:
@@ -82,6 +78,9 @@ spec:
           - --port
           - "6379"
           {{- end }}
+          {{- with .Values.globalConfig.clusterCache.extraArgs }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}          
           ports:
             - containerPort: 6379
               name: cache
@@ -133,8 +132,27 @@ spec:
                 secretKeyRef:
                   name: {{ include "akeyless-gateway.clusterCache.secretName" . }}
                   key: cache-pass
-          {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
           volumeMounts:
+            {{- if .Values.globalConfig.clusterCache.persistence.enabled }}
+            - name: cache-data
+              mountPath: /data
+            {{- end }}
+            {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
             {{- include "akeyless-gateway.clusterCache.tlsVolumeMounts" . | nindent 12 -}}
-          {{- end }}
+            {{- end }}
+            {{- with .Values.globalConfig.clusterCache.extraVolumesMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}            
+      volumes:
+        {{- if .Values.globalConfig.clusterCache.persistence.enabled }}
+        - name: cache-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.globalConfig.clusterCache.persistence.existingClaim | default (include "akeyless-gateway.clusterCache.pvcName" .) }}
+        {{- end }}
+        {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
+        {{- include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 6 }}
+        {{- end }}
+        {{- with .Values.globalConfig.clusterCache.extraVolumes }}
+        {{- toYaml . | nindent 6 }}
+        {{- end }}                  
 {{- end }}

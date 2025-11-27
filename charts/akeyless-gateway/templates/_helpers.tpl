@@ -169,6 +169,10 @@ component: cache
   {{- end -}}
 {{- end }}
 
+{{- define "akeyless-gateway.clusterCache.pvcName" -}}
+  {{- printf "%s-cache" (include "akeyless-gateway.fullname" .) }}
+{{- end -}}
+
 {{- define "akeyless-gateway.cache-ha.fullname" -}}
   {{- if .Values.cacheHA.enabled -}}
     {{- if contains .Values.cacheHA.nameOverride .Release.Name -}}
