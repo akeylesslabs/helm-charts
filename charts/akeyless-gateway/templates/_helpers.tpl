@@ -259,8 +259,16 @@ component: cache
 {{- end -}}
 {{- end -}}
 
+{{- define "akeyless-gateway.encryptionKeyExistingSecret" -}}
+{{- or .Values.globalConfig.clusterCache.encryptionKeyExistingSecret .Values.cacheHA.encryptionKeyExistingSecret -}}
+{{- end -}}
+
+{{- define "akeyless-gateway.enableScaleOutOnDisconnectedMode" -}}
+{{- eq (.Values.globalConfig.clusterCache.enableScaleOutOnDisconnectedMode | default false) true -}}
+{{- end -}}
+
 {{- define "akeyless-gateway.clusterCacheEncryptionKeySecret" -}}
-    {{- if or .Values.globalConfig.clusterCache.encryptionKeyExistingSecret .Values.cacheHA.encryptionKeyExistingSecret -}}
+    {{- if include "akeyless-gateway.encryptionKeyExistingSecret" . -}}
         {{- if .Values.globalConfig.clusterCache.encryptionKeyExistingSecret -}}
             {{- .Values.globalConfig.clusterCache.encryptionKeyExistingSecret -}}
         {{- else -}}
@@ -287,8 +295,8 @@ component: cache
     value: "{{ printf "%s/%s" (include "akeyless-gateway.clusterCache.tlsVolumeMountPath" .) .Values.cacheHA.tls.certFile }}"
   {{- end }}
   - name: STORE_CACHE_ENCRYPTION_KEY_TO_K8S_SECRETS
-    value: "false" # we generate with helm
-  {{- if or .Values.globalConfig.clusterCache.encryptionKeyExistingSecret .Values.cacheHA.encryptionKeyExistingSecret }}
+    value: {{ if include "akeyless-gateway.enableScaleOutOnDisconnectedMode" . }}"true"{{ else }}"false"{{ end }}
+  {{- if include "akeyless-gateway.encryptionKeyExistingSecret" . }}
   - name: CACHE_ENCRYPTION_KEY_SECRET_NAME
     value: {{ include "akeyless-gateway.clusterCacheEncryptionKeySecret" . | quote }}
   {{- end }}

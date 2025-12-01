@@ -263,11 +263,11 @@ spec:
               value: enable
             {{- include "akeyless-gateway.clusterCacheConfig" . | nindent 10 }}
             {{- end }}
-            {{- if or .Values.globalConfig.clusterCache.encryptionKeyExistingSecret .Values.cacheHA.encryptionKeyExistingSecret }}
+            {{- if (include "akeyless-gateway.encryptionKeyExistingSecret" .) }}
             - name: CACHE_ENCRYPTION_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{- include "akeyless-gateway.clusterCacheEncryptionKeySecret" }}
+                  name: {{- include "akeyless-gateway.clusterCacheEncryptionKeySecret" . }}
                   key: cluster-cache-encryption-key
             {{- end }}
             {{- with .Values.globalConfig.gatewayAuth.universalIdentity }}
