@@ -153,12 +153,16 @@ Generate chart secret name
 {{- end }}
 
 {{- define "akeyless-gateway.clusterCache.enabled" -}}
-{{- if or (eq .Values.globalConfig.gatewayAuth.gatewayAccessType "uid") (ne .Values.globalConfig.clusterCache.enabled false) .Values.cacheHA.enabled -}}
+{{- if or
+  (eq .Values.globalConfig.gatewayAuth.gatewayAccessType "uid")
+  (ne .Values.globalConfig.clusterCache.enabled false)
+  .Values.cacheHA.enabled
+-}}
 true
 {{- else -}}
 false
 {{- end -}}
-{{- end }}
+{{- end -}}
 
 {{- define "akeyless-gateway.clusterCache.labels" -}}
 name: {{ include "akeyless-gateway.clusterCache.SvcName" . }}
