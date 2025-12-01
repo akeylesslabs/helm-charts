@@ -1,5 +1,5 @@
-{{/* RBAC rule to access the secret if enableScaleOutOnDisconnectedMode is true and clusterCacheEncryptionKeyExist is not empty */}}
-{{- if and (include "akeyless-gateway.enableScaleOutOnDisconnectedMode" .) (not (include "akeyless-gateway.encryptionKeyExistingSecret" .)) }}
+{{/* RBAC rule to access the secret if enableScaleOutOnDisconnectedMode is true (for both existing and newly created secrets) */}}
+{{- if and (eq "true" (include "akeyless-gateway.clusterCache.enabled" .)) (eq "true" (include "akeyless-gateway.enableScaleOutOnDisconnectedMode" .)) }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
