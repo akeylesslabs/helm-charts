@@ -267,7 +267,7 @@ spec:
             - name: CACHE_ENCRYPTION_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ if .Values.globalConfig.clusterCache.encryptionKeyExistingSecret }}{{ .Values.globalConfig.clusterCache.encryptionKeyExistingSecret }}{{ else }}{{ .Values.cacheHA.encryptionKeyExistingSecret }}{{ end }}
+                  name: {{- include "akeyless-gateway.clusterCacheEncryptionKeySecret" }}
                   key: cluster-cache-encryption-key
             {{- end }}
             {{- with .Values.globalConfig.gatewayAuth.universalIdentity }}

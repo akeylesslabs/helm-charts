@@ -259,7 +259,7 @@ component: cache
 {{- end -}}
 {{- end -}}
 
-{{- define "akeyless-gateway.clusterCacheEncryptionKeyExist" -}}
+{{- define "akeyless-gateway.clusterCacheEncryptionKeySecret" -}}
     {{- if or .Values.globalConfig.clusterCache.encryptionKeyExistingSecret .Values.cacheHA.encryptionKeyExistingSecret -}}
         {{- if .Values.globalConfig.clusterCache.encryptionKeyExistingSecret -}}
             {{- .Values.globalConfig.clusterCache.encryptionKeyExistingSecret -}}
@@ -287,10 +287,10 @@ component: cache
     value: "{{ printf "%s/%s" (include "akeyless-gateway.clusterCache.tlsVolumeMountPath" .) .Values.cacheHA.tls.certFile }}"
   {{- end }}
   - name: STORE_CACHE_ENCRYPTION_KEY_TO_K8S_SECRETS
-    value: {{ .Values.globalConfig.clusterCache.enableScaleOutOnDisconnectedMode | default false | quote }}
+    value: "false" # we generate with helm
   {{- if or .Values.globalConfig.clusterCache.encryptionKeyExistingSecret .Values.cacheHA.encryptionKeyExistingSecret }}
   - name: CACHE_ENCRYPTION_KEY_SECRET_NAME
-    value: {{ include "akeyless-gateway.clusterCacheEncryptionKeyExist" . | quote }}
+    value: {{ include "akeyless-gateway.clusterCacheEncryptionKeySecret" . | quote }}
   {{- end }}
   {{- include "akeyless-gateway.clusterCache.password" . }}
 {{- end -}}
