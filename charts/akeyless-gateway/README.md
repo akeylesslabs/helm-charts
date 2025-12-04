@@ -71,6 +71,11 @@ spec:
     jsonPointers:
       - /data/redis-password
   - kind: Secret
+    name: <release-name>-cache-encryption-key
+    namespace: <k8s destination namespace>
+    jsonPointers:
+      - /data/cluster-cache-encryption-key
+  - kind: Secret
     name: <release-name>-cluster-cache-ha-tls
     namespace: <k8s destination namespace>
     jsonPointers:
