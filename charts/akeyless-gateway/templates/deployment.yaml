@@ -263,12 +263,15 @@ spec:
               value: enable
             {{- include "akeyless-gateway.clusterCacheConfig" . | nindent 10 }}
             {{- end }}
-            {{- if or .Values.globalConfig.clusterCache.encryptionKeyExistingSecret .Values.cacheHA.encryptionKeyExistingSecret }}
+            {{- if eq "true" (include "akeyless-gateway.enableScaleOutOnDisconnectedMode" .) }}
+            {{- $encryptionSecretName := include "akeyless-gateway.clusterCacheEncryptionKeySecret" . }}
+            {{- if $encryptionSecretName }}
             - name: CACHE_ENCRYPTION_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ if .Values.globalConfig.clusterCache.encryptionKeyExistingSecret }}{{ .Values.globalConfig.clusterCache.encryptionKeyExistingSecret }}{{ else }}{{ .Values.cacheHA.encryptionKeyExistingSecret }}{{ end }}
+                  name: {{ $encryptionSecretName }}
                   key: cluster-cache-encryption-key
+            {{- end }}
             {{- end }}
             {{- with .Values.globalConfig.gatewayAuth.universalIdentity }}
             - name: UID_ROTATE_INTERVAL

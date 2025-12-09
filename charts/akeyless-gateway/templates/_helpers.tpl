@@ -153,8 +153,16 @@ Generate chart secret name
 {{- end }}
 
 {{- define "akeyless-gateway.clusterCache.enabled" -}}
-{{- or (eq .Values.globalConfig.gatewayAuth.gatewayAccessType "uid") (ne .Values.globalConfig.clusterCache.enabled false) .Values.cacheHA.enabled -}}
-{{- end }}
+{{- if or
+  (eq .Values.globalConfig.gatewayAuth.gatewayAccessType "uid")
+  (ne .Values.globalConfig.clusterCache.enabled false)
+  .Values.cacheHA.enabled
+-}}
+true
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
 
 {{- define "akeyless-gateway.clusterCache.labels" -}}
 name: {{ include "akeyless-gateway.clusterCache.SvcName" . }}
@@ -259,15 +267,34 @@ component: cache
 {{- end -}}
 {{- end -}}
 
-{{- define "akeyless-gateway.clusterCacheEncryptionKeyExist" -}}
-    {{- if or .Values.globalConfig.clusterCache.encryptionKeyExistingSecret .Values.cacheHA.encryptionKeyExistingSecret -}}
+{{- define "akeyless-gateway.enableScaleOutOnDisconnectedMode" -}}
+{{- if eq (.Values.globalConfig.clusterCache.enableScaleOutOnDisconnectedMode | default false) true -}}
+true
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
+
+{{- define "akeyless-gateway.useEncryptionKeyExistingSecret" -}}
+{{- if or .Values.globalConfig.clusterCache.encryptionKeyExistingSecret .Values.cacheHA.encryptionKeyExistingSecret -}}
+true
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
+
+{{- define "akeyless-gateway.clusterCacheEncryptionKeySecret" -}}
+    {{- if eq "true" (include "akeyless-gateway.useEncryptionKeyExistingSecret" .) -}}
         {{- if .Values.globalConfig.clusterCache.encryptionKeyExistingSecret -}}
             {{- .Values.globalConfig.clusterCache.encryptionKeyExistingSecret -}}
         {{- else -}}
             {{- .Values.cacheHA.encryptionKeyExistingSecret -}}
         {{- end -}}
-    {{- else if (eq "true" (include "akeyless-gateway.clusterCache.enabled" . )) -}}
-        {{- printf "%s-cache-encryption-key" .Release.Name -}}
+    {{- else if (and
+      (eq "true" (include "akeyless-gateway.enableScaleOutOnDisconnectedMode" .))
+      (eq "true" (include "akeyless-gateway.clusterCache.enabled" .))
+    ) -}}
+      {{- printf "%s-cache-encryption-key" $.Release.Name -}}
     {{- end -}}
 {{- end -}}
 
@@ -287,10 +314,13 @@ component: cache
     value: "{{ printf "%s/%s" (include "akeyless-gateway.clusterCache.tlsVolumeMountPath" .) .Values.cacheHA.tls.certFile }}"
   {{- end }}
   - name: STORE_CACHE_ENCRYPTION_KEY_TO_K8S_SECRETS
-    value: {{ .Values.globalConfig.clusterCache.enableScaleOutOnDisconnectedMode | default false | quote }}
-  {{- if or .Values.globalConfig.clusterCache.encryptionKeyExistingSecret .Values.cacheHA.encryptionKeyExistingSecret }}
+    value: {{ include "akeyless-gateway.enableScaleOutOnDisconnectedMode" . | quote }}
+  {{- if eq "true" (include "akeyless-gateway.enableScaleOutOnDisconnectedMode" .) }}
+  {{- $secretName := include "akeyless-gateway.clusterCacheEncryptionKeySecret" . }}
+  {{- if $secretName }}
   - name: CACHE_ENCRYPTION_KEY_SECRET_NAME
-    value: {{ include "akeyless-gateway.clusterCacheEncryptionKeyExist" . | quote }}
+    value: {{ $secretName | quote }}
+  {{- end }}
   {{- end }}
   {{- include "akeyless-gateway.clusterCache.password" . }}
 {{- end -}}
@@ -300,9 +330,9 @@ Check customer fragment
 
 {{- define "akeyless-gateway.root.config.path" -}}
 {{- if not .Values.gatewayRootMode }}
-     {{- printf "/home/akeyless" -}}
+    {{- printf "/home/akeyless" -}}
 {{- else }}
-     {{- printf "/root" -}}
+    {{- printf "/root" -}}
 {{- end -}}
 {{- end -}}
 
