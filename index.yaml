@@ -2,6 +2,16 @@ apiVersion: v1
 entries:
   akeyless-api-gateway:
   - apiVersion: v2
+    appVersion: 4.42.0
+    created: "2025-12-09T16:32:00.669468988Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
+    digest: d52a21e83bad8ee2e1f44e3f7ea50432e42fdc208b6b05402ce63fe72410cc7f
+    name: akeyless-api-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-api-gateway-1.61.0/akeyless-api-gateway-1.61.0.tgz
+    version: 1.61.0
+  - apiVersion: v2
     appVersion: 4.41.0
     created: "2025-12-02T12:30:32.625232984Z"
     description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
@@ -3358,6 +3368,29 @@ entries:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-csi-provider-1.0.0/akeyless-csi-provider-1.0.0.tgz
     version: 1.0.0
   akeyless-gateway:
+  - annotations:
+      gatewayVersion: 4.42.0
+      sraVersion: 2.7.0
+    apiVersion: v2
+    appVersion: 4.42.0_2.7.0
+    created: "2025-12-09T16:32:00.841994615Z"
+    dependencies:
+    - alias: cacheHA
+      condition: cacheHA.enabled
+      name: redis-ha
+      repository: https://dandydeveloper.github.io/charts/
+      version: 4.35.3
+    description: A Helm chart for Kubernetes that deploys akeyless-gateway
+    digest: 025f054ea57035b827269284e988019f5d2eb81deb132c3310c947b2a732353e
+    icon: https://akeyless-908832575.imgix.net/wp-content/uploads/2024/03/akeyless-2024.png?auto=format%2Ccompress&fm=webp&ixlib=php-3.3.0
+    keywords:
+    - akeyless-gateway
+    - sra
+    name: akeyless-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-gateway-1.16.0/akeyless-gateway-1.16.0.tgz
+    version: 1.16.0
   - annotations:
       gatewayVersion: 4.41.0
       sraVersion: 2.7.0
@@ -11895,4 +11928,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2025-12-09T14:24:26.083526569Z"
+generated: "2025-12-09T16:32:00.846829486Z"
