@@ -78,6 +78,21 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- define "akeyless-gateway.containerName" -}}
   {{- print "akeyless-gateway" -}}
 {{- end -}}
+
+{{/*
+Gateway container image (repository:tag).
+*/}}
+{{- define "akeyless-gateway.gatewayImage" -}}
+{{- $repository := "akeyless/gateway" -}}
+{{- if .Values.gateway.deployment.image.repository -}}
+{{- $repository = .Values.gateway.deployment.image.repository -}}
+{{- else if .Values.gatewayRootMode -}}
+{{- $repository = "akeyless/base" -}}
+{{- end -}}
+{{- $tag := .Values.gateway.deployment.image.tag | default "latest" -}}
+{{- printf "%s:%s" $repository $tag -}}
+{{- end -}}
+
 {{/*
 Create the name of the service account to use
 */}}

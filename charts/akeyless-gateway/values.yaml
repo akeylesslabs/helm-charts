@@ -226,7 +226,7 @@ gateway:
     annotations: {}
     labels: {}
 
-    replicaCount: 2
+    replicaCount: 1
 
     ## Deployment update strategy configuration
     ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
@@ -236,9 +236,9 @@ gateway:
       # maxSurge: "25%"
 
     ## Gateway image settings: repository and tag to deploy
-    ## Default: akeyless/base. Alternative mirror registry: docker.registry-2.akeyless.io/base
     image:
-      # repository: akeyless/base
+      ## Default: akeyless/gateway. Alternative mirror registry: docker.registry-2.akeyless.io/gateway
+      # repository: akeyless/gateway
       # tag: latest
       pullPolicy: IfNotPresent
 
