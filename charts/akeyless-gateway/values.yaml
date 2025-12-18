@@ -225,8 +225,8 @@ gateway:
         # tag: latest
       pullPolicy: IfNotPresent
 
-    # Place here any pod annotations you may need
     pod:
+      # Place here any pod annotations you may need
       annotations: {}
 
     affinity:
