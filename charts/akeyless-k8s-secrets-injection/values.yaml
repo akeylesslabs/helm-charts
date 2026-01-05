@@ -41,12 +41,12 @@ containerSecurityContext: {}
 #    type: RuntimeDefault
 
 image:
-  repository: docker.registry-2.akeyless.io/k8s-webhook-server
-  agentImage: docker.registry-2.akeyless.io/k8s-secrets-sidecar
+  repository: akeyless/k8s-webhook-server
+  agentImage: akeyless/k8s-secrets-sidecar
 
-##   Alternative mirror registry
-#  repository: akeyless/k8s-webhook-server
-#  agentImage: akeyless/k8s-secrets-sidecar
+  ## Alternative mirror registry
+  # repository: docker.registry-2.akeyless.io/k8s-webhook-server
+  # agentImage: docker.registry-2.akeyless.io/k8s-secrets-sidecar
 
   pullPolicy: IfNotPresent
 
