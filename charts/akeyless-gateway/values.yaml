@@ -123,6 +123,8 @@ globalConfig:
       # storageClass: ""
       # size: 10Gi
 
+    pod:
+      annotations: {}
 
 cacheHA:
   enabled: false
@@ -228,6 +230,8 @@ gateway:
     pod:
       # Place here any pod annotations you may need
       annotations: {}
+
+    containerPort: 8000
 
     affinity:
       enabled: false
