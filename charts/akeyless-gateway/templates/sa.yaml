@@ -9,5 +9,9 @@ metadata:
   annotations:
     {{- toYaml .annotations | nindent 4 }}
   {{- end -}}
+  {{- if .labels }}
+  labels:
+    {{- toYaml .labels | nindent 4 }}
+  {{- end -}}
 {{- end -}}
 {{- end -}}
