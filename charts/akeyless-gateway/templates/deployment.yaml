@@ -79,14 +79,14 @@ spec:
             secretName: {{ .Values.globalConfig.TLSConf.tlsExistingSecret }}
             defaultMode: 420
             items:
-              - key: tlsCertificate
+              - key: {{ (.Values.globalConfig.TLSConf).tlsCertificateSecretKeyName | default "akeyless-api-cert.crt" }}
                 path: akeyless-api-cert.crt
         - name: tls-conf-private-key
           secret:
             secretName: {{ .Values.globalConfig.TLSConf.tlsExistingSecret }}
             defaultMode: 420
             items:
-              - key: tlsPrivateKey
+              - key: {{ (.Values.globalConfig.TLSConf).tlsPrivateKeySecretKeyName | default "akeyless-api-cert.key" }}
                 path: akeyless-api-cert.key
       {{- end }}
       {{- if and (.Values.globalConfig.metrics.enabled) (.Values.globalConfig.metrics.metricsExistingSecret) }}
