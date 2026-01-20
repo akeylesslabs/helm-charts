@@ -20,7 +20,7 @@ You can then run `helm search repo akeyless` to see the charts.
 
 This repo holds kubernetes helm charts for Akeyless services:
 
-[Akeyless API Gateway](https://github.com/akeylesslabs/helm-charts/tree/main/charts/akeyless-api-gateway)
+[Akeyless Gateway](https://github.com/akeylesslabs/helm-charts/tree/main/charts/akeyless-gateway)
 
 [Akeyless K8S Secrets Injection](https://github.com/akeylesslabs/helm-charts/tree/main/charts/akeyless-k8s-secrets-injection)
 
