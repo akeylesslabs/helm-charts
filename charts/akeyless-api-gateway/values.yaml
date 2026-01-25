@@ -30,11 +30,18 @@ cache:
     pullPolicy: Always
   resources:
     limits:
-  # cpu: 500m
+      # cpu: 500m
       memory: 2Gi
     requests:
       cpu: 250m
       memory: 256Mi
+  persistence:
+    enabled: false
+    # existingClaim: ""
+    # accessMode: "ReadWriteMany"
+    # size: 5Gi
+    # storageClass ""
+
 
 image:
   repository: akeyless/base
