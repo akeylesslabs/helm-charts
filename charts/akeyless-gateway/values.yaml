@@ -70,8 +70,8 @@ globalConfig:
     enabled: false
     ## Specifies an existing secret for tls-certificate:
     tlsExistingSecret:
-    # tlsCertificateSecretKeyName: akeyless-api-cert.crt
-    # tlsPrivateKeySecretKeyName: akeyless-api-cert.key
+    # tlsCertificateSecretKeyName: tlsCertificate
+    # tlsPrivateKeySecretKeyName: tlsPrivateKey
 
   ## Telemetry Metrics see docs for examples https://docs.akeyless.io/docs/telemetry-metrics-k8s
   ##
