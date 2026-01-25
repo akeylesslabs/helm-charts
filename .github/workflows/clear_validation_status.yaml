@@ -1,0 +1,13 @@
+name: Validate Chart Version
+
+on:
+  deployment:
+  pull_request:
+    paths-ignore:
+      - "charts/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - run: 'echo "No validate status check required"'

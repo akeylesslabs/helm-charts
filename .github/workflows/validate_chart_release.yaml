@@ -3,6 +3,8 @@ name: Validate Chart Version
 on:
   deployment:
   pull_request:
+    paths:
+      - "charts/**"
 
 jobs:
   validate:
