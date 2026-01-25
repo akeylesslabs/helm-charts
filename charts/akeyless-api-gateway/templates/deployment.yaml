@@ -93,7 +93,7 @@ spec:
       {{- if eq .Values.persistence.enabled true }}
       - name: persistent-storage
         persistentVolumeClaim:
-          claimName: {{ .Values.persistence.existingClaim | default (printf "%s-pvc" (include "akeyless-api-gw.fullname" .)) }}
+          claimName: {{ .Values.persistence.existingClaim | default (include "akeyless-api-gw.pvcName" .) }}
       {{- end }}
       initContainers:
         # Since k8s 1.9.4, config maps mount read-only volumes. Since the Docker image also writes to the config file,

@@ -146,10 +146,14 @@ Generate chart secret name
     {{- end -}}
 {{- end -}}
 
+{{- define "akeyless-api-gw.cache.pvcName" -}}
+{{- printf "%s-cache" (include "akeyless-api-gw.fullname" .) }}
+{{- end -}}
+
+
 {{/* Define REDIS_MAXMEMORY as 80% of the pod's memory limit */}}
 {{- define "akeyless-api-gw.redisMaxmemory" -}}
 {{- $memoryLimit := .Values.cache.resources.limits.memory | toString -}}
-
 {{- $memoryLimitBytes := 0 -}}
 {{- if regexMatch "^[0-9]+$" $memoryLimit -}}
   {{- $memoryLimitBytes = $memoryLimit | mulf 1 -}} {{/* Direct byte value */}}
