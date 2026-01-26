@@ -88,8 +88,8 @@ service:
 
 env:
   AKEYLESS_URL: "https://vault.akeyless.io"
-  AKEYLESS_ACCESS_ID: "" 
   AKEYLESS_ACCESS_TYPE: ""  # azure_ad/aws_iam/api_key/k8s
+  AKEYLESS_ACCESS_ID: "" 
 
  # AKEYLESS_API_GW_URL: "https://api-gw-url"
  # AKEYLESS_POD_ACCESS_PATH: "<location-to-access-secrets-per-pod-name>"
