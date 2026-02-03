@@ -268,7 +268,7 @@ component: cache
 {{- end -}}
 
 {{- define "akeyless-gateway.enableScaleOutOnDisconnectedMode" -}}
-{{- if eq (.Values.globalConfig.clusterCache.enableScaleOutOnDisconnectedMode | default false) true -}}
+{{- if eq (.Values.globalConfig.clusterCache.enableScaleOutOnDisconnectedMode) true -}}
 true
 {{- else -}}
 false
