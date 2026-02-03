@@ -221,12 +221,12 @@ gateway:
     annotations: {}
     labels: {}
 
-    replicaCount: 2
+    replicaCount: 1
     image:
-        # repository: akeyless/base
-      ##   Alternative mirror registry
-        # repository: docker.registry-2.akeyless.io/base
-        # tag: latest
+      # repository: akeyless/gateway
+      ## Alternative mirror registry
+      # repository: docker.registry-2.akeyless.io/gateway
+      # tag: latest
       pullPolicy: IfNotPresent
 
     pod:
