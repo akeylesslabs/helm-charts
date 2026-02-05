@@ -94,13 +94,13 @@ globalConfig:
   ##
   clusterCache:
     enabled: true
-    ## In case Cache is enabled in the Gateway, and the encryptionKeyExistingSecret parameter has a value
-    ## Akeyless will use this specified encryption key and store it securely within Akeyless Gateway.
-    ## If the encryptionKeyExistingSecret parameter is empty or not specified,
-    ## Akeyless will automatically generate a new encryption key and a new ServiceAccount for K8s.
-    ## for more information: https://docs.akeyless.io/docs/advanced-chart-configuration#cache-configuration
-    ##
+    ## If enableScaleOutOnDisconnectedMode is set to true, and the encryptionKeyExistingSecret parameter has a value
+    ## Akeyless will use this specified encryption key for offline scaling support.
+    ## If enableScaleOutOnDisconnectedMode is set to true, and the encryptionKeyExistingSecret parameter is empty or not specified,
+    ## Akeyless will automatically generate a new encryption key and a new k8s secret    
     encryptionKeyExistingSecret:
+
+    enableScaleOutOnDisconnectedMode: false
 
     # Enable/Disable TLS  between the Gateway and the cluster cache service
     # using generated certificates and keys
@@ -222,11 +222,11 @@ gateway:
     labels: {}
 
     replicaCount: 2
+    ## Gateway image settings: repository and tag to deploy
+    ## Default: akeyless/base. Alternative mirror registry: docker.registry-2.akeyless.io/base
     image:
-        # repository: akeyless/base
-      ##   Alternative mirror registry
-        # repository: docker.registry-2.akeyless.io/base
-        # tag: latest
+      # repository: akeyless/base
+      # tag: latest
       pullPolicy: IfNotPresent
 
     pod:
