@@ -30,7 +30,7 @@ globalConfig:
   ## To enable only specific users to use Remote Access, make sure to add the relevant `authorizedAccessIDs` in the `Global` section.
   ## A comma-separated list can be used for multiple IDs.
   ## While this is not mandatory, it is a good security practice to limit user access. If not configured, a Warning message
-  ## will appear. For more information: https://docs.akeyless.io/docs/remote-access-setup-k8s#configuration
+  ## will appear. For more information: <https://docs.akeyless.io/docs/remote-access-setup-k8s>
   ##
   authorizedAccessIDs:
 
@@ -435,8 +435,7 @@ gateway:
 ##
 sra:
   ## Enable secure-remote-access. Valid values: true/false.
-  ## For more information on a Quick Start guide for Remote Access <https://docs.akeyless.io/docs/remote-access-quick-start-guide>
-  ## Or setup SRA on K8s <https://docs.akeyless.io/docs/remote-access-setup-k8s>
+  ## For more information <https://docs.akeyless.io/docs/remote-access-setup-k8s>
   enabled: false
 
   image:
@@ -470,7 +469,7 @@ sra:
     ## Akeyless requires data persistence to be shared within all pods in the cluster
     ## accessMode: ReadWriteMany
     ## Make sure to change the below values according to your environment except for the hostPath values
-    ## see docs for more information <https://docs.akeyless.io/docs/remote-access-setup-k8s#configuration>
+    ## see docs for more information <https://docs.akeyless.io/docs/remote-access-setup-k8s>
     ##
     persistence:
       volumes: {}
@@ -497,7 +496,6 @@ sra:
       ## We've set a base recommended requests of 1 vCPU and 2GB memory.
       ## We intentionally leave resource limits unspecified to enable customization. If you wish to set specific resource
       ## limits, uncomment the 'limits' section and adjust values as needed.
-      ## For more information on system requirements <https://docs.akeyless.io/docs/remote-access-system-requirements>
       ##
       ## If Horizontal Pod Autoscaler (HPA) usage is desired, you must set requests values.
       ## If you do want to specify resources, uncomment the following
@@ -521,7 +519,7 @@ sra:
       memAvgUtil: 70
 
   ## The below section is for the Remote Access SSH app
-  ## For more information: <https://docs.akeyless.io/docs/remote-access-advanced-configuration-k8s#ssh-configuration>
+  ## For more information: <https://docs.akeyless.io/docs/remote-access-setup-k8s>
   ##
   sshConfig:
     deployment:
@@ -536,7 +534,7 @@ sra:
     replicaCount: 1
 
     ## This is a required RSA Public Key for your Akeyless SSH Cert Issuer
-    ## See docs for examples <https://docs.akeyless.io/docs/remote-access-setup-k8s#ssh--config>
+    ## See docs for examples <https://docs.akeyless.io/docs/remote-access-setup-k8s>
     ##
     CAPublicKey:
     # CAPublicKey: |
@@ -545,7 +543,7 @@ sra:
     ## This approach prevents the need to manually re-accept the SSH host key fingerprint after upgrades or other changes.
     ## In the example below, the fingerprints will be stored in the /MY_SSH_REMOTE_ACCESS_HOST_KEYS folder.
     ## Note: Ensure that your Remote Access default authentication method has the necessary permissions to create, read, and list within this folder.
-    ## See docs for more information <https://docs.akeyless.io/docs/remote-access-advanced-configuration-k8s#ssh-configuration>
+    ## See docs for more information <https://docs.akeyless.io/docs/remote-access-setup-k8s>
     ##
     sshHostKeysPath:
 
@@ -583,8 +581,6 @@ sra:
       ## We've set a base recommended requests of 1 vCPU and 2GB memory.
       ## We intentionally leave resource limits unspecified to enable customization. If you wish to set specific resource
       ## limits, uncomment the 'limits' section and adjust values as needed.
-      ## For more information on system requirments <https://docs.akeyless.io/docs/remote-access-system-requirements>
-
       ## If Horizontal Pod Autoscaler (HPA) usage is desired, you must set requests values.
       ## If you do want to specify resources, uncomment the following
       ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
