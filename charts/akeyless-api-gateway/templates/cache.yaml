@@ -26,16 +26,16 @@ spec:
         component: cache
     spec:
       volumes:
-      {{- if .Values.cache.persistence.enabled }}
-      - name: cache-data
-        persistentVolumeClaim:
-          claimName: {{ .Values.cache.persistence.existingClaim | default (include "akeyless-api-gw.cache.pvcName" .) }}
-      {{- end }}
-      {{- if (include "cacheEnableTls" . | eq "true") }}
+        {{- if .Values.cache.persistence.enabled }}
+        - name: cache-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.cache.persistence.existingClaim | default (include "akeyless-api-gw.cache.pvcName" .) }}
+        {{- end }}
+        {{- if (include "cacheEnableTls" . | eq "true") }}
         - name: cache-tls
           secret:
             secretName: {{ include "cacheTlsSecretName" . }}
-      {{ end }}
+        {{- end }}
       {{-  include "cache.imagePullSecrets" . | indent 2 }}
       containers:
       - name: {{ $deploymentName }}
