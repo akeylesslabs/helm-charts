@@ -40,7 +40,13 @@ cache:
     # existingClaim: ""
     # accessMode: "ReadWriteMany"
     # size: 5Gi
-    # storageClass ""
+    # storageClass: ""
+    # labels: {}
+    # annotations: {}
+  # Additional Redis flags appended to the container args.
+  # By default, when cache.persistence.enabled=false, the chart adds:
+  # --save "" --appendonly "no"
+  # extraArgs: []
 
 
 image:

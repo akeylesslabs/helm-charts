@@ -74,6 +74,11 @@ spec:
         {{- end }}
         {{- if .Values.cache.extraArgs }}
         {{- toYaml .Values.cache.extraArgs | nindent 8 }}
+        {{- else if not .Values.cache.persistence.enabled }}
+        - --save
+        - ""
+        - --appendonly
+        - "no"
         {{- end }}
         ports:
         - containerPort: 6379
