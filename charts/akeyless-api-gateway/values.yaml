@@ -37,6 +37,10 @@ cache:
       memory: 256Mi
   persistence:
     enabled: false
+    # existingClaim: ""
+    # accessMode: "ReadWriteMany"
+    # size: 5Gi
+    # storageClass ""
 
 
 image:
