@@ -222,6 +222,14 @@ gateway:
     labels: {}
 
     replicaCount: 2
+
+    ## Deployment update strategy configuration
+    ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
+    strategy: {}
+      # type: RollingUpdate
+      # maxUnavailable: 0
+      # maxSurge: "25%"
+
     ## Gateway image settings: repository and tag to deploy
     ## Default: akeyless/base. Alternative mirror registry: docker.registry-2.akeyless.io/base
     image:
@@ -400,11 +408,11 @@ gateway:
     ## useRand: false
   persistence:
     enabled: false
-    ## existingClaim: ""
-    ## mountPath: ""
-    ## accessMode: "ReadWriteMany"
-    ## storageClass: ""
-    ## size: 100Mi
+    # existingClaim: ""
+    # mountPath: ""
+    # accessMode: "ReadWriteMany"
+    # storageClass: ""
+    # size: 5Gi
   customCA:
     enabled: false
     # Name of the volume to mount
@@ -459,6 +467,7 @@ sra:
         enabled: false
         data:
       topologySpreadConstraints: []
+      strategy: {}
     replicaCount: 1
 
     # Example for enabling pod-level securityContext for volume permissions:
@@ -533,6 +542,7 @@ sra:
         enabled: false
         data:
       topologySpreadConstraints: []
+      strategy: {} 
     replicaCount: 1
 
     ## This is a required RSA Public Key for your Akeyless SSH Cert Issuer

@@ -17,6 +17,10 @@ spec:
   {{- if not .Values.sra.webConfig.hpa.enabled }}
   replicas: {{ default 1 .Values.sra.webConfig.replicaCount }}
   {{- end }}
+  {{- if .Values.sra.webConfig.deployment.strategy }}
+  strategy:
+    {{- toYaml .Values.sra.webConfig.deployment.strategy | nindent 4 }}
+  {{- end }}    
   selector:
     matchLabels:
       {{- include "akeyless-sra-web.selectorLabels" . | nindent 6 }}

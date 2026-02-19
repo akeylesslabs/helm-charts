@@ -17,6 +17,10 @@ spec:
   {{- if .Values.sra.sshConfig.hpa.enabled }}
   replicas: {{ default 1 .Values.sra.sshConfig.replicaCount }}
   {{- end }}
+  {{- if .Values.sra.sshConfig.deployment.strategy }}
+  strategy:
+    {{- toYaml .Values.sra.sshConfig.deployment.strategy | nindent 4 }}
+  {{- end }}  
   selector:
     matchLabels:
       {{- include "akeyless-gateway-sra-ssh-service.selectorLabels" . | nindent 6 }}
