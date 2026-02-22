@@ -1,0 +1,49 @@
+{{- if .Values.sra.enabled }}
+{{- if .Values.sra.webConfig.pdb.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: web-{{ include "akeyless-gateway.fullname" . }}-pdb
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "akeyless-sra-web.labels" . | nindent 4 }}
+  {{- if .Values.sra.webConfig.pdb.annotations }}
+  annotations:
+    {{- toYaml .Values.sra.webConfig.pdb.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.sra.webConfig.pdb.maxUnavailable }}
+  maxUnavailable: {{ .Values.sra.webConfig.pdb.maxUnavailable }}
+  {{- end }}
+  {{- if .Values.sra.webConfig.pdb.minAvailable }}
+  minAvailable: {{ .Values.sra.webConfig.pdb.minAvailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "akeyless-sra-web.selectorLabels" . | nindent 6 }}
+{{- end }}
+---
+{{- if .Values.sra.sshConfig.pdb.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ssh-{{ include "akeyless-gateway.fullname" . }}-pdb
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "akeyless-sra-ssh.labels" . | nindent 4 }}
+  {{- if .Values.sra.sshConfig.pdb.annotations }}
+  annotations:
+    {{- toYaml .Values.sra.sshConfig.pdb.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.sra.sshConfig.pdb.maxUnavailable }}
+  maxUnavailable: {{ .Values.sra.sshConfig.pdb.maxUnavailable }}
+  {{- end }}
+  {{- if .Values.sra.sshConfig.pdb.minAvailable }}
+  minAvailable: {{ .Values.sra.sshConfig.pdb.minAvailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "akeyless-gateway-sra-ssh-service.selectorLabels" . | nindent 6 }}
+{{- end }}
+{{- end }}
