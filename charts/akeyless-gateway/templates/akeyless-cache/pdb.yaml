@@ -1,0 +1,24 @@
+{{- if and (eq "true" (include "akeyless-gateway.clusterCache.enabled" . )) (not .Values.cacheHA.enabled) .Values.globalConfig.clusterCache.pdb.enabled -}}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "akeyless-gateway.fullname" . }}-cache-pdb
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "akeyless-gateway.clusterCache.labels" . | nindent 4 }}
+    {{- include "akeyless-gateway.labels" . | nindent 4 }}
+  {{- if .Values.globalConfig.clusterCache.pdb.annotations }}
+  annotations:
+    {{- toYaml .Values.globalConfig.clusterCache.pdb.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.globalConfig.clusterCache.pdb.maxUnavailable }}
+  maxUnavailable: {{ .Values.globalConfig.clusterCache.pdb.maxUnavailable }}
+  {{- end }}
+  {{- if .Values.globalConfig.clusterCache.pdb.minAvailable }}
+  minAvailable: {{ .Values.globalConfig.clusterCache.pdb.minAvailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "akeyless-gateway.clusterCache.labels" . | nindent 6 }}
+{{- end }}

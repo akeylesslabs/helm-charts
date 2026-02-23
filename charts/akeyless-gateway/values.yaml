@@ -125,6 +125,11 @@ globalConfig:
       # storageClass: ""
       # size: 10Gi
 
+    pdb:
+      enabled: false
+      # minAvailable: ""
+      # maxUnavailable: ""
+
     pod:
       annotations: {}
 
@@ -395,6 +400,13 @@ gateway:
     memAvgUtil: 70
 
     annotations: {}
+
+  ## Pod Disruption Budget configuration
+  pdb:
+    enabled: false
+    # minAvailable: ""
+    # maxUnavailable: ""
+
   ## HSM configuration
   hsm:
     enabled: false
@@ -529,6 +541,12 @@ sra:
       cpuAvgUtil: 70
       memAvgUtil: 70
 
+    ## Pod Disruption Budget configuration
+    pdb:
+      enabled: false
+      # minAvailable: ""
+      # maxUnavailable: ""
+
   ## The below section is for the Remote Access SSH app
   ## For more information: <https://docs.akeyless.io/docs/remote-access-advanced-configuration-k8s#ssh-configuration>
   ##
@@ -615,3 +633,9 @@ sra:
       maxReplicas: 10
       cpuAvgUtil: 70
       memAvgUtil: 70
+
+    ## Pod Disruption Budget configuration
+    pdb:
+      enabled: false
+      # minAvailable: ""
+      # maxUnavailable: ""
