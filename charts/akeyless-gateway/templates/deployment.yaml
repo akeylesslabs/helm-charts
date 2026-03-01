@@ -58,10 +58,14 @@ spec:
         {{- toYaml .Values.gateway.deployment.tolerations | nindent 8 }}
       {{- end }}
       {{- include "akeyless-gateway.imagePullSecrets" . | indent 2 }}
-      {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true) (.Values.gateway.secretsStore.enabled)}}
+      {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true) (.Values.gateway.secretsStore.enabled) (.Values.gateway.akeylessConfigVol) }}
       volumes:
         - name: akeyless-config
+          {{- if .Values.gateway.akeylessConfigVol }}
+          {{- toYaml .Values.gateway.akeylessConfigVol | nindent 10 }}
+          {{- else }}
           emptyDir: {}
+          {{- end }}
       {{- if .Values.gateway.customCA.enabled }}
         - name: {{ .Values.gateway.customCA.volumeName }}
         {{- if eq (.Values.gateway.customCA.volumeType| lower) "configmap" }}
