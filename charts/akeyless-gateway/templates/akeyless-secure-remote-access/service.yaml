@@ -33,15 +33,15 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "akeyless-sra-ssh.labels" . | nindent 4 }}
-  {{- if .Values.sra.sshConfig.service.labels }}
-    {{- toYaml .Values.sra.sshConfig.service.labels | nindent 4 }}
+  {{- if .Values.sra.sshConfig.serviceInternal.labels }}
+    {{- toYaml .Values.sra.sshConfig.serviceInternal.labels | nindent 4 }}
   {{- end }}
   annotations:
-  {{- toYaml .Values.sra.sshConfig.service.annotations | nindent 4 }}
+  {{- toYaml .Values.sra.sshConfig.serviceInternal.annotations | nindent 4 }}
 spec:
   type: ClusterIP
   ports:
-    - port: {{ .Values.sra.sshConfig.service.curlProxyPort | default "9900" }}
+    - port: {{ .Values.sra.sshConfig.serviceInternal.curlProxyPort | default "9900" }}
       targetPort: curl-proxy
       protocol: TCP
       name: curl-proxy

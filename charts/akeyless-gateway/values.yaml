@@ -601,6 +601,11 @@ sra:
       labels: {}
       type: LoadBalancer
       port: 22
+    
+    serviceInternal:
+      annotations: {}
+      labels: {}
+      # curlProxyPort: 9900
 
     livenessProbe:
       failureThreshold: 5
