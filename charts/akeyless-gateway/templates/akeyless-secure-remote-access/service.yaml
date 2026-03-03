@@ -36,8 +36,6 @@ metadata:
   {{- if .Values.sra.sshConfig.service.labels }}
     {{- toYaml .Values.sra.sshConfig.service.labels | nindent 4 }}
   {{- end }}
-  annotations:
-  {{- toYaml .Values.sra.sshConfig.service.annotations | nindent 4 }}
 spec:
   type: ClusterIP
   ports:
