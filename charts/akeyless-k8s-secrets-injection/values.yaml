@@ -102,6 +102,11 @@ env:
  # the gw base64 certificate file e.g: 'cat my-gw.crt | base64'
  # AKEYLESS_GW_CERTIFICATE: 
 
+ # For Azure
+#  AZURE_CLIENT_ID=
+#  AZURE_TENANT_ID=
+#  AZURE_FEDERATED_TOKEN_FILE=
+#  AZURE_AUTHORITY_HOST=
 
   AKEYLESS_AGENT_LIMITS_CPU: "500m"
   AKEYLESS_AGENT_REQUESTS_CPU: "250m"
