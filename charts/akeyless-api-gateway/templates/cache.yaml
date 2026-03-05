@@ -25,12 +25,17 @@ spec:
         name: {{ $deploymentName }}
         component: cache
     spec:
-      {{- if (include "cacheEnableTls" . | eq "true") }}
       volumes:
+        {{- if .Values.cache.persistence.enabled }}
+        - name: cache-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.cache.persistence.existingClaim | default (include "akeyless-api-gw.cache.pvcName" .) }}
+        {{- end }}
+        {{- if (include "cacheEnableTls" . | eq "true") }}
         - name: cache-tls
           secret:
             secretName: {{ include "cacheTlsSecretName" . }}
-      {{ end }}
+        {{- end }}
       {{-  include "cache.imagePullSecrets" . | indent 2 }}
       containers:
       - name: {{ $deploymentName }}
@@ -66,6 +71,14 @@ spec:
         {{- else }}
         - --port
         - "6379"
+        {{- end }}
+        {{- if .Values.cache.extraArgs }}
+        {{- toYaml .Values.cache.extraArgs | nindent 8 }}
+        {{- else if not .Values.cache.persistence.enabled }}
+        - --save
+        - ""
+        - --appendonly
+        - "no"
         {{- end }}
         ports:
         - containerPort: 6379
@@ -118,8 +131,12 @@ spec:
             secretKeyRef:
               name: {{ include "akeyless-api-gw.cacheSecretName" . }}
               key: cache-pass
-        {{- if (include "cacheEnableTls" . | eq "true") }}
         volumeMounts:
+        {{- if .Values.cache.persistence.enabled }}
+        - name: cache-data
+          mountPath: /data
+        {{- end }}
+        {{- if (include "cacheEnableTls" . | eq "true") }}
         - name: cache-tls
           mountPath: {{ $mountCertPaths }}
           readOnly: true

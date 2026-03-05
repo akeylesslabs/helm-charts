@@ -30,11 +30,24 @@ cache:
     pullPolicy: Always
   resources:
     limits:
-  # cpu: 500m
+      # cpu: 500m
       memory: 2Gi
     requests:
       cpu: 250m
       memory: 256Mi
+  persistence:
+    enabled: false
+    # existingClaim: ""
+    # accessMode: "ReadWriteMany"
+    # size: 5Gi
+    # storageClass: ""
+    # labels: {}
+    # annotations: {}
+  # Additional Redis flags appended to the container args.
+  # By default, when cache.persistence.enabled=false, the chart adds:
+  # --save "" --appendonly "no"
+  # extraArgs: []
+
 
 image:
   repository: akeyless/base

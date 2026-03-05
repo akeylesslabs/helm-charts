@@ -14,3 +14,29 @@ spec:
       storage: {{ .Values.persistence.size }}
   storageClassName: {{ .Values.persistence.storageClass }}
 {{- end }}
+
+---
+{{- if and .Values.cache.persistence.enabled (not .Values.cache.persistence.existingClaim) }}
+{{- $pvcName := include "akeyless-api-gw.cache.pvcName" . }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $pvcName }}
+  {{- if .Values.cache.persistence.labels }}
+  labels:
+    {{- toYaml .Values.cache.persistence.labels | nindent 4 }}
+  {{- end }}
+  {{- if .Values.cache.persistence.annotations }}
+  annotations:
+    {{- toYaml .Values.cache.persistence.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  accessModes:
+    - {{ .Values.cache.persistence.accessMode | default "ReadWriteOnce" }}
+  resources:
+    requests:
+      storage: {{ .Values.cache.persistence.size | default "10Gi" }}
+  {{- if .Values.cache.persistence.storageClass }}
+  storageClassName: {{ .Values.cache.persistence.storageClass }}
+  {{- end }}
+{{- end }}
