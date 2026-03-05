@@ -425,6 +425,12 @@ gateway:
     # accessMode: "ReadWriteMany"
     # storageClass: ""
     # size: 5Gi
+  
+  ## Optional volume config for akeyless-config. Leave empty for default emptyDir: {}.
+  akeylessConfigVol: {}
+    # emptyDir:
+    #   sizeLimit: "500Mi"
+
   customCA:
     enabled: false
     # Name of the volume to mount
