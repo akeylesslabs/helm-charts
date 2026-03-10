@@ -1,6 +1,6 @@
 apiVersion: v2
 name: akeyless-gateway
-version: 1.18.8
+version: 1.18.9
 description: A Helm chart for Kubernetes that deploys akeyless-gateway
 type: application
 keywords:
@@ -13,7 +13,7 @@ annotations:
   sraVersion: 2.8.3
 dependencies:
   - name: redis-ha
-    version: 4.35.3
+    version: 4.35.10
     repository: https://dandydeveloper.github.io/charts/
     condition: cacheHA.enabled
     alias: cacheHA
