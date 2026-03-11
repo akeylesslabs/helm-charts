@@ -2,6 +2,16 @@ apiVersion: v1
 entries:
   akeyless-api-gateway:
   - apiVersion: v2
+    appVersion: 4.47.0
+    created: "2026-03-11T14:52:16.391233197Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
+    digest: e439e45d69076d28800118454b6146d40487c5e8281e80c61ad90bcc96f20ac3
+    name: akeyless-api-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-api-gateway-1.62.2/akeyless-api-gateway-1.62.2.tgz
+    version: 1.62.2
+  - apiVersion: v2
     appVersion: 4.46.0
     created: "2026-02-15T13:28:54.087959371Z"
     description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
@@ -3408,6 +3418,29 @@ entries:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-csi-provider-1.0.0/akeyless-csi-provider-1.0.0.tgz
     version: 1.0.0
   akeyless-gateway:
+  - annotations:
+      gatewayVersion: 4.47.0
+      sraVersion: 2.8.3
+    apiVersion: v2
+    appVersion: 4.47.0_2.8.3
+    created: "2026-03-11T14:52:16.586931242Z"
+    dependencies:
+    - alias: cacheHA
+      condition: cacheHA.enabled
+      name: redis-ha
+      repository: https://dandydeveloper.github.io/charts/
+      version: 4.35.10
+    description: A Helm chart for Kubernetes that deploys akeyless-gateway
+    digest: 7e8c27b3496e026764d06e6d623fd9e20c6774dc12534f6f785439e740b4ccf9
+    icon: https://akeyless-908832575.imgix.net/wp-content/uploads/2024/03/akeyless-2024.png?auto=format%2Ccompress&fm=webp&ixlib=php-3.3.0
+    keywords:
+    - akeyless-gateway
+    - sra
+    name: akeyless-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-gateway-1.18.10/akeyless-gateway-1.18.10.tgz
+    version: 1.18.10
   - annotations:
       gatewayVersion: 4.46.0
       sraVersion: 2.8.3
@@ -12621,4 +12654,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2026-03-10T07:00:36.573216677Z"
+generated: "2026-03-11T14:52:16.590317258Z"
