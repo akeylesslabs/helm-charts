@@ -107,7 +107,14 @@ env:
   AKEYLESS_AGENT_REQUESTS_CPU: "250m"
   AKEYLESS_AGENT_LIMITS_MEM: "128Mi"
   AKEYLESS_AGENT_REQUESTS_MEM: "64Mi"
- 
+
+  # --- Injector performance tuning (optional) ---
+  # AKEYLESS_IMAGE_CACHE_TTL: "300"              # Image metadata cache TTL in seconds (default: 300)
+  # AKEYLESS_WEBHOOK_MAX_CONCURRENT: "50"         # Max concurrent webhook mutations (default: 50)
+  # AKEYLESS_WEBHOOK_ACQUIRE_TIMEOUT: "28s"       # Semaphore acquire timeout (default: 28s)
+  # AKEYLESS_REGISTRY_MAX_IDLE_CONNS: "100"       # HTTP connection pool size (default: 100)
+  # AKEYLESS_HEALTH_PORT: "8081"                  # Isolated health endpoint port (default: disabled)
+
 
 resources:
   limits:
