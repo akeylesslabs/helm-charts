@@ -484,6 +484,16 @@ spec:
             - name: no_proxy
               value: {{ .Values.httpProxySettings.no_proxy }}
           {{- end }}
+          {{- if .Values.kubernetesAuth }}
+          {{- if .Values.kubernetesAuth.k8sClientQPS }}
+            - name: AKEYLESS_K8S_CLIENT_QPS
+              value: {{ .Values.kubernetesAuth.k8sClientQPS | quote }}
+          {{- end }}
+          {{- if .Values.kubernetesAuth.k8sClientBurst }}
+            - name: AKEYLESS_K8S_CLIENT_BURST
+              value: {{ .Values.kubernetesAuth.k8sClientBurst | quote }}
+          {{- end }}
+          {{- end }}
           {{- if .Values.env }}
   {{- toYaml .Values.env | nindent 12 }}
           {{- end }}

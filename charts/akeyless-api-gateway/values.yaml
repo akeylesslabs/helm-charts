@@ -419,6 +419,14 @@ cachingConf:
   # Configure metrics exporter (backend) (such as Datadog,Prometheus, etc..)
   # Provide an existing secret with the metrics configuration or use the config section
   # For more details: https://docs.akeyless.io/docs/telemetry-metrics-k8s
+
+# Kubernetes client configuration
+# Controls the rate limiter for k8s API calls (TokenReview, etc.)
+# Increase these values when running at scale (300+ concurrent pods)
+kubernetesAuth:
+  # k8sClientQPS: "50"        # QPS for k8s client rate limiter (default: 5)
+  # k8sClientBurst: "100"     # Burst for k8s client rate limiter (default: 10)
+
 metrics:
   enabled: false
   # Specifies an existing secret for metrics must include:
