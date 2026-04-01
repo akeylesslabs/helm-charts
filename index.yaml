@@ -3,6 +3,16 @@ entries:
   akeyless-api-gateway:
   - apiVersion: v2
     appVersion: 4.48.0
+    created: "2026-04-01T09:33:49.573043542Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
+    digest: 73d68d3087138de140ed2005f011acff44db407f4bf8791244b5ac34fd42039e
+    name: akeyless-api-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-api-gateway-1.62.6/akeyless-api-gateway-1.62.6.tgz
+    version: 1.62.6
+  - apiVersion: v2
+    appVersion: 4.48.0
     created: "2026-04-01T09:20:37.126281373Z"
     description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
     digest: 09cee1ecb0477ad3f5fe691976c57759dae334e7e54b9e53f5b3067ff03ed5f2
@@ -3448,6 +3458,29 @@ entries:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-csi-provider-1.0.0/akeyless-csi-provider-1.0.0.tgz
     version: 1.0.0
   akeyless-gateway:
+  - annotations:
+      gatewayVersion: 4.48.0
+      sraVersion: 2.8.3
+    apiVersion: v2
+    appVersion: 4.48.0_2.8.3
+    created: "2026-04-01T09:33:49.699739423Z"
+    dependencies:
+    - alias: cacheHA
+      condition: cacheHA.enabled
+      name: redis-ha
+      repository: https://dandydeveloper.github.io/charts/
+      version: 4.35.10
+    description: A Helm chart for Kubernetes that deploys akeyless-gateway
+    digest: 7f9deeeeeca9d02bb15efd56bf66d6f6a20a11d762372cf3267441641b93046a
+    icon: https://akeyless-908832575.imgix.net/wp-content/uploads/2024/03/akeyless-2024.png?auto=format%2Ccompress&fm=webp&ixlib=php-3.3.0
+    keywords:
+    - akeyless-gateway
+    - sra
+    name: akeyless-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-gateway-1.19.5/akeyless-gateway-1.19.5.tgz
+    version: 1.19.5
   - annotations:
       gatewayVersion: 4.48.0
       sraVersion: 2.8.3
@@ -12799,4 +12832,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2026-04-01T09:20:37.281048438Z"
+generated: "2026-04-01T09:33:49.70128392Z"
