@@ -3460,6 +3460,29 @@ entries:
   akeyless-gateway:
   - annotations:
       gatewayVersion: 4.48.0
+      sraVersion: 2.8.4
+    apiVersion: v2
+    appVersion: 4.48.0_2.8.4
+    created: "2026-04-01T12:34:01.83277766Z"
+    dependencies:
+    - alias: cacheHA
+      condition: cacheHA.enabled
+      name: redis-ha
+      repository: https://dandydeveloper.github.io/charts/
+      version: 4.35.10
+    description: A Helm chart for Kubernetes that deploys akeyless-gateway
+    digest: e4602b2a0a8df075b499d7cbbdcb951000f9ba0d1c9bec3d1be6330c46b26464
+    icon: https://akeyless-908832575.imgix.net/wp-content/uploads/2024/03/akeyless-2024.png?auto=format%2Ccompress&fm=webp&ixlib=php-3.3.0
+    keywords:
+    - akeyless-gateway
+    - sra
+    name: akeyless-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-gateway-1.19.6/akeyless-gateway-1.19.6.tgz
+    version: 1.19.6
+  - annotations:
+      gatewayVersion: 4.48.0
       sraVersion: 2.8.3
     apiVersion: v2
     appVersion: 4.48.0_2.8.3
@@ -6760,6 +6783,20 @@ entries:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-secrets-injection-1.0.0/akeyless-secrets-injection-1.0.0.tgz
     version: 1.0.0
   akeyless-sra:
+  - annotations:
+      ztbVersion: 2.8.4
+      ztpVersion: 1.12.3
+    apiVersion: v2
+    appVersion: 2.8.4_1.12.3
+    created: "2026-04-01T12:34:02.002772533Z"
+    description: A Helm chart for Kubernetes akeyless-zero-trust-bastion, akeyless-ssh-bastion
+      and akeyless-zero-trust-portal deployments
+    digest: a9d254329a0aa4012eeca65963b9651ca53b158c11e78bacced53cc0a054b867
+    name: akeyless-sra
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-sra-1.12.4/akeyless-sra-1.12.4.tgz
+    version: 1.12.4
   - annotations:
       ztbVersion: 2.8.3
       ztpVersion: 1.12.3
@@ -12832,4 +12869,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2026-04-01T09:33:49.70128392Z"
+generated: "2026-04-01T12:34:02.006380295Z"
