@@ -19,7 +19,7 @@ spec:
       targetPort: ssh
       protocol: TCP
       name: ssh
-    - port: 8000
+    - port: {{ .Values.sra.sshConfig.service.gatewayPort | default 8000 }}
       targetPort: gateway
       protocol: TCP
       name: gateway
