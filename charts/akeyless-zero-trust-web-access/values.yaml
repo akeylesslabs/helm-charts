@@ -38,6 +38,7 @@ dispatcher:
       repository: busybox
       tag: 1.30.1
       pullPolicy: IfNotPresent
+    resources: {}
   image:
     repository: akeyless/zero-trust-web-dispatcher
     pullPolicy: Always
@@ -200,6 +201,7 @@ webWorker:
       repository: apteno/alpine-jq
       tag: 2021-04-04
       pullPolicy: IfNotPresent
+    resources: {}
   image:
     repository: akeyless/zero-trust-web-worker
     pullPolicy: Always
