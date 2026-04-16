@@ -74,6 +74,8 @@ spec:
 {{- end }}
               [ "$(ls /configmap_policy_conf)" ] && cp /configmap_policy_conf/* /var/akeyless/policy_conf/
               jq -e . /var/akeyless/policy_conf/policies.json || (echo "Policies JSON validation failed! please correct the policies JSON structure in the values.yaml file" && exit 1)
+          resources:
+{{- toYaml .Values.webWorker.initContainer.resources | nindent 12 }}
           securityContext:
             runAsUser: 1000
             runAsGroup: 1000

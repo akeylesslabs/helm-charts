@@ -115,6 +115,8 @@ spec:
 {{- if .Values.dispatcher.config.allowedProxyUrls }}
               echo {{ range $index, $element := .Values.dispatcher.config.allowedProxyUrls -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_proxy_urls
 {{- end }}
+          resources:
+{{- toYaml .Values.dispatcher.initContainer.resources | nindent 12 }}
           securityContext:
             runAsUser: 65534
             runAsGroup: 65534
