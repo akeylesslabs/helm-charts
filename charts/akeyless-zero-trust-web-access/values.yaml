@@ -225,7 +225,14 @@ webWorker:
 #       cpu: 1000m
 #       memory: 1Gi
 
+  sessionCleanup:
+    staleGraceSeconds: 30
+
   livenessProbe:
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    failureThreshold: 3
+    timeoutSeconds: 5
     successThreshold: 1
 
   env: []

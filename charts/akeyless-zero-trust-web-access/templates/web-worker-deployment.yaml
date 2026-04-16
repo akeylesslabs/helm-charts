@@ -167,12 +167,20 @@ spec:
           resources:
 {{- toYaml .Values.webWorker.resources | nindent 12 }}
           livenessProbe:
-            httpGet:
-              path: /healthy
-              port: agent
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            failureThreshold: 3
+            exec:
+              command:
+                - sh
+                - -c
+                - |
+                  RESP=$(curl -sf -o /dev/null -w "%{http_code}" http://localhost:9090/healthy 2>/dev/null)
+                  if [ -z "$RESP" ] || [ "$RESP" = "000" ]; then exit 1; fi
+                  if [ ! -f /tmp/occupied ]; then exit 0; fi
+                  AGE=$(( $(date +%s) - $(stat -c %Y /tmp/occupied) ))
+                  if [ $AGE -lt {{ .Values.webWorker.sessionCleanup.staleGraceSeconds | default 120 }} ]; then exit 0; fi
+                  if netstat -tn 2>/dev/null | grep -q ":5800.*ESTABLISHED"; then exit 0; fi
+                  rm -f /tmp/occupied /tmp/session /tmp/lock
+                  pkill -f web_worker_agent 2>/dev/null
+                  exit 1
 {{- toYaml .Values.webWorker.livenessProbe | trim | nindent 12 }}
           lifecycle:
             preStop:
