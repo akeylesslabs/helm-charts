@@ -22,8 +22,11 @@ spec:
     spec:
       securityContext:
         fsGroup: 10000
+        supplementalGroups: [72]
       volumes:
-        - name: config
+        - name: akeyless-conf
+          emptyDir: {}
+        - name: akeyless-policy-conf
           emptyDir: {}
 {{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
         - name: gw-signed-ca
@@ -66,16 +69,24 @@ spec:
             - "-c"
             - |
               set -ex
+{{- if .Values.dlp.enabled }}
               [ "$(ls /configmap_conf)" ] && cp /configmap_conf/* /var/akeyless/conf
-              [ "$(ls /configmap_policy_conf)" ] && cp /configmap_policy_conf/* /var/akeyless/policy_conf
-              jq -e . /var/akeyless/policy_conf || (echo "Policies JSON validation failed! please correct the policies JSON structure in the values.yaml file" && exit 1)
+{{- end }}
+              [ "$(ls /configmap_policy_conf)" ] && cp /configmap_policy_conf/* /var/akeyless/policy_conf/
+              jq -e . /var/akeyless/policy_conf/policies.json || (echo "Policies JSON validation failed! please correct the policies JSON structure in the values.yaml file" && exit 1)
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
           volumeMounts:
 {{- if .Values.dlp.enabled }}
             - name: configmap-conf
               mountPath: /configmap_conf
 {{- end }}
-            - name: config
+            - name: akeyless-conf
               mountPath: /var/akeyless/conf
+            - name: akeyless-policy-conf
+              mountPath: /var/akeyless/policy_conf
             - name: configmap-policies
               mountPath: /configmap_policy_conf
 {{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
@@ -90,6 +101,10 @@ spec:
         - name: {{ .Values.webWorker.containerName }}
           image: "{{ .Values.webWorker.image.repository }}:{{ .Values.webWorker.image.tag  | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.webWorker.image.pullPolicy }}
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
           ports:
             - containerPort: 5800
               name: web
@@ -98,6 +113,8 @@ spec:
           env:
             - name: WEB_DISPATCHER_SERVICE_DNS
               value: {{ include "akeyless-zero-web-access.fullname" . }}-disc-disp
+            - name: DISPATCHER_DNS
+              value: {{ include "akeyless-zero-web-access.fullname" . }}-dispatcher
             - name: FF_PREF_HOMEPAGE
               value: browser.startup.homepage=\"https://www.akeyless.io\"
             - name: DES_DOWNLOAD_PATH
@@ -136,7 +153,7 @@ spec:
             mountPath: /dev/shm
           - name: configmap-policies
             mountPath: /usr/lib/firefox/distribution
-          - name: config
+          - name: akeyless-conf
             mountPath: /var/akeyless/conf
           {{ if and .Values.persistence .Values.persistence.shareStorageVolume }}
           - name: {{ .Values.persistence.shareStorageVolume.name | title | lower }}
@@ -150,12 +167,20 @@ spec:
           resources:
 {{- toYaml .Values.webWorker.resources | nindent 12 }}
           livenessProbe:
-            httpGet:
-              path: /healthy
-              port: agent
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            failureThreshold: 3
+            exec:
+              command:
+                - sh
+                - -c
+                - |
+                  RESP=$(curl -sf -o /dev/null -w "%{http_code}" http://localhost:9090/healthy 2>/dev/null)
+                  if [ -z "$RESP" ] || [ "$RESP" = "000" ]; then exit 1; fi
+                  if [ ! -f /tmp/occupied ]; then exit 0; fi
+                  AGE=$(( $(date +%s) - $(stat -c %Y /tmp/occupied) ))
+                  if [ $AGE -lt {{ .Values.webWorker.sessionCleanup.staleGraceSeconds | default 120 }} ]; then exit 0; fi
+                  if netstat -tn 2>/dev/null | grep -q ":5800.*ESTABLISHED"; then exit 0; fi
+                  rm -f /tmp/occupied /tmp/session /tmp/lock
+                  pkill -f web_worker_agent 2>/dev/null
+                  exit 1
 {{- toYaml .Values.webWorker.livenessProbe | trim | nindent 12 }}
           lifecycle:
             preStop:

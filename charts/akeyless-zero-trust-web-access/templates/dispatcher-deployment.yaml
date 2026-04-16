@@ -115,6 +115,10 @@ spec:
 {{- if .Values.dispatcher.config.allowedProxyUrls }}
               echo {{ range $index, $element := .Values.dispatcher.config.allowedProxyUrls -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_proxy_urls
 {{- end }}
+          securityContext:
+            runAsUser: 65534
+            runAsGroup: 65534
+            runAsNonRoot: true
           volumeMounts:
             - name: configmap-akeyless
               mountPath: /configmap_akeyless
@@ -135,6 +139,10 @@ spec:
         - name: {{ .Values.dispatcher.containerName }}
           image: "{{ .Values.dispatcher.image.repository }}:{{ .Values.dispatcher.image.tag  | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.dispatcher.image.pullPolicy }}
+          securityContext:
+            runAsUser: 65534
+            runAsGroup: 65534
+            runAsNonRoot: true
           ports:
             - containerPort: 9000
               name: web
