@@ -80,6 +80,7 @@ spec:
             runAsUser: 1000
             runAsGroup: 1000
             runAsNonRoot: true
+            allowPrivilegeEscalation: false
           volumeMounts:
 {{- if .Values.dlp.enabled }}
             - name: configmap-conf
