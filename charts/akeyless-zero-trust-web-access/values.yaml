@@ -194,6 +194,33 @@ dispatcher:
 #      target_splunk_token=""
 #      target_splunk_url=""
 
+    recording:
+      enabled: false
+      quality: "360p"  # 144p | 240p | 360p | 480p | 720p | 1080p (maps to CRF + framerate)
+      compress: false
+      encryption:
+        type: ""  # "" (none) | "sse-s3" | "sse-kms"
+        kmsKeyId: ""  # For sse-kms only
+
+      # S3 upload config (inline)
+      s3:
+        bucket: ""
+        prefix: "ztwa-recordings"
+        region: ""
+        # Leave empty to use IAM role / instance profile
+        accessKeyId: ""
+        accessKeySecret: ""
+        endpoint: ""  # For S3-compatible stores (NetApp, MinIO)
+
+      # Or reference existing K8s secret
+      existingSecretName: ""
+      # Secret should contain keys:
+      #   RECORDING_S3_BUCKET
+      #   RECORDING_S3_PREFIX (optional)
+      #   RECORDING_S3_REGION (optional)
+      #   RECORDING_S3_ACCESS_KEY_ID (optional)
+      #   RECORDING_S3_ACCESS_KEY_SECRET (optional)
+
 webWorker:
   replicaCount: 5
   initContainer:
