@@ -121,6 +121,7 @@ spec:
             runAsUser: 65534
             runAsGroup: 65534
             runAsNonRoot: true
+            allowPrivilegeEscalation: false
           volumeMounts:
             - name: configmap-akeyless
               mountPath: /configmap_akeyless

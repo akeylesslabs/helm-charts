@@ -19,6 +19,9 @@ spec:
     - name: post-install-job
       image: "{{ .Values.validator.image.repository}}:{{ .Values.validator.image.tag }}"
       imagePullPolicy: {{ .Values.validator.image.pullPolicy }}
+      securityContext:
+        runAsNonRoot: true
+        allowPrivilegeEscalation: false
       command: ["/bin/sh"]
       args:
           - "-c"
