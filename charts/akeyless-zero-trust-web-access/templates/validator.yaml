@@ -20,6 +20,8 @@ spec:
       image: "{{ .Values.validator.image.repository}}:{{ .Values.validator.image.tag }}"
       imagePullPolicy: {{ .Values.validator.image.pullPolicy }}
       securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
         runAsNonRoot: true
         allowPrivilegeEscalation: false
       command: ["/bin/sh"]
