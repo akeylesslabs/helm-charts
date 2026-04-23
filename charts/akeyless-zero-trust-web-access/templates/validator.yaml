@@ -28,8 +28,8 @@ spec:
       args:
           - "-c"
           - |
-            jq -nr 'env | .POLICY_CONFIG' > policy_check
-            jq -e . policy_check || (echo "Policies JSON validation failed! please correct the policies JSON structure in the values.yaml file" && exit 1)
+            jq -nr 'env | .POLICY_CONFIG' > /tmp/policy_check
+            jq -e . /tmp/policy_check || (echo "Policies JSON validation failed! please correct the policies JSON structure in the values.yaml file" && exit 1)
       env:
         - name: POLICY_CONFIG
           valueFrom:
