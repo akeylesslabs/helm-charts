@@ -23,6 +23,7 @@ spec:
       securityContext:
         fsGroup: 10000
         supplementalGroups: [72]
+        runAsNonRoot: true
       volumes:
         - name: akeyless-conf
           emptyDir: {}

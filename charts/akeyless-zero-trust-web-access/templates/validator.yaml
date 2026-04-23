@@ -15,11 +15,19 @@ metadata:
     "helm.sh/hook": post-install
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
+  securityContext:
+    runAsNonRoot: true
+  volumes:
+    - name: validator-tmp
+      emptyDir: {}
   containers:
     - name: post-install-job
       image: "{{ .Values.validator.image.repository}}:{{ .Values.validator.image.tag }}"
       imagePullPolicy: {{ .Values.validator.image.pullPolicy }}
+      workingDir: /tmp
       securityContext:
+        runAsUser: 65534
+        runAsGroup: 65534
         runAsNonRoot: true
         allowPrivilegeEscalation: false
       command: ["/bin/sh"]
@@ -33,6 +41,9 @@ spec:
           valueFrom:
             configMapKeyRef:
               name: {{ $.Release.Name }}-cm-web-policies
-              key: policies.json           
+              key: policies.json
+      volumeMounts:
+        - name: validator-tmp
+          mountPath: /tmp
   restartPolicy: Never
 {{- end }}

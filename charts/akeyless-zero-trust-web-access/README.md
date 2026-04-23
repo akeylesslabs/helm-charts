@@ -5,6 +5,9 @@
 This chart bootstraps a Akeyless-Zero-Trust-Web-Access deployment on a Kubernetes cluster using the Helm package manager.
 This chart has been tested to work with [NGINX Ingress](https://kubernetes.github.io/ingress-nginx/) and [cert-manager](https://cert-manager.io/).
 
+### Chart 3.0.5 — pod security hardening
+
+Version **3.0.5** adds **pod-level** `runAsNonRoot: true` on the dispatcher and web-worker Deployments (for restricted PSA / Kyverno policies that validate pod `securityContext`). The post-install **validator** Pod now runs as non-root with a writable `/tmp` so the default **`validator.enabled: true`** path can succeed under stricter admission.
 
 ## Preparation
 
