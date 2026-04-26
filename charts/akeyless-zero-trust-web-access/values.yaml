@@ -4,6 +4,19 @@
 fullnameOverride:
 
 image:
+  # References to pre-existing image pull secrets, merged into spec.imagePullSecrets for every
+  # pod in this chart. Each entry is a LocalObjectReference: { name: "your-secret" }.
+  # Kubernetes applies pull credentials at the pod level; this list is merged with
+  # per-workload imagePullSecrets and, when set, the secret from dockerRepositoryCreds
+  # (all deduplicated by name).
+  imagePullSecrets: []
+  # (Deprecated) Base64 dockerconfig for the Akeyless registry, used only to create the
+  # pre-install secret "akeyless-docker-hub-web-access" when this value is non-empty.
+  # Obsolete: prefer a kubernetes.io/dockerconfigjson secret you create yourself and
+  # reference it in image.imagePullSecrets; this value will be removed in a future chart
+  # version. When both imagePullSecrets and this field are set, the generated secret is
+  # added alongside your listed secrets. Omitting this field is fully supported and is
+  # the recommended approach.
   dockerRepositoryCreds:
 
 
@@ -24,6 +37,9 @@ validator:
     repository: apteno/alpine-jq
     pullPolicy: IfNotPresent
     tag: 2021-04-04
+    # Extra image pull secret refs for the validator hook Pod only, merged with
+    # image.imagePullSecrets (and the legacy docker creds secret when used) on the pod.
+    imagePullSecrets: []
   annotations: {}
   # Remove the {} and add any needed annotations regarding your pod sidecar implementation
   # For Example when using istio sidecar to avoid issues with validator job completion please add the following annotation:
@@ -38,11 +54,17 @@ dispatcher:
       repository: busybox
       tag: 1.30.1
       pullPolicy: IfNotPresent
+    # Pull secret refs for the init container; merged on the pod with global and main
+    # image.imagePullSecrets, plus the legacy secret when dockerRepositoryCreds is set.
+    imagePullSecrets: []
     resources: {}
   image:
     repository: akeyless/zero-trust-web-dispatcher
     pullPolicy: Always
 #    tag: latest
+    # Pull secret refs for the main dispatcher container; all lists are merged at pod
+    # spec.imagePullSecrets and deduplicated.
+    imagePullSecrets: []
 
   containerName: "web-dispatcher"
 
@@ -201,11 +223,16 @@ webWorker:
       repository: apteno/alpine-jq
       tag: 2021-04-04
       pullPolicy: IfNotPresent
+    # Merged with global and main imagePullSecrets on the web-worker pod; pull secrets
+    # apply to all containers in the pod.
+    imagePullSecrets: []
     resources: {}
   image:
     repository: akeyless/zero-trust-web-worker
     pullPolicy: Always
 #    tag: latest
+    # Merged with image.imagePullSecrets, initContainer imagePullSecrets, and legacy; deduplicated.
+    imagePullSecrets: []
 
   containerName: "web-worker"
 

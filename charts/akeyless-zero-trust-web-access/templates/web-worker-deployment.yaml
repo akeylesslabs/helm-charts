@@ -97,8 +97,7 @@ spec:
               mountPath: "/etc/ssl/certs/gw-cert.pem"
               subPath: gw-cert.pem
 {{- end }}
-      imagePullSecrets:
-        - name: akeyless-docker-hub-web-access
+{{- with include "akeyless-zero-web-access.imagePullSecrets" (dict "Root" $ "initPullSecrets" .Values.webWorker.initContainer.imagePullSecrets "imagePullSecrets" .Values.webWorker.image.imagePullSecrets) }}{{ . | nindent 6 }}{{ end }}
       terminationGracePeriodSeconds: {{ .Values.HPA.webWorker.sessionTerminationGracePeriodSeconds | default 3600 }}
       containers:
         - name: {{ .Values.webWorker.containerName }}

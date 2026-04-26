@@ -1,0 +1,19 @@
+{{- if .Values.image.dockerRepositoryCreds -}}
+Akeyless Zero Trust Web Access — legacy registry credentials
+===========================================================
+
+You are using "image.dockerRepositoryCreds" to let this chart create the pre-install
+pull secret "akeyless-docker-hub-web-access". This option is deprecated and will be
+removed in a future chart version.
+
+Preferred approach:
+
+- Create a Secret of type kubernetes.io/dockerconfigjson (or the equivalent) in the
+  release namespace yourself.
+- Set image.imagePullSecrets to reference it (e.g. [ { name: your-secret } ]), and
+  any per-workload imagePullSecrets fields as needed. Lists are merged and deduplicated
+  on each pod.
+
+Omitting "image.dockerRepositoryCreds" is fully supported; no action is required if
+you are already using only image pull secrets.
+{{- end }}

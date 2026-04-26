@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://akeyless.io/helm-charts/akeyless-zero-trust-web-access/values.schema.json",
+  "title": "Akeyless Zero Trust Web Access Helm chart values",
+  "type": "object",
+  "properties": {
+    "image": {
+      "type": "object",
+      "title": "Global image and registry pull settings",
+      "properties": {
+        "imagePullSecrets": {
+          "type": "array",
+          "description": "List of { name: secretName } for every pod. Merged with per-workload imagePullSecrets and, when set, the chart-generated docker secret (deduplicated).",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" }
+            },
+            "required": ["name"]
+          }
+        },
+        "dockerRepositoryCreds": {
+          "type": ["string", "null"],
+          "deprecated": true,
+          "description": "Deprecated. Base64 dockerconfig used only to create the pre-install pull secret. Prefer a kubernetes.io/dockerconfigjson secret you create and set image.imagePullSecrets; this field will be removed in a future version."
+        }
+      }
+    },
+    "dispatcher": {
+      "type": "object",
+      "properties": {
+        "initContainer": {
+          "type": "object",
+          "properties": {
+            "imagePullSecrets": {
+              "type": "array",
+              "description": "Merged on the dispatcher pod with image.imagePullSecrets and dispatcher.image.imagePullSecrets; deduplicated at pod spec.",
+              "items": {
+                "type": "object",
+                "properties": { "name": { "type": "string" } },
+                "required": ["name"]
+              }
+            }
+          }
+        },
+        "image": {
+          "type": "object",
+          "properties": {
+            "imagePullSecrets": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": { "name": { "type": "string" } },
+                "required": ["name"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "webWorker": {
+      "type": "object",
+      "properties": {
+        "initContainer": {
+          "type": "object",
+          "properties": {
+            "imagePullSecrets": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": { "name": { "type": "string" } },
+                "required": ["name"]
+              }
+            }
+          }
+        },
+        "image": {
+          "type": "object",
+          "properties": {
+            "imagePullSecrets": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": { "name": { "type": "string" } },
+                "required": ["name"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "validator": {
+      "type": "object",
+      "properties": {
+        "image": {
+          "type": "object",
+          "properties": {
+            "imagePullSecrets": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": { "name": { "type": "string" } },
+                "required": ["name"]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

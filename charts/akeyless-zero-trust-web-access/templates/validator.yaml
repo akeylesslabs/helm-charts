@@ -15,6 +15,7 @@ metadata:
     "helm.sh/hook": post-install
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
+{{- with include "akeyless-zero-web-access.imagePullSecrets" (dict "Root" $ "initPullSecrets" (list) "imagePullSecrets" .Values.validator.image.imagePullSecrets) }}{{ . | nindent 2 }}{{ end }}
   containers:
     - name: post-install-job
       image: "{{ .Values.validator.image.repository}}:{{ .Values.validator.image.tag }}"

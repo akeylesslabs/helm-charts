@@ -8,7 +8,7 @@ Expand the name of the chart.
 
 {{/*
 Create a default fully qualified app name.
-We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+We truncate at 63 chars because Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
 {{- define "akeyless-zero-web-access.fullname" -}}
@@ -104,3 +104,54 @@ Checks kubernetes API version support for ingress BC
     {{- print "false" -}}
   {{- end }}
 {{- end }}
+
+{{/*
+Merge and deduplicate image pull secret names. Order: global (image.imagePullSecrets),
+then initPullSecrets, then imagePullSecrets (per-pod), then akeyless-docker-hub-web-access
+when image.dockerRepositoryCreds is set.
+Input dict: Root, initPullSecrets, imagePullSecrets
+Renders an unindented "imagePullSecrets: ..." block, or nothing when empty. Callers pipe to nindent.
+*/}}
+{{- define "akeyless-zero-web-access.imagePullSecrets" -}}
+{{- $root := .Root -}}
+{{- $g := $root.Values.image.imagePullSecrets | default list -}}
+{{- $i := .initPullSecrets | default list -}}
+{{- $m := .imagePullSecrets | default list -}}
+{{- $names := list -}}
+{{- $seen := dict -}}
+{{- range $g -}}
+  {{- if .name -}}
+  {{- if not (index $seen .name) -}}
+    {{- $names = append $names .name -}}
+    {{- $seen = set $seen .name true -}}
+  {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- range $i -}}
+  {{- if .name -}}
+  {{- if not (index $seen .name) -}}
+    {{- $names = append $names .name -}}
+    {{- $seen = set $seen .name true -}}
+  {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- range $m -}}
+  {{- if .name -}}
+  {{- if not (index $seen .name) -}}
+    {{- $names = append $names .name -}}
+    {{- $seen = set $seen .name true -}}
+  {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- if $root.Values.image.dockerRepositoryCreds -}}
+  {{- if not (index $seen "akeyless-docker-hub-web-access") -}}
+    {{- $names = append $names "akeyless-docker-hub-web-access" -}}
+  {{- end -}}
+{{- end -}}
+{{- if $names -}}
+imagePullSecrets:
+{{- range $names }}
+  - name: {{ . | quote }}
+{{- end -}}
+{{- end -}}
+{{- end -}}
