@@ -3,9 +3,11 @@
   "$id": "https://akeyless.io/helm-charts/akeyless-zero-trust-web-access/values.schema.json",
   "title": "Akeyless Zero Trust Web Access Helm chart values",
   "type": "object",
+  "additionalProperties": true,
   "properties": {
     "image": {
       "type": "object",
+      "additionalProperties": true,
       "title": "Global image and registry pull settings",
       "properties": {
         "imagePullSecrets": {
@@ -13,6 +15,7 @@
           "description": "List of { name: secretName } for every pod. Merged with per-workload imagePullSecrets and, when set, the chart-generated docker secret (deduplicated).",
           "items": {
             "type": "object",
+            "additionalProperties": true,
             "properties": {
               "name": { "type": "string" }
             },
@@ -28,15 +31,18 @@
     },
     "dispatcher": {
       "type": "object",
+      "additionalProperties": true,
       "properties": {
         "initContainer": {
           "type": "object",
+          "additionalProperties": true,
           "properties": {
             "imagePullSecrets": {
               "type": "array",
               "description": "Merged on the dispatcher pod with image.imagePullSecrets and dispatcher.image.imagePullSecrets; deduplicated at pod spec.",
               "items": {
                 "type": "object",
+                "additionalProperties": true,
                 "properties": { "name": { "type": "string" } },
                 "required": ["name"]
               }
@@ -45,11 +51,13 @@
         },
         "image": {
           "type": "object",
+          "additionalProperties": true,
           "properties": {
             "imagePullSecrets": {
               "type": "array",
               "items": {
                 "type": "object",
+                "additionalProperties": true,
                 "properties": { "name": { "type": "string" } },
                 "required": ["name"]
               }
@@ -60,14 +68,17 @@
     },
     "webWorker": {
       "type": "object",
+      "additionalProperties": true,
       "properties": {
         "initContainer": {
           "type": "object",
+          "additionalProperties": true,
           "properties": {
             "imagePullSecrets": {
               "type": "array",
               "items": {
                 "type": "object",
+                "additionalProperties": true,
                 "properties": { "name": { "type": "string" } },
                 "required": ["name"]
               }
@@ -76,11 +87,13 @@
         },
         "image": {
           "type": "object",
+          "additionalProperties": true,
           "properties": {
             "imagePullSecrets": {
               "type": "array",
               "items": {
                 "type": "object",
+                "additionalProperties": true,
                 "properties": { "name": { "type": "string" } },
                 "required": ["name"]
               }
@@ -91,14 +104,17 @@
     },
     "validator": {
       "type": "object",
+      "additionalProperties": true,
       "properties": {
         "image": {
           "type": "object",
+          "additionalProperties": true,
           "properties": {
             "imagePullSecrets": {
               "type": "array",
               "items": {
                 "type": "object",
+                "additionalProperties": true,
                 "properties": { "name": { "type": "string" } },
                 "required": ["name"]
               }
