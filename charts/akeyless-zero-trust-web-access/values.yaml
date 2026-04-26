@@ -57,7 +57,12 @@ dispatcher:
     # Pull secret refs for the init container; merged on the pod with global and main
     # image.imagePullSecrets, plus the legacy secret when dockerRepositoryCreds is set.
     imagePullSecrets: []
-    resources: {}
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        memory: 512Mi
   image:
     repository: akeyless/zero-trust-web-dispatcher
     pullPolicy: Always
@@ -111,16 +116,13 @@ dispatcher:
     port: 9000
     proxyPort: 19414
 
-  resources: {}
-    # We usually recommend not to specify default resources and to leave this as a conscious
-    # choice for the user. This also increases chances charts run on environments with little
-    # resources, such as Minikube. If you do want to specify resources, uncomment the following
-    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-#     limits:
-#       memory: 1Gi
-#     requests:
-#       cpu: 1000m
-#       memory: 1Gi
+  # Overridable defaults. Set resources: {} in your values file to clear.
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+    limits:
+      memory: 2Gi
 
   livenessProbe:
     initialDelaySeconds: 30
@@ -226,7 +228,13 @@ webWorker:
     # Merged with global and main imagePullSecrets on the web-worker pod; pull secrets
     # apply to all containers in the pod.
     imagePullSecrets: []
-    resources: {}
+    # Dispatcher-style defaults; override if bootstrap needs more.
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        memory: 512Mi
   image:
     repository: akeyless/zero-trust-web-worker
     pullPolicy: Always
@@ -243,16 +251,21 @@ webWorker:
 
     port: 5800
 
-  resources: {}
-    # We usually recommend not to specify default resources and to leave this as a conscious
-    # choice for the user. This also increases chances charts run on environments with little
-    # resources, such as Minikube. If you do want to specify resources, uncomment the following
-    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-#     limits:
-#       memory: 1Gi
-#     requests:
-#       cpu: 1000m
-#       memory: 1Gi
+  # Standard profile for the web worker main container. A Heavy browsing workload
+  # profile is commented below; use it by replacing the resources: map with that block.
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+    limits:
+      memory: 2Gi
+  # Heavy browsing workload profile (replace the standard resources: block above with this):
+  # resources:
+  #   requests:
+  #     cpu: 2000m
+  #     memory: 3Gi
+  #   limits:
+  #     memory: 4Gi
 
   sessionCleanup:
     staleGraceSeconds: 30

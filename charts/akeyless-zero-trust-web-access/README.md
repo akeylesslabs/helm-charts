@@ -97,8 +97,10 @@ The following table lists the configurable parameters of the Zero Trust Web Acce
 | `image.imagePullSecrets`                  | List of `{ name: <secret> }` merged into `spec.imagePullSecrets` for every pod (with per-workload lists, deduplicated) | `[]`                                                         |
 | `image.dockerRepositoryCreds`             | **Deprecated** — base64 dockerconfig; when set, creates the pre-install secret `akeyless-docker-hub-web-access`, merged with `image.imagePullSecrets`. Prefer pre-created `kubernetes.io/dockerconfigjson` secrets; will be removed in a future version | `nil`                                                        |
 | `dispatcher.initContainer.imagePullSecrets` | Extra pull secret refs for the dispatcher init container; merged at the pod (with global and main)                  | `[]`                                                         |
+| `dispatcher.initContainer.resources`     | Init container resource requests/limits; defaults match the dispatcher main container                                 | `requests: cpu: 100m, memory: 128Mi; limits: memory: 512Mi` |
 | `dispatcher.image.imagePullSecrets`       | Extra pull secret refs for the dispatcher main container; merged at the pod                                         | `[]`                                                         |
 | `webWorker.initContainer.imagePullSecrets` | Extra pull secret refs for the web worker init; merged at the pod                                                     | `[]`                                                         |
+| `webWorker.initContainer.resources`      | Init resource requests/limits; same dispatcher-style defaults as the web dispatcher (bootstrap is short-lived)        | `requests: cpu: 100m, memory: 128Mi; limits: memory: 512Mi`  |
 | `webWorker.image.imagePullSecrets`        | Extra pull secret refs for the web worker main; merged at the pod                                                     | `[]`                                                         |
 | `validator.image.imagePullSecrets`         | Extra pull secret refs for the post-install validator Pod; merged with `image.imagePullSecrets`                    | `[]`                                                         |
 | `dispatcher.image.repository`             | Zero Trust Web Access Dispatcher image name                                                                          | `akeyless/zero-trust-web-dispatcher`                         |
@@ -108,8 +110,8 @@ The following table lists the configurable parameters of the Zero Trust Web Acce
 | `dispatcher.replicaCount`                 | Number of Zero Trust Web Access Dispatcher nodes                                                                     | `1`                                                          |
 | `dispatcher.livenessProbe`                | Liveness probe configuration for Zero Trust Web Access Dispatcher                                                    | Check `values.yaml` file                                     |                   
 | `dispatcher.readinessProbe`               | Readiness probe configuration for Zero Trust Web Access Dispatcher                                                   | Check `values.yaml` file                                     |         
-| `dispatcher.resources.limits`             | The resources limits for Zero Trust Web Access Dispatcher containers (If HPA is enabled these must be set)           | `{}`                                                         |
-| `dispatcher.resources.requests`           | The requested resources for Zero Trust Web Access Dispatcher containers (If HPA is enabled these must be set)        | `{}`                                                         |
+| `dispatcher.resources.limits`             | The resources limits for Zero Trust Web Access Dispatcher containers (If HPA is enabled these must be set)           | `memory: 512Mi`                                              |
+| `dispatcher.resources.requests`           | The requested resources for Zero Trust Web Access Dispatcher containers (If HPA is enabled these must be set)        | `cpu: 100m, memory: 128Mi`                                   |
 | `webWorker.image.repository`              | Zero Trust Web Access Web Worker image name                                                                          | `akeyless/zero-trust-web-worker`                             |
 | `webWorker.image.tag`                     | Zero Trust Web Access Web Worker image tag                                                                           | `latest`                                                     |      
 | `webWorker.image.pullPolicy`              | Zero Trust Web Access Web Worker image pull policy                                                                   | `Always`                                                     |
@@ -117,8 +119,10 @@ The following table lists the configurable parameters of the Zero Trust Web Acce
 | `webWorker.replicaCount`                  | Number of Zero Trust Web Access Web Worker nodes                                                                     | `5`                                                          |
 | `webWorker.livenessProbe`                 | Liveness probe configuration for Zero Trust Web Access Web Worker                                                    | Check `values.yaml` file                                     |                   
 | `webWorker.readinessProbe`                | Readiness probe configuration for Zero Trust Web Access Web Worker                                                   | Check `values.yaml` file                                     |         
-| `webWorker.resources.limits`              | The resources limits for Zero Trust Web Access Web Worker containers (If HPA is enabled these must be set)           | `{}`                                                         |
-| `webWorker.resources.requests`            | The requested resources for Zero Trust Web Access Web Worker containers (If HPA is enabled these must be set)        | `{}`                                                         |
+| `webWorker.resources.limits`              | The resources limits for Zero Trust Web Access Web Worker containers (If HPA is enabled these must be set)           | `memory: 2Gi`                                                |
+| `webWorker.resources.requests`            | The requested resources for Zero Trust Web Access Web Worker containers (If HPA is enabled these must be set)        | `cpu: 1000m, memory: 1Gi`                                    |
+
+A **Heavy browsing workload** example for the web worker main `resources` is in `values.yaml` as a commented block under `webWorker.resources` (see `akeyless-zero-trust-web-access/values.yaml`).
 
 ### Exposure parameters
 
