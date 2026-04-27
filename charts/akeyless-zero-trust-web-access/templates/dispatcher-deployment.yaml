@@ -136,8 +136,7 @@ spec:
               mountPath: "/etc/ssl/certs/gw-cert.pem"
               subPath: gw-cert.pem
 {{- end }}
-      imagePullSecrets:
-        - name: akeyless-docker-hub-web-access
+{{- with include "akeyless-zero-web-access.imagePullSecrets" (dict "Root" $ "initPullSecrets" .Values.dispatcher.initContainer.imagePullSecrets "imagePullSecrets" .Values.dispatcher.image.imagePullSecrets) }}{{ . | nindent 6 }}{{ end }}
       containers:
         - name: {{ .Values.dispatcher.containerName }}
           image: "{{ .Values.dispatcher.image.repository }}:{{ .Values.dispatcher.image.tag  | default .Chart.AppVersion }}"

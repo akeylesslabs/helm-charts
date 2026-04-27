@@ -15,19 +15,22 @@ metadata:
     "helm.sh/hook": post-install
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
+{{- with include "akeyless-zero-web-access.imagePullSecrets" (dict "Root" $ "initPullSecrets" (list) "imagePullSecrets" .Values.validator.image.imagePullSecrets) }}{{ . | nindent 2 }}{{ end }}
   containers:
     - name: post-install-job
       image: "{{ .Values.validator.image.repository}}:{{ .Values.validator.image.tag }}"
       imagePullPolicy: {{ .Values.validator.image.pullPolicy }}
       securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
         runAsNonRoot: true
         allowPrivilegeEscalation: false
       command: ["/bin/sh"]
       args:
           - "-c"
           - |
-            jq -nr 'env | .POLICY_CONFIG' > policy_check
-            jq -e . policy_check || (echo "Policies JSON validation failed! please correct the policies JSON structure in the values.yaml file" && exit 1)
+            jq -nr 'env | .POLICY_CONFIG' > /tmp/policy_check
+            jq -e . /tmp/policy_check || (echo "Policies JSON validation failed! please correct the policies JSON structure in the values.yaml file" && exit 1)
       env:
         - name: POLICY_CONFIG
           valueFrom:
