@@ -148,6 +148,12 @@ spec:
             - name: DISPLAY_HEIGHT
               value: {{ .Values.webWorker.config.displayHeight | quote }}
           {{- end }}
+{{- with .Values.webWorker.config.recording }}
+            - name: ENABLE_RECORDING
+              value: {{ ternary "true" "false" .enabled }}
+            - name: RECORDING_QUALITY
+              value: {{ .quality | quote }}
+{{- end }}
 {{- if .Values.webWorker.env }}
           {{- toYaml .Values.webWorker.env | nindent 12 }}
 {{- end }}

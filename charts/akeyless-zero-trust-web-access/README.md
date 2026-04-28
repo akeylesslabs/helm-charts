@@ -29,6 +29,10 @@ For security reason, please limit the PersistentVolumes mount permissions to `06
    - file_mode=0650
 ```
 
+### Session recording (optional)
+
+Configure **`dispatcher.config.recording`** to set S3 upload options for the dispatcher (`ENABLE_RECORDING_UPLOAD`, `RECORDING_S3_*`, compression, SSE, and optional **`uploaderStatePath`** for `RECORDING_UPLOADER_STATE_PATH`). Configure **`webWorker.config.recording`** for capture settings (`ENABLE_RECORDING`, `RECORDING_QUALITY`). Both paths require **`persistence.shareStorageVolume`** so `/etc/shared` is mounted on dispatcher and web-worker pods. Prefer injecting secrets via **`dispatcher.env`** / **`webWorker.env`** with `valueFrom` instead of storing credentials in plain values.
+
 ### Prerequisites
 
 #### Horizonal Auto-Scaling

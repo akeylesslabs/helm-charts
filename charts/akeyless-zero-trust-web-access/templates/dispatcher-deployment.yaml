@@ -182,6 +182,32 @@ spec:
             - name: no_proxy
               value: {{ .Values.httpProxySettings.no_proxy }}
 {{- end }}
+{{- with .Values.dispatcher.config.recording }}
+            - name: ENABLE_RECORDING_UPLOAD
+              value: {{ ternary "true" "false" .enabled }}
+            - name: RECORDING_S3_BUCKET
+              value: {{ .s3Bucket | quote }}
+            - name: RECORDING_S3_PREFIX
+              value: {{ .s3Prefix | quote }}
+            - name: RECORDING_S3_REGION
+              value: {{ .s3Region | quote }}
+            - name: RECORDING_S3_ACCESS_KEY_ID
+              value: {{ .s3AccessKeyId | quote }}
+            - name: RECORDING_S3_ACCESS_KEY_SECRET
+              value: {{ .s3AccessKeySecret | quote }}
+            - name: RECORDING_S3_ENDPOINT
+              value: {{ .s3Endpoint | quote }}
+            - name: RECORDING_COMPRESS
+              value: {{ ternary "true" "false" .compress }}
+            - name: RECORDING_SSE_TYPE
+              value: {{ .sseType | quote }}
+            - name: RECORDING_SSE_KMS_KEY_ID
+              value: {{ .sseKmsKeyId | quote }}
+            {{- if .uploaderStatePath }}
+            - name: RECORDING_UPLOADER_STATE_PATH
+              value: {{ .uploaderStatePath | quote }}
+            {{- end }}
+{{- end }}
 {{- if .Values.dispatcher.env }}
           {{- toYaml .Values.dispatcher.env | nindent 12 }}
 {{- end }}
