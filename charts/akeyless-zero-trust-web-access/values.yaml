@@ -29,6 +29,52 @@ httpProxySettings:
 deployment:
   labels: {}
 
+# Session recording (unified configuration - recommended)
+# Provides a simplified interface for enabling video capture and S3 upload.
+# Advanced users can override specific settings via dispatcher.config.recording.* and webWorker.config.recording.*
+# Requires persistence.shareStorageVolume configured with ReadWriteMany access mode.
+sessionRecording:
+  # Enable video capture on web-worker pods (creates rec_*.mp4 files in shared volume)
+  enabled: false
+  
+  # Recording quality: 144p|240p|360p|480p|720p|1080p (affects vnc-recorder CRF and framerate)
+  quality: "360p"
+  
+  # S3 upload configuration (dispatcher-side)
+  upload:
+    # Enable upload to S3-compatible storage (requires valid credentials and bucket config)
+    enabled: false
+    
+    # S3 bucket and region (required when upload.enabled is true)
+    s3Bucket: ""
+    s3Region: ""
+    
+    # Optional S3 prefix for organizing recordings (e.g., "recordings" or "ztwa/sessions")
+    s3Prefix: ""
+    
+    # Optional custom endpoint for S3-compatible services (MinIO, Wasabi, NetApp StorageGRID, etc.)
+    # Leave empty for AWS S3
+    s3Endpoint: ""
+    
+    # S3 credentials (NOT RECOMMENDED: use secretKeyRef in dispatcher.env or IAM/IRSA instead)
+    # Leave empty to use AWS default credential chain (instance profile, environment, etc.)
+    s3AccessKeyId: ""
+    s3AccessKeySecret: ""
+    
+    # Enable gzip compression before upload (reduces storage/bandwidth costs)
+    compress: false
+    
+    # Server-side encryption configuration
+    sse:
+      # Encryption type: "" (none), "sse-s3" (AES-256), or "sse-kms"
+      type: ""
+      # KMS key ID/ARN (required for sse-kms, optional to use default CMK)
+      kmsKeyId: ""
+    
+    # Optional: Custom path for upload state file (absolute or relative to /etc/shared)
+    # Default: upload/recording_uploader_state.json (under /etc/shared)
+    uploaderStatePath: ""
+
 validator:
   # Validator is enabled by default, and will run on helm chart installation.
   # If Validator set to false, policies validation will still run on the web-worker deployment, with the validator as init-container.
@@ -232,7 +278,7 @@ dispatcher:
       compress: false
       sseType: ""
       sseKmsKeyId: ""
-      # Optional JSON state path for recording_uploader (default file under /etc/shared). Absolute or relative to /etc/shared.
+      # Optional JSON state path (default upload/recording_uploader_state.json under /etc/shared). Absolute or relative to /etc/shared.
       uploaderStatePath: ""
 
 webWorker:

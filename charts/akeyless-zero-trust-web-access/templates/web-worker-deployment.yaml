@@ -148,12 +148,22 @@ spec:
             - name: DISPLAY_HEIGHT
               value: {{ .Values.webWorker.config.displayHeight | quote }}
           {{- end }}
-{{- with .Values.webWorker.config.recording }}
-            - name: ENABLE_RECORDING
-              value: {{ ternary "true" "false" .enabled }}
-            - name: RECORDING_QUALITY
-              value: {{ .quality | quote }}
+{{- /* Recording env: precedence is webWorker.config.recording (service override) > sessionRecording (unified) */}}
+{{- $workerRecEnabled := false }}
+{{- $workerRecQuality := "360p" }}
+{{- if .Values.webWorker.config.recording }}
+  {{- /* Service-specific override takes precedence */}}
+  {{- $workerRecEnabled = .Values.webWorker.config.recording.enabled }}
+  {{- $workerRecQuality = .Values.webWorker.config.recording.quality }}
+{{- else if .Values.sessionRecording }}
+  {{- /* Fallback to unified configuration */}}
+  {{- $workerRecEnabled = .Values.sessionRecording.enabled }}
+  {{- $workerRecQuality = .Values.sessionRecording.quality }}
 {{- end }}
+            - name: ENABLE_RECORDING
+              value: {{ ternary "true" "false" $workerRecEnabled | quote }}
+            - name: RECORDING_QUALITY
+              value: {{ $workerRecQuality | quote }}
 {{- if .Values.webWorker.env }}
           {{- toYaml .Values.webWorker.env | nindent 12 }}
 {{- end }}

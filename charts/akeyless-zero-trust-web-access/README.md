@@ -29,9 +29,137 @@ For security reason, please limit the PersistentVolumes mount permissions to `06
    - file_mode=0650
 ```
 
-### Session recording (optional)
+### Session Recording (Optional)
 
-Configure **`dispatcher.config.recording`** to set S3 upload options for the dispatcher (`ENABLE_RECORDING_UPLOAD`, `RECORDING_S3_*`, compression, SSE, and optional **`uploaderStatePath`** for `RECORDING_UPLOADER_STATE_PATH`). Configure **`webWorker.config.recording`** for capture settings (`ENABLE_RECORDING`, `RECORDING_QUALITY`). Both paths require **`persistence.shareStorageVolume`** so `/etc/shared` is mounted on dispatcher and web-worker pods. Prefer injecting secrets via **`dispatcher.env`** / **`webWorker.env`** with `valueFrom` instead of storing credentials in plain values.
+ZTWA can capture Firefox web sessions to video files (`.mp4`) and optionally upload them to S3-compatible storage.
+
+#### Prerequisites
+
+1. **Shared Volume**: Configure `persistence.shareStorageVolume` with a `ReadWriteMany` PersistentVolumeClaim (e.g., NFS, Azure Files, EFS) so `/etc/shared` is mounted on both dispatcher and web-worker pods.
+2. **Security Context**: The chart automatically sets `securityContext.fsGroup: 10000` on dispatcher and worker pods to allow the non-root `nobody` user (supplementary group `shared` GID 10000) to write recordings and state files. Omitting `fsGroup` commonly yields permission denied errors.
+3. **S3 Credentials** (for upload):
+   - **Recommended**: Use IAM roles (AWS IRSA, GKE Workload Identity) or inject secrets via `dispatcher.env` with `valueFrom.secretKeyRef`
+   - **Not Recommended**: Hardcoding `s3AccessKeyId` and `s3AccessKeySecret` in `values.yaml`
+
+#### Configuration (Recommended: Unified Model)
+
+Use the unified `sessionRecording` section for simplified configuration:
+
+```yaml
+sessionRecording:
+  # Enable video capture on web-worker pods
+  enabled: true
+  
+  # Recording quality: 144p|240p|360p|480p|720p|1080p (affects file size and CPU)
+  quality: "360p"
+  
+  # S3 upload configuration (dispatcher-side)
+  upload:
+    enabled: true
+    s3Bucket: "my-ztwa-recordings"
+    s3Region: "us-east-1"
+    # Optional: organize recordings in a prefix
+    s3Prefix: "recordings"
+    # Optional: custom S3-compatible endpoint (MinIO, Wasabi, etc.)
+    s3Endpoint: ""
+    # Optional: enable gzip compression before upload (reduces storage costs)
+    compress: true
+    # Server-side encryption
+    sse:
+      # type: "" (none), "sse-s3" (AES-256), or "sse-kms"
+      type: "sse-s3"
+      # kmsKeyId: optional KMS key ARN for sse-kms
+      kmsKeyId: ""
+
+persistence:
+  shareStorageVolume:
+    name: share-storage
+    storageClassName: "efs-sc"  # Example: EFS storage class
+    accessModes:
+      - ReadWriteMany
+    size: 10Gi
+```
+
+**Credentials**: Use IAM roles or inject via secrets:
+
+```yaml
+dispatcher:
+  env:
+    - name: RECORDING_S3_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: s3-credentials
+          key: access-key-id
+    - name: RECORDING_S3_ACCESS_KEY_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: s3-credentials
+          key: secret-access-key
+```
+
+#### Advanced Configuration (Per-Service Overrides)
+
+For advanced use cases (e.g., different quality per worker pool, separate S3 buckets), use service-specific overrides. These take precedence over the unified `sessionRecording` section:
+
+```yaml
+# Unified config provides defaults
+sessionRecording:
+  enabled: true
+  quality: "360p"
+  upload:
+    enabled: true
+    s3Bucket: "default-bucket"
+
+# Override dispatcher upload settings (takes precedence)
+dispatcher:
+  config:
+    recording:
+      enabled: true
+      s3Bucket: "high-priority-bucket"
+      s3Region: "eu-west-1"
+      compress: true
+
+# Override worker capture settings (takes precedence)
+webWorker:
+  config:
+    recording:
+      enabled: true
+      quality: "720p"  # Higher quality for specific worker pool
+```
+
+**Precedence Rules**:
+- Dispatcher: `dispatcher.config.recording.*` > `sessionRecording.upload.*` > `dispatcher.env[]`
+- Worker: `webWorker.config.recording.*` > `sessionRecording.*` > `webWorker.env[]`
+
+#### Upload Behavior and Limitations
+
+- **Asynchronous Upload**: Recordings are uploaded 60-90+ seconds after session end (60s poll interval + 30s stability check)
+- **Partial Recordings**: Worker liveness probes terminate inactive sessions (default `staleGraceSeconds: 30`), which can truncate recordings mid-session. This is by design for resource cleanup. To prioritize complete recordings:
+  - Increase `webWorker.sessionCleanup.staleGraceSeconds` (trade-off: slower cleanup)
+  - Disable liveness probes (trade-off: manual cleanup required)
+- **Storage**: Ensure shared volume has sufficient capacity for concurrent sessions and upload backlog
+- **Retention**: Configure S3 lifecycle policies for long-term retention management
+
+#### Credential Mechanisms (Priority Order)
+
+The dispatcher upload service tries credentials in this order:
+
+1. **Explicit S3 keys**: `sessionRecording.upload.s3AccessKeyId` / `s3AccessKeySecret` (or `dispatcher.config.recording.*`)
+2. **AWS Default Credential Chain**: Environment variables, IAM instance profile, IRSA, shared credentials file
+3. **Log Forwarding Fallback**: Extracts bucket/region/credentials from `dispatcher.config.logForward` when `target_log_type=aws_s3` and S3 bucket is empty
+
+**Best Practice**: Use option #2 (IAM roles) for production deployments.
+
+#### Troubleshooting
+
+- **Permission Denied on State File**: Ensure `fsGroup: 10000` is set on dispatcher pod (chart default). State file lives at `/etc/shared/upload/recording_uploader_state.json` by default (group-writable).
+- **No Recordings Created**: Check `ENABLE_RECORDING=true` on worker pods (`kubectl logs <worker-pod>`). Verify shared volume is mounted at `/etc/shared`.
+- **Upload Failures**: Check dispatcher logs for S3 errors. Verify bucket/region/credentials. Test with `aws s3 ls s3://<bucket>` using the same credentials.
+- **Partial Recordings**: Expected behavior when worker restarts occur. Adjust `staleGraceSeconds` or review liveness probe configuration.
+
+#### Backward Compatibility
+
+Existing deployments using `dispatcher.config.recording.*` and `webWorker.config.recording.*` continue to function identically. The unified `sessionRecording.*` section is **opt-in** and recommended for new deployments. See `BACKWARD_COMPAT_TEST.md` for migration guidance.
 
 ### Prerequisites
 
