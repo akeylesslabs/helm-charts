@@ -34,10 +34,12 @@ deployment:
 # Advanced users can override specific settings via dispatcher.config.recording.* and webWorker.config.recording.*
 # Requires persistence.shareStorageVolume configured with ReadWriteMany access mode.
 sessionRecording:
-  # Enable video capture on web-worker pods (creates rec_*.mp4 files in shared volume)
+  # Enable video capture on web-worker pods.
+  # Worker writes Matroska (rec_*.mkv) to the shared volume; dispatcher remuxes to standard
+  # rec_*.mp4 with ffmpeg before S3 upload. The customer-facing artifact in S3 stays .mp4.
   enabled: false
   
-  # Recording quality: 144p|240p|360p|480p|720p|1080p (affects vnc-recorder CRF and framerate)
+  # Recording quality: 144p|240p|360p|480p|720p|1080p (affects ffmpeg CRF and framerate)
   quality: "360p"
   
   # S3 upload configuration (dispatcher-side)
@@ -264,22 +266,17 @@ dispatcher:
 #      target_splunk_token=""
 #      target_splunk_url=""
 
-    # Session recording upload (dispatcher recording_uploader). Requires persistence.shareStorageVolume so /etc/shared exists.
-    # When enabled is false the uploader exits on start; set S3 settings when enabling. Credentials may instead come from
-    # LOG_FORWARDING / logand.conf (target_log_type=aws_s3) when bucket keys are empty — see dispatcher env documentation.
-    recording:
-      enabled: false
-      s3Bucket: ""
-      s3Prefix: ""
-      s3Region: ""
-      s3AccessKeyId: ""
-      s3AccessKeySecret: ""
-      s3Endpoint: ""
-      compress: false
-      sseType: ""
-      sseKmsKeyId: ""
-      # Optional JSON state path (default upload/recording_uploader_state.json under /etc/shared). Absolute or relative to /etc/shared.
-      uploaderStatePath: ""
+    # Service-specific override for session recording upload. Empty by default;
+    # any field set here takes precedence over the equivalent sessionRecording.upload.<field>
+    # for the dispatcher only. Recognised fields: enabled, s3Bucket, s3Prefix, s3Region,
+    # s3AccessKeyId, s3AccessKeySecret, s3Endpoint, compress, sseType, sseKmsKeyId,
+    # uploaderStatePath. Use this to drive a different bucket or credentials than
+    # the unified config when running multiple ZTWA fleets from one chart.
+    # Example:
+    #   recording:
+    #     s3Bucket: high-priority-bucket
+    #     s3Region: eu-west-1
+    recording: {}
 
 webWorker:
   replicaCount: 5
@@ -346,10 +343,13 @@ webWorker:
     displayWidth: 2560
     displayHeight: 1200
 
-    # Firefox session recording quality (vnc-recorder). Requires persistence.shareStorageVolume for recordings path.
-    recording:
-      enabled: false
-      quality: "360p"
+    # Service-specific override for session recording capture (worker only).
+    # Empty by default; any field set here takes precedence over the equivalent
+    # sessionRecording.<field> for the worker. Recognised fields: enabled, quality.
+    # Example for a higher-quality worker pool:
+    #   recording:
+    #     quality: "720p"
+    recording: {}
 
     policies: |
         {

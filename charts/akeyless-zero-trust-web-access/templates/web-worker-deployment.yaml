@@ -148,17 +148,21 @@ spec:
             - name: DISPLAY_HEIGHT
               value: {{ .Values.webWorker.config.displayHeight | quote }}
           {{- end }}
-{{- /* Recording env: precedence is webWorker.config.recording (service override) > sessionRecording (unified) */}}
+{{- /* Recording env: precedence per-field is webWorker.config.recording.<field> (service
+     override) > sessionRecording.<field> (unified) > built-in default. */}}
 {{- $workerRecEnabled := false }}
 {{- $workerRecQuality := "360p" }}
-{{- if .Values.webWorker.config.recording }}
-  {{- /* Service-specific override takes precedence */}}
-  {{- $workerRecEnabled = .Values.webWorker.config.recording.enabled }}
-  {{- $workerRecQuality = .Values.webWorker.config.recording.quality }}
-{{- else if .Values.sessionRecording }}
-  {{- /* Fallback to unified configuration */}}
+{{- if .Values.sessionRecording }}
   {{- $workerRecEnabled = .Values.sessionRecording.enabled }}
   {{- $workerRecQuality = .Values.sessionRecording.quality }}
+{{- end }}
+{{- if .Values.webWorker.config.recording }}
+  {{- if hasKey .Values.webWorker.config.recording "enabled" }}
+    {{- $workerRecEnabled = .Values.webWorker.config.recording.enabled }}
+  {{- end }}
+  {{- if .Values.webWorker.config.recording.quality }}
+    {{- $workerRecQuality = .Values.webWorker.config.recording.quality }}
+  {{- end }}
 {{- end }}
             - name: ENABLE_RECORDING
               value: {{ ternary "true" "false" $workerRecEnabled | quote }}

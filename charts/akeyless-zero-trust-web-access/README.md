@@ -134,9 +134,8 @@ webWorker:
 #### Upload Behavior and Limitations
 
 - **Asynchronous Upload**: Recordings are uploaded 60-90+ seconds after session end (60s poll interval + 30s stability check)
-- **Partial Recordings**: Worker liveness probes terminate inactive sessions (default `staleGraceSeconds: 30`), which can truncate recordings mid-session. This is by design for resource cleanup. To prioritize complete recordings:
-  - Increase `webWorker.sessionCleanup.staleGraceSeconds` (trade-off: slower cleanup)
-  - Disable liveness probes (trade-off: manual cleanup required)
+- **Worker Capture Format**: Workers write Matroska (`rec_*.mkv`) to the shared volume. The dispatcher remuxes to standard `rec_*.mp4` with `ffmpeg` before S3 upload, so the customer-facing artifact in S3 stays `.mp4`. MKV-on-disk is truncation-resilient: if a worker is terminated mid-session (liveness recycle, eviction, manual restart) the partial bytes already written are still playable, and the dispatcher remuxes whatever it finds.
+- **Worker Recycle**: Worker liveness probes terminate inactive sessions (default `webWorker.sessionCleanup.staleGraceSeconds: 30`). The recorder receives `SIGTERM` and flushes; whatever was captured up to that point is retained.
 - **Storage**: Ensure shared volume has sufficient capacity for concurrent sessions and upload backlog
 - **Retention**: Configure S3 lifecycle policies for long-term retention management
 
@@ -153,13 +152,13 @@ The dispatcher upload service tries credentials in this order:
 #### Troubleshooting
 
 - **Permission Denied on State File**: Ensure `fsGroup: 10000` is set on dispatcher pod (chart default). State file lives at `/etc/shared/upload/recording_uploader_state.json` by default (group-writable).
-- **No Recordings Created**: Check `ENABLE_RECORDING=true` on worker pods (`kubectl logs <worker-pod>`). Verify shared volume is mounted at `/etc/shared`.
-- **Upload Failures**: Check dispatcher logs for S3 errors. Verify bucket/region/credentials. Test with `aws s3 ls s3://<bucket>` using the same credentials.
-- **Partial Recordings**: Expected behavior when worker restarts occur. Adjust `staleGraceSeconds` or review liveness probe configuration.
+- **No Recordings Created**: Check `ENABLE_RECORDING=true` on worker pods (`kubectl logs <worker-pod>`). Verify the `session_recorder` service started cleanly (it preflights `/etc/shared` and `/bin/ffmpeg` on boot and fails fast otherwise). Verify the shared volume is mounted at `/etc/shared`.
+- **Upload Failures**: Check dispatcher logs for S3 errors. Verify bucket/region/credentials. Test with `aws s3 ls s3://<bucket>` using the same credentials. The dispatcher also remuxes `.mkv` -> `.mp4` before upload; remux failures are logged and the source `.mkv` is retained for retry.
+- **Truncated Sessions**: When a worker is recycled mid-session, the recording captured up to `SIGTERM` is uploaded as a valid (shorter) `.mp4`. To extend in-progress sessions, raise `webWorker.sessionCleanup.staleGraceSeconds`.
 
 #### Backward Compatibility
 
-Existing deployments using `dispatcher.config.recording.*` and `webWorker.config.recording.*` continue to function identically. The unified `sessionRecording.*` section is **opt-in** and recommended for new deployments. See `BACKWARD_COMPAT_TEST.md` for migration guidance.
+Existing deployments using `dispatcher.config.recording.*` and `webWorker.config.recording.*` continue to function identically. The unified `sessionRecording.*` section is **opt-in** and recommended for new deployments.
 
 ### Prerequisites
 
