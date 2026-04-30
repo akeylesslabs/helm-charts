@@ -29,6 +29,15 @@ For security reason, please limit the PersistentVolumes mount permissions to `06
    - file_mode=0650
 ```
 
+> **Important — single-node vs multi-node clusters**
+>
+> Session recording requires the dispatcher and web-worker pods to read/write the **same** `/etc/shared` directory because the worker writes `rec_*.mkv` and the dispatcher remuxes/uploads it.
+>
+> - **Single-node clusters** (k3s sandboxes, Minikube, kind) often default to a node-scoped provisioner such as `local-path`. This works only as long as every ZTWA pod schedules on the same node; deleting a pod with an in-progress recording also deletes the partial MKV (the directory belongs to that pod's local-path).
+> - **Multi-node production clusters** must use a real RWX storage class backed by NFS, AWS EFS, Azure Files, GCP Filestore, Longhorn, etc. Without RWX, dispatcher and worker pods scheduled on different nodes will not see each other's files and recordings will be silently lost.
+>
+> The chart does not enforce a specific provisioner — pick the one that matches your cluster's topology and pin it via `persistence.shareStorageVolume.storageClassName`.
+
 ### Session Recording (Optional)
 
 ZTWA can capture Firefox web sessions to video files (`.mp4`) and optionally upload them to S3-compatible storage.
@@ -138,6 +147,33 @@ webWorker:
 - **Worker Recycle**: Worker liveness probes terminate inactive sessions (default `webWorker.sessionCleanup.staleGraceSeconds: 30`). The recorder receives `SIGTERM` and flushes; whatever was captured up to that point is retained.
 - **Storage**: Ensure shared volume has sufficient capacity for concurrent sessions and upload backlog
 - **Retention**: Configure S3 lifecycle policies for long-term retention management
+
+#### Lifecycle Watchdog (Abort Detection and Runaway Cap)
+
+The worker enforces two guard rails so a single stuck session can never permanently occupy a worker pod:
+
+1. **Client connect-timeout** — when ZTWA assigns a session, the dispatcher creates `/tmp/occupied` on the worker and `session_recorder` starts capturing. If the browser tab is opened but never establishes a websocket on `:5800` (network blip, user closes the tab before the page loads), the worker tears the session down after `WORKER_CLIENT_CONNECT_TIMEOUT_SECONDS` (default **90 seconds**) so the liveness probe can recycle the pod.
+2. **Recording max-duration** — `session_recorder` caps a single recording at `SESSION_RECORDER_WATCHDOG_MAX_DURATION` (default **4 hours**). When exceeded, ffmpeg is signalled gracefully and the dispatcher uploads whatever was captured. Set to `0` to disable.
+
+Defaults are baked into the image; expose them only when you need to override:
+
+```yaml
+sessionRecording:
+  watchdog:
+    # How long the worker waits for the browser to fully connect after assignment.
+    # Empty string (default) = 90 seconds.
+    clientConnectTimeoutSeconds: ""
+
+    # How often the recorder watchdog wakes up to check the max-duration cap.
+    # Empty string (default) = 30s. Format: Go duration string ("10s", "1m", ...).
+    intervalSeconds: ""
+
+    # Hard upper bound on a single recording. Empty string (default) = 4h.
+    # Format: Go duration string ("4h", "8h", "0" to disable).
+    maxDurationSeconds: ""
+```
+
+Tune `maxDurationSeconds` higher (e.g. `8h`, `12h`) for environments with long-running interactive sessions such as 24/7 dashboards, and lower (e.g. `1h`) when sessions should be force-closed sooner.
 
 #### Credential Mechanisms (Priority Order)
 

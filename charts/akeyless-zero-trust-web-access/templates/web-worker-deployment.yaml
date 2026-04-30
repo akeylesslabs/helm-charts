@@ -168,6 +168,28 @@ spec:
               value: {{ ternary "true" "false" $workerRecEnabled | quote }}
             - name: RECORDING_QUALITY
               value: {{ $workerRecQuality | quote }}
+{{- /* Lifecycle watchdog tunables. Each is rendered only when the operator
+       sets a non-empty string under sessionRecording.watchdog.*; otherwise
+       the in-image defaults (config.go: clientConnectTimeoutSeconds=90,
+       intervalSeconds=30s, maxDurationSeconds=4h) take effect. Required
+       to defend against "browser opened but client never connected" pods
+       and runaway recordings — see ASM-17214 lifecycle gaps. */}}
+{{- if and .Values.sessionRecording .Values.sessionRecording.watchdog }}
+  {{- with .Values.sessionRecording.watchdog }}
+    {{- if .clientConnectTimeoutSeconds }}
+            - name: WORKER_CLIENT_CONNECT_TIMEOUT_SECONDS
+              value: {{ .clientConnectTimeoutSeconds | quote }}
+    {{- end }}
+    {{- if .intervalSeconds }}
+            - name: SESSION_RECORDER_WATCHDOG_INTERVAL
+              value: {{ .intervalSeconds | quote }}
+    {{- end }}
+    {{- if .maxDurationSeconds }}
+            - name: SESSION_RECORDER_WATCHDOG_MAX_DURATION
+              value: {{ .maxDurationSeconds | quote }}
+    {{- end }}
+  {{- end }}
+{{- end }}
 {{- if .Values.webWorker.env }}
           {{- toYaml .Values.webWorker.env | nindent 12 }}
 {{- end }}

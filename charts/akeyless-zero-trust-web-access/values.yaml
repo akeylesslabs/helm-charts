@@ -77,6 +77,30 @@ sessionRecording:
     # Default: upload/recording_uploader_state.json (under /etc/shared)
     uploaderStatePath: ""
 
+  # Worker-side lifecycle watchdog configuration
+  # These knobs cap a single recording's wall-clock duration and detect
+  # "browser tab opened but client never connected" abort scenarios.
+  # The defaults are safe for typical interactive sessions; extend
+  # maxDurationSeconds for environments with very long-running screens
+  # (e.g. 24/7 dashboards). Empty string keeps the in-image defaults.
+  watchdog:
+    # WORKER_CLIENT_CONNECT_TIMEOUT_SECONDS — how long the worker waits for
+    # the browser to actually establish a websocket on :5800 after the
+    # session is assigned. If the client never appears, the worker tears
+    # down the session so the liveness probe can recycle the pod.
+    # In-image default: 90 seconds.
+    clientConnectTimeoutSeconds: ""
+    # SESSION_RECORDER_WATCHDOG_INTERVAL — how often the recorder watchdog
+    # wakes up to check the max-duration cap. Tune lower (e.g. "10s") for
+    # tighter recycling, higher to reduce wake-ups.
+    # In-image default: 30s. Format: Go duration string ("10s", "1m", ...).
+    intervalSeconds: ""
+    # SESSION_RECORDER_WATCHDOG_MAX_DURATION — hard upper bound on a single
+    # recording's wall-clock duration. The watchdog issues a graceful Stop
+    # when exceeded so the dispatcher can finalise the MKV and upload.
+    # In-image default: 4h. Format: Go duration string ("4h", "8h", ...).
+    maxDurationSeconds: ""
+
 validator:
   # Validator is enabled by default, and will run on helm chart installation.
   # If Validator set to false, policies validation will still run on the web-worker deployment, with the validator as init-container.
