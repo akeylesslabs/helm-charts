@@ -58,7 +58,7 @@ spec:
         {{- toYaml .Values.gateway.deployment.tolerations | nindent 8 }}
       {{- end }}
       {{- include "akeyless-gateway.imagePullSecrets" . | indent 2 }}
-      {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true) (.Values.gateway.secretsStore.enabled) (.Values.gateway.akeylessConfigVol) }}
+      {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true) (.Values.gateway.secretsStore.enabled) (.Values.gateway.akeylessConfigVol) (.Values.gateway.deployment.readOnlyRootFilesystem.enabled) }}
       volumes:
         - name: akeyless-config
           {{- if .Values.gateway.akeylessConfigVol }}
@@ -110,14 +110,60 @@ spec:
           persistentVolumeClaim:
             claimName: {{ .Values.gateway.persistence.existingClaim | default (printf "%s-pvc" (include "akeyless-gateway.fullname" .)) }}
       {{- end }}
+      {{- if .Values.gateway.deployment.readOnlyRootFilesystem.enabled }}
+        - name: akeyless-writable
+          emptyDir: {}
+        - name: var-akeyless-conf
+          emptyDir: {}
+        - name: var-log-supervisor
+          emptyDir: {}
+        - name: var-log-akeyless
+          emptyDir: {}
+        - name: var-run-akeyless
+          emptyDir: {}
+        - name: run
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+        - name: ca-certificates
+          emptyDir: {}
+        - name: etc-ssl-certs
+          emptyDir: {}
+      {{- end }}
+      {{- end }}
+      {{- if .Values.gateway.deployment.readOnlyRootFilesystem.enabled }}
+      initContainers:
+        - name: patch-entrypoint
+          image: "{{ include "akeyless-gateway.gatewayImage" . }}"
+          imagePullPolicy: {{ .Values.gateway.deployment.image.pullPolicy }}
+          command: ['sh', '-c']
+          args:
+            - |
+              # Copy the original entrypoint to writable location
+              cp /akeyless/docker_entrypoint.sh /akeyless-writable/docker_entrypoint.sh
+              # Patch the setupnss path from /akeyless/setupnss to /tmp/setupnss
+              sed -i 's|>> /akeyless/setupnss|>> /tmp/setupnss|g' /akeyless-writable/docker_entrypoint.sh
+              chmod +x /akeyless-writable/docker_entrypoint.sh
+              echo "Patched entrypoint for read-only filesystem"
+          volumeMounts:
+            - name: akeyless-writable
+              mountPath: /akeyless-writable
       {{- end }}
       containers:
         - name: {{ include "akeyless-gateway.containerName" . }}
           image: "{{ include "akeyless-gateway.gatewayImage" . }}"
           imagePullPolicy: {{ .Values.gateway.deployment.image.pullPolicy }}
-          {{- if .Values.gateway.deployment.containerSecurityContext }}
+          {{- if .Values.gateway.deployment.readOnlyRootFilesystem.enabled }}
+          command: ["/akeyless-writable/docker_entrypoint.sh"]
+          {{- end }}
+          {{- if or .Values.gateway.deployment.containerSecurityContext .Values.gateway.deployment.readOnlyRootFilesystem.enabled }}
           securityContext:
+            {{- if .Values.gateway.deployment.readOnlyRootFilesystem.enabled }}
+            readOnlyRootFilesystem: true
+            {{- end }}
+            {{- if .Values.gateway.deployment.containerSecurityContext }}
             {{- toYaml .Values.gateway.deployment.containerSecurityContext | nindent 12 }}
+            {{- end }}
           {{- end }}
           ports:
             - name: gateway
@@ -142,7 +188,7 @@ spec:
               path: /health
               port: 8080
           {{- toYaml .Values.gateway.deployment.readinessProbe | trim | nindent 12 }}
-          {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true) (.Values.gateway.secretsStore.enabled)}}
+          {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true) (.Values.gateway.secretsStore.enabled) (.Values.gateway.deployment.readOnlyRootFilesystem.enabled)}}
           volumeMounts:
             - name: akeyless-config
               mountPath: {{include "akeyless-gateway.root.config.path" $}}/.akeyless
@@ -177,6 +223,26 @@ spec:
           {{- if eq .Values.gateway.persistence.enabled true }}
             - name: persistent-storage
               mountPath: {{ .Values.gateway.persistence.mountPath }}
+          {{- end }}
+          {{- if .Values.gateway.deployment.readOnlyRootFilesystem.enabled }}
+            - name: akeyless-writable
+              mountPath: /akeyless-writable
+            - name: var-akeyless-conf
+              mountPath: /var/akeyless/conf
+            - name: var-log-supervisor
+              mountPath: /var/log/supervisor
+            - name: var-log-akeyless
+              mountPath: /var/log/akeyless
+            - name: var-run-akeyless
+              mountPath: /var/run/akeyless
+            - name: run
+              mountPath: /run
+            - name: tmp
+              mountPath: /tmp
+            - name: ca-certificates
+              mountPath: /usr/local/share/ca-certificates
+            - name: etc-ssl-certs
+              mountPath: /etc/ssl/certs
           {{- end }}
           {{- end}}
           resources:
