@@ -131,6 +131,10 @@ spec:
           emptyDir: {}
         - name: etc-rsyslog-d
           emptyDir: {}
+        - name: etc-supervisor-conf-d
+          emptyDir: {}
+        - name: app
+          emptyDir: {}
         - name: akeyless-tmp
           emptyDir: {}
         - name: opt-splunkforwarder
@@ -151,8 +155,18 @@ spec:
           command: ['sh', '-c']
           args:
             - |
+              # Copy base supervisord config files to writable volume (before it gets mounted over)
+              if [ -d /etc/supervisor/conf.d ]; then
+                cp -a /etc/supervisor/conf.d/. /etc-supervisor-conf-d-rw/ 2>/dev/null || echo "Supervisor config copy failed"
+              fi
+              
               # Copy the original entrypoint to writable location
               cp /akeyless/docker_entrypoint.sh /akeyless-writable/docker_entrypoint.sh
+              
+              # Copy passwd.template to writable home directory (required by entrypoint)
+              if [ -f /home/akeyless/passwd.template ]; then
+                cp /home/akeyless/passwd.template /home-akeyless-rw/passwd.template
+              fi
               
               # Patch read-only filesystem paths to writable locations
               sed -i 's|> \${HOME}/passwd|> /tmp/passwd|g' /akeyless-writable/docker_entrypoint.sh
@@ -174,6 +188,10 @@ spec:
               mountPath: /akeyless-writable
             - name: opt-splunkforwarder
               mountPath: /mnt/splunkforwarder-writable
+            - name: home-akeyless
+              mountPath: /home-akeyless-rw
+            - name: etc-supervisor-conf-d
+              mountPath: /etc-supervisor-conf-d-rw
       {{- end }}
       containers:
         - name: {{ include "akeyless-gateway.containerName" . }}
@@ -271,6 +289,10 @@ spec:
               mountPath: /etc/ssl/certs
             - name: etc-rsyslog-d
               mountPath: /etc/rsyslog.d
+            - name: etc-supervisor-conf-d
+              mountPath: /etc/supervisor/conf.d
+            - name: app
+              mountPath: /app
             - name: akeyless-tmp
               mountPath: /akeyless/tmp
             - name: opt-splunkforwarder
