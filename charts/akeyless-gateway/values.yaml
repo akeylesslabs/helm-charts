@@ -277,6 +277,12 @@ gateway:
     #  seccompProfile:
     #    type: RuntimeDefault
 
+    # Read-only root filesystem support (opt-in for security-hardened environments)
+    # When enabled, writable emptyDir volumes are mounted at required paths
+    # No size limits = same disk behavior as current writable root filesystem
+    readOnlyRootFilesystem:
+      enabled: false
+
     livenessProbe:
       initialDelaySeconds: 60
       periodSeconds: 30

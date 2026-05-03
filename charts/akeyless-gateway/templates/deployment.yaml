@@ -58,7 +58,7 @@ spec:
         {{- toYaml .Values.gateway.deployment.tolerations | nindent 8 }}
       {{- end }}
       {{- include "akeyless-gateway.imagePullSecrets" . | indent 2 }}
-      {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true) (.Values.gateway.secretsStore.enabled) (.Values.gateway.akeylessConfigVol) }}
+      {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true) (.Values.gateway.secretsStore.enabled) (.Values.gateway.akeylessConfigVol) (.Values.gateway.deployment.containerSecurityContext.readOnlyRootFilesystem) }}
       volumes:
         - name: akeyless-config
           {{- if .Values.gateway.akeylessConfigVol }}
@@ -110,14 +110,104 @@ spec:
           persistentVolumeClaim:
             claimName: {{ .Values.gateway.persistence.existingClaim | default (printf "%s-pvc" (include "akeyless-gateway.fullname" .)) }}
       {{- end }}
+      {{- if .Values.gateway.deployment.containerSecurityContext.readOnlyRootFilesystem }}
+        - name: akeyless-writable
+          emptyDir: {}
+        - name: var-akeyless-conf
+          emptyDir: {}
+        - name: var-log-supervisor
+          emptyDir: {}
+        - name: var-log-akeyless
+          emptyDir: {}
+        - name: var-run-akeyless
+          emptyDir: {}
+        - name: run
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+        - name: ca-certificates
+          emptyDir: {}
+        - name: etc-ssl-certs
+          emptyDir: {}
+        - name: etc-rsyslog-d
+          emptyDir: {}
+        - name: etc-supervisor-conf-d
+          emptyDir: {}
+        - name: app
+          emptyDir: {}
+        - name: akeyless-tmp
+          emptyDir: {}
+        - name: opt-splunkforwarder
+          emptyDir: {}
+        - name: etc-cron-d
+          emptyDir: {}
+        - name: var-spool-cron
+          emptyDir: {}
+        - name: home-akeyless
+          emptyDir: {}
+      {{- end }}
+      {{- end }}
+      {{- if .Values.gateway.deployment.containerSecurityContext.readOnlyRootFilesystem }}
+      initContainers:
+        - name: patch-entrypoint
+          image: "{{ include "akeyless-gateway.gatewayImage" . }}"
+          imagePullPolicy: {{ .Values.gateway.deployment.image.pullPolicy }}
+          command: ['sh', '-c']
+          args:
+            - |
+              # Copy base supervisord config files to writable volume (before it gets mounted over)
+              if [ -d /etc/supervisor/conf.d ]; then
+                cp -a /etc/supervisor/conf.d/. /etc-supervisor-conf-d-rw/ 2>/dev/null || echo "Supervisor config copy failed"
+              fi
+              
+              # Copy the original entrypoint to writable location
+              cp /akeyless/docker_entrypoint.sh /akeyless-writable/docker_entrypoint.sh
+              
+              # Copy passwd.template to writable home directory (required by entrypoint)
+              if [ -f /home/akeyless/passwd.template ]; then
+                cp /home/akeyless/passwd.template /home-akeyless-rw/passwd.template
+              fi
+              
+              # Patch read-only filesystem paths to writable locations
+              sed -i 's|> \${HOME}/passwd|> /tmp/passwd|g' /akeyless-writable/docker_entrypoint.sh
+              sed -i 's|NSS_WRAPPER_PASSWD=\${NON_ROOT_HOME_DIR}/passwd|NSS_WRAPPER_PASSWD=/tmp/passwd|g' /akeyless-writable/docker_entrypoint.sh
+              sed -i 's|>> /akeyless/setupnss|>> /tmp/setupnss|g' /akeyless-writable/docker_entrypoint.sh
+              
+              # Make entrypoint executable
+              chmod +x /akeyless-writable/docker_entrypoint.sh
+              
+              # Copy Splunk binaries to writable location if they exist
+              if [ -d /opt/splunkforwarder ] && [ "$(ls -A /opt/splunkforwarder 2>/dev/null)" ]; then
+                echo "Copying Splunk binaries to writable volume..."
+                cp -a /opt/splunkforwarder/. /mnt/splunkforwarder-writable/ 2>/dev/null || echo "Splunk copy skipped"
+              fi
+              
+              echo "✅ Patched entrypoint for read-only filesystem"
+          volumeMounts:
+            - name: akeyless-writable
+              mountPath: /akeyless-writable
+            - name: opt-splunkforwarder
+              mountPath: /mnt/splunkforwarder-writable
+            - name: home-akeyless
+              mountPath: /home-akeyless-rw
+            - name: etc-supervisor-conf-d
+              mountPath: /etc-supervisor-conf-d-rw
       {{- end }}
       containers:
         - name: {{ include "akeyless-gateway.containerName" . }}
           image: "{{ include "akeyless-gateway.gatewayImage" . }}"
           imagePullPolicy: {{ .Values.gateway.deployment.image.pullPolicy }}
-          {{- if .Values.gateway.deployment.containerSecurityContext }}
+          {{- if .Values.gateway.deployment.containerSecurityContext.readOnlyRootFilesystem }}
+          command: ["/akeyless-writable/docker_entrypoint.sh"]
+          {{- end }}
+          {{- if or .Values.gateway.deployment.containerSecurityContext .Values.gateway.deployment.containerSecurityContext.readOnlyRootFilesystem }}
           securityContext:
+            {{- if .Values.gateway.deployment.containerSecurityContext.readOnlyRootFilesystem }}
+            readOnlyRootFilesystem: true
+            {{- end }}
+            {{- if .Values.gateway.deployment.containerSecurityContext }}
             {{- toYaml .Values.gateway.deployment.containerSecurityContext | nindent 12 }}
+            {{- end }}
           {{- end }}
           ports:
             - name: gateway
@@ -142,7 +232,7 @@ spec:
               path: /health
               port: 8080
           {{- toYaml .Values.gateway.deployment.readinessProbe | trim | nindent 12 }}
-          {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true) (.Values.gateway.secretsStore.enabled)}}
+          {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true) (.Values.gateway.secretsStore.enabled) (.Values.gateway.deployment.containerSecurityContext.readOnlyRootFilesystem)}}
           volumeMounts:
             - name: akeyless-config
               mountPath: {{include "akeyless-gateway.root.config.path" $}}/.akeyless
@@ -177,6 +267,42 @@ spec:
           {{- if eq .Values.gateway.persistence.enabled true }}
             - name: persistent-storage
               mountPath: {{ .Values.gateway.persistence.mountPath }}
+          {{- end }}
+          {{- if .Values.gateway.deployment.containerSecurityContext.readOnlyRootFilesystem }}
+            - name: akeyless-writable
+              mountPath: /akeyless-writable
+            - name: var-akeyless-conf
+              mountPath: /var/akeyless/conf
+            - name: var-log-supervisor
+              mountPath: /var/log/supervisor
+            - name: var-log-akeyless
+              mountPath: /var/log/akeyless
+            - name: var-run-akeyless
+              mountPath: /var/run/akeyless
+            - name: run
+              mountPath: /run
+            - name: tmp
+              mountPath: /tmp
+            - name: ca-certificates
+              mountPath: /usr/local/share/ca-certificates
+            - name: etc-ssl-certs
+              mountPath: /etc/ssl/certs
+            - name: etc-rsyslog-d
+              mountPath: /etc/rsyslog.d
+            - name: etc-supervisor-conf-d
+              mountPath: /etc/supervisor/conf.d
+            - name: app
+              mountPath: /app
+            - name: akeyless-tmp
+              mountPath: /akeyless/tmp
+            - name: opt-splunkforwarder
+              mountPath: /opt/splunkforwarder
+            - name: etc-cron-d
+              mountPath: /etc/cron.d
+            - name: var-spool-cron
+              mountPath: /var/spool/cron
+            - name: home-akeyless
+              mountPath: /home/akeyless
           {{- end }}
           {{- end}}
           resources:
