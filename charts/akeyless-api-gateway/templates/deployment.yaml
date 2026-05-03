@@ -51,7 +51,7 @@ spec:
       {{ toYaml .Values.deployment.nodeSelector | indent 4 }}
       {{- end }}
       {{-  include "akeyless-api-gw.imagePullSecrets" . | indent 2 }}
-      {{- if or (not (eq (include "akeyless-api-gw.customerFragmentExist" .) "")) (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true" ) (.Values.metrics.enabled) (eq .Values.persistence.enabled true) (.Values.customTrustedCA.enabled) (.Values.deployment.readOnlyRootFilesystem.enabled) |  or (include "cacheEnableTls" . | eq "true")  }}
+      {{- if or (not (eq (include "akeyless-api-gw.customerFragmentExist" .) "")) (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true" ) (.Values.metrics.enabled) (eq .Values.persistence.enabled true) (.Values.customTrustedCA.enabled)|  or (include "cacheEnableTls" . | eq "true")  }}
       volumes:
       {{- if and ($.Values.customTrustedCA.enabled) ($.Values.customTrustedCA.secretName) }}
       - name: trusted-ca
@@ -95,44 +95,7 @@ spec:
         persistentVolumeClaim:
           claimName: {{ .Values.persistence.existingClaim | default (printf "%s-pvc" (include "akeyless-api-gw.fullname" .)) }}
       {{- end }}
-      {{- if .Values.deployment.readOnlyRootFilesystem.enabled }}
-      - name: akeyless-writable
-        emptyDir: {}
-      - name: var-akeyless-conf
-        emptyDir: {}
-      - name: var-log-supervisor
-        emptyDir: {}
-      - name: var-log-akeyless
-        emptyDir: {}
-      - name: var-run-akeyless
-        emptyDir: {}
-      - name: run
-        emptyDir: {}
-      - name: tmp
-        emptyDir: {}
-      - name: ca-certificates
-        emptyDir: {}
-      - name: etc-ssl-certs
-        emptyDir: {}
-      {{- end }}
       initContainers:
-      {{- if .Values.deployment.readOnlyRootFilesystem.enabled }}
-        - name: patch-entrypoint
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: ['sh', '-c']
-          args:
-            - |
-              # Copy the original entrypoint to writable location
-              cp /akeyless/docker_entrypoint.sh /akeyless-writable/docker_entrypoint.sh
-              # Patch the setupnss path from /akeyless/setupnss to /tmp/setupnss
-              sed -i 's|>> /akeyless/setupnss|>> /tmp/setupnss|g' /akeyless-writable/docker_entrypoint.sh
-              chmod +x /akeyless-writable/docker_entrypoint.sh
-              echo "Patched entrypoint for read-only filesystem"
-          volumeMounts:
-            - name: akeyless-writable
-              mountPath: /akeyless-writable
-      {{- end }}
         # Since k8s 1.9.4, config maps mount read-only volumes. Since the Docker image also writes to the config file,
         # the file must be mounted as read-write. We use init containers to copy from the config map read-only
         # path, to a read-write path
@@ -181,17 +144,9 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           {{- end}}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          {{- if .Values.deployment.readOnlyRootFilesystem.enabled }}
-          command: ["/akeyless-writable/docker_entrypoint.sh"]
-          {{- end }}
-          {{- if or .Values.deployment.containerSecurityContext .Values.deployment.readOnlyRootFilesystem.enabled }}
+          {{- if .Values.deployment.containerSecurityContext }}
           securityContext:
-            {{- if .Values.deployment.readOnlyRootFilesystem.enabled }}
-            readOnlyRootFilesystem: true
-            {{- end }}
-            {{- if .Values.deployment.containerSecurityContext }}
             {{- toYaml .Values.deployment.containerSecurityContext | nindent 12 }}
-            {{- end }}
           {{- end }}
           ports:
             - name: web
@@ -222,7 +177,7 @@ spec:
               scheme: HTTPS
               {{- end }}
 {{- toYaml .Values.readinessProbe | trim | nindent 12 }}
-         {{- if or (not (eq (include "akeyless-api-gw.customerFragmentExist" .) "")) (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true") ( .Values.metrics.enabled) (eq .Values.persistence.enabled true) (.Values.customTrustedCA.enabled) (.Values.deployment.readOnlyRootFilesystem.enabled) |  or (include "cacheEnableTls" . | eq "true") }}
+         {{- if or (not (eq (include "akeyless-api-gw.customerFragmentExist" .) "")) (eq (include "akeyless-api-gw.logandConfExist" .) "true") (eq (include "akeyless-api-gw.tlsCertificateExist" .) "true") ( .Values.metrics.enabled) (eq .Values.persistence.enabled true) (.Values.customTrustedCA.enabled) |  or (include "cacheEnableTls" . | eq "true") }}
           volumeMounts:
             {{- if and (.Values.customTrustedCA.enabled) (.Values.customTrustedCA.secretName) }}
             - name: trusted-ca
@@ -245,26 +200,6 @@ spec:
           {{- if eq .Values.persistence.enabled true }}
             - name: persistent-storage
               mountPath: {{ .Values.persistence.mountPath}}
-          {{- end }}
-          {{- if .Values.deployment.readOnlyRootFilesystem.enabled }}
-            - name: akeyless-writable
-              mountPath: /akeyless-writable
-            - name: var-akeyless-conf
-              mountPath: /var/akeyless/conf
-            - name: var-log-supervisor
-              mountPath: /var/log/supervisor
-            - name: var-log-akeyless
-              mountPath: /var/log/akeyless
-            - name: var-run-akeyless
-              mountPath: /var/run/akeyless
-            - name: run
-              mountPath: /run
-            - name: tmp
-              mountPath: /tmp
-            - name: ca-certificates
-              mountPath: /usr/local/share/ca-certificates
-            - name: etc-ssl-certs
-              mountPath: /etc/ssl/certs
           {{- end }}
           {{- end}}
           resources:

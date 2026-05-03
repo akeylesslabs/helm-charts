@@ -162,26 +162,3 @@ The following table lists the configurable parameters of the API Gateway chart a
 |---------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
 | `grpc.enabled`            |  Should the gRPC API be enabled enabled                                                     | false 
 
-### Read-Only Root Filesystem Support
-
-The Gateway supports running with `readOnlyRootFilesystem: true`.
-
-#### Enable Read-Only Filesystem
-
-```yaml
-deployment:
-  readOnlyRootFilesystem:
-    enabled: true
-
-  containerSecurityContext:
-    readOnlyRootFilesystem: true
-```
-
-#### What This Does
-
-- Mounts writable `emptyDir` volumes at required paths (`/var/akeyless/conf`, `/tmp`, `/usr/local/share/ca-certificates`, `/etc/ssl/certs`)
-- No size limits (same disk behavior as current writable root filesystem)
-- Zero infrastructure changes needed
-- Zero performance impact
-- Fully backward compatible (disabled by default)
-
