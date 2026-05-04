@@ -351,9 +351,28 @@ webWorker:
   #   limits:
   #     memory: 4Gi
 
+  # Two layers of session-cleanup defence on the worker:
+  #
+  # 1. The web_worker_agent itself removes /tmp/occupied as soon as `/healthy`
+  #    detects that the VNC client closed the connection (clearSessionMarkers()
+  #    in handlers/register_handlers/server.go). This is the fast path — no
+  #    pod recycle is needed and the worker re-enters the dispatcher pool on
+  #    the next /healthy poll (~30s after the user closes the tab).
+  # 2. The liveness probe below is the *safety net* for the case where the
+  #    agent process itself dies. Once `/tmp/occupied` is older than
+  #    sessionCleanup.staleGraceSeconds AND no client is on :5800, the probe
+  #    wipes the markers and signals kubelet to recycle the pod.
   sessionCleanup:
+    # How long to wait after `/tmp/occupied` is created before the probe is
+    # allowed to declare the worker stranded. Must cover the worst-case
+    # browser-mount latency (token exchange + Firefox render). 30s is enough
+    # for a healthy network; raise if your sessions need >30s warm-up.
     staleGraceSeconds: 30
 
+  # Tighter defaults than the chart used to ship with: failureThreshold * periodSeconds
+  # is the upper bound on how long a dead-agent pod stays stranded. With these values,
+  # recycle happens within ~30 seconds of the third consecutive failure, vs. the older
+  # 60 * 30s = 30-minute window that hid the ASM-17214 lifecycle regression.
   livenessProbe:
     initialDelaySeconds: 60
     periodSeconds: 10

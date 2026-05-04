@@ -190,6 +190,14 @@ spec:
     {{- end }}
   {{- end }}
 {{- end }}
+{{- /* Liveness-probe tunable: how long /tmp/occupied may exist without a
+       VNC client before the in-image probe wipes markers and recycles the
+       pod. Hardcoded default in the script is 30s; override here only if
+       your sessions need a longer warm-up window. */}}
+{{- if and .Values.webWorker.sessionCleanup .Values.webWorker.sessionCleanup.staleGraceSeconds }}
+            - name: STALE_GRACE_SECONDS
+              value: {{ .Values.webWorker.sessionCleanup.staleGraceSeconds | quote }}
+{{- end }}
 {{- if .Values.webWorker.env }}
           {{- toYaml .Values.webWorker.env | nindent 12 }}
 {{- end }}
@@ -211,21 +219,17 @@ spec:
 {{- end }}
           resources:
 {{- toYaml .Values.webWorker.resources | nindent 12 }}
+          # The probe script lives inside the image at
+          # /var/akeyless/scripts/worker_liveness.sh and is version-locked to
+          # web_worker_agent's clearSessionMarkers() contract. Operators tune
+          # behaviour through `webWorker.sessionCleanup.staleGraceSeconds`
+          # (passed via env) and the kubelet-side knobs under
+          # `webWorker.livenessProbe.*` (period, threshold, etc.) — never by
+          # editing the script itself.
           livenessProbe:
             exec:
               command:
-                - sh
-                - -c
-                - |
-                  RESP=$(curl -sf -o /dev/null -w "%{http_code}" http://localhost:9090/healthy 2>/dev/null)
-                  if [ -z "$RESP" ] || [ "$RESP" = "000" ]; then exit 1; fi
-                  if [ ! -f /tmp/occupied ]; then exit 0; fi
-                  AGE=$(( $(date +%s) - $(stat -c %Y /tmp/occupied) ))
-                  if [ $AGE -lt {{ .Values.webWorker.sessionCleanup.staleGraceSeconds | default 120 }} ]; then exit 0; fi
-                  if netstat -tn 2>/dev/null | grep -q ":5800.*ESTABLISHED"; then exit 0; fi
-                  rm -f /tmp/occupied /tmp/session /tmp/lock
-                  pkill -f web_worker_agent 2>/dev/null
-                  exit 1
+                - /var/akeyless/scripts/worker_liveness.sh
 {{- toYaml .Values.webWorker.livenessProbe | trim | nindent 12 }}
           lifecycle:
             preStop:
