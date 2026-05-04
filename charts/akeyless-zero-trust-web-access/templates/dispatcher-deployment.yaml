@@ -182,6 +182,76 @@ spec:
             - name: no_proxy
               value: {{ .Values.httpProxySettings.no_proxy }}
 {{- end }}
+{{- /* Recording env: precedence is per-field — dispatcher.config.recording.<field>
+     (service override) > sessionRecording.upload.<field> (unified) > built-in default.
+     Mirrors the per-field pattern used by web-worker-deployment so a stub
+     `dispatcher.config.recording: {}` block in values.yaml does NOT swallow the
+     unified sessionRecording.upload.* values. */}}
+{{- $recEnabled := false }}
+{{- $recBucket := "" }}
+{{- $recPrefix := "" }}
+{{- $recRegion := "" }}
+{{- $recKeyId := "" }}
+{{- $recKeySecret := "" }}
+{{- $recEndpoint := "" }}
+{{- $recCompress := false }}
+{{- $recSSEType := "" }}
+{{- $recSSEKmsKey := "" }}
+{{- $recStatePath := "" }}
+{{- if and .Values.sessionRecording .Values.sessionRecording.upload }}
+  {{- $u := .Values.sessionRecording.upload }}
+  {{- if hasKey $u "enabled" }}{{- $recEnabled = $u.enabled }}{{- end }}
+  {{- if $u.s3Bucket }}{{- $recBucket = $u.s3Bucket }}{{- end }}
+  {{- if $u.s3Prefix }}{{- $recPrefix = $u.s3Prefix }}{{- end }}
+  {{- if $u.s3Region }}{{- $recRegion = $u.s3Region }}{{- end }}
+  {{- if $u.s3AccessKeyId }}{{- $recKeyId = $u.s3AccessKeyId }}{{- end }}
+  {{- if $u.s3AccessKeySecret }}{{- $recKeySecret = $u.s3AccessKeySecret }}{{- end }}
+  {{- if $u.s3Endpoint }}{{- $recEndpoint = $u.s3Endpoint }}{{- end }}
+  {{- if hasKey $u "compress" }}{{- $recCompress = $u.compress }}{{- end }}
+  {{- if $u.sse }}
+    {{- if $u.sse.type }}{{- $recSSEType = $u.sse.type }}{{- end }}
+    {{- if $u.sse.kmsKeyId }}{{- $recSSEKmsKey = $u.sse.kmsKeyId }}{{- end }}
+  {{- end }}
+  {{- if $u.uploaderStatePath }}{{- $recStatePath = $u.uploaderStatePath }}{{- end }}
+{{- end }}
+{{- if .Values.dispatcher.config.recording }}
+  {{- $r := .Values.dispatcher.config.recording }}
+  {{- if hasKey $r "enabled" }}{{- $recEnabled = $r.enabled }}{{- end }}
+  {{- if $r.s3Bucket }}{{- $recBucket = $r.s3Bucket }}{{- end }}
+  {{- if $r.s3Prefix }}{{- $recPrefix = $r.s3Prefix }}{{- end }}
+  {{- if $r.s3Region }}{{- $recRegion = $r.s3Region }}{{- end }}
+  {{- if $r.s3AccessKeyId }}{{- $recKeyId = $r.s3AccessKeyId }}{{- end }}
+  {{- if $r.s3AccessKeySecret }}{{- $recKeySecret = $r.s3AccessKeySecret }}{{- end }}
+  {{- if $r.s3Endpoint }}{{- $recEndpoint = $r.s3Endpoint }}{{- end }}
+  {{- if hasKey $r "compress" }}{{- $recCompress = $r.compress }}{{- end }}
+  {{- if $r.sseType }}{{- $recSSEType = $r.sseType }}{{- end }}
+  {{- if $r.sseKmsKeyId }}{{- $recSSEKmsKey = $r.sseKmsKeyId }}{{- end }}
+  {{- if $r.uploaderStatePath }}{{- $recStatePath = $r.uploaderStatePath }}{{- end }}
+{{- end }}
+            - name: ENABLE_RECORDING_UPLOAD
+              value: {{ ternary "true" "false" $recEnabled | quote }}
+            - name: RECORDING_S3_BUCKET
+              value: {{ $recBucket | quote }}
+            - name: RECORDING_S3_PREFIX
+              value: {{ $recPrefix | quote }}
+            - name: RECORDING_S3_REGION
+              value: {{ $recRegion | quote }}
+            - name: RECORDING_S3_ACCESS_KEY_ID
+              value: {{ $recKeyId | quote }}
+            - name: RECORDING_S3_ACCESS_KEY_SECRET
+              value: {{ $recKeySecret | quote }}
+            - name: RECORDING_S3_ENDPOINT
+              value: {{ $recEndpoint | quote }}
+            - name: RECORDING_COMPRESS
+              value: {{ ternary "true" "false" $recCompress | quote }}
+            - name: RECORDING_SSE_TYPE
+              value: {{ $recSSEType | quote }}
+            - name: RECORDING_SSE_KMS_KEY_ID
+              value: {{ $recSSEKmsKey | quote }}
+            {{- if $recStatePath }}
+            - name: RECORDING_UPLOADER_STATE_PATH
+              value: {{ $recStatePath | quote }}
+            {{- end }}
 {{- if .Values.dispatcher.env }}
           {{- toYaml .Values.dispatcher.env | nindent 12 }}
 {{- end }}

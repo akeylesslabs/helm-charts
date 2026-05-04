@@ -29,6 +29,78 @@ httpProxySettings:
 deployment:
   labels: {}
 
+# Session recording (unified configuration - recommended)
+# Provides a simplified interface for enabling video capture and S3 upload.
+# Advanced users can override specific settings via dispatcher.config.recording.* and webWorker.config.recording.*
+# Requires persistence.shareStorageVolume configured with ReadWriteMany access mode.
+sessionRecording:
+  # Enable video capture on web-worker pods.
+  # Worker writes Matroska (rec_*.mkv) to the shared volume; dispatcher remuxes to standard
+  # rec_*.mp4 with ffmpeg before S3 upload. The customer-facing artifact in S3 stays .mp4.
+  enabled: false
+  
+  # Recording quality: 144p|240p|360p|480p|720p|1080p (affects ffmpeg CRF and framerate)
+  quality: "360p"
+  
+  # S3 upload configuration (dispatcher-side)
+  upload:
+    # Enable upload to S3-compatible storage (requires valid credentials and bucket config)
+    enabled: false
+    
+    # S3 bucket and region (required when upload.enabled is true)
+    s3Bucket: ""
+    s3Region: ""
+    
+    # Optional S3 prefix for organizing recordings (e.g., "recordings" or "ztwa/sessions")
+    s3Prefix: ""
+    
+    # Optional custom endpoint for S3-compatible services (MinIO, Wasabi, NetApp StorageGRID, etc.)
+    # Leave empty for AWS S3
+    s3Endpoint: ""
+    
+    # S3 credentials (NOT RECOMMENDED: use secretKeyRef in dispatcher.env or IAM/IRSA instead)
+    # Leave empty to use AWS default credential chain (instance profile, environment, etc.)
+    s3AccessKeyId: ""
+    s3AccessKeySecret: ""
+    
+    # Enable gzip compression before upload (reduces storage/bandwidth costs)
+    compress: false
+    
+    # Server-side encryption configuration
+    sse:
+      # Encryption type: "" (none), "sse-s3" (AES-256), or "sse-kms"
+      type: ""
+      # KMS key ID/ARN (required for sse-kms, optional to use default CMK)
+      kmsKeyId: ""
+    
+    # Optional: Custom path for upload state file (absolute or relative to /etc/shared)
+    # Default: upload/recording_uploader_state.json (under /etc/shared)
+    uploaderStatePath: ""
+
+  # Worker-side lifecycle watchdog configuration
+  # These knobs cap a single recording's wall-clock duration and detect
+  # "browser tab opened but client never connected" abort scenarios.
+  # The defaults are safe for typical interactive sessions; extend
+  # maxDurationSeconds for environments with very long-running screens
+  # (e.g. 24/7 dashboards). Empty string keeps the in-image defaults.
+  watchdog:
+    # WORKER_CLIENT_CONNECT_TIMEOUT_SECONDS — how long the worker waits for
+    # the browser to actually establish a websocket on :5800 after the
+    # session is assigned. If the client never appears, the worker tears
+    # down the session so the liveness probe can recycle the pod.
+    # In-image default: 90 seconds.
+    clientConnectTimeoutSeconds: ""
+    # SESSION_RECORDER_WATCHDOG_INTERVAL — how often the recorder watchdog
+    # wakes up to check the max-duration cap. Tune lower (e.g. "10s") for
+    # tighter recycling, higher to reduce wake-ups.
+    # In-image default: 30s. Format: Go duration string ("10s", "1m", ...).
+    intervalSeconds: ""
+    # SESSION_RECORDER_WATCHDOG_MAX_DURATION — hard upper bound on a single
+    # recording's wall-clock duration. The watchdog issues a graceful Stop
+    # when exceeded so the dispatcher can finalise the MKV and upload.
+    # In-image default: 4h. Format: Go duration string ("4h", "8h", ...).
+    maxDurationSeconds: ""
+
 validator:
   # Validator is enabled by default, and will run on helm chart installation.
   # If Validator set to false, policies validation will still run on the web-worker deployment, with the validator as init-container.
@@ -45,6 +117,12 @@ validator:
   # For Example when using istio sidecar to avoid issues with validator job completion please add the following annotation:
   #  annotations:
   #    sidecar.istio.io/inject: "false"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
 
 
 dispatcher:
@@ -218,6 +296,18 @@ dispatcher:
 #      target_splunk_token=""
 #      target_splunk_url=""
 
+    # Service-specific override for session recording upload. Empty by default;
+    # any field set here takes precedence over the equivalent sessionRecording.upload.<field>
+    # for the dispatcher only. Recognised fields: enabled, s3Bucket, s3Prefix, s3Region,
+    # s3AccessKeyId, s3AccessKeySecret, s3Endpoint, compress, sseType, sseKmsKeyId,
+    # uploaderStatePath. Use this to drive a different bucket or credentials than
+    # the unified config when running multiple ZTWA fleets from one chart.
+    # Example:
+    #   recording:
+    #     s3Bucket: high-priority-bucket
+    #     s3Region: eu-west-1
+    recording: {}
+
 webWorker:
   replicaCount: 5
   initContainer:
@@ -267,9 +357,28 @@ webWorker:
   #   limits:
   #     memory: 4Gi
 
+  # Two layers of session-cleanup defence on the worker:
+  #
+  # 1. The web_worker_agent itself removes /tmp/occupied as soon as `/healthy`
+  #    detects that the VNC client closed the connection (clearSessionMarkers()
+  #    in handlers/register_handlers/server.go). This is the fast path — no
+  #    pod recycle is needed and the worker re-enters the dispatcher pool on
+  #    the next /healthy poll (~30s after the user closes the tab).
+  # 2. The liveness probe below is the *safety net* for the case where the
+  #    agent process itself dies. Once `/tmp/occupied` is older than
+  #    sessionCleanup.staleGraceSeconds AND no client is on :5800, the probe
+  #    wipes the markers and signals kubelet to recycle the pod.
   sessionCleanup:
+    # How long to wait after `/tmp/occupied` is created before the probe is
+    # allowed to declare the worker stranded. Must cover the worst-case
+    # browser-mount latency (token exchange + Firefox render). 30s is enough
+    # for a healthy network; raise if your sessions need >30s warm-up.
     staleGraceSeconds: 30
 
+  # Tighter defaults than the chart used to ship with: failureThreshold * periodSeconds
+  # is the upper bound on how long a dead-agent pod stays stranded. With these values,
+  # recycle happens within ~30 seconds of the third consecutive failure, vs. the older
+  # 60 * 30s = 30-minute window that hid the ASM-17214 lifecycle regression.
   livenessProbe:
     initialDelaySeconds: 60
     periodSeconds: 10
@@ -282,6 +391,14 @@ webWorker:
   config:
     displayWidth: 2560
     displayHeight: 1200
+
+    # Service-specific override for session recording capture (worker only).
+    # Empty by default; any field set here takes precedence over the equivalent
+    # sessionRecording.<field> for the worker. Recognised fields: enabled, quality.
+    # Example for a higher-quality worker pool:
+    #   recording:
+    #     quality: "720p"
+    recording: {}
 
     policies: |
         {

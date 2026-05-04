@@ -29,6 +29,173 @@ For security reason, please limit the PersistentVolumes mount permissions to `06
    - file_mode=0650
 ```
 
+> **Important — single-node vs multi-node clusters**
+>
+> Session recording requires the dispatcher and web-worker pods to read/write the **same** `/etc/shared` directory because the worker writes `rec_*.mkv` and the dispatcher remuxes/uploads it.
+>
+> - **Single-node clusters** (k3s sandboxes, Minikube, kind) often default to a node-scoped provisioner such as `local-path`. This works only as long as every ZTWA pod schedules on the same node; deleting a pod with an in-progress recording also deletes the partial MKV (the directory belongs to that pod's local-path).
+> - **Multi-node production clusters** must use a real RWX storage class backed by NFS, AWS EFS, Azure Files, GCP Filestore, Longhorn, etc. Without RWX, dispatcher and worker pods scheduled on different nodes will not see each other's files and recordings will be silently lost.
+>
+> The chart does not enforce a specific provisioner — pick the one that matches your cluster's topology and pin it via `persistence.shareStorageVolume.storageClassName`.
+
+### Session Recording (Optional)
+
+ZTWA can capture Firefox web sessions to video files (`.mp4`) and optionally upload them to S3-compatible storage.
+
+#### Prerequisites
+
+1. **Shared Volume**: Configure `persistence.shareStorageVolume` with a `ReadWriteMany` PersistentVolumeClaim (e.g., NFS, Azure Files, EFS) so `/etc/shared` is mounted on both dispatcher and web-worker pods.
+2. **Security Context**: The chart automatically sets `securityContext.fsGroup: 10000` on dispatcher and worker pods to allow the non-root `nobody` user (supplementary group `shared` GID 10000) to write recordings and state files. Omitting `fsGroup` commonly yields permission denied errors.
+3. **S3 Credentials** (for upload):
+   - **Recommended**: Use IAM roles (AWS IRSA, GKE Workload Identity) or inject secrets via `dispatcher.env` with `valueFrom.secretKeyRef`
+   - **Not Recommended**: Hardcoding `s3AccessKeyId` and `s3AccessKeySecret` in `values.yaml`
+
+#### Configuration (Recommended: Unified Model)
+
+Use the unified `sessionRecording` section for simplified configuration:
+
+```yaml
+sessionRecording:
+  # Enable video capture on web-worker pods
+  enabled: true
+  
+  # Recording quality: 144p|240p|360p|480p|720p|1080p (affects file size and CPU)
+  quality: "360p"
+  
+  # S3 upload configuration (dispatcher-side)
+  upload:
+    enabled: true
+    s3Bucket: "my-ztwa-recordings"
+    s3Region: "us-east-1"
+    # Optional: organize recordings in a prefix
+    s3Prefix: "recordings"
+    # Optional: custom S3-compatible endpoint (MinIO, Wasabi, etc.)
+    s3Endpoint: ""
+    # Optional: enable gzip compression before upload (reduces storage costs)
+    compress: true
+    # Server-side encryption
+    sse:
+      # type: "" (none), "sse-s3" (AES-256), or "sse-kms"
+      type: "sse-s3"
+      # kmsKeyId: optional KMS key ARN for sse-kms
+      kmsKeyId: ""
+
+persistence:
+  shareStorageVolume:
+    name: share-storage
+    storageClassName: "efs-sc"  # Example: EFS storage class
+    accessModes:
+      - ReadWriteMany
+    size: 10Gi
+```
+
+**Credentials**: Use IAM roles or inject via secrets:
+
+```yaml
+dispatcher:
+  env:
+    - name: RECORDING_S3_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: s3-credentials
+          key: access-key-id
+    - name: RECORDING_S3_ACCESS_KEY_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: s3-credentials
+          key: secret-access-key
+```
+
+#### Advanced Configuration (Per-Service Overrides)
+
+For advanced use cases (e.g., different quality per worker pool, separate S3 buckets), use service-specific overrides. These take precedence over the unified `sessionRecording` section:
+
+```yaml
+# Unified config provides defaults
+sessionRecording:
+  enabled: true
+  quality: "360p"
+  upload:
+    enabled: true
+    s3Bucket: "default-bucket"
+
+# Override dispatcher upload settings (takes precedence)
+dispatcher:
+  config:
+    recording:
+      enabled: true
+      s3Bucket: "high-priority-bucket"
+      s3Region: "eu-west-1"
+      compress: true
+
+# Override worker capture settings (takes precedence)
+webWorker:
+  config:
+    recording:
+      enabled: true
+      quality: "720p"  # Higher quality for specific worker pool
+```
+
+**Precedence Rules**:
+- Dispatcher: `dispatcher.config.recording.*` > `sessionRecording.upload.*` > `dispatcher.env[]`
+- Worker: `webWorker.config.recording.*` > `sessionRecording.*` > `webWorker.env[]`
+
+#### Upload Behavior and Limitations
+
+- **Asynchronous Upload**: Recordings are uploaded 60-90+ seconds after session end (60s poll interval + 30s stability check)
+- **Worker Capture Format**: Workers write Matroska (`rec_*.mkv`) to the shared volume. The dispatcher remuxes to standard `rec_*.mp4` with `ffmpeg` before S3 upload, so the customer-facing artifact in S3 stays `.mp4`. MKV-on-disk is truncation-resilient: if a worker is terminated mid-session (liveness recycle, eviction, manual restart) the partial bytes already written are still playable, and the dispatcher remuxes whatever it finds.
+- **Worker Recycle**: Worker liveness probes terminate inactive sessions (default `webWorker.sessionCleanup.staleGraceSeconds: 30`). The recorder receives `SIGTERM` and flushes; whatever was captured up to that point is retained.
+- **Storage**: Ensure shared volume has sufficient capacity for concurrent sessions and upload backlog
+- **Retention**: Configure S3 lifecycle policies for long-term retention management
+
+#### Lifecycle Watchdog (Abort Detection and Runaway Cap)
+
+The worker enforces two guard rails so a single stuck session can never permanently occupy a worker pod:
+
+1. **Client connect-timeout** — when ZTWA assigns a session, the dispatcher creates `/tmp/occupied` on the worker and `session_recorder` starts capturing. If the browser tab is opened but never establishes a websocket on `:5800` (network blip, user closes the tab before the page loads), the worker tears the session down after `WORKER_CLIENT_CONNECT_TIMEOUT_SECONDS` (default **90 seconds**) so the liveness probe can recycle the pod.
+2. **Recording max-duration** — `session_recorder` caps a single recording at `SESSION_RECORDER_WATCHDOG_MAX_DURATION` (default **4 hours**). When exceeded, ffmpeg is signalled gracefully and the dispatcher uploads whatever was captured. Set to `0` to disable.
+
+Defaults are baked into the image; expose them only when you need to override:
+
+```yaml
+sessionRecording:
+  watchdog:
+    # How long the worker waits for the browser to fully connect after assignment.
+    # Empty string (default) = 90 seconds.
+    clientConnectTimeoutSeconds: ""
+
+    # How often the recorder watchdog wakes up to check the max-duration cap.
+    # Empty string (default) = 30s. Format: Go duration string ("10s", "1m", ...).
+    intervalSeconds: ""
+
+    # Hard upper bound on a single recording. Empty string (default) = 4h.
+    # Format: Go duration string ("4h", "8h", "0" to disable).
+    maxDurationSeconds: ""
+```
+
+Tune `maxDurationSeconds` higher (e.g. `8h`, `12h`) for environments with long-running interactive sessions such as 24/7 dashboards, and lower (e.g. `1h`) when sessions should be force-closed sooner.
+
+#### Credential Mechanisms (Priority Order)
+
+The dispatcher upload service tries credentials in this order:
+
+1. **Explicit S3 keys**: `sessionRecording.upload.s3AccessKeyId` / `s3AccessKeySecret` (or `dispatcher.config.recording.*`)
+2. **AWS Default Credential Chain**: Environment variables, IAM instance profile, IRSA, shared credentials file
+3. **Log Forwarding Fallback**: Extracts bucket/region/credentials from `dispatcher.config.logForward` when `target_log_type=aws_s3` and S3 bucket is empty
+
+**Best Practice**: Use option #2 (IAM roles) for production deployments.
+
+#### Troubleshooting
+
+- **Permission Denied on State File**: Ensure `fsGroup: 10000` is set on dispatcher pod (chart default). State file lives at `/etc/shared/upload/recording_uploader_state.json` by default (group-writable).
+- **No Recordings Created**: Check `ENABLE_RECORDING=true` on worker pods (`kubectl logs <worker-pod>`). Verify the `session_recorder` service started cleanly (it preflights `/etc/shared` and `/bin/ffmpeg` on boot and fails fast otherwise). Verify the shared volume is mounted at `/etc/shared`.
+- **Upload Failures**: Check dispatcher logs for S3 errors. Verify bucket/region/credentials. Test with `aws s3 ls s3://<bucket>` using the same credentials. The dispatcher also remuxes `.mkv` -> `.mp4` before upload; remux failures are logged and the source `.mkv` is retained for retry.
+- **Truncated Sessions**: When a worker is recycled mid-session, the recording captured up to `SIGTERM` is uploaded as a valid (shorter) `.mp4`. To extend in-progress sessions, raise `webWorker.sessionCleanup.staleGraceSeconds`.
+
+#### Backward Compatibility
+
+Existing deployments using `dispatcher.config.recording.*` and `webWorker.config.recording.*` continue to function identically. The unified `sessionRecording.*` section is **opt-in** and recommended for new deployments.
+
 ### Prerequisites
 
 #### Horizonal Auto-Scaling

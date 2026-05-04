@@ -25,6 +25,10 @@ spec:
         runAsGroup: 1000
         runAsNonRoot: true
         allowPrivilegeEscalation: false
+      {{- with .Values.validator.resources }}
+      resources:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       command: ["/bin/sh"]
       args:
           - "-c"
