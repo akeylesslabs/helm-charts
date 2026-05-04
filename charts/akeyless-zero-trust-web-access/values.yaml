@@ -117,6 +117,12 @@ validator:
   # For Example when using istio sidecar to avoid issues with validator job completion please add the following annotation:
   #  annotations:
   #    sidecar.istio.io/inject: "false"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
 
 
 dispatcher:
