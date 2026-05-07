@@ -148,6 +148,56 @@ spec:
             - name: DISPLAY_HEIGHT
               value: {{ .Values.webWorker.config.displayHeight | quote }}
           {{- end }}
+{{- /* Recording env: precedence per-field is webWorker.config.recording.<field> (service
+     override) > sessionRecording.<field> (unified) > built-in default. */}}
+{{- $workerRecEnabled := false }}
+{{- $workerRecQuality := "360p" }}
+{{- if .Values.sessionRecording }}
+  {{- $workerRecEnabled = .Values.sessionRecording.enabled }}
+  {{- $workerRecQuality = .Values.sessionRecording.quality }}
+{{- end }}
+{{- if .Values.webWorker.config.recording }}
+  {{- if hasKey .Values.webWorker.config.recording "enabled" }}
+    {{- $workerRecEnabled = .Values.webWorker.config.recording.enabled }}
+  {{- end }}
+  {{- if .Values.webWorker.config.recording.quality }}
+    {{- $workerRecQuality = .Values.webWorker.config.recording.quality }}
+  {{- end }}
+{{- end }}
+            - name: ENABLE_RECORDING
+              value: {{ ternary "true" "false" $workerRecEnabled | quote }}
+            - name: RECORDING_QUALITY
+              value: {{ $workerRecQuality | quote }}
+{{- /* Lifecycle watchdog tunables. Each is rendered only when the operator
+       sets a non-empty string under sessionRecording.watchdog.*; otherwise
+       the in-image defaults (config.go: clientConnectTimeoutSeconds=90,
+       intervalSeconds=30s, maxDurationSeconds=4h) take effect. Required
+       to defend against "browser opened but client never connected" pods
+       and runaway recordings — see ASM-17214 lifecycle gaps. */}}
+{{- if and .Values.sessionRecording .Values.sessionRecording.watchdog }}
+  {{- with .Values.sessionRecording.watchdog }}
+    {{- if .clientConnectTimeoutSeconds }}
+            - name: WORKER_CLIENT_CONNECT_TIMEOUT_SECONDS
+              value: {{ .clientConnectTimeoutSeconds | quote }}
+    {{- end }}
+    {{- if .intervalSeconds }}
+            - name: SESSION_RECORDER_WATCHDOG_INTERVAL
+              value: {{ .intervalSeconds | quote }}
+    {{- end }}
+    {{- if .maxDurationSeconds }}
+            - name: SESSION_RECORDER_WATCHDOG_MAX_DURATION
+              value: {{ .maxDurationSeconds | quote }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- /* Liveness-probe tunable: how long /tmp/occupied may exist without a
+       VNC client before the in-image probe wipes markers and recycles the
+       pod. Hardcoded default in the script is 30s; override here only if
+       your sessions need a longer warm-up window. */}}
+{{- if and .Values.webWorker.sessionCleanup .Values.webWorker.sessionCleanup.staleGraceSeconds }}
+            - name: STALE_GRACE_SECONDS
+              value: {{ .Values.webWorker.sessionCleanup.staleGraceSeconds | quote }}
+{{- end }}
 {{- if .Values.webWorker.env }}
           {{- toYaml .Values.webWorker.env | nindent 12 }}
 {{- end }}
@@ -169,21 +219,17 @@ spec:
 {{- end }}
           resources:
 {{- toYaml .Values.webWorker.resources | nindent 12 }}
+          # The probe script lives inside the image at
+          # /var/akeyless/scripts/worker_liveness.sh and is version-locked to
+          # web_worker_agent's clearSessionMarkers() contract. Operators tune
+          # behaviour through `webWorker.sessionCleanup.staleGraceSeconds`
+          # (passed via env) and the kubelet-side knobs under
+          # `webWorker.livenessProbe.*` (period, threshold, etc.) — never by
+          # editing the script itself.
           livenessProbe:
             exec:
               command:
-                - sh
-                - -c
-                - |
-                  RESP=$(curl -sf -o /dev/null -w "%{http_code}" http://localhost:9090/healthy 2>/dev/null)
-                  if [ -z "$RESP" ] || [ "$RESP" = "000" ]; then exit 1; fi
-                  if [ ! -f /tmp/occupied ]; then exit 0; fi
-                  AGE=$(( $(date +%s) - $(stat -c %Y /tmp/occupied) ))
-                  if [ $AGE -lt {{ .Values.webWorker.sessionCleanup.staleGraceSeconds | default 120 }} ]; then exit 0; fi
-                  if netstat -tn 2>/dev/null | grep -q ":5800.*ESTABLISHED"; then exit 0; fi
-                  rm -f /tmp/occupied /tmp/session /tmp/lock
-                  pkill -f web_worker_agent 2>/dev/null
-                  exit 1
+                - /var/akeyless/scripts/worker_liveness.sh
 {{- toYaml .Values.webWorker.livenessProbe | trim | nindent 12 }}
           lifecycle:
             preStop:
