@@ -191,21 +191,20 @@ spec:
 {{- $recBucket := "" }}
 {{- $recPrefix := "" }}
 {{- $recRegion := "" }}
-{{- $recKeyId := "" }}
-{{- $recKeySecret := "" }}
 {{- $recEndpoint := "" }}
 {{- $recCompress := false }}
 {{- $recSSEType := "" }}
 {{- $recSSEKmsKey := "" }}
 {{- $recStatePath := "" }}
+{{- $recSecretName := "" }}
+{{- $recSecretAccessKeyIdKey := "access-key-id" }}
+{{- $recSecretAccessKeySecretKey := "secret-access-key" }}
 {{- if and .Values.sessionRecording .Values.sessionRecording.upload }}
   {{- $u := .Values.sessionRecording.upload }}
   {{- if hasKey $u "enabled" }}{{- $recEnabled = $u.enabled }}{{- end }}
   {{- if $u.s3Bucket }}{{- $recBucket = $u.s3Bucket }}{{- end }}
   {{- if $u.s3Prefix }}{{- $recPrefix = $u.s3Prefix }}{{- end }}
   {{- if $u.s3Region }}{{- $recRegion = $u.s3Region }}{{- end }}
-  {{- if $u.s3AccessKeyId }}{{- $recKeyId = $u.s3AccessKeyId }}{{- end }}
-  {{- if $u.s3AccessKeySecret }}{{- $recKeySecret = $u.s3AccessKeySecret }}{{- end }}
   {{- if $u.s3Endpoint }}{{- $recEndpoint = $u.s3Endpoint }}{{- end }}
   {{- if hasKey $u "compress" }}{{- $recCompress = $u.compress }}{{- end }}
   {{- if $u.sse }}
@@ -213,6 +212,11 @@ spec:
     {{- if $u.sse.kmsKeyId }}{{- $recSSEKmsKey = $u.sse.kmsKeyId }}{{- end }}
   {{- end }}
   {{- if $u.uploaderStatePath }}{{- $recStatePath = $u.uploaderStatePath }}{{- end }}
+  {{- if $u.existingSecretNames }}
+    {{- if $u.existingSecretNames.s3 }}{{- $recSecretName = $u.existingSecretNames.s3 }}{{- end }}
+    {{- if $u.existingSecretNames.s3AccessKeyIdKey }}{{- $recSecretAccessKeyIdKey = $u.existingSecretNames.s3AccessKeyIdKey }}{{- end }}
+    {{- if $u.existingSecretNames.s3SecretAccessKeyKey }}{{- $recSecretAccessKeySecretKey = $u.existingSecretNames.s3SecretAccessKeyKey }}{{- end }}
+  {{- end }}
 {{- end }}
 {{- if .Values.dispatcher.config.recording }}
   {{- $r := .Values.dispatcher.config.recording }}
@@ -220,8 +224,6 @@ spec:
   {{- if $r.s3Bucket }}{{- $recBucket = $r.s3Bucket }}{{- end }}
   {{- if $r.s3Prefix }}{{- $recPrefix = $r.s3Prefix }}{{- end }}
   {{- if $r.s3Region }}{{- $recRegion = $r.s3Region }}{{- end }}
-  {{- if $r.s3AccessKeyId }}{{- $recKeyId = $r.s3AccessKeyId }}{{- end }}
-  {{- if $r.s3AccessKeySecret }}{{- $recKeySecret = $r.s3AccessKeySecret }}{{- end }}
   {{- if $r.s3Endpoint }}{{- $recEndpoint = $r.s3Endpoint }}{{- end }}
   {{- if hasKey $r "compress" }}{{- $recCompress = $r.compress }}{{- end }}
   {{- if $r.sseType }}{{- $recSSEType = $r.sseType }}{{- end }}
@@ -236,10 +238,18 @@ spec:
               value: {{ $recPrefix | quote }}
             - name: RECORDING_S3_REGION
               value: {{ $recRegion | quote }}
+{{- if $recSecretName }}
             - name: RECORDING_S3_ACCESS_KEY_ID
-              value: {{ $recKeyId | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $recSecretName | quote }}
+                  key: {{ $recSecretAccessKeyIdKey | quote }}
             - name: RECORDING_S3_ACCESS_KEY_SECRET
-              value: {{ $recKeySecret | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $recSecretName | quote }}
+                  key: {{ $recSecretAccessKeySecretKey | quote }}
+{{- end }}
             - name: RECORDING_S3_ENDPOINT
               value: {{ $recEndpoint | quote }}
             - name: RECORDING_COMPRESS

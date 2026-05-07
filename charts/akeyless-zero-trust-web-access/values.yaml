@@ -58,10 +58,21 @@ sessionRecording:
     # Leave empty for AWS S3
     s3Endpoint: ""
     
-    # S3 credentials (NOT RECOMMENDED: use secretKeyRef in dispatcher.env or IAM/IRSA instead)
-    # Leave empty to use AWS default credential chain (instance profile, environment, etc.)
-    s3AccessKeyId: ""
-    s3AccessKeySecret: ""
+    # S3 credentials are sourced from a Kubernetes Secret you create out-of-band
+    # (or from the AWS default credential chain if existingSecretNames.s3 is empty:
+    # IRSA, instance profile, AWS_* env vars from dispatcher.env, etc.).
+    #
+    # Example:
+    #   kubectl create secret generic ztwa-s3-credentials \
+    #     --from-literal=access-key-id=AKIA... \
+    #     --from-literal=secret-access-key=...
+    existingSecretNames:
+      # Name of the Secret holding the S3 credential pair.
+      # When empty, the chart falls back to the AWS default credential chain.
+      s3: ""
+      # Keys inside that Secret. Defaults align with the kubectl example above.
+      s3AccessKeyIdKey: "access-key-id"
+      s3SecretAccessKeyKey: "secret-access-key"
     
     # Enable gzip compression before upload (reduces storage/bandwidth costs)
     compress: false
@@ -299,9 +310,10 @@ dispatcher:
     # Service-specific override for session recording upload. Empty by default;
     # any field set here takes precedence over the equivalent sessionRecording.upload.<field>
     # for the dispatcher only. Recognised fields: enabled, s3Bucket, s3Prefix, s3Region,
-    # s3AccessKeyId, s3AccessKeySecret, s3Endpoint, compress, sseType, sseKmsKeyId,
-    # uploaderStatePath. Use this to drive a different bucket or credentials than
-    # the unified config when running multiple ZTWA fleets from one chart.
+    # s3Endpoint, compress, sseType, sseKmsKeyId, uploaderStatePath. Credentials
+    # come exclusively from sessionRecording.upload.existingSecretNames.s3 — there
+    # is no per-dispatcher override for the credential pair, mount a different
+    # Secret if you need that.
     # Example:
     #   recording:
     #     s3Bucket: high-priority-bucket

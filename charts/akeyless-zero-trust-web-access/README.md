@@ -46,9 +46,9 @@ ZTWA can capture Firefox web sessions to video files (`.mp4`) and optionally upl
 
 1. **Shared Volume**: Configure `persistence.shareStorageVolume` with a `ReadWriteMany` PersistentVolumeClaim (e.g., NFS, Azure Files, EFS) so `/etc/shared` is mounted on both dispatcher and web-worker pods.
 2. **Security Context**: The chart automatically sets `securityContext.fsGroup: 10000` on dispatcher and worker pods to allow the non-root `nobody` user (supplementary group `shared` GID 10000) to write recordings and state files. Omitting `fsGroup` commonly yields permission denied errors.
-3. **S3 Credentials** (for upload):
-   - **Recommended**: Use IAM roles (AWS IRSA, GKE Workload Identity) or inject secrets via `dispatcher.env` with `valueFrom.secretKeyRef`
-   - **Not Recommended**: Hardcoding `s3AccessKeyId` and `s3AccessKeySecret` in `values.yaml`
+3. **S3 Credentials** (for upload): the chart never accepts plain credentials in `values.yaml`. Choose one of:
+   - **IAM roles** (AWS IRSA, GKE Workload Identity) — recommended for production. Leave `sessionRecording.upload.existingSecretNames.s3` empty so the dispatcher picks up the AWS default credential chain.
+   - **Kubernetes Secret** — create the Secret out-of-band and reference it via `sessionRecording.upload.existingSecretNames.s3`. See "Kubernetes Secret" below.
 
 #### Configuration (Recommended: Unified Model)
 
@@ -89,22 +89,25 @@ persistence:
     size: 10Gi
 ```
 
-**Credentials**: Use IAM roles or inject via secrets:
+**Credentials — Kubernetes Secret**: create the Secret out-of-band and reference it from `values.yaml`. The chart wires the dispatcher's `RECORDING_S3_ACCESS_KEY_ID` / `RECORDING_S3_ACCESS_KEY_SECRET` env vars to the Secret via `secretKeyRef`.
+
+```bash
+kubectl create secret generic ztwa-s3-credentials \
+  --from-literal=access-key-id=AKIA... \
+  --from-literal=secret-access-key=...
+```
 
 ```yaml
-dispatcher:
-  env:
-    - name: RECORDING_S3_ACCESS_KEY_ID
-      valueFrom:
-        secretKeyRef:
-          name: s3-credentials
-          key: access-key-id
-    - name: RECORDING_S3_ACCESS_KEY_SECRET
-      valueFrom:
-        secretKeyRef:
-          name: s3-credentials
-          key: secret-access-key
+sessionRecording:
+  upload:
+    existingSecretNames:
+      s3: ztwa-s3-credentials
+      # Override the keys inside the Secret if you used different field names:
+      # s3AccessKeyIdKey: access-key-id
+      # s3SecretAccessKeyKey: secret-access-key
 ```
+
+**Credentials — IAM roles (no Secret)**: leave `existingSecretNames.s3` unset. The dispatcher's `recording_uploader` falls through to the AWS default credential chain (IRSA, instance profile, or `AWS_*` env vars you may inject via `dispatcher.env`).
 
 #### Advanced Configuration (Per-Service Overrides)
 
@@ -179,11 +182,11 @@ Tune `maxDurationSeconds` higher (e.g. `8h`, `12h`) for environments with long-r
 
 The dispatcher upload service tries credentials in this order:
 
-1. **Explicit S3 keys**: `sessionRecording.upload.s3AccessKeyId` / `s3AccessKeySecret` (or `dispatcher.config.recording.*`)
-2. **AWS Default Credential Chain**: Environment variables, IAM instance profile, IRSA, shared credentials file
-3. **Log Forwarding Fallback**: Extracts bucket/region/credentials from `dispatcher.config.logForward` when `target_log_type=aws_s3` and S3 bucket is empty
+1. **Kubernetes Secret**: when `sessionRecording.upload.existingSecretNames.s3` is set, the chart wires the Secret's keys into `RECORDING_S3_ACCESS_KEY_ID` / `RECORDING_S3_ACCESS_KEY_SECRET` via `secretKeyRef`.
+2. **AWS Default Credential Chain**: Environment variables, IAM instance profile, IRSA, shared credentials file. Used when `existingSecretNames.s3` is empty.
+3. **Log Forwarding Fallback**: Extracts bucket/region/credentials from `dispatcher.config.logForward` when `target_log_type=aws_s3` and S3 bucket is empty.
 
-**Best Practice**: Use option #2 (IAM roles) for production deployments.
+**Best Practice**: Use option #2 (IAM roles) for production deployments. Option #1 is the right choice when IAM is unavailable (on-prem, MinIO, etc.).
 
 #### Troubleshooting
 
