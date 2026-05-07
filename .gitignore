@@ -9,6 +9,8 @@
 #Ignore manifest work directory
 manifest_work_dir/
 
+.claude/settings.local.json
+
 Chart.lock
 **/charts/*.tgz
 **/tmpcharts-*/
