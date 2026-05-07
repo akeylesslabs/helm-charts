@@ -125,6 +125,17 @@ globalConfig:
       # storageClass: ""
       # size: 10Gi
 
+    ## Pod-level security context for the cache pod.
+    ## fsGroup: 999 matches the redis user in the official Redis Alpine image and is
+    ## required when persistence.enabled=true so that Redis can write to the mounted /data volume.
+    ##
+    securityContext:
+      fsGroup: 999
+
+    ## Container-level security context for the Redis container.
+    ##
+    containerSecurityContext: {}
+
     pdb:
       enabled: false
       # minAvailable: ""

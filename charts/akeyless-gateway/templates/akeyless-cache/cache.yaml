@@ -48,12 +48,16 @@ spec:
         {{- toYaml .Values.gateway.deployment.topologySpreadConstraints | nindent 8 }}
       {{- end }}
       {{- end }}
+      {{- if .Values.globalConfig.clusterCache.securityContext }}
+      securityContext:
+        {{- toYaml .Values.globalConfig.clusterCache.securityContext | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ $deploymentName }}
           {{- include "akeyless-gateway.clusterCacheImage" . | nindent 10 }}
-          {{- if .Values.gateway.deployment.containerSecurityContext }}
+          {{- if .Values.globalConfig.clusterCache.containerSecurityContext }}
           securityContext:
-            {{- toYaml .Values.gateway.deployment.containerSecurityContext | nindent 12 }}
+            {{- toYaml .Values.globalConfig.clusterCache.containerSecurityContext | nindent 12 }}
           {{- end }}
           args:
           - redis-server
@@ -140,6 +144,7 @@ spec:
                 secretKeyRef:
                   name: {{ include "akeyless-gateway.clusterCache.secretName" . }}
                   key: cache-pass
+          {{- if or .Values.globalConfig.clusterCache.persistence.enabled (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) .Values.globalConfig.clusterCache.extraVolumesMounts }}
           volumeMounts:
             {{- if .Values.globalConfig.clusterCache.persistence.enabled }}
             - name: cache-data
@@ -150,7 +155,9 @@ spec:
             {{- end }}
             {{- with .Values.globalConfig.clusterCache.extraVolumesMounts }}
             {{- toYaml . | nindent 12 }}
-            {{- end }}            
+            {{- end }}
+          {{- end }}
+      {{- if or .Values.globalConfig.clusterCache.persistence.enabled (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) .Values.globalConfig.clusterCache.extraVolumes }}
       volumes:
         {{- if .Values.globalConfig.clusterCache.persistence.enabled }}
         - name: cache-data
@@ -162,5 +169,6 @@ spec:
         {{- end }}
         {{- with .Values.globalConfig.clusterCache.extraVolumes }}
         {{- toYaml . | nindent 6 }}
-        {{- end }}                  
+        {{- end }}
+      {{- end }}
 {{- end }}
