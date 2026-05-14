@@ -63,6 +63,24 @@
               }
             }
           }
+        },
+        "config": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "cloudIdentity": {
+              "type": "object",
+              "additionalProperties": true,
+              "description": "IMDS escape hatch for clusters where the dispatcher pod cannot reach 169.254.169.254 (e.g. EKS with IMDSv2 hop-limit=1).",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": ["", "aws_iam", "azure_ad", "gcp"],
+                  "description": "Set to short-circuit IMDS classification and authenticate via the configured cloud identity. Empty string (default) preserves IMDS auto-detection."
+                }
+              }
+            }
+          }
         }
       }
     },

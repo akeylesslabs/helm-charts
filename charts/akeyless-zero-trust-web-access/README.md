@@ -199,7 +199,7 @@ The dispatcher upload service tries credentials in this order:
 
 Existing deployments using `dispatcher.config.recording.*` and `webWorker.config.recording.*` continue to function identically. The unified `sessionRecording.*` section is **opt-in** and recommended for new deployments.
 
-### Cloud Identity Escape Hatch (`dispatcher.config.cloudIdentity.type`)
+### Cloud Identity (`dispatcher.config.cloudIdentity.type`)
 
 The dispatcher determines its cloud provider by probing the instance
 metadata service at `169.254.169.254` (IMDS). When IMDS is unreachable,
