@@ -71,7 +71,7 @@
             "cloudIdentity": {
               "type": "object",
               "additionalProperties": true,
-              "description": "IMDS escape hatch for clusters where the dispatcher pod cannot reach 169.254.169.254 (e.g. EKS with IMDSv2 hop-limit=1).",
+              "description": "Cloud identity override. Forces the dispatcher to authenticate via the configured cloud identity instead of probing IMDS. Use this on clusters where the dispatcher pod cannot reach 169.254.169.254 (e.g. EKS with IMDSv2 hop-limit=1).",
               "properties": {
                 "type": {
                   "type": "string",
