@@ -164,6 +164,10 @@ spec:
             - name: CLUSTER_NAME
               value: {{ .Values.dispatcher.config.clusterName }}
 {{- end }}
+{{- if and .Values.dispatcher.config.cloudIdentity .Values.dispatcher.config.cloudIdentity.type }}
+            - name: ADMIN_ACCESS_ID_TYPE
+              value: {{ .Values.dispatcher.config.cloudIdentity.type | quote }}
+{{- end }}
 {{- if .Values.httpProxySettings.http_proxy }}
             - name: HTTP_PROXY
               value: {{ .Values.httpProxySettings.http_proxy }}

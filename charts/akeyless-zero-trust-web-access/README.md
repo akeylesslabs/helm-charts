@@ -199,6 +199,39 @@ The dispatcher upload service tries credentials in this order:
 
 Existing deployments using `dispatcher.config.recording.*` and `webWorker.config.recording.*` continue to function identically. The unified `sessionRecording.*` section is **opt-in** and recommended for new deployments.
 
+### Cloud Identity Escape Hatch (`dispatcher.config.cloudIdentity.type`)
+
+The dispatcher determines its cloud provider by probing the instance
+metadata service at `169.254.169.254` (IMDS). When IMDS is unreachable,
+classification fails and sessions exit with `unknown-cloud-provider`.
+Common causes:
+
+- **EKS with IMDSv2 `httpPutResponseHopLimit=1`** (the AWS default — pods
+  cannot reach IMDS unless the limit is raised to `2` on the worker node).
+- Restrictive egress `NetworkPolicy` denying the link-local subnet.
+- Non-cloud Kubernetes (on-prem k3s, kind, bare metal).
+
+Set `dispatcher.config.cloudIdentity.type` to skip the IMDS probe and
+authenticate with the configured cloud identity directly:
+
+```yaml
+dispatcher:
+  config:
+    privilegedAccess:
+      accessID: "<AWS_IAM_ACCESS_ID>"
+      # accessKey: must be empty to take the cloud-identity code path
+    cloudIdentity:
+      type: "aws_iam"   # or "azure_ad" / "gcp"
+```
+
+Allowed values: `""` (default, IMDS auto-detection), `"aws_iam"`,
+`"azure_ad"`, `"gcp"`. The default `""` renders no `ADMIN_ACCESS_ID_TYPE`
+env var, so existing deployments are unaffected.
+
+For background on the IMDSv2 hop-limit issue and alternative mitigations
+(e.g. raising the hop limit at the EC2 level), see the
+[Akeyless AWS IAM guide](https://docs.akeyless.io/docs/auth-with-aws#aws-instance-metadata-service).
+
 ### Prerequisites
 
 #### Horizonal Auto-Scaling

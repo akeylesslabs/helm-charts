@@ -286,6 +286,15 @@ dispatcher:
    # When false, dispatcher session cookie can be send only on top off encrypted requests (HTTPS)
     disableSecureCookie: "true"
 
+    # IMDS escape hatch. When set, the dispatcher skips cloud-provider detection
+    # via the instance metadata endpoint and authenticates with this access type
+    # directly. Use it on clusters where pods cannot reach 169.254.169.254
+    # (e.g. EKS with IMDSv2 httpPutResponseHopLimit=1, strict egress policies).
+    # Allowed values: "" (auto-detect via IMDS, default) | "aws_iam" | "azure_ad" | "gcp".
+    # https://docs.akeyless.io/docs/auth-with-aws#aws-instance-metadata-service
+    cloudIdentity:
+      type: ""
+
     # existingLogForwardSecretName will hold the configuration for dispatcher log forward
     # The data structure in secret should be like so:
     ## logand.conf: | ## make sure to keep logand.conf as the key!
