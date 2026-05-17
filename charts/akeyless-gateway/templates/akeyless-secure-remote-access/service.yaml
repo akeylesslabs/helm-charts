@@ -14,6 +14,9 @@ metadata:
   {{- toYaml .Values.sra.sshConfig.service.annotations | nindent 4 }}
 spec:
   type: {{ required "A valid .Values.sra.sshConfig.service.type entry required!" .Values.sra.sshConfig.service.type }}
+  {{- if .Values.sra.sshConfig.service.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ .Values.sra.sshConfig.service.externalTrafficPolicy }}
+  {{- end }}
   ports:
     - port: {{ .Values.sra.sshConfig.service.port }}
       targetPort: ssh
