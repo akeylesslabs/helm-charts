@@ -601,7 +601,7 @@ sra:
       labels: {}
       type: LoadBalancer
       port: 22
-      externalTrafficPolicy: Cluster
+      externalTrafficPolicy: ""
 
     livenessProbe:
       failureThreshold: 5
