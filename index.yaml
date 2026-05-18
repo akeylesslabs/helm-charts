@@ -2,6 +2,16 @@ apiVersion: v1
 entries:
   akeyless-api-gateway:
   - apiVersion: v2
+    appVersion: 4.51.1
+    created: "2026-05-18T12:00:56.187697709Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
+    digest: 455ef66994bf50248c07507ddad524c7f8efce8ce2681269b56cf292773b7baf
+    name: akeyless-api-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-api-gateway-1.62.10/akeyless-api-gateway-1.62.10.tgz
+    version: 1.62.10
+  - apiVersion: v2
     appVersion: 4.51.0
     created: "2026-05-14T10:58:12.776632224Z"
     description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
@@ -3488,6 +3498,29 @@ entries:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-csi-provider-1.0.0/akeyless-csi-provider-1.0.0.tgz
     version: 1.0.0
   akeyless-gateway:
+  - annotations:
+      gatewayVersion: 4.51.1
+      sraVersion: 3.0.1
+    apiVersion: v2
+    appVersion: 4.51.1_3.0.1
+    created: "2026-05-18T12:00:56.382651299Z"
+    dependencies:
+    - alias: cacheHA
+      condition: cacheHA.enabled
+      name: redis-ha
+      repository: https://dandydeveloper.github.io/charts/
+      version: 4.35.10
+    description: A Helm chart for Kubernetes that deploys akeyless-gateway
+    digest: 8026cc64a8884fffa438e208eab406e67f13f3e2329e2221452c31d0bd78d5df
+    icon: https://akeyless-908832575.imgix.net/wp-content/uploads/2024/03/akeyless-2024.png?auto=format%2Ccompress&fm=webp&ixlib=php-3.3.0
+    keywords:
+    - akeyless-gateway
+    - sra
+    name: akeyless-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-gateway-2.0.2/akeyless-gateway-2.0.2.tgz
+    version: 2.0.2
   - annotations:
       gatewayVersion: 4.51.0
       sraVersion: 3.0.1
@@ -13269,4 +13302,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2026-05-17T09:33:33.440640803Z"
+generated: "2026-05-18T12:00:56.386109643Z"
