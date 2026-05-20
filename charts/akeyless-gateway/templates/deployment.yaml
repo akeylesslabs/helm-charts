@@ -1,3 +1,4 @@
+{{- include "akeyless-gateway.validateNoPlaintextSecrets" . }}
 apiVersion: apps/v1
 kind: {{ include "deployment.type" $ }}
 metadata:
@@ -43,10 +44,19 @@ spec:
       {{- toYaml .Values.gateway.deployment.topologySpreadConstraints | nindent 8 }}
       {{- end }}
       {{- end }}
-      {{- if .Values.gateway.deployment.securityContext.enabled }}
+      {{- if or .Values.gateway.deployment.securityContext.enabled .Values.strictSecurityPolicy.enabled }}
       securityContext:
+        {{- if .Values.strictSecurityPolicy.enabled }}
+        runAsNonRoot: true
+        runAsUser: {{ .Values.strictSecurityPolicy.uid }}
+        runAsGroup: {{ .Values.strictSecurityPolicy.gid }}
+        fsGroup: {{ .Values.strictSecurityPolicy.fsGroup }}
+        seccompProfile:
+          type: RuntimeDefault
+        {{- else }}
         runAsUser: {{ .Values.gateway.deployment.securityContext.runAsUser }}
         fsGroup: {{ .Values.gateway.deployment.securityContext.fsGroup }}
+        {{- end }}
       {{- end }}
       serviceAccountName: {{ include "akeyless-gateway.getServiceAccountName" . }}
       {{- if .Values.gateway.deployment.nodeSelector }}
@@ -115,9 +125,20 @@ spec:
         - name: {{ include "akeyless-gateway.containerName" . }}
           image: "{{ include "akeyless-gateway.gatewayImage" . }}"
           imagePullPolicy: {{ .Values.gateway.deployment.image.pullPolicy }}
-          {{- if .Values.gateway.deployment.containerSecurityContext }}
+          {{- if or .Values.gateway.deployment.containerSecurityContext .Values.strictSecurityPolicy.enabled }}
           securityContext:
+            {{- if .Values.strictSecurityPolicy.enabled }}
+            runAsNonRoot: true
+            runAsUser: {{ .Values.strictSecurityPolicy.uid }}
+            runAsGroup: {{ .Values.strictSecurityPolicy.gid }}
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: false
+            {{- else }}
             {{- toYaml .Values.gateway.deployment.containerSecurityContext | nindent 12 }}
+            {{- end }}
           {{- end }}
           ports:
             - name: gateway
@@ -180,7 +201,20 @@ spec:
           {{- end }}
           {{- end}}
           resources:
+          {{- if .Values.strictSecurityPolicy.enabled }}
+          {{- if or (empty .Values.gateway.resources) (and (not .Values.gateway.resources.requests) (not .Values.gateway.resources.limits)) }}
+            requests:
+              cpu: {{ .Values.strictSecurityPolicy.resources.requests.cpu | quote }}
+              memory: {{ .Values.strictSecurityPolicy.resources.requests.memory | quote }}
+            limits:
+              cpu: {{ .Values.strictSecurityPolicy.resources.limits.cpu | quote }}
+              memory: {{ .Values.strictSecurityPolicy.resources.limits.memory | quote }}
+          {{- else }}
+            {{- toYaml .Values.gateway.resources | nindent 12 }}
+          {{- end }}
+          {{- else }}
           {{- toYaml .Values.gateway.resources | nindent 12 }}
+          {{- end }}
           env:
             {{- if .Values.cacheHA.enabled }}
             - name: REDIS_SENTINEL_ADDR

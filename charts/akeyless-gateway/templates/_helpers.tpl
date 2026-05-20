@@ -584,3 +584,101 @@ web
 ssh
 {{- end -}}
 {{- end -}}
+
+{{/*
+Strict Security Policy - Pod-level securityContext
+Renders pod-level securityContext when strictSecurityPolicy.enabled is true
+Usage: {{ include "akeyless-gateway.strictPodSecurityContext" . }}
+*/}}
+{{- define "akeyless-gateway.strictPodSecurityContext" -}}
+{{- if .Values.strictSecurityPolicy.enabled }}
+securityContext:
+  runAsNonRoot: true
+  runAsUser: {{ .Values.strictSecurityPolicy.uid }}
+  runAsGroup: {{ .Values.strictSecurityPolicy.gid }}
+  fsGroup: {{ .Values.strictSecurityPolicy.fsGroup }}
+  seccompProfile:
+    type: RuntimeDefault
+{{- end -}}
+{{- end -}}
+
+{{/*
+Strict Security Policy - Container-level securityContext
+Renders container-level securityContext when strictSecurityPolicy.enabled is true
+Usage: {{ include "akeyless-gateway.strictContainerSecurityContext" . }}
+*/}}
+{{- define "akeyless-gateway.strictContainerSecurityContext" -}}
+{{- if .Values.strictSecurityPolicy.enabled }}
+securityContext:
+  runAsNonRoot: true
+  runAsUser: {{ .Values.strictSecurityPolicy.uid }}
+  runAsGroup: {{ .Values.strictSecurityPolicy.gid }}
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+{{- end -}}
+{{- end -}}
+
+{{/*
+Strict Security Policy - Resource limits
+Renders resource requests/limits when strictSecurityPolicy.enabled is true
+Falls back to provided resources if they exist
+Usage: {{ include "akeyless-gateway.strictResources" (dict "resources" .Values.gateway.resources "context" .) }}
+*/}}
+{{- define "akeyless-gateway.strictResources" -}}
+{{- $resources := .resources -}}
+{{- $context := .context -}}
+{{- if $context.Values.strictSecurityPolicy.enabled }}
+{{- if or (empty $resources) (and (not $resources.requests) (not $resources.limits)) }}
+requests:
+  cpu: {{ $context.Values.strictSecurityPolicy.resources.requests.cpu | quote }}
+  memory: {{ $context.Values.strictSecurityPolicy.resources.requests.memory | quote }}
+limits:
+  cpu: {{ $context.Values.strictSecurityPolicy.resources.limits.cpu | quote }}
+  memory: {{ $context.Values.strictSecurityPolicy.resources.limits.memory | quote }}
+{{- else }}
+{{- toYaml $resources }}
+{{- end }}
+{{- else }}
+{{- toYaml $resources }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+SSH Bastion Phase A - Narrow capability set
+For SRA SSH only - minimum caps needed for mount/mknod/adduser operations
+Usage: {{ include "akeyless-gateway.sshBastionPhaseACaps" . }}
+*/}}
+{{- define "akeyless-gateway.sshBastionPhaseACaps" -}}
+capabilities:
+  add:
+    - SYS_ADMIN      # Required for mount --bind /dev/pts
+    - MKNOD          # Required for mknod device nodes in jail
+    - DAC_OVERRIDE   # Required for adduser/deluser/jail permissions
+    - CHOWN          # Required by adduser + chroot setup
+    - SETUID         # Required by adduser + chroot setup
+    - SETGID         # Required by adduser + chroot setup
+    - FOWNER         # Required by adduser + chroot setup
+{{- end -}}
+
+{{/*
+Validate no plaintext secrets in env when strict security policy is enabled
+Usage: {{ include "akeyless-gateway.validateNoPlaintextSecrets" . }}
+*/}}
+{{- define "akeyless-gateway.validateNoPlaintextSecrets" -}}
+{{- if .Values.strictSecurityPolicy.enabled }}
+  {{- $sensitivePattern := "(?i)(token|key|password|secret|credential)" -}}
+  {{- range .Values.globalConfig.env }}
+    {{- if regexMatch $sensitivePattern .name }}
+      {{- fail (printf "strictSecurityPolicy.enabled: detected potential secret '%s' in globalConfig.env. Use secretKeyRef or existingSecret instead" .name) }}
+    {{- end }}
+  {{- end }}
+  {{- range .Values.sra.env }}
+    {{- if regexMatch $sensitivePattern .name }}
+      {{- fail (printf "strictSecurityPolicy.enabled: detected potential secret '%s' in sra.env. Use secretKeyRef or existingSecret instead" .name) }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- end -}}

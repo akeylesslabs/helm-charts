@@ -1,4 +1,5 @@
 {{- if eq .Values.sra.enabled true }}
+{{- include "akeyless-gateway.validateNoPlaintextSecrets" . }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -85,11 +86,27 @@ spec:
           image: "{{ .Values.sra.image.repository | default "akeyless/zero-trust-bastion" }}:{{ .Values.sra.image.tag | default .Chart.Annotations.sraVersion }}"
           imagePullPolicy: {{ .Values.sra.image.pullPolicy }}
           securityContext:
+            {{- if .Values.strictSecurityPolicy.enabled }}
+            # SSH bastion Phase A: narrow capabilities (no privileged)
+            # Still runs as root (UID 0) - documented Kyverno exception required
+            # Phase B (separate epic) will refactor to non-root
+            allowPrivilegeEscalation: true  # Required for mount --bind
+            capabilities:
+              add:
+                - SYS_ADMIN      # Required for mount --bind /dev/pts
+                - MKNOD          # Required for mknod device nodes in jail
+                - DAC_OVERRIDE   # Required for adduser/deluser/jail permissions
+                - CHOWN          # Required by adduser + chroot setup
+                - SETUID         # Required by adduser + chroot setup
+                - SETGID         # Required by adduser + chroot setup
+                - FOWNER         # Required by adduser + chroot setup
+            {{- else }}
             privileged: true
             capabilities:
               add: ["SYS_ADMIN"]
+            {{- end }}
           ports:
-          - containerPort: 22
+          - containerPort: {{ if .Values.strictSecurityPolicy.enabled }}2222{{ else }}22{{ end }}
             name: ssh
           - containerPort: 9900
             name: curl-proxy
@@ -137,7 +154,20 @@ spec:
             {{- toYaml .Values.globalConfig.env | nindent 12 }}
             {{- end }}
           resources:
+          {{- if .Values.strictSecurityPolicy.enabled }}
+          {{- if or (empty .Values.sra.sshConfig.resources) (and (not .Values.sra.sshConfig.resources.requests) (not .Values.sra.sshConfig.resources.limits)) }}
+            requests:
+              cpu: {{ .Values.strictSecurityPolicy.resources.requests.cpu | quote }}
+              memory: {{ .Values.strictSecurityPolicy.resources.requests.memory | quote }}
+            limits:
+              cpu: {{ .Values.strictSecurityPolicy.resources.limits.cpu | quote }}
+              memory: {{ .Values.strictSecurityPolicy.resources.limits.memory | quote }}
+          {{- else }}
+            {{- toYaml .Values.sra.sshConfig.resources | nindent 12 }}
+          {{- end }}
+          {{- else }}
           {{- toYaml .Values.sra.sshConfig.resources | nindent 12 }}
+          {{- end }}
           livenessProbe:
             httpGet:
               path: /status

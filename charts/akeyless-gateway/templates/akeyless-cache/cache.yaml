@@ -48,16 +48,38 @@ spec:
         {{- toYaml .Values.gateway.deployment.topologySpreadConstraints | nindent 8 }}
       {{- end }}
       {{- end }}
-      {{- if .Values.globalConfig.clusterCache.securityContext }}
+      {{- if .Values.strictSecurityPolicy.enabled }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      {{- else if .Values.globalConfig.clusterCache.securityContext }}
       securityContext:
         {{- toYaml .Values.globalConfig.clusterCache.securityContext | nindent 8 }}
       {{- end }}
       containers:
         - name: {{ $deploymentName }}
           {{- include "akeyless-gateway.clusterCacheImage" . | nindent 10 }}
-          {{- if .Values.globalConfig.clusterCache.containerSecurityContext }}
+          {{- if .Values.strictSecurityPolicy.enabled }}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+            runAsGroup: 1001
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: false
+          {{- else if .Values.globalConfig.clusterCache.containerSecurityContext }}
           securityContext:
             {{- toYaml .Values.globalConfig.clusterCache.containerSecurityContext | nindent 12 }}
+          {{- else if .Values.gateway.deployment.containerSecurityContext }}
+          securityContext:
+            {{- toYaml .Values.gateway.deployment.containerSecurityContext | nindent 12 }}
           {{- end }}
           args:
           - redis-server
@@ -137,7 +159,20 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 5
           resources:
+          {{- if .Values.strictSecurityPolicy.enabled }}
+          {{- if or (empty .Values.globalConfig.clusterCache.resources) (and (not .Values.globalConfig.clusterCache.resources.requests) (not .Values.globalConfig.clusterCache.resources.limits)) }}
+            requests:
+              cpu: {{ .Values.strictSecurityPolicy.resources.requests.cpu | quote }}
+              memory: {{ .Values.strictSecurityPolicy.resources.requests.memory | quote }}
+            limits:
+              cpu: {{ .Values.strictSecurityPolicy.resources.limits.cpu | quote }}
+              memory: {{ .Values.strictSecurityPolicy.resources.limits.memory | quote }}
+          {{- else }}
+            {{- toYaml .Values.globalConfig.clusterCache.resources | nindent 12 }}
+          {{- end }}
+          {{- else }}
           {{- toYaml .Values.globalConfig.clusterCache.resources | nindent 12 }}
+          {{- end }}
           env:
             - name: REDIS_PASSWORD
               valueFrom:

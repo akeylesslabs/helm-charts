@@ -1,6 +1,27 @@
 ############
 ## Global ##
 ############
+
+## Strict Security Policy Toggle (Kyverno/PSA compliance)
+## When enabled, enforces non-root execution, capability drops, resource limits,
+## and other hardening measures across Gateway, Cache, and SRA Web workloads.
+## NOTE: SRA SSH bastion is excluded (requires root for session jailing - see docs).
+## See: docs/STRICT_SECURITY_POLICY.md
+##
+strictSecurityPolicy:
+  enabled: false
+  uid: 1001
+  gid: 1001
+  fsGroup: 1001
+  # Default resource limits when strict mode is enabled
+  resources:
+    requests:
+      cpu: "1"
+      memory: "2G"
+    limits:
+      cpu: "2"
+      memory: "4G"
+
 globalConfig:
   gatewayAuth:
     ## Supported types: access_key, certificate, universal identity, cloud identity (aws_iam/azure_ad/gcp)

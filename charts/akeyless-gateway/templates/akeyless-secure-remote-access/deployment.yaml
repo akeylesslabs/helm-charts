@@ -1,4 +1,5 @@
 {{- if .Values.sra.enabled }}
+{{- include "akeyless-gateway.validateNoPlaintextSecrets" . }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -36,11 +37,20 @@ spec:
           {{- toYaml .Values.sra.webConfig.deployment.labels | nindent 8 }}
         {{- end }}
     spec:
-      {{- if .Values.sra.webConfig.securityContext }}
-      {{- if .Values.sra.webConfig.securityContext.enabled }}
+      {{- if or (.Values.sra.webConfig.securityContext) (.Values.strictSecurityPolicy.enabled) }}
+      {{- if or (and .Values.sra.webConfig.securityContext .Values.sra.webConfig.securityContext.enabled) (.Values.strictSecurityPolicy.enabled) }}
       securityContext:
+        {{- if .Values.strictSecurityPolicy.enabled }}
+        runAsNonRoot: true
+        runAsUser: {{ .Values.strictSecurityPolicy.uid }}
+        runAsGroup: {{ .Values.strictSecurityPolicy.gid }}
+        fsGroup: {{ .Values.strictSecurityPolicy.fsGroup }}
+        seccompProfile:
+          type: RuntimeDefault
+        {{- else }}
         runAsUser: {{ .Values.sra.webConfig.securityContext.runAsUser }}
         fsGroup: {{ .Values.sra.webConfig.securityContext.fsGroup }}
+        {{- end }}
       {{- end }}
       {{- end }}
       serviceAccountName: {{ include "akeyless-gateway.getServiceAccountName" . }}
@@ -82,6 +92,17 @@ spec:
         - name: gateway-sra-web
           image: "{{ .Values.sra.image.repository | default "akeyless/zero-trust-bastion" }}:{{ .Values.sra.image.tag | default .Chart.Annotations.sraVersion }}"
           imagePullPolicy: {{ .Values.sra.image.pullPolicy }}
+          {{- if .Values.strictSecurityPolicy.enabled }}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: {{ .Values.strictSecurityPolicy.uid }}
+            runAsGroup: {{ .Values.strictSecurityPolicy.gid }}
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: false
+          {{- end }}
           ports:
             - containerPort: 8888
               name: web
@@ -132,7 +153,20 @@ spec:
             {{- toYaml .Values.sra.env | nindent 12 }}
             {{- end }}
           resources:
+          {{- if .Values.strictSecurityPolicy.enabled }}
+          {{- if or (empty .Values.sra.webConfig.resources) (and (not .Values.sra.webConfig.resources.requests) (not .Values.sra.webConfig.resources.limits)) }}
+            requests:
+              cpu: {{ .Values.strictSecurityPolicy.resources.requests.cpu | quote }}
+              memory: {{ .Values.strictSecurityPolicy.resources.requests.memory | quote }}
+            limits:
+              cpu: {{ .Values.strictSecurityPolicy.resources.limits.cpu | quote }}
+              memory: {{ .Values.strictSecurityPolicy.resources.limits.memory | quote }}
+          {{- else }}
             {{- toYaml .Values.sra.webConfig.resources | nindent 12 }}
+          {{- end }}
+          {{- else }}
+            {{- toYaml .Values.sra.webConfig.resources | nindent 12 }}
+          {{- end }}
           livenessProbe:
             tcpSocket:
               port: 8888
