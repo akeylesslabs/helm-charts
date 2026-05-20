@@ -26,7 +26,7 @@ cache:
     existingSecretName: ""
   image:
     repository: public.ecr.aws/docker/library/redis
-    tag: 8.2.2-alpine
+    tag: 8.6.3-alpine
     pullPolicy: Always
   resources:
     limits:
