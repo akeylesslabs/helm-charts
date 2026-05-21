@@ -6,6 +6,7 @@
 apiVersion: v1
 kind: List
 metadata:
+  name: {{ template "vault-secrets-webhook.fullname" . }}-webhook
 items:
 
 - apiVersion: v1
@@ -50,7 +51,7 @@ items:
       matchExpressions:
       - key: release
         operator: NotIn
-        values: 
+        values:
         - {{ .Release.Name }}
     admissionReviewVersions: ["v1beta1"]
     sideEffects: None #Unknown

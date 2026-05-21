@@ -1,0 +1,20 @@
+fullnameOverride: ztwa-ci
+
+# Test-only install smoke values. The dispatcher and worker images require
+# registry pull credentials and are amd64-only, so keep workloads scaled to zero
+# for public chart-testing and arm64 kind compatibility.
+dispatcher:
+  replicaCount: 0
+  service:
+    type: ClusterIP
+  config:
+    listOnlyCredentials:
+      samlAccessID: p-12345678911123
+    privilegedAccess:
+      accessID: p-12345678911123
+      # Test-only placeholder; not a real credential.
+      accessKey: dummy-access-key
+
+webWorker:
+  # See dispatcher.replicaCount comment above.
+  replicaCount: 0
