@@ -75,3 +75,28 @@ jobs:
       - name: Run chart-testing install
         if: steps.list-changed.outputs.changed == 'true'
         run: ct install --config .github/ct.yaml
+
+      - name: Dump chart-testing diagnostics
+        if: failure() && steps.list-changed.outputs.changed == 'true'
+        run: |
+          echo "## Nodes"
+          kubectl get nodes -o wide || true
+          kubectl describe nodes || true
+
+          echo "## Namespace resources"
+          kubectl get all -n chart-testing -o wide || true
+
+          echo "## Helm releases"
+          helm list -n chart-testing --all || true
+
+          echo "## Events"
+          kubectl get events -n chart-testing --sort-by lastTimestamp -o wide || true
+
+          echo "## Pod descriptions"
+          kubectl describe pods -n chart-testing || true
+
+          echo "## Current container logs"
+          kubectl logs -n chart-testing --all-containers --all-pods --tail=200 || true
+
+          echo "## Previous container logs"
+          kubectl logs -n chart-testing --all-containers --all-pods --previous --tail=200 || true
