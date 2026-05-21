@@ -158,7 +158,7 @@ ztbConfig:
   # List of URLs that will be considered valid for redirection from the Portal back to the bastion
   allowedBastionUrls: []
     # - "https://bastion.my.org:8888"
-    # - "https://basion.other.org:8888"
+    # - "https://bastion.other.org:8888"
 
     ## existingSecret: name-of-existing-secret
 
@@ -475,4 +475,4 @@ sshConfig:
   # List of URLs that will be considered valid for redirection from the Portal back to the bastion
   allowedBastionUrls: []
     # - "bastion.my.org:2222"
-    # - "basion.other.org:2222"
+    # - "bastion.other.org:2222"
