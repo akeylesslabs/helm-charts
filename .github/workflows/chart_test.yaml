@@ -12,7 +12,7 @@ jobs:
   chart-test:
     # ubuntu-latest currently resolves to ubuntu-24.04, where kind/gateway
     # installs hit a runner-kernel-specific rsyslog permission failure.
-    # Keep this pin until GitHub's ubuntu-24.04 runner/kernel behavior changes.
+    # Keep this pin until ubuntu-24.04 runner/kernel or gateway behavior changes.
     runs-on: ubuntu-22.04
     permissions:
       contents: read
