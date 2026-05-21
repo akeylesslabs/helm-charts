@@ -4,13 +4,6 @@ globalConfig:
     gatewayCredentialsExistingSecret: akeyless-auth
 
 gateway:
-  deployment:
-    extraVolumes:
-      - name: akeyless-run
-        emptyDir: {}
-    extraVolumeMounts:
-      - name: akeyless-run
-        mountPath: /run/akeyless
   service:
     type: ClusterIP
 

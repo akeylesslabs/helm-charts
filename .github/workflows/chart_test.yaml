@@ -10,7 +10,9 @@ on:
 
 jobs:
   chart-test:
-    runs-on: ubuntu-latest
+    # ubuntu-latest currently resolves to ubuntu-24.04, where kind/gateway
+    # installs hit a runner-kernel-specific rsyslog permission failure.
+    runs-on: ubuntu-22.04
     permissions:
       contents: read
 
