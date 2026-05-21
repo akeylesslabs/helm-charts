@@ -1,4 +1,11 @@
 replicaCount: 1
 
+akeylessUserAuth:
+  adminAccessId: p-12345678911123
+  # Test-only base64-shaped placeholder; not a real credential.
+  adminAccessKey: ZHVtbXktYWNjZXNzLWtleQ==
+  clusterName: chart-testing
+  initialClusterDisplayName: chart-testing
+
 service:
   type: ClusterIP

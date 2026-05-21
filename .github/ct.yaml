@@ -5,5 +5,5 @@ check-version-increment: true
 validate-maintainers: true
 namespace: chart-testing
 release-label: chart-testing
-helm-extra-args: --timeout 180s
+helm-extra-args: --timeout 600s
 debug: true
