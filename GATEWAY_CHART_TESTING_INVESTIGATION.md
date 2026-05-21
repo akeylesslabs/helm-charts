@@ -16,6 +16,7 @@ Relevant GitHub Actions runs investigated:
 - `26228633712` — failure, head SHA `a28830ffa26f9b7df833f12208cd9161141eaf63`
 - `26230089904` — failure, head SHA `704e1d1decc7e28e738c4442d893abf47a63c168`
 - `26232215225` — failure, head SHA `8fae5d8942309e9c4da4fdb3875624e035c80aa5`
+- `26239834081` — **success** after pinning chart testing to `ubuntu-22.04`, head SHA `79c4403`
 
 ## Current working tree status
 
@@ -32,13 +33,21 @@ No gateway chart template changes are currently intended.
 
 No Helm/kind version pinning is currently intended.
 
-Validation run after these changes:
+Validation runs after these changes:
 
 ```sh
 ct lint --config .github/ct.yaml
 ```
 
-Result: passed.
+Result: passed locally.
+
+GitHub Actions:
+
+```text
+Chart Test run 26239834081
+```
+
+Result: passed on `ubuntu-22.04`.
 
 ## Key conclusion so far
 
@@ -360,6 +369,8 @@ Runs:
 - `26238532375` — manual dispatch, `ubuntu-24.04` + `kindest/node:v1.34.3` + targeted install, failed with same rsyslog `/run/akeyless/syslog` permission error.
 - `26238532438` — manual dispatch, `ubuntu-24.04` + `kindest/node:v1.33.7` + targeted install, failed with same rsyslog `/run/akeyless/syslog` permission error.
 - `26238532507` — manual dispatch, `ubuntu-22.04` + default kind node + targeted install, did **not** show the rsyslog `/run/akeyless/syslog` failure; gateway pods reached `1/1 Running`, but Helm still timed out because Redis was `ImagePullBackOff`.
+- `26239778629` — manual dispatch after disabling internal diagnostic cluster cache, `ubuntu-22.04` + default kind node + targeted install; gateway pods reached `1/1 Running` and deployment `2/2` available, but Helm still timed out because the diagnostic service remained `LoadBalancer` with no external IP in kind.
+- `26239778731` — manual dispatch after adding `rsyslog-startup-runner`/mitigation probes, `ubuntu-24.04` + default kind node + targeted install; `rsyslog-startup-runner` probes and targeted install still reproduced `/run/akeyless/syslog` permission failure.
 
 ### `26236909615`: simple permission probe on GitHub kind
 
@@ -450,6 +461,8 @@ These runs materially narrowed the failure:
 | `26238532375` | `ubuntu-24.04` | `kindest/node:v1.34.3` | Gateway pods `CrashLoopBackOff`; rsyslog could not create `/run/akeyless/syslog` and entered FATAL state. |
 | `26238532438` | `ubuntu-24.04` | `kindest/node:v1.33.7` | Gateway pods `CrashLoopBackOff`; same rsyslog `/run/akeyless/syslog` permission failure. |
 | `26238532507` | `ubuntu-22.04` | default node | Gateway deployment reached `2/2` available and gateway pods were `1/1 Running`; Helm timed out because `docker.io/bitnami/redis:6.2` was `ImagePullBackOff`, not because of rsyslog. |
+| `26239778629` | `ubuntu-22.04` | default node | With internal diagnostic cache disabled, gateway pods reached `1/1 Running` and deployment `2/2` available; Helm still timed out because the diagnostic service remained `LoadBalancer` in kind. |
+| `26239778731` | `ubuntu-24.04` | default node | `rsyslog-startup-runner` failed with `cannot create '/run/akeyless/syslog': Permission denied`; targeted install still had gateway `CrashLoopBackOff`/non-ready pods. |
 
 Important environment comparison:
 
@@ -461,7 +474,7 @@ Interpretation:
 
 - The rsyslog failure follows the **GitHub `ubuntu-24.04` runner / Azure kernel line**, not the kind node image version alone.
 - Older kind node images `v1.34.3` and `v1.33.7` do **not** avoid the rsyslog failure on `ubuntu-24.04`.
-- `ubuntu-22.04` is a useful control: the gateway container can start and become Ready under the same workflow shape when the host kernel is `6.8`, although the Redis dependency can still make Helm fail for an unrelated image-pull reason.
+- `ubuntu-22.04` is a useful control: the gateway container can start and become Ready under the same workflow shape when the host kernel is `6.8`; remaining internal diagnostic Helm timeouts were unrelated to rsyslog (`ImagePullBackOff` before cache was disabled, then `LoadBalancer` service wait in kind).
 
 ## Recommended next internal-repo experiments
 
@@ -623,7 +636,7 @@ Keep chart changes as a last resort.
 Recommended near-term PR state:
 
 1. Keep removal of the PR-added `/run/akeyless` CI mounts because they are unnecessary and not representative of default chart behavior.
-2. Pin chart testing to `ubuntu-22.04` because internal controls show the failure follows GitHub `ubuntu-24.04`/kernel `6.17`, while `ubuntu-22.04` does not reproduce the rsyslog crash.
+2. Pin chart testing to `ubuntu-22.04` because internal controls show the failure follows GitHub `ubuntu-24.04`/kernel `6.17`, while `ubuntu-22.04` does not reproduce the rsyslog crash. Public PR Chart Test run `26239834081` passed with this pin.
 3. Avoid init containers, `runAsUser`, `fsGroup`, or template changes unless diagnostics prove they are necessary and safe.
 
 ## Cleanup performed
