@@ -1,0 +1,196 @@
+name: Release Charts
+
+on:
+  deployment:
+  push:
+    branches:
+      - main
+    paths:
+      - "charts/**"
+      - ".github/workflows/chart_release.yaml"
+
+concurrency:
+  group: Release Charts
+
+jobs:
+  release:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Set up Helm
+        uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2 # v5
+
+      - name: Add dependency chart repos
+        run: |
+          helm repo add dandydeveloper https://dandydeveloper.github.io/charts/
+          helm repo update
+
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@a0d2dc62c5e491af8ef6ba64a2e02bcf3fb33aa1 # v1
+        env:
+          CR_TOKEN: "${{ secrets.AKEYLESS_CI_GITHUB_TOKEN }}"
+
+  update-latest-helm-chart-version:
+    if: github.event_name == 'deployment' && github.event.deployment.task == 'update-latest-version'
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    outputs:
+      new_chart_version: ${{ steps.release.outputs.new_chart_version }}
+      charts: ${{ steps.release.outputs.charts }}
+      updated_charts_summary: ${{ steps.release.outputs.updated_charts_summary }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.AKEYLESS_CI_COMMIT_PUSH_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Update latest helm chart version
+        id: release
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github.event.deployment) }}
+        run: .github/scripts/latest_version_release.sh
+
+      - name: Dispatch manifest update
+        uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9
+        with:
+          github-token: ${{ secrets.AKEYLESS_CI_COMMIT_PUSH_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: 'akeylesslabs',
+              repo: 'akeyless-k8s-manifests',
+              workflow_id: 'update-chart.yml',
+              ref: 'main'
+            })
+
+  Slack-Notification-on-release-failure:
+    name: Slack-On-Release-Failure-Notification
+    runs-on: ubuntu-22.04
+    permissions: {}
+    needs: [ release ]
+    if: always() && needs.release.result == 'failure'
+    steps:
+      - name: Prepare Slack Message On Failure
+        id: slack-message-failure-creator
+        run: |
+          SLACK_MESSAGE="
+          *Status:* Failure
+          :terminator:"
+          delimiter="$(openssl rand -hex 8)"
+          {
+            echo "slack-message<<${delimiter}"
+            echo "$SLACK_MESSAGE"
+            echo "${delimiter}"
+          } >> "$GITHUB_ENV"
+
+      - name: Slack Failure Notification
+        uses: rtCamp/action-slack-notify@f43175ac92c1fb2e8f9cd89aa2984941ac0d30dc # v2
+        env:
+          SLACK_CHANNEL: 'operations'
+          SLACK_COLOR: '#bd3232'
+          SLACK_ICON: https://github.com/rtCamp.png?size=48
+          SLACK_TITLE: Helm Chart Release Failed!
+          SLACK_MESSAGE: '${{ env.slack-message }}'
+          SLACK_USERNAME: githubBot
+          SLACK_WEBHOOK: ${{ secrets.SLACK_OPERATIONS_WEBHOOK }}
+          SLACK_FOOTER: Akeyless.io Helm Chart Release
+
+  Slack-Notification-on-latest-version-success:
+    name: Slack-On-Latest-Version-Success-Notification
+    runs-on: ubuntu-22.04
+    permissions: {}
+    needs: [ update-latest-helm-chart-version ]
+    if: github.event_name == 'deployment' && github.event.deployment.task == 'update-latest-version' && needs.update-latest-helm-chart-version.result == 'success'
+    env:
+      service: ${{ github.event.deployment.payload.service }}
+      major_minor_patch: ${{ github.event.deployment.payload.major_minor_patch }}
+      app_version: ${{ github.event.deployment.payload.app_version }}
+      charts: ${{ needs.update-latest-helm-chart-version.outputs.charts }}
+      updated_charts_summary: ${{ needs.update-latest-helm-chart-version.outputs.updated_charts_summary }}
+    steps:
+      - name: Prepare Slack Message On Success
+        id: slack-message-success-creator
+        run: |
+          SLACK_MESSAGE="*Service:* $service
+          *Bump version:* $major_minor_patch
+          *App Version:* $app_version
+          *Charts:* $charts
+          *Release summary:* $updated_charts_summary
+          :helm:"
+          delimiter="$(openssl rand -hex 8)"
+          {
+            echo "slack-message<<${delimiter}"
+            echo "$SLACK_MESSAGE"
+            echo "${delimiter}"
+          } >> "$GITHUB_ENV"
+
+      - name: Slack Success Notification
+        uses: rtCamp/action-slack-notify@f43175ac92c1fb2e8f9cd89aa2984941ac0d30dc # v2
+        env:
+          SLACK_CHANNEL: 'operations'
+          SLACK_COLOR: 'good'
+          SLACK_ICON: https://github.com/rtCamp.png?size=48
+          SLACK_TITLE: Helm Chart Latest Version Release Updated
+          SLACK_MESSAGE: '${{ env.slack-message }}'
+          SLACK_USERNAME: githubBot
+          SLACK_WEBHOOK: ${{ secrets.SLACK_OPERATIONS_WEBHOOK }}
+          MSG_MINIMAL: true
+          SLACK_FOOTER: Akeyless.io Helm Chart Latest Version Release
+
+  Slack-Notification-on-latest-version-failure:
+    name: Slack-On-Latest-Version-Failure-Notification
+    runs-on: ubuntu-22.04
+    permissions: {}
+    needs: [ update-latest-helm-chart-version ]
+    if: always() && github.event_name == 'deployment' && github.event.deployment.task == 'update-latest-version' && needs.update-latest-helm-chart-version.result == 'failure'
+    env:
+      service: ${{ github.event.deployment.payload.service }}
+      major_minor_patch: ${{ github.event.deployment.payload.major_minor_patch }}
+      app_version: ${{ github.event.deployment.payload.app_version }}
+      charts: ${{ needs.update-latest-helm-chart-version.outputs.charts }}
+    steps:
+      - name: Prepare Slack Message On Failure
+        id: slack-message-failure-creator
+        run: |
+          SLACK_MESSAGE="*Service:* $service
+          *Bump version:* $major_minor_patch
+          *App Version:* $app_version
+          *Chart:* $charts
+          *Status:* Failure
+          :terminator:"
+          delimiter="$(openssl rand -hex 8)"
+          {
+            echo "slack-message<<${delimiter}"
+            echo "$SLACK_MESSAGE"
+            echo "${delimiter}"
+          } >> "$GITHUB_ENV"
+
+      - name: Slack Failure Notification
+        uses: rtCamp/action-slack-notify@f43175ac92c1fb2e8f9cd89aa2984941ac0d30dc # v2
+        env:
+          SLACK_CHANNEL: 'operations'
+          SLACK_COLOR: '#bd3232'
+          SLACK_ICON: https://github.com/rtCamp.png?size=48
+          SLACK_TITLE: Helm Chart Latest Version Release Failed!
+          SLACK_MESSAGE: '${{ env.slack-message }}'
+          SLACK_USERNAME: githubBot
+          SLACK_WEBHOOK: ${{ secrets.SLACK_OPERATIONS_WEBHOOK }}
+          SLACK_FOOTER: Akeyless.io Helm Chart Latest Version Release

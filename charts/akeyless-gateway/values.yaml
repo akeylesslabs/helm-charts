@@ -97,7 +97,7 @@ globalConfig:
     ## If enableScaleOutOnDisconnectedMode is set to true, and the encryptionKeyExistingSecret parameter has a value
     ## Akeyless will use this specified encryption key for offline scaling support.
     ## If enableScaleOutOnDisconnectedMode is set to true, and the encryptionKeyExistingSecret parameter is empty or not specified,
-    ## Akeyless will automatically generate a new encryption key and a new k8s secret    
+    ## Akeyless will automatically generate a new encryption key and a new k8s secret
     encryptionKeyExistingSecret:
 
     enableScaleOutOnDisconnectedMode: false
@@ -425,7 +425,7 @@ gateway:
     # accessMode: "ReadWriteMany"
     # storageClass: ""
     # size: 5Gi
-  
+
   ## Optional volume config for akeyless-config. Leave empty for default emptyDir: {}.
   akeylessConfigVol: {}
     # emptyDir:
@@ -438,7 +438,7 @@ gateway:
     # Type of the volume to mount: either 'configMap' or 'secret'
     volumeType: "configMap"
     # Name of the ConfigMap or Secret containing the custom CA certificates.
-    volumeSourceName: "" # Must have a key named 'ca-certificates.crt'.
+    volumeSourceName: ""  # Must have a key named 'ca-certificates.crt'.
 
   secretsStore:
     # Enable Secret Store CSI integration
@@ -566,7 +566,7 @@ sra:
         enabled: false
         data:
       topologySpreadConstraints: []
-      strategy: {} 
+      strategy: {}
     replicaCount: 1
 
     ## This is a required RSA Public Key for your Akeyless SSH Cert Issuer

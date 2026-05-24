@@ -1,6 +1,10 @@
 apiVersion: v2
 name: akeyless-zero-trust-web-access
 description: A Helm chart for Kubernetes that deploys akeyless-zero-trust-web-access
+maintainers:
+  - name: Akeyless
+    email: support@akeyless.io
+    url: https://www.akeyless.io
 # A chart can be either an 'application' or a 'library' chart.
 #
 # Application charts are a collection of templates that can be packaged into versioned archives
@@ -12,7 +16,7 @@ description: A Helm chart for Kubernetes that deploys akeyless-zero-trust-web-ac
 type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
-version: 3.3.1
+version: 3.3.2
 appVersion: 2.0.0-rc3
 icon: https://akeylesslabs.github.io/helm-charts/assets/logo/akl.jpeg
 home: https://www.akeyless.io

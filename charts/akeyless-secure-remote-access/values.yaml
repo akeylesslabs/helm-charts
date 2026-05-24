@@ -1,5 +1,5 @@
 # This values.yaml file contains the default values for akeyless-secure-remote-access helm chart.
-# The chart bundles both akeyless-zero-trust-bastion and akeyless-ssh-bastion. 
+# The chart bundles both akeyless-zero-trust-bastion and akeyless-ssh-bastion.
 # Enter your configuration in the global and dedicated service sections
 
 ############
@@ -17,7 +17,7 @@ apiGatewayURL: https://rest.akeyless.io
 apiGatewayCert:
   #  Specifies an existing secret for gateway tls certificate must include:
   # - tls.crt
-  tlsCertsSecretName: 
+  tlsCertsSecretName:
 
 
 # Secure remote access cluster name. Use a name that will help you understand
@@ -101,7 +101,7 @@ ztbConfig:
   #  repository: akeyless/zero-trust-bastion
     pullPolicy: IfNotPresent
   #  tag: latest
-    
+
   containerName: "zero-trust-bastion"
   env: []
 
@@ -157,8 +157,8 @@ ztbConfig:
 
   # List of URLs that will be considered valid for redirection from the Portal back to the bastion
   allowedBastionUrls: []
-    #- "https://bastion.my.org:8888"
-    #- "https://basion.other.org:8888"
+    # - "https://bastion.my.org:8888"
+    # - "https://bastion.other.org:8888"
 
     ## existingSecret: name-of-existing-secret
 
@@ -194,10 +194,10 @@ ztbConfig:
     # If Horizontal Pod Autoscaler (HPA) usage is desired, you must set requests values.
     # If you do want to specify resources, uncomment the following
     # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-    #limits:
+    # limits:
     #  cpu: <your_cpu_limit>
     #  memory: <your_memory_limit>
-    #requests:
+    # requests:
     #  cpu: 1
     #  memory: 2G
 
@@ -214,7 +214,7 @@ ztbConfig:
     rdpRecord:
       enabled: false
       keepLocalRecording: false
-      quality: "" #low/medium/high
+      quality: ""  # low/medium/high
       enableCompression: false
       encryptionKey: ""
       # automatically upload session recordings to S3 in your AWS account
@@ -279,10 +279,10 @@ ztpConfig:
     # If Horizontal Pod Autoscaler (HPA) usage is desired, you must set requests values.
     # If you do want to specify resources, uncomment the following
     # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-    #limits:
+    # limits:
     #  cpu: <your_cpu_limit>
     #  memory: <your_memory_limit>
-    #requests:
+    # requests:
     #  cpu: 1
   #  memory: 2G
 
@@ -423,10 +423,10 @@ sshConfig:
     # If Horizontal Pod Autoscaler (HPA) usage is desired, you must set requests values.
     # If you do want to specify resources, uncomment the following
     # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-    #limits:
+    # limits:
     #  cpu: <your_cpu_limit>
     #  memory: <your_memory_limit>
-    #requests:
+    # requests:
     #  cpu: 1
     #  memory: 2G
 
@@ -442,7 +442,7 @@ sshConfig:
   config:
     CAPublicKey:
     # CAPublicKey: |
-      
+
     sessionTermination:
     ## Session Termination is available for okta and keycloak
     ## Ref: https://docs.akeyless.io/docs/professional-bastion
@@ -474,5 +474,5 @@ sshConfig:
 
   # List of URLs that will be considered valid for redirection from the Portal back to the bastion
   allowedBastionUrls: []
-    #- "bastion.my.org:2222"
-    #- "basion.other.org:2222"
+    # - "bastion.my.org:2222"
+    # - "bastion.other.org:2222"

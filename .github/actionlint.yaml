@@ -1,0 +1,14 @@
+self-hosted-runner:
+  labels: []
+
+config-variables: null
+
+paths:
+  .github/workflows/reusable-git-issues-jira-automation.yaml:
+    ignore:
+      - "shellcheck reported issue in this script: SC2086:"
+      - "shellcheck reported issue in this script: SC2129:"
+  .github/workflows/update_manifests.yaml:
+    ignore:
+      - 'the runner of ".*" action is too old to run on GitHub Actions'
+      - "shellcheck reported issue in this script: SC2086:"
