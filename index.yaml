@@ -3,6 +3,20 @@ entries:
   akeyless-api-gateway:
   - apiVersion: v2
     appVersion: 4.51.1
+    created: "2026-05-24T10:42:08.096912401Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
+    digest: dae79687b213816284fc5e745b9fec6c5f36e629af95871fbed7a9496347a2cf
+    maintainers:
+    - email: support@akeyless.io
+      name: Akeyless
+      url: https://www.akeyless.io
+    name: akeyless-api-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-api-gateway-1.62.11/akeyless-api-gateway-1.62.11.tgz
+    version: 1.62.11
+  - apiVersion: v2
+    appVersion: 4.51.1
     created: "2026-05-18T12:00:56.187697709Z"
     description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
     digest: 455ef66994bf50248c07507ddad524c7f8efce8ce2681269b56cf292773b7baf
@@ -3463,6 +3477,22 @@ entries:
   akeyless-csi-provider:
   - apiVersion: v2
     appVersion: 1.0.0
+    created: "2026-05-24T10:42:08.226123703Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-csi-provider
+    digest: 0fb6b9f840307bbb0007938ab50e27fd6c2f3b6b6268a2f77b7d4a36c345feda
+    kubeVersion: '>= 1.14.0-0'
+    maintainers:
+    - email: support@akeyless.io
+      name: Akeyless
+      url: https://www.akeyless.io
+    name: akeyless-csi-provider
+    sources:
+    - https://github.com/akeylesslabs/akeyless-csi-provider
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-csi-provider-1.0.3/akeyless-csi-provider-1.0.3.tgz
+    version: 1.0.3
+  - apiVersion: v2
+    appVersion: 1.0.0
     created: "2022-11-02T11:56:31.271170315Z"
     description: A Helm chart for Kubernetes that deploys akeyless-csi-provider
     digest: 31c89cb7ca4217aae37f304eace8ef2a7433d0c575b22ac0b225e40d5e390e98
@@ -3498,6 +3528,33 @@ entries:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-csi-provider-1.0.0/akeyless-csi-provider-1.0.0.tgz
     version: 1.0.0
   akeyless-gateway:
+  - annotations:
+      gatewayVersion: 4.51.1
+      sraVersion: 3.0.3
+    apiVersion: v2
+    appVersion: 4.51.1_3.0.3
+    created: "2026-05-24T10:42:08.365792575Z"
+    dependencies:
+    - alias: cacheHA
+      condition: cacheHA.enabled
+      name: redis-ha
+      repository: https://dandydeveloper.github.io/charts/
+      version: 4.35.10
+    description: A Helm chart for Kubernetes that deploys akeyless-gateway
+    digest: 48634390eaad422650c7ca5de0ef73e92b2bca47c8a2a467e673450d8370489d
+    icon: https://akeyless-908832575.imgix.net/wp-content/uploads/2024/03/akeyless-2024.png?auto=format%2Ccompress&fm=webp&ixlib=php-3.3.0
+    keywords:
+    - akeyless-gateway
+    - sra
+    maintainers:
+    - email: support@akeyless.io
+      name: Akeyless
+      url: https://www.akeyless.io
+    name: akeyless-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-gateway-2.0.6/akeyless-gateway-2.0.6.tgz
+    version: 2.0.6
   - annotations:
       gatewayVersion: 4.51.1
       sraVersion: 3.0.3
@@ -6042,6 +6099,21 @@ entries:
   akeyless-secrets-injection:
   - apiVersion: v2
     appVersion: 0.37.0
+    created: "2026-05-24T10:42:08.492465295Z"
+    description: A Helm chart that deploys a mutating admission webhook that configures
+      applications to request env vars from Akeyless Vault Secrets
+    digest: beab36e6a797d0bbc3c64a9f8ac334989b6cabea5532b4c399b941abffe89c11
+    maintainers:
+    - email: support@akeyless.io
+      name: Akeyless
+      url: https://www.akeyless.io
+    name: akeyless-secrets-injection
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-secrets-injection-1.20.2/akeyless-secrets-injection-1.20.2.tgz
+    version: 1.20.2
+  - apiVersion: v2
+    appVersion: 0.37.0
     created: "2026-04-27T15:05:20.634970048Z"
     description: A Helm chart that deploys a mutating admission webhook that configures
       applications to request env vars from Akeyless Vault Secrets
@@ -7075,6 +7147,24 @@ entries:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-secrets-injection-1.0.0/akeyless-secrets-injection-1.0.0.tgz
     version: 1.0.0
   akeyless-sra:
+  - annotations:
+      ztbVersion: 3.0.3
+      ztpVersion: 2.0.1
+    apiVersion: v2
+    appVersion: 3.0.3_2.0.1
+    created: "2026-05-24T10:42:08.630780263Z"
+    description: A Helm chart for Kubernetes akeyless-zero-trust-bastion, akeyless-ssh-bastion
+      and akeyless-zero-trust-portal deployments
+    digest: 2d8600dc7e92afe6dc1642e1a472260dcc32a9fe5f70cf17ef6b6bf2249a78b3
+    maintainers:
+    - email: support@akeyless.io
+      name: Akeyless
+      url: https://www.akeyless.io
+    name: akeyless-sra
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-sra-3.0.5/akeyless-sra-3.0.5.tgz
+    version: 3.0.5
   - annotations:
       ztbVersion: 3.0.3
       ztpVersion: 2.0.1
@@ -11372,6 +11462,24 @@ entries:
   akeyless-zero-trust-web-access:
   - apiVersion: v2
     appVersion: 2.0.0-rc3
+    created: "2026-05-24T10:42:08.757109352Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-zero-trust-web-access
+    digest: e06ddb4a5b269ff36032f09b3879a951066fdbca87edf21c36c91969910461d5
+    home: https://www.akeyless.io
+    icon: https://akeylesslabs.github.io/helm-charts/assets/logo/akl.jpeg
+    maintainers:
+    - email: support@akeyless.io
+      name: Akeyless
+      url: https://www.akeyless.io
+    name: akeyless-zero-trust-web-access
+    sources:
+    - https://github.com/akeylesslabs/helm-charts/tree/feature/helm_repo/akeyless-zero-trust-web-access
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-3.3.2/akeyless-zero-trust-web-access-3.3.2.tgz
+    version: 3.3.2
+  - apiVersion: v2
+    appVersion: 2.0.0-rc3
     created: "2026-05-14T15:43:10.118135665Z"
     description: A Helm chart for Kubernetes that deploys akeyless-zero-trust-web-access
     digest: 49748e40001b32cbe81176fb7c2dc5bcf1457f19fa05ad684e9f1355e2215f68
@@ -13413,4 +13521,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2026-05-20T14:46:06.141826824Z"
+generated: "2026-05-24T10:42:08.760659985Z"
