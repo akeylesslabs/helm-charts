@@ -181,7 +181,7 @@ spec:
                   key: cache-pass
           {{- if or .Values.globalConfig.clusterCache.persistence.enabled (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) .Values.globalConfig.clusterCache.extraVolumesMounts }}
           volumeMounts:
-            {{- if .Values.globalConfig.clusterCache.persistence.enabled }}
+            {{- if or .Values.globalConfig.clusterCache.persistence.enabled .Values.strictSecurityPolicy.enabled }}
             - name: cache-data
               mountPath: /data
             {{- end }}
@@ -198,6 +198,9 @@ spec:
         - name: cache-data
           persistentVolumeClaim:
             claimName: {{ .Values.globalConfig.clusterCache.persistence.existingClaim | default (include "akeyless-gateway.clusterCache.pvcName" .) }}
+        {{- else if .Values.strictSecurityPolicy.enabled }}
+        - name: cache-data
+          emptyDir: {}
         {{- end }}
         {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
         {{- include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 6 }}
