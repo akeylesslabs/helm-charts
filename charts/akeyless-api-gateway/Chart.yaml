@@ -1,6 +1,10 @@
 apiVersion: v2
 name: akeyless-api-gateway
 description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
+maintainers:
+  - name: Akeyless
+    email: support@akeyless.io
+    url: https://www.akeyless.io
 # A chart can be either an 'application' or a 'library' chart.
 #
 # Application charts are a collection of templates that can be packaged into versioned archives

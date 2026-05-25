@@ -1,7 +1,11 @@
 apiVersion: v2
 name: akeyless-csi-provider
 description: A Helm chart for Kubernetes that deploys akeyless-csi-provider
-version: 1.0.2
+maintainers:
+  - name: Akeyless
+    email: support@akeyless.io
+    url: https://www.akeyless.io
+version: 1.0.3
 appVersion: 1.0.0
 kubeVersion: ">= 1.14.0-0"
 sources:

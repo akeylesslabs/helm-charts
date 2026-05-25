@@ -1,0 +1,19 @@
+fullnameOverride: sra-ci
+
+# Test-only empty docker config, base64 for {"auths":{}}; not a real credential.
+dockerRepositoryCreds: eyJhdXRocyI6e319Cg==
+
+ztbConfig:
+  enabled: false
+  service:
+    type: ClusterIP
+
+ztpConfig:
+  enabled: false
+  service:
+    type: ClusterIP
+
+sshConfig:
+  enabled: false
+  service:
+    type: ClusterIP

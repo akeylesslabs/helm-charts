@@ -1,6 +1,10 @@
 apiVersion: v2
 name: akeyless-sra
 description: A Helm chart for Kubernetes akeyless-zero-trust-bastion, akeyless-ssh-bastion and akeyless-zero-trust-portal deployments
+maintainers:
+  - name: Akeyless
+    email: support@akeyless.io
+    url: https://www.akeyless.io
 # A chart can be either an 'application' or a 'library' chart.
 #
 # Application charts are a collection of templates that can be packaged into versioned archives

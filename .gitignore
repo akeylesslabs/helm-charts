@@ -10,6 +10,12 @@
 manifest_work_dir/
 
 Chart.lock
+/charts/*/charts/
 **/charts/*.tgz
 **/tmpcharts-*/
 values.yaml.tmp
+
+# AI tool configs
+.claude/settings.local.json
+.codex/config.toml
+.cursor/settings.json

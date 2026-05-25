@@ -1,0 +1,7 @@
+replicaCount: 1
+
+env:
+  AKEYLESS_ACCESS_TYPE: api_key
+  AKEYLESS_ACCESS_ID: p-12345678911123
+  # Test-only base64-shaped placeholder; not a real credential.
+  AKEYLESS_API_KEY: ZHVtbXktYXBpLWtleQ==
