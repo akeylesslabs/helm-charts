@@ -87,9 +87,6 @@ Gateway container image (repository:tag).
 {{- $tag := .Values.version | default .Values.gateway.deployment.image.tag | default .Chart.Annotations.gatewayVersion | default "latest" -}}
 {{- if .Values.gateway.deployment.image.repository -}}
 {{- $repository = .Values.gateway.deployment.image.repository -}}
-{{- else if .Values.gatewayRootMode -}}
-{{- $repository = "akeyless/base" -}}
-{{- $tag = .Values.gateway.deployment.image.tag | default "latest" -}}
 {{- end -}}
 {{- printf "%s:%s" $repository $tag -}}
 {{- end -}}
