@@ -1,0 +1,29 @@
+globalConfig:
+  gatewayAuth:
+    gatewayAccessType: access_key
+    gatewayCredentialsExistingSecret: akeyless-auth
+
+gateway:
+  service:
+    type: ClusterIP
+
+cacheHA:
+  enabled: true
+  replicas: 3
+  auth: true
+  hardAntiAffinity: false
+  persistentVolume:
+    enabled: false
+  redis:
+    port: 6379
+    tlsPort: 0
+    tlsReplication: false
+  sentinel:
+    port: 26379
+    tlsPort: 0
+    tlsReplication: false
+
+sra:
+  sshConfig:
+    service:
+      type: ClusterIP

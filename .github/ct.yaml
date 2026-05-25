@@ -1,0 +1,9 @@
+chart-dirs:
+  - charts
+target-branch: main
+check-version-increment: true
+validate-maintainers: true
+namespace: chart-testing
+release-label: chart-testing
+helm-extra-args: --timeout 300s
+debug: true

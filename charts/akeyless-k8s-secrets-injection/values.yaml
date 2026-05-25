@@ -35,7 +35,7 @@ gatewayCert:
   # - tls.crt (base64)
   tlsCertsSecretName:
 
-#Remove the {} and add any needed values to your SecurityContext here, do not change runAsUser and allowPrivilegeEscalation
+# Remove the {} and add any needed values to your SecurityContext here, do not change runAsUser and allowPrivilegeEscalation
 containerSecurityContext: {}
 #  seccompProfile:
 #    type: RuntimeDefault
@@ -84,12 +84,12 @@ service:
   labels: {}
 
 # for EKS using custom CNI
-#hostNetwork: true
+# hostNetwork: true
 
 env:
   AKEYLESS_URL: "https://vault.akeyless.io"
   AKEYLESS_ACCESS_TYPE: ""  # azure_ad/aws_iam/api_key/k8s
-  AKEYLESS_ACCESS_ID: "" 
+  AKEYLESS_ACCESS_ID: ""
 
  # AKEYLESS_API_GW_URL: "https://api-gw-url"
  # AKEYLESS_POD_ACCESS_PATH: "<location-to-access-secrets-per-pod-name>"
@@ -98,16 +98,16 @@ env:
  # AKEYLESS_API_KEY: "<api_key>"
  # AKEYLESS_CRASH_POD_ON_ERROR: "enable"
  # AKEYLESS_K8S_AUTH_CONF_NAME: "K8s_conf_name"
- 
+
  # the gw base64 certificate file e.g: 'cat my-gw.crt | base64'
- # AKEYLESS_GW_CERTIFICATE: 
+ # AKEYLESS_GW_CERTIFICATE:
 
 
   AKEYLESS_AGENT_LIMITS_CPU: "500m"
   AKEYLESS_AGENT_REQUESTS_CPU: "250m"
   AKEYLESS_AGENT_LIMITS_MEM: "128Mi"
   AKEYLESS_AGENT_REQUESTS_MEM: "64Mi"
- 
+
 
 resources:
   limits:
@@ -116,7 +116,6 @@ resources:
   requests:
     cpu: 0.25
     memory: 128Mi
-
 
 
 metrics:
@@ -129,7 +128,7 @@ metrics:
       prometheus.io/scrape: "true"
       prometheus.io/path: "/metrics"
       prometheus.io/port: "akls-metrics"
-      
+
 
 HPA:
   # Note that metrics server must be installed for this to work:
