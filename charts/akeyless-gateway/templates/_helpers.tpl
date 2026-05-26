@@ -708,12 +708,12 @@ Usage: {{ include "akeyless-gateway.validateNoPlaintextSecrets" . }}
 {{- if .Values.strictSecurityPolicy.enabled }}
   {{- $sensitivePattern := "(?i)(token|key|password|secret|credential)" -}}
   {{- range .Values.globalConfig.env }}
-    {{- if regexMatch $sensitivePattern .name }}
+    {{- if and (regexMatch $sensitivePattern .name) (not .valueFrom) }}
       {{- fail (printf "strictSecurityPolicy.enabled: detected potential secret '%s' in globalConfig.env. Use secretKeyRef or existingSecret instead" .name) }}
     {{- end }}
   {{- end }}
   {{- range .Values.sra.env }}
-    {{- if regexMatch $sensitivePattern .name }}
+    {{- if and (regexMatch $sensitivePattern .name) (not .valueFrom) }}
       {{- fail (printf "strictSecurityPolicy.enabled: detected potential secret '%s' in sra.env. Use secretKeyRef or existingSecret instead" .name) }}
     {{- end }}
   {{- end }}

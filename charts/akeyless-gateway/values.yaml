@@ -4,9 +4,8 @@
 
 ## Strict Security Policy Toggle (Kyverno/PSA compliance)
 ## When enabled, enforces non-root execution, capability drops, resource limits,
-## and other hardening measures across Gateway, Cache, and SRA Web workloads.
-## NOTE: SRA SSH bastion is excluded (requires root for session jailing - see docs).
-## See: docs/STRICT_SECURITY_POLICY.md
+## and hardening on Gateway, Cache, and SRA Web. SRA SSH uses Phase A (root + narrow caps).
+## See: STRICT_SECURITY_POLICY.md in this chart directory.
 ##
 strictSecurityPolicy:
   enabled: false
@@ -634,10 +633,6 @@ sra:
       labels: {}
       type: LoadBalancer
       port: 22
-      ## Optional second Service port (not unified Gateway :8000). Used by some k3s/ServiceLB setups
-      ## to obtain an external IP on the SSH LoadBalancer. Set to 0/false in overrides to omit.
-      gatewayPort: 8008
-      gatewayTargetPort: gateway
 
     livenessProbe:
       failureThreshold: 5
