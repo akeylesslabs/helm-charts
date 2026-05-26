@@ -634,6 +634,10 @@ sra:
       labels: {}
       type: LoadBalancer
       port: 22
+      ## Optional second Service port (not unified Gateway :8000). Used by some k3s/ServiceLB setups
+      ## to obtain an external IP on the SSH LoadBalancer. Set to 0/false in overrides to omit.
+      gatewayPort: 8008
+      gatewayTargetPort: gateway
 
     livenessProbe:
       failureThreshold: 5

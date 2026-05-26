@@ -37,22 +37,7 @@ spec:
           {{- toYaml .Values.sra.webConfig.deployment.labels | nindent 8 }}
         {{- end }}
     spec:
-      {{- if or (.Values.sra.webConfig.securityContext) (.Values.strictSecurityPolicy.enabled) }}
-      {{- if or (and .Values.sra.webConfig.securityContext .Values.sra.webConfig.securityContext.enabled) (.Values.strictSecurityPolicy.enabled) }}
-      securityContext:
-        {{- if .Values.strictSecurityPolicy.enabled }}
-        runAsNonRoot: true
-        runAsUser: {{ .Values.strictSecurityPolicy.uid }}
-        runAsGroup: {{ .Values.strictSecurityPolicy.gid }}
-        fsGroup: {{ .Values.strictSecurityPolicy.fsGroup }}
-        seccompProfile:
-          type: RuntimeDefault
-        {{- else }}
-        runAsUser: {{ .Values.sra.webConfig.securityContext.runAsUser }}
-        fsGroup: {{ .Values.sra.webConfig.securityContext.fsGroup }}
-        {{- end }}
-      {{- end }}
-      {{- end }}
+      {{- include "akeyless-sra-web.podSecurityContext" . | nindent 6 }}
       serviceAccountName: {{ include "akeyless-gateway.getServiceAccountName" . }}
       {{- if .Values.sra.webConfig.deployment.nodeSelector }}
       nodeSelector:
@@ -92,17 +77,7 @@ spec:
         - name: gateway-sra-web
           image: "{{ .Values.sra.image.repository | default "akeyless/zero-trust-bastion" }}:{{ .Values.sra.image.tag | default .Chart.Annotations.sraVersion }}"
           imagePullPolicy: {{ .Values.sra.image.pullPolicy }}
-          {{- if .Values.strictSecurityPolicy.enabled }}
-          securityContext:
-            runAsNonRoot: true
-            runAsUser: {{ .Values.strictSecurityPolicy.uid }}
-            runAsGroup: {{ .Values.strictSecurityPolicy.gid }}
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - ALL
-            readOnlyRootFilesystem: false
-          {{- end }}
+          {{- include "akeyless-sra-web.containerSecurityContext" . | nindent 10 }}
           ports:
             - containerPort: 8888
               name: web

@@ -661,6 +661,46 @@ capabilities:
 {{- end -}}
 
 {{/*
+SRA Web — always rootless (UID 1001). Bastion image default USER; not gated on strictSecurityPolicy.
+*/}}
+{{- define "akeyless-sra-web.podSecurityContext" -}}
+securityContext:
+  runAsNonRoot: true
+  runAsUser: {{ .Values.strictSecurityPolicy.uid }}
+  runAsGroup: {{ .Values.strictSecurityPolicy.gid }}
+  fsGroup: {{ .Values.strictSecurityPolicy.fsGroup }}
+  seccompProfile:
+    type: RuntimeDefault
+{{- end -}}
+
+{{- define "akeyless-sra-web.containerSecurityContext" -}}
+securityContext:
+  runAsNonRoot: true
+  runAsUser: {{ .Values.strictSecurityPolicy.uid }}
+  runAsGroup: {{ .Values.strictSecurityPolicy.gid }}
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+{{- end -}}
+
+{{/*
+SRA SSH — Phase A only (root + narrow caps). Non-root SSH deferred to a follow-up epic.
+*/}}
+{{- define "akeyless-sra-ssh.podSecurityContext" -}}
+securityContext:
+  runAsUser: 0
+  runAsGroup: 0
+{{- end -}}
+
+{{- define "akeyless-sra-ssh.containerSecurityContext" -}}
+securityContext:
+  allowPrivilegeEscalation: true
+  {{- include "akeyless-gateway.sshBastionPhaseACaps" . | nindent 2 }}
+{{- end -}}
+
+{{/*
 Validate no plaintext secrets in env when strict security policy is enabled
 Usage: {{ include "akeyless-gateway.validateNoPlaintextSecrets" . }}
 */}}

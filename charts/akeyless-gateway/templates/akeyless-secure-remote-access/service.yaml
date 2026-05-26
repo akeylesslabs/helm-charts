@@ -19,10 +19,12 @@ spec:
       targetPort: ssh
       protocol: TCP
       name: ssh
-    - port: 8000
-      targetPort: gateway
+    {{- if .Values.sra.sshConfig.service.gatewayPort }}
+    - port: {{ .Values.sra.sshConfig.service.gatewayPort }}
+      targetPort: {{ .Values.sra.sshConfig.service.gatewayTargetPort | default "gateway" }}
       protocol: TCP
       name: gateway
+    {{- end }}
   selector:
     {{- include "akeyless-gateway-sra-ssh-service.selectorLabels" . | nindent 4 }}
 ---

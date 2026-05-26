@@ -37,13 +37,7 @@ spec:
           {{- toYaml .Values.sra.sshConfig.labels | nindent 8 }}
         {{- end }}
     spec:
-      {{- if .Values.sra.sshConfig.securityContext }}
-        {{- if .Values.sra.sshConfig.securityContext.enabled }}
-      securityContext:
-        runAsUser: {{ .Values.sra.sshConfig.securityContext.runAsUser }}
-        fsGroup: {{ .Values.sra.sshConfig.securityContext.fsGroup }}
-        {{- end }}
-      {{- end }}
+      {{- include "akeyless-sra-ssh.podSecurityContext" . | nindent 6 }}
       serviceAccountName: {{ include "akeyless-gateway.getServiceAccountName" . }}
       {{- if .Values.sra.sshConfig.deployment.nodeSelector }}
       nodeSelector:
@@ -85,28 +79,9 @@ spec:
         - name: gateway-sra-ssh
           image: "{{ .Values.sra.image.repository | default "akeyless/zero-trust-bastion" }}:{{ .Values.sra.image.tag | default .Chart.Annotations.sraVersion }}"
           imagePullPolicy: {{ .Values.sra.image.pullPolicy }}
-          securityContext:
-            {{- if .Values.strictSecurityPolicy.enabled }}
-            # SSH bastion Phase A: narrow capabilities (no privileged)
-            # Still runs as root (UID 0) - documented Kyverno exception required
-            # Phase B (separate epic) will refactor to non-root
-            allowPrivilegeEscalation: true  # Required for mount --bind
-            capabilities:
-              add:
-                - SYS_ADMIN      # Required for mount --bind /dev/pts
-                - MKNOD          # Required for mknod device nodes in jail
-                - DAC_OVERRIDE   # Required for adduser/deluser/jail permissions
-                - CHOWN          # Required by adduser + chroot setup
-                - SETUID         # Required by adduser + chroot setup
-                - SETGID         # Required by adduser + chroot setup
-                - FOWNER         # Required by adduser + chroot setup
-            {{- else }}
-            privileged: true
-            capabilities:
-              add: ["SYS_ADMIN"]
-            {{- end }}
+          {{- include "akeyless-sra-ssh.containerSecurityContext" . | nindent 10 }}
           ports:
-          - containerPort: {{ if .Values.strictSecurityPolicy.enabled }}2222{{ else }}22{{ end }}
+          - containerPort: 2222
             name: ssh
           - containerPort: 9900
             name: curl-proxy
