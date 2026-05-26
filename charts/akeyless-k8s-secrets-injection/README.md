@@ -16,7 +16,7 @@ The default `namespaceSelector` uses the `kubernetes.io/metadata.name` label, wh
 set the target namespace name or skip for the default name: vswh
 
 ```bash
-export WEBHOOK_NS=`<namepsace>`
+export WEBHOOK_NS=`<namespace>`
 ```
 
 
