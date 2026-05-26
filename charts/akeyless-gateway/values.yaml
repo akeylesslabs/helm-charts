@@ -125,6 +125,18 @@ globalConfig:
       # storageClass: ""
       # size: 10Gi
 
+    ## Pod-level security context for the cache pod.
+    ## fsGroup: 1000 is the GID of the redis group in the official Redis Alpine image and is
+    ## required when persistence.enabled=true so that the mounted /data volume is chown'ed
+    ## to that group and writable by Redis.
+    ##
+    securityContext:
+      fsGroup: 1000
+
+    ## Container-level security context for the Redis container.
+    ##
+    containerSecurityContext: {}
+
     pdb:
       enabled: false
       # minAvailable: ""
