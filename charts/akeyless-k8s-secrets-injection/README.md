@@ -11,7 +11,7 @@ The `MutatingWebhookConfiguration` gets created before the actual backend Pod wh
 
 ### Creating the namespace
 
-The namespace must have a label of `name` with the namespace name as it's value.
+The default `namespaceSelector` uses the `kubernetes.io/metadata.name` label, which Kubernetes (1.21+) automatically applies to all namespaces. No manual labeling is required.
 
 set the target namespace name or skip for the default name: vswh
 
@@ -46,21 +46,39 @@ helm delete RELEASE_NAME --namespace "${WEBHOOK_NS}"
 
 ## Configuration
 
+### Upgrading to chart 2.0.0
+
+The top-level `webhookFailurePolicy` value was removed. Move it under `mutatingWebhook.failurePolicy`:
+
+```yaml
+# before
+webhookFailurePolicy: Fail
+
+# after
+mutatingWebhook:
+  failurePolicy: Fail
+```
+
 The following tables lists configurable parameters of the vault-secrets-webhook chart and their default values.
 
-|               Parameter             |                    Description                    |                  Default                 |
-| ----------------------------------- | ------------------------------------------------- | -----------------------------------------|
-|affinity                             |affinities to use                                  |{}                                        |
-|debug                                |debug logs for webhook                             |false                                     |
-|image.pullPolicy                     |image pull policy                                  |Always                                    |
-|image.repository                     |image repo that contains the admission server      |akeyless/k8s-webhook-server               |
-|image.tag                            |image tag                                          |latest                                    |
-|namespaceSelector                    |namespace selector to use, will limit webhook scope|{}                                        |
-|nodeSelector                         |node selector to use                               |{}                                        |
-|replicaCount                         |number of replicas                                 |1                                         |
-|resources                            |resources to request                               |{}                                        |
-|service.externalPort                 |webhook service external port                      |443                                       |
-|service.internalPort                 |webhook service external port                      |8443                                      |
-|service.name                         |webhook service name                               |secrets-webhook                           |
-|service.type                         |webhook service type                               |ClusterIP                                 |
-|tolerations                          |tolerations to add                                 |[]                                        |
+| Parameter                         | Description | Default |
+| --------------------------------- | ----------- | ------- |
+| `debug`                           | Enable debug logs for the webhook | `false` |
+| `image.pullPolicy`                | Webhook image pull policy | `IfNotPresent` |
+| `image.repository`                | Image repo that contains the admission server | `akeyless/k8s-webhook-server` |
+| `image.agentImage`                | Image repo for the injected secrets sidecar | `akeyless/k8s-secrets-sidecar` |
+| `replicaCount`                    | Number of webhook replicas | `2` |
+| `mutatingWebhook`                 | Additional fields to render on the generated `MutatingWebhook`, such as `failurePolicy`, selectors, `timeoutSeconds`, `matchPolicy`, `reinvocationPolicy`, and `matchConditions`. Chart-owned fields like `clientConfig` and `rules` are not overridden here. | See `values.yaml` |
+| `mutatingWebhook.failurePolicy`   | Failure policy for the mutating webhook | `Ignore` |
+| `mutatingWebhook.namespaceSelector` | Namespace selector for the mutating webhook. Rendered with `tpl`, so values can reference release context. | Excludes `kube-system`, `kube-node-lease`, and the release namespace |
+| `mutatingWebhook.objectSelector`  | Object selector for the mutating webhook. Rendered with `tpl`, so values can reference release context. | Excludes the release name |
+| `mutatingWebhook.timeoutSeconds`  | Webhook request timeout in seconds | `10` |
+| `mutatingWebhook.matchConditions` | CEL match conditions for the mutating webhook. Rendered with `tpl`, so values can reference release context. | `[]` |
+| `deployment.nodeSelector`         | Node selector for webhook pods | `null` |
+| `deployment.tolerations`          | Tolerations configuration for webhook pods | `{ enabled: false, data: [] }` |
+| `deployment.affinity`             | Affinity configuration for webhook pods | `{ enabled: false }` |
+| `resources`                       | Webhook container resource requests/limits | See `values.yaml` |
+| `service.externalPort`            | Webhook service external port | `443` |
+| `service.internalPort`            | Webhook service internal port | `8443` |
+| `service.name`                    | Webhook service name | `secrets-webhook` |
+| `service.type`                    | Webhook service type | `ClusterIP` |
