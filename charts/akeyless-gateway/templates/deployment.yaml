@@ -1,4 +1,7 @@
 {{- include "akeyless-gateway.validateNoPlaintextSecrets" . }}
+{{- if and .Values.strictSecurityPolicy.enabled .Values.gatewayRootMode }}
+  {{- fail "ERROR: Cannot combine strictSecurityPolicy.enabled=true with gatewayRootMode=true. strictSecurityPolicy requires non-root execution, but gatewayRootMode enables root-mode paths. Please set gatewayRootMode=false when using strictSecurityPolicy." }}
+{{- end }}
 apiVersion: apps/v1
 kind: {{ include "deployment.type" $ }}
 metadata:
@@ -48,9 +51,9 @@ spec:
       securityContext:
         {{- if .Values.strictSecurityPolicy.enabled }}
         runAsNonRoot: true
-        runAsUser: {{ .Values.strictSecurityPolicy.uid }}
-        runAsGroup: {{ .Values.strictSecurityPolicy.gid }}
-        fsGroup: {{ .Values.strictSecurityPolicy.fsGroup }}
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
         seccompProfile:
           type: RuntimeDefault
         {{- else }}
@@ -129,8 +132,8 @@ spec:
           securityContext:
             {{- if .Values.strictSecurityPolicy.enabled }}
             runAsNonRoot: true
-            runAsUser: {{ .Values.strictSecurityPolicy.uid }}
-            runAsGroup: {{ .Values.strictSecurityPolicy.gid }}
+            runAsUser: 1001
+            runAsGroup: 1001
             allowPrivilegeEscalation: false
             capabilities:
               drop:
@@ -202,16 +205,22 @@ spec:
           {{- end}}
           resources:
           {{- if .Values.strictSecurityPolicy.enabled }}
-          {{- if or (empty .Values.gateway.resources) (and (not .Values.gateway.resources.requests) (not .Values.gateway.resources.limits)) }}
+            {{- if or (not .Values.gateway.resources) (not .Values.gateway.resources.requests) }}
             requests:
               cpu: {{ .Values.strictSecurityPolicy.resources.requests.cpu | quote }}
               memory: {{ .Values.strictSecurityPolicy.resources.requests.memory | quote }}
+            {{- else }}
+            requests:
+              {{- toYaml .Values.gateway.resources.requests | nindent 14 }}
+            {{- end }}
+            {{- if or (not .Values.gateway.resources) (not .Values.gateway.resources.limits) }}
             limits:
               cpu: {{ .Values.strictSecurityPolicy.resources.limits.cpu | quote }}
               memory: {{ .Values.strictSecurityPolicy.resources.limits.memory | quote }}
-          {{- else }}
-            {{- toYaml .Values.gateway.resources | nindent 12 }}
-          {{- end }}
+            {{- else }}
+            limits:
+              {{- toYaml .Values.gateway.resources.limits | nindent 14 }}
+            {{- end }}
           {{- else }}
           {{- toYaml .Values.gateway.resources | nindent 12 }}
           {{- end }}

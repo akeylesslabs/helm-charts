@@ -19,10 +19,6 @@ spec:
       targetPort: ssh
       protocol: TCP
       name: ssh
-    - port: 8000
-      targetPort: gateway
-      protocol: TCP
-      name: gateway
   selector:
     {{- include "akeyless-gateway-sra-ssh-service.selectorLabels" . | nindent 4 }}
 ---

@@ -1,0 +1,36 @@
+{{- if eq .Values.sra.enabled true }}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Akeyless Gateway + Secure Remote Access (SRA)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SRA Bastion Image Requirements:
+  Minimum required version: 3.1.0
+  Current deployed tag:      {{ .Values.sra.image.tag | default "latest" }}
+
+{{- if .Values.strictSecurityPolicy.enabled }}
+  ⚠️  strictSecurityPolicy is enabled. Ensure your bastion image is >= 3.1.0.
+      Earlier versions will fail to run as UID 1001.
+{{- end }}
+
+For more information:
+  • SRA Quick Start: https://docs.akeyless.io/docs/remote-access-quick-start-guide
+  • Setup SRA on K8s: https://docs.akeyless.io/docs/remote-access-setup-k8s
+  • Strict Security Policy: see STRICT_SECURITY_POLICY.md in this chart
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{{- else }}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Akeyless Gateway Deployed
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+{{- if .Values.strictSecurityPolicy.enabled }}
+  ℹ️  strictSecurityPolicy is enabled. Gateway runs as UID 1001 with
+      PSA restricted-compatible hardening.
+      See STRICT_SECURITY_POLICY.md for details.
+{{- end }}
+
+For more information:
+  • Gateway Documentation: https://docs.akeyless.io/docs/gateway-overview
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{{- end }}

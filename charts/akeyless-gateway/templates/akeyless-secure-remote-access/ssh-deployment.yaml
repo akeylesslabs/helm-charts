@@ -130,18 +130,24 @@ spec:
             {{- end }}
           resources:
           {{- if .Values.strictSecurityPolicy.enabled }}
-          {{- if or (empty .Values.sra.sshConfig.resources) (and (not .Values.sra.sshConfig.resources.requests) (not .Values.sra.sshConfig.resources.limits)) }}
+            {{- if or (not .Values.sra.sshConfig.resources) (not .Values.sra.sshConfig.resources.requests) }}
             requests:
               cpu: {{ .Values.strictSecurityPolicy.resources.requests.cpu | quote }}
               memory: {{ .Values.strictSecurityPolicy.resources.requests.memory | quote }}
+            {{- else }}
+            requests:
+              {{- toYaml .Values.sra.sshConfig.resources.requests | nindent 14 }}
+            {{- end }}
+            {{- if or (not .Values.sra.sshConfig.resources) (not .Values.sra.sshConfig.resources.limits) }}
             limits:
               cpu: {{ .Values.strictSecurityPolicy.resources.limits.cpu | quote }}
               memory: {{ .Values.strictSecurityPolicy.resources.limits.memory | quote }}
+            {{- else }}
+            limits:
+              {{- toYaml .Values.sra.sshConfig.resources.limits | nindent 14 }}
+            {{- end }}
           {{- else }}
             {{- toYaml .Values.sra.sshConfig.resources | nindent 12 }}
-          {{- end }}
-          {{- else }}
-          {{- toYaml .Values.sra.sshConfig.resources | nindent 12 }}
           {{- end }}
           livenessProbe:
             httpGet:

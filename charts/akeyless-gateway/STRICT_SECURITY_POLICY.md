@@ -31,9 +31,7 @@ Override defaults if needed:
 ```yaml
 strictSecurityPolicy:
   enabled: true
-  uid: 1001        # numeric UID (default: 1001)
-  gid: 1001        # numeric GID (default: 1001)
-  fsGroup: 1001    # volume ownership GID (default: 1001)
+  # UID/GID/fsGroup are hardcoded to 1001 in templates (not overridable)
   resources:
     requests:
       cpu: "2"
@@ -172,7 +170,7 @@ globalConfig:
 
 You'll get:
 
-```
+```text
 Error: strictSecurityPolicy.enabled: detected potential secret 'MY_PASSWORD' in globalConfig.env. Use secretKeyRef or existingSecret instead
 ```
 

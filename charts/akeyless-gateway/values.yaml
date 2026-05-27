@@ -3,15 +3,12 @@
 ############
 
 ## Strict Security Policy Toggle (Kyverno/PSA compliance)
-## When enabled, enforces non-root execution, capability drops, resource limits,
-## and hardening on Gateway, Cache, and SRA Web. SRA SSH uses Phase A (root + narrow caps).
-## See: STRICT_SECURITY_POLICY.md in this chart directory.
+## When enabled, enforces non-root execution (UID/GID/fsGroup hardcoded to 1001),
+## capability drops, resource limits, and hardening on Gateway, Cache, and SRA Web.
+## SRA SSH uses Phase A (root + narrow caps). See: STRICT_SECURITY_POLICY.md in this chart directory.
 ##
 strictSecurityPolicy:
   enabled: false
-  uid: 1001
-  gid: 1001
-  fsGroup: 1001
   # Default resource limits when strict mode is enabled
   resources:
     requests:

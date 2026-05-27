@@ -136,7 +136,16 @@ Generate chart secret name
 
 {{/* Define REDIS_MAXMEMORY as 80% of the pod's memory limit */}}
 {{- define "akeyless-gateway.redisMaxmemory" -}}
-{{- $memoryLimit := .Values.globalConfig.clusterCache.resources.limits.memory | toString -}}
+{{- $memoryLimit := "" -}}
+{{- if .Values.strictSecurityPolicy.enabled -}}
+  {{- if and .Values.globalConfig.clusterCache.resources .Values.globalConfig.clusterCache.resources.limits .Values.globalConfig.clusterCache.resources.limits.memory -}}
+    {{- $memoryLimit = .Values.globalConfig.clusterCache.resources.limits.memory | toString -}}
+  {{- else -}}
+    {{- $memoryLimit = .Values.strictSecurityPolicy.resources.limits.memory | toString -}}
+  {{- end -}}
+{{- else -}}
+  {{- $memoryLimit = .Values.globalConfig.clusterCache.resources.limits.memory | toString -}}
+{{- end -}}
 {{- $memoryLimitBytes := 0 -}}
 {{- if regexMatch "^[0-9]+$" $memoryLimit -}}
   {{- $memoryLimitBytes = $memoryLimit | mulf 1 -}} {{/* Direct byte value */}}
@@ -591,9 +600,9 @@ Usage: {{ include "akeyless-gateway.strictPodSecurityContext" . }}
 {{- if .Values.strictSecurityPolicy.enabled }}
 securityContext:
   runAsNonRoot: true
-  runAsUser: {{ .Values.strictSecurityPolicy.uid }}
-  runAsGroup: {{ .Values.strictSecurityPolicy.gid }}
-  fsGroup: {{ .Values.strictSecurityPolicy.fsGroup }}
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
   seccompProfile:
     type: RuntimeDefault
 {{- end -}}
@@ -608,8 +617,8 @@ Usage: {{ include "akeyless-gateway.strictContainerSecurityContext" . }}
 {{- if .Values.strictSecurityPolicy.enabled }}
 securityContext:
   runAsNonRoot: true
-  runAsUser: {{ .Values.strictSecurityPolicy.uid }}
-  runAsGroup: {{ .Values.strictSecurityPolicy.gid }}
+  runAsUser: 1001
+  runAsGroup: 1001
   allowPrivilegeEscalation: false
   capabilities:
     drop:
@@ -650,6 +659,8 @@ Usage: {{ include "akeyless-gateway.sshBastionPhaseACaps" . }}
 */}}
 {{- define "akeyless-gateway.sshBastionPhaseACaps" -}}
 capabilities:
+  drop:
+    - ALL
   add:
     - SYS_ADMIN      # Required for mount --bind /dev/pts
     - MKNOD          # Required for mknod device nodes in jail
@@ -666,9 +677,9 @@ SRA Web — always rootless (UID 1001). Bastion image default USER; not gated on
 {{- define "akeyless-sra-web.podSecurityContext" -}}
 securityContext:
   runAsNonRoot: true
-  runAsUser: {{ .Values.strictSecurityPolicy.uid }}
-  runAsGroup: {{ .Values.strictSecurityPolicy.gid }}
-  fsGroup: {{ .Values.strictSecurityPolicy.fsGroup }}
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
   seccompProfile:
     type: RuntimeDefault
 {{- end -}}
@@ -676,8 +687,8 @@ securityContext:
 {{- define "akeyless-sra-web.containerSecurityContext" -}}
 securityContext:
   runAsNonRoot: true
-  runAsUser: {{ .Values.strictSecurityPolicy.uid }}
-  runAsGroup: {{ .Values.strictSecurityPolicy.gid }}
+  runAsUser: 1001
+  runAsGroup: 1001
   allowPrivilegeEscalation: false
   capabilities:
     drop:

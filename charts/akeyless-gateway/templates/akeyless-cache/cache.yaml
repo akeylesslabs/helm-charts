@@ -160,16 +160,22 @@ spec:
             periodSeconds: 5
           resources:
           {{- if .Values.strictSecurityPolicy.enabled }}
-          {{- if or (empty .Values.globalConfig.clusterCache.resources) (and (not .Values.globalConfig.clusterCache.resources.requests) (not .Values.globalConfig.clusterCache.resources.limits)) }}
+            {{- if or (not .Values.globalConfig.clusterCache.resources) (not .Values.globalConfig.clusterCache.resources.requests) }}
             requests:
               cpu: {{ .Values.strictSecurityPolicy.resources.requests.cpu | quote }}
               memory: {{ .Values.strictSecurityPolicy.resources.requests.memory | quote }}
+            {{- else }}
+            requests:
+              {{- toYaml .Values.globalConfig.clusterCache.resources.requests | nindent 14 }}
+            {{- end }}
+            {{- if or (not .Values.globalConfig.clusterCache.resources) (not .Values.globalConfig.clusterCache.resources.limits) }}
             limits:
               cpu: {{ .Values.strictSecurityPolicy.resources.limits.cpu | quote }}
               memory: {{ .Values.strictSecurityPolicy.resources.limits.memory | quote }}
-          {{- else }}
-            {{- toYaml .Values.globalConfig.clusterCache.resources | nindent 12 }}
-          {{- end }}
+            {{- else }}
+            limits:
+              {{- toYaml .Values.globalConfig.clusterCache.resources.limits | nindent 14 }}
+            {{- end }}
           {{- else }}
           {{- toYaml .Values.globalConfig.clusterCache.resources | nindent 12 }}
           {{- end }}
@@ -181,7 +187,7 @@ spec:
                   key: cache-pass
           {{- if or .Values.globalConfig.clusterCache.persistence.enabled (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) .Values.globalConfig.clusterCache.extraVolumesMounts }}
           volumeMounts:
-            {{- if or .Values.globalConfig.clusterCache.persistence.enabled .Values.strictSecurityPolicy.enabled }}
+            {{- if .Values.globalConfig.clusterCache.persistence.enabled }}
             - name: cache-data
               mountPath: /data
             {{- end }}
@@ -198,9 +204,6 @@ spec:
         - name: cache-data
           persistentVolumeClaim:
             claimName: {{ .Values.globalConfig.clusterCache.persistence.existingClaim | default (include "akeyless-gateway.clusterCache.pvcName" .) }}
-        {{- else if .Values.strictSecurityPolicy.enabled }}
-        - name: cache-data
-          emptyDir: {}
         {{- end }}
         {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
         {{- include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 6 }}

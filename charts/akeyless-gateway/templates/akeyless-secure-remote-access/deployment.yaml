@@ -129,16 +129,22 @@ spec:
             {{- end }}
           resources:
           {{- if .Values.strictSecurityPolicy.enabled }}
-          {{- if or (empty .Values.sra.webConfig.resources) (and (not .Values.sra.webConfig.resources.requests) (not .Values.sra.webConfig.resources.limits)) }}
+            {{- if or (not .Values.sra.webConfig.resources) (not .Values.sra.webConfig.resources.requests) }}
             requests:
               cpu: {{ .Values.strictSecurityPolicy.resources.requests.cpu | quote }}
               memory: {{ .Values.strictSecurityPolicy.resources.requests.memory | quote }}
+            {{- else }}
+            requests:
+              {{- toYaml .Values.sra.webConfig.resources.requests | nindent 14 }}
+            {{- end }}
+            {{- if or (not .Values.sra.webConfig.resources) (not .Values.sra.webConfig.resources.limits) }}
             limits:
               cpu: {{ .Values.strictSecurityPolicy.resources.limits.cpu | quote }}
               memory: {{ .Values.strictSecurityPolicy.resources.limits.memory | quote }}
-          {{- else }}
-            {{- toYaml .Values.sra.webConfig.resources | nindent 12 }}
-          {{- end }}
+            {{- else }}
+            limits:
+              {{- toYaml .Values.sra.webConfig.resources.limits | nindent 14 }}
+            {{- end }}
           {{- else }}
             {{- toYaml .Values.sra.webConfig.resources | nindent 12 }}
           {{- end }}
