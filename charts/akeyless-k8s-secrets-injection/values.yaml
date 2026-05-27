@@ -25,9 +25,56 @@ deployment:
 
 replicaCount: 2
 openshiftEnabled: false
-# Configure the policy below to Fail so that injected pod creation is blocked whenever the webhook is unreachable.
+
+# Additional MutatingWebhook fields to render on the webhook created by this chart.
+# Useful for fields from admissionregistration.k8s.io/v1 MutatingWebhook such as failurePolicy,
+# timeoutSeconds, namespaceSelector, objectSelector, matchPolicy, reinvocationPolicy, and matchConditions:
+# https://kubernetes.io/docs/reference/kubernetes-api/admissionregistration/mutating-webhook-configuration-v1/#MutatingWebhook
+#
+# Configure failurePolicy to Fail so injected pod creation is blocked whenever the webhook is unreachable.
 # See https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#failure-policy
-webhookFailurePolicy: Ignore
+#
+# The chart owns name, clientConfig, rules, admissionReviewVersions, and sideEffects to preserve
+# existing behavior and avoid duplicate YAML keys.
+# namespaceSelector, objectSelector, and matchConditions are rendered with tpl, so they can use
+# release context such as {{ $.Release.Namespace }} and {{ $.Release.Name }}.
+#
+# The default namespaceSelector and objectSelector intentionally exclude this chart's release
+# namespace and release-labeled objects. This prevents the injector from trying to mutate its own
+# webhook pods/resources during install or upgrade, which can block the webhook from becoming ready
+# and may cause pod creation failures. Override these selectors carefully.
+#
+# Examples:
+# mutatingWebhook:
+#   timeoutSeconds: 5
+#   failurePolicy: Fail
+#   namespaceSelector:
+#     matchExpressions: [] # Matches all namespaces; make sure you still exclude the injector namespace if needed.
+#   objectSelector:
+#     matchExpressions: [] # Matches all objects; make sure you still exclude the injector release if needed.
+#   matchPolicy: Equivalent
+#   reinvocationPolicy: IfNeeded
+#   matchConditions:
+#     - name: skip-leases
+#       expression: '!(request.resource.group == "coordination.k8s.io" && request.resource.resource == "leases")'
+mutatingWebhook:
+  failurePolicy: Ignore
+  namespaceSelector:
+    matchExpressions:
+    - key: kubernetes.io/metadata.name
+      operator: NotIn
+      values:
+      - kube-node-lease
+      - kube-system
+      - "{{ $.Release.Namespace }}"
+  objectSelector:
+    matchExpressions:
+    - key: release
+      operator: NotIn
+      values:
+      - "{{ $.Release.Name }}"
+  timeoutSeconds: 10
+  matchConditions: []
 debug: false
 
 gatewayCert:

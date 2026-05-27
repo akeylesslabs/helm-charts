@@ -1,19 +1,20 @@
 {{ $ca := genCA "webhook-ca" 3650 }}
-{{ $svcName := include "vault-secrets-webhook.fullname" . }}
-{{ $cn := printf "%s.%s.svc" $svcName .Release.Namespace }}
+{{ $fullName := include "vault-secrets-webhook.fullname" . }}
+{{ $cn := printf "%s.%s.svc" $fullName .Release.Namespace }}
 {{ $cert := genSignedCert $cn nil (list $cn "") 365 $ca }}
+{{ $mutatingWebhook := .Values.mutatingWebhook | default dict }}
 
 apiVersion: v1
 kind: List
 metadata:
-  name: {{ template "vault-secrets-webhook.fullname" . }}-webhook
+  name: {{ $fullName }}-webhook
 items:
 
 - apiVersion: v1
   kind: Secret
   metadata:
-    name: {{ template "vault-secrets-webhook.fullname" . }}
-    namespace: {{ .Release.Namespace | quote }}
+    name: {{ $fullName }}
+    namespace: {{ .Release.Namespace }}
   data:
     tls.crt: {{ b64enc $cert.Cert }}
     tls.key: {{ b64enc $cert.Key }}
@@ -22,13 +23,13 @@ items:
 - apiVersion: admissionregistration.k8s.io/v1
   kind: MutatingWebhookConfiguration
   metadata:
-    name: {{ template "vault-secrets-webhook.fullname" . }}
+    name: {{ $fullName }}
   webhooks:
-  - name: pods.{{ template "vault-secrets-webhook.fullname" . }}.admission
+  - name: pods.{{ $fullName }}.admission
     clientConfig:
       service:
         namespace: {{ .Release.Namespace }}
-        name: {{ template "vault-secrets-webhook.fullname" . }}
+        name: {{ $fullName }}
         path: /pods
       caBundle: {{ b64enc $ca.Cert }}
     rules:
@@ -40,18 +41,18 @@ items:
       - "*"
       resources:
       - pods
-    failurePolicy: {{.Values.webhookFailurePolicy}}
     namespaceSelector:
-      matchExpressions:
-      - key: name
-        operator: NotIn
-        values:
-        - {{ .Release.Namespace }}
+      {{- $namespaceSelector := dig "namespaceSelector" dict $mutatingWebhook }}
+      {{- tpl (toYaml $namespaceSelector) . | nindent 6 }}
     objectSelector:
-      matchExpressions:
-      - key: release
-        operator: NotIn
-        values:
-        - {{ .Release.Name }}
-    admissionReviewVersions: ["v1beta1"]
+      {{- $objectSelector := dig "objectSelector" dict $mutatingWebhook }}
+      {{- tpl (toYaml $objectSelector) . | nindent 6 }}
+    admissionReviewVersions: ["v1", "v1beta1"]
     sideEffects: None #Unknown
+  {{- with dig "matchConditions" list $mutatingWebhook }}
+    matchConditions:
+      {{- tpl (toYaml .) $ | nindent 6 }}
+  {{- end }}
+{{- with omit $mutatingWebhook "name" "clientConfig" "rules" "namespaceSelector" "objectSelector" "matchConditions" "admissionReviewVersions" "sideEffects" }}
+    {{- toYaml . | nindent 4 }}
+{{- end }}
