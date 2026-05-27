@@ -39,14 +39,19 @@ openshiftEnabled: false
 # namespaceSelector, objectSelector, and matchConditions are rendered with tpl, so they can use
 # release context such as {{ $.Release.Namespace }} and {{ $.Release.Name }}.
 #
+# The default namespaceSelector and objectSelector intentionally exclude this chart's release
+# namespace and release-labeled objects. This prevents the injector from trying to mutate its own
+# webhook pods/resources during install or upgrade, which can block the webhook from becoming ready
+# and may cause pod creation failures. Override these selectors carefully.
+#
 # Examples:
 # mutatingWebhook:
 #   timeoutSeconds: 5
 #   failurePolicy: Fail
 #   namespaceSelector:
-#     matchExpressions: []
+#     matchExpressions: [] # Matches all namespaces; make sure you still exclude the injector namespace if needed.
 #   objectSelector:
-#     matchExpressions: []
+#     matchExpressions: [] # Matches all objects; make sure you still exclude the injector release if needed.
 #   matchPolicy: Equivalent
 #   reinvocationPolicy: IfNeeded
 #   matchConditions:
