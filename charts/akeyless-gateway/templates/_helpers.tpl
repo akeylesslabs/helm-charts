@@ -719,13 +719,14 @@ Usage: {{ include "akeyless-gateway.validateNoPlaintextSecrets" . }}
 {{- define "akeyless-gateway.validateNoPlaintextSecrets" -}}
 {{- if .Values.strictSecurityPolicy.enabled }}
   {{- $sensitivePattern := "(?i)(token|key|password|secret|credential)" -}}
+  {{- $allowPlaintextEnvNames := list "AKEYLESS_URL" -}}
   {{- range .Values.globalConfig.env }}
-    {{- if and (regexMatch $sensitivePattern .name) (not .valueFrom) }}
+    {{- if and (regexMatch $sensitivePattern .name) (not .valueFrom) (not (has .name $allowPlaintextEnvNames)) }}
       {{- fail (printf "strictSecurityPolicy.enabled: detected potential secret '%s' in globalConfig.env. Use secretKeyRef or existingSecret instead" .name) }}
     {{- end }}
   {{- end }}
   {{- range .Values.sra.env }}
-    {{- if and (regexMatch $sensitivePattern .name) (not .valueFrom) }}
+    {{- if and (regexMatch $sensitivePattern .name) (not .valueFrom) (not (has .name $allowPlaintextEnvNames)) }}
       {{- fail (printf "strictSecurityPolicy.enabled: detected potential secret '%s' in sra.env. Use secretKeyRef or existingSecret instead" .name) }}
     {{- end }}
   {{- end }}
