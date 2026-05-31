@@ -663,6 +663,7 @@ capabilities:
     - ALL
   add:
     - SYS_CHROOT     # sshd privilege separation: chroot("/run/sshd") [preauth]
+    - AUDIT_WRITE    # sshd session: linux_audit_write_entry after pubkey auth
     - SYS_ADMIN      # Required for mount --bind /dev/pts
     - MKNOD          # Required for mknod device nodes in jail
     - DAC_OVERRIDE   # Required for adduser/deluser/jail permissions
