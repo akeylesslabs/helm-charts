@@ -662,6 +662,7 @@ capabilities:
   drop:
     - ALL
   add:
+    - SYS_CHROOT     # sshd privilege separation: chroot("/run/sshd") [preauth]
     - SYS_ADMIN      # Required for mount --bind /dev/pts
     - MKNOD          # Required for mknod device nodes in jail
     - DAC_OVERRIDE   # Required for adduser/deluser/jail permissions
