@@ -1,0 +1,164 @@
+# Sample rendered manifest snippet showing strictSecurityPolicy applied
+# Gateway Deployment excerpt
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: unified-test-release-akeyless-gateway
+  namespace: default
+spec:
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: akeyless-gateway
+        image: "akeyless/gateway:latest"
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1001
+          runAsGroup: 1001
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          readOnlyRootFilesystem: false
+        resources:
+          requests:
+            cpu: "1"
+            memory: "2G"
+          limits:
+            cpu: "2"
+            memory: "4G"
+---
+# Cache Deployment excerpt
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-release-akeyless-gateway-cache
+  namespace: default
+spec:
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: test-release-akeyless-gateway-cache
+        image: "public.ecr.aws/docker/library/redis:8.2.5-alpine"
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1001
+          runAsGroup: 1001
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          readOnlyRootFilesystem: false
+        resources:
+          requests:
+            cpu: "1"
+            memory: "2G"
+          limits:
+            cpu: "2"
+            memory: "4G"
+---
+# SRA Web Deployment excerpt
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-test-release-akeyless-gateway
+  namespace: default
+spec:
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: gateway-sra-web
+        image: "akeyless/zero-trust-bastion:latest"
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1001
+          runAsGroup: 1001
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          readOnlyRootFilesystem: false
+        resources:
+          requests:
+            cpu: "1"
+            memory: "2G"
+          limits:
+            cpu: "2"
+            memory: "4G"
+---
+# SRA SSH Deployment excerpt - Phase A hardening
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ssh-test-release-akeyless-gateway
+  namespace: default
+spec:
+  template:
+    spec:
+      containers:
+      - name: gateway-sra-ssh
+        image: "akeyless/zero-trust-bastion:latest"
+        securityContext:
+          # Phase A: narrow capabilities (no privileged)
+          allowPrivilegeEscalation: true  # Required for mount --bind
+          capabilities:
+            add:
+              - SYS_ADMIN      # Required for mount --bind /dev/pts
+              - MKNOD          # Required for mknod device nodes in jail
+              - DAC_OVERRIDE   # Required for adduser/deluser/jail permissions
+              - CHOWN          # Required by adduser + chroot setup
+              - SETUID         # Required by adduser + chroot setup
+              - SETGID         # Required by adduser + chroot setup
+              - FOWNER         # Required by adduser + chroot setup
+        resources:
+          requests:
+            cpu: "1"
+            memory: "2G"
+          limits:
+            cpu: "2"
+            memory: "4G"
+---
+# Kyverno PolicyException for SSH Phase A
+# SSH bastion still runs as root (UID 0) with elevated capabilities for
+# per-session chroot/mount operations. Phase B (separate epic) will refactor to non-root.
+apiVersion: kyverno.io/v2
+kind: PolicyException
+metadata:
+  name: ssh-bastion-phase-a-exception
+  namespace: default
+spec:
+  exceptions:
+  - policyName: restrict-pod-security-standard
+    ruleNames:
+    - restricted
+  match:
+    any:
+    - resources:
+        kinds:
+        - Deployment
+        namespaces:
+        - default
+        names:
+        - ssh-*
+

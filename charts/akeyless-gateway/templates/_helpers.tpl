@@ -87,9 +87,6 @@ Gateway container image (repository:tag).
 {{- $tag := .Values.version | default .Values.gateway.deployment.image.tag | default .Chart.Annotations.gatewayVersion | default "latest" -}}
 {{- if .Values.gateway.deployment.image.repository -}}
 {{- $repository = .Values.gateway.deployment.image.repository -}}
-{{- else if .Values.gatewayRootMode -}}
-{{- $repository = "akeyless/base" -}}
-{{- $tag = .Values.gateway.deployment.image.tag | default "latest" -}}
 {{- end -}}
 {{- printf "%s:%s" $repository $tag -}}
 {{- end -}}
@@ -139,7 +136,16 @@ Generate chart secret name
 
 {{/* Define REDIS_MAXMEMORY as 80% of the pod's memory limit */}}
 {{- define "akeyless-gateway.redisMaxmemory" -}}
-{{- $memoryLimit := .Values.globalConfig.clusterCache.resources.limits.memory | toString -}}
+{{- $memoryLimit := "" -}}
+{{- if .Values.strictSecurityPolicy.enabled -}}
+  {{- if and .Values.globalConfig.clusterCache.resources .Values.globalConfig.clusterCache.resources.limits .Values.globalConfig.clusterCache.resources.limits.memory -}}
+    {{- $memoryLimit = .Values.globalConfig.clusterCache.resources.limits.memory | toString -}}
+  {{- else -}}
+    {{- $memoryLimit = .Values.strictSecurityPolicy.resources.limits.memory | toString -}}
+  {{- end -}}
+{{- else -}}
+  {{- $memoryLimit = .Values.globalConfig.clusterCache.resources.limits.memory | toString -}}
+{{- end -}}
 {{- $memoryLimitBytes := 0 -}}
 {{- if regexMatch "^[0-9]+$" $memoryLimit -}}
   {{- $memoryLimitBytes = $memoryLimit | mulf 1 -}} {{/* Direct byte value */}}
@@ -583,4 +589,147 @@ web
 {{- else -}}
 ssh
 {{- end -}}
+{{- end -}}
+
+{{/*
+Strict Security Policy - Pod-level securityContext
+Renders pod-level securityContext when strictSecurityPolicy.enabled is true
+Usage: {{ include "akeyless-gateway.strictPodSecurityContext" . }}
+*/}}
+{{- define "akeyless-gateway.strictPodSecurityContext" -}}
+{{- if .Values.strictSecurityPolicy.enabled }}
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
+  seccompProfile:
+    type: RuntimeDefault
+{{- end -}}
+{{- end -}}
+
+{{/*
+Strict Security Policy - Container-level securityContext
+Renders container-level securityContext when strictSecurityPolicy.enabled is true
+Usage: {{ include "akeyless-gateway.strictContainerSecurityContext" . }}
+*/}}
+{{- define "akeyless-gateway.strictContainerSecurityContext" -}}
+{{- if .Values.strictSecurityPolicy.enabled }}
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+{{- end -}}
+{{- end -}}
+
+{{/*
+Strict Security Policy - Resource limits
+Renders resource requests/limits when strictSecurityPolicy.enabled is true
+Falls back to provided resources if they exist
+Usage: {{ include "akeyless-gateway.strictResources" (dict "resources" .Values.gateway.resources "context" .) }}
+*/}}
+{{- define "akeyless-gateway.strictResources" -}}
+{{- $resources := .resources -}}
+{{- $context := .context -}}
+{{- if $context.Values.strictSecurityPolicy.enabled }}
+{{- if or (empty $resources) (and (not $resources.requests) (not $resources.limits)) }}
+requests:
+  cpu: {{ $context.Values.strictSecurityPolicy.resources.requests.cpu | quote }}
+  memory: {{ $context.Values.strictSecurityPolicy.resources.requests.memory | quote }}
+limits:
+  cpu: {{ $context.Values.strictSecurityPolicy.resources.limits.cpu | quote }}
+  memory: {{ $context.Values.strictSecurityPolicy.resources.limits.memory | quote }}
+{{- else }}
+{{- toYaml $resources }}
+{{- end }}
+{{- else }}
+{{- toYaml $resources }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+SSH Bastion Phase A - Narrow capability set
+For SRA SSH only - minimum caps needed for mount/mknod/adduser operations
+Usage: {{ include "akeyless-gateway.sshBastionPhaseACaps" . }}
+*/}}
+{{- define "akeyless-gateway.sshBastionPhaseACaps" -}}
+capabilities:
+  drop:
+    - ALL
+  add:
+    - SYS_CHROOT     # sshd privilege separation: chroot("/run/sshd") [preauth]
+    - AUDIT_WRITE    # sshd session: linux_audit_write_entry after pubkey auth
+    - SYS_ADMIN      # Required for mount --bind /dev/pts
+    - MKNOD          # Required for mknod device nodes in jail
+    - DAC_OVERRIDE   # Required for adduser/deluser/jail permissions
+    - CHOWN          # Required by adduser + chroot setup
+    - SETUID         # Required by adduser + chroot setup
+    - SETGID         # Required by adduser + chroot setup
+    - FOWNER         # Required by adduser + chroot setup
+{{- end -}}
+
+{{/*
+SRA Web — always rootless (UID 1001). Bastion image default USER; not gated on strictSecurityPolicy.
+*/}}
+{{- define "akeyless-sra-web.podSecurityContext" -}}
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
+  seccompProfile:
+    type: RuntimeDefault
+{{- end -}}
+
+{{- define "akeyless-sra-web.containerSecurityContext" -}}
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+{{- end -}}
+
+{{/*
+SRA SSH — Phase A only (root + narrow caps). Non-root SSH deferred to a follow-up epic.
+*/}}
+{{- define "akeyless-sra-ssh.podSecurityContext" -}}
+securityContext:
+  runAsUser: 0
+  runAsGroup: 0
+{{- end -}}
+
+{{- define "akeyless-sra-ssh.containerSecurityContext" -}}
+securityContext:
+  allowPrivilegeEscalation: true
+  {{- include "akeyless-gateway.sshBastionPhaseACaps" . | nindent 2 }}
+{{- end -}}
+
+{{/*
+Validate no plaintext secrets in env when strict security policy is enabled
+Usage: {{ include "akeyless-gateway.validateNoPlaintextSecrets" . }}
+*/}}
+{{- define "akeyless-gateway.validateNoPlaintextSecrets" -}}
+{{- if .Values.strictSecurityPolicy.enabled }}
+  {{- $sensitivePattern := "(?i)(token|key|password|secret|credential)" -}}
+  {{- $allowPlaintextEnvNames := list "AKEYLESS_URL" -}}
+  {{- range .Values.globalConfig.env }}
+    {{- if and (regexMatch $sensitivePattern .name) (not .valueFrom) (not (has .name $allowPlaintextEnvNames)) }}
+      {{- fail (printf "strictSecurityPolicy.enabled: detected potential secret '%s' in globalConfig.env. Use secretKeyRef or existingSecret instead" .name) }}
+    {{- end }}
+  {{- end }}
+  {{- range .Values.sra.env }}
+    {{- if and (regexMatch $sensitivePattern .name) (not .valueFrom) (not (has .name $allowPlaintextEnvNames)) }}
+      {{- fail (printf "strictSecurityPolicy.enabled: detected potential secret '%s' in sra.env. Use secretKeyRef or existingSecret instead" .name) }}
+    {{- end }}
+  {{- end }}
+{{- end }}
 {{- end -}}

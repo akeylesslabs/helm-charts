@@ -35,6 +35,31 @@ To install the chart run the following:
 helm install gateway akeyless/akeyless-gateway
 ```
 
+## Strict Security Policy (Kyverno/PSA Compliance)
+
+For environments requiring Kyverno or Pod Security Admission (PSA) `restricted` profile compliance, enable the `strictSecurityPolicy` toggle:
+
+```bash
+helm install gateway akeyless/akeyless-gateway \
+  --set strictSecurityPolicy.enabled=true \
+  --set globalConfig.gatewayAuth.gatewayAccessId=<your-access-id> \
+  --set globalConfig.gatewayAuth.gatewayAccessType=access_key \
+  --set globalConfig.gatewayAuth.gatewayCredentialsExistingSecret=<your-secret>
+```
+
+This enforces:
+- **Non-root execution** (`runAsUser: 1001`, `runAsNonRoot: true`)
+- **Capability drops** (`drop: [ALL]`)
+- **No privilege escalation** (`allowPrivilegeEscalation: false`)
+- **Explicit resource limits** (CPU/memory)
+- **Seccomp profile** (`RuntimeDefault`)
+
+**Applies to:** Gateway, Cache, SRA Web Bastion
+
+**SRA SSH Bastion:** Phase A interim hardening (narrow capabilities, documented Kyverno exception). See [STRICT_SECURITY_POLICY.md](./STRICT_SECURITY_POLICY.md) for full details, SSH exception requirements, and Phase B roadmap.
+
+For comprehensive documentation, troubleshooting, and validation steps, see **[STRICT_SECURITY_POLICY.md](./STRICT_SECURITY_POLICY.md)**.
+
 ## Argo CD Instructions
 When deploying the Akeyless Gateway with Argo CD, follow these instructions:
 ```yaml
