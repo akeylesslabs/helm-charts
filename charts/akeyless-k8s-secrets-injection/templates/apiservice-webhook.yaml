@@ -47,7 +47,7 @@ items:
     objectSelector:
       {{- $objectSelector := dig "objectSelector" dict $mutatingWebhook }}
       {{- tpl (toYaml $objectSelector) . | nindent 6 }}
-    admissionReviewVersions: ["v1", "v1beta1"]
+    admissionReviewVersions: ["v1beta1"]
     sideEffects: None #Unknown
   {{- with dig "matchConditions" list $mutatingWebhook }}
     matchConditions:
