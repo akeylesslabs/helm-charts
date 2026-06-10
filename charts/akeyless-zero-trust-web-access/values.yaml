@@ -452,7 +452,8 @@ webWorker:
                 "<all_urls>"
               ],
               "Exceptions": [
-                "https://*.akeyless.io/*"
+                "https://*.akeyless.io/*",
+                "http://localhost:12411/*"
               ]
             },
             "Handlers": {
@@ -465,6 +466,14 @@ webWorker:
                     "uriTemplate": "https://www.akeyless.io/"
                   }]
                 }
+              }
+            },
+            "ExtensionSettings": {
+              "akeyless-sa@akeyless.io": {
+                "installation_mode": "force_installed",
+                "install_url": "file:///config/profile/extensions/akeyless-sa@akeyless.io.xpi",
+                "default_area": "navbar",
+                "updates_disabled": true
               }
             }
           }
