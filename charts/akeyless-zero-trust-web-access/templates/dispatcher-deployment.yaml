@@ -254,14 +254,20 @@ spec:
                   name: {{ $recSecretName | quote }}
                   key: {{ $recSecretAccessKeySecretKey | quote }}
 {{- end }}
+            {{- if $recEndpoint }}
             - name: RECORDING_S3_ENDPOINT
               value: {{ $recEndpoint | quote }}
+            {{- end }}
             - name: RECORDING_COMPRESS
               value: {{ ternary "true" "false" $recCompress | quote }}
+            {{- if $recSSEType }}
             - name: RECORDING_SSE_TYPE
               value: {{ $recSSEType | quote }}
+            {{- end }}
+            {{- if $recSSEKmsKey }}
             - name: RECORDING_SSE_KMS_KEY_ID
               value: {{ $recSSEKmsKey | quote }}
+            {{- end }}
             {{- if $recStatePath }}
             - name: RECORDING_UPLOADER_STATE_PATH
               value: {{ $recStatePath | quote }}
