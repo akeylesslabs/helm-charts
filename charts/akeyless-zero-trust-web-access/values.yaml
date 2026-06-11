@@ -434,6 +434,7 @@ webWorker:
             "DisablePrivateBrowsing": true,
             "DisableProfileImport": true,
             "DisableSafeMode": true,
+            "ExtensionUpdate": false,
             "OfferToSaveLogins": false,
             "OfferToSaveLoginsDefault": false,
             "PasswordManagerEnabled": false,
