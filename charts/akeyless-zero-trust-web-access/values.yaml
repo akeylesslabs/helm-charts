@@ -231,7 +231,7 @@ dispatcher:
 
   config:
     # a full URL of Akeyless API Gateway
-    apiGatewayURL: https://rest.akeyless.io
+    apiGatewayURL: https://api.akeyless.io
     apiGatewayCert:
   #  Specifies an existing secret for gateway tls certificate must include:
   # - tls.crt
@@ -434,6 +434,7 @@ webWorker:
             "DisablePrivateBrowsing": true,
             "DisableProfileImport": true,
             "DisableSafeMode": true,
+            "ExtensionUpdate": false,
             "OfferToSaveLogins": false,
             "OfferToSaveLoginsDefault": false,
             "PasswordManagerEnabled": false,
@@ -452,7 +453,8 @@ webWorker:
                 "<all_urls>"
               ],
               "Exceptions": [
-                "https://*.akeyless.io/*"
+                "https://*.akeyless.io/*",
+                "http://localhost:12411/*"
               ]
             },
             "Handlers": {
@@ -465,6 +467,14 @@ webWorker:
                     "uriTemplate": "https://www.akeyless.io/"
                   }]
                 }
+              }
+            },
+            "ExtensionSettings": {
+              "akeyless-sa@akeyless.io": {
+                "installation_mode": "force_installed",
+                "install_url": "file:///config/profile/extensions/akeyless-sa@akeyless.io.xpi",
+                "default_area": "navbar",
+                "updates_disabled": true
               }
             }
           }
