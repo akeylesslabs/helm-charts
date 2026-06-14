@@ -298,6 +298,7 @@ dispatcher:
     # existingLogForwardSecretName will hold the configuration for dispatcher log forward
     # The data structure in secret should be like so:
     ## logand.conf: | ## make sure to keep logand.conf as the key!
+    #    enable="true" ## REQUIRED - log forwarding is disabled (silently, no error) without this line!
     #    target_log_type="splunk"
     #    target_splunk_sourcetype=""
     #    target_splunk_source=""
@@ -309,6 +310,7 @@ dispatcher:
 #    # audit configuration for log forwarding, currently support several technologies: https://docs.akeyless.io/docs/ssh-log-forwarding
 #    #splunk example
 #    logForward: |
+#      enable="true" ## REQUIRED - log forwarding is disabled (silently, no error) without this line!
 #      target_log_type="splunk"
 #      target_splunk_sourcetype=""
 #      target_splunk_source=""
@@ -493,6 +495,7 @@ dlp:
 # existingLogForwardSecretName will hold the configuration for dlp log forward
 # The data structure in secret should be like so:
 #  logand.conf: | ## make sure to keep logand.conf as the key!
+#    enable="true" ## REQUIRED - log forwarding is disabled (silently, no error) without this line!
 #    target_log_type="splunk"
 #    target_splunk_sourcetype=""
 #    target_splunk_source=""
@@ -505,6 +508,7 @@ dlp:
 # audit configuration for log forwarding, currently support several technologies: https://docs.akeyless.io/docs/ssh-log-forwarding
 # splunk example
 #  audit: |
+#    enable="true" ## REQUIRED - log forwarding is disabled (silently, no error) without this line!
 #    target_log_type="splunk"
 #    target_splunk_sourcetype=""
 #    target_splunk_source=""
