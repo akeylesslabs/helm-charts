@@ -266,6 +266,10 @@ spec:
             - name: RECORDING_UPLOADER_STATE_PATH
               value: {{ $recStatePath | quote }}
             {{- end }}
+{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+            - name: AKEYLESS_CA_BUNDLE
+              value: "/etc/ssl/certs/gw-cert.pem"
+{{- end }}
 {{- if .Values.dispatcher.env }}
           {{- toYaml .Values.dispatcher.env | nindent 12 }}
 {{- end }}
