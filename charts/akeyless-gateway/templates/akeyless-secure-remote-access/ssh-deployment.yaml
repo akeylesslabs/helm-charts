@@ -86,6 +86,8 @@ spec:
           - containerPort: 9900
             name: curl-proxy
           env:
+            - name: SSH_PROXY_PORT
+              value: 2222
             {{- if .Values.cacheHA.enabled }}
             - name: REDIS_SENTINEL_ADDR
               value: {{ include "akeyless-gateway.clusterCache.sentinelAddress" . }}
