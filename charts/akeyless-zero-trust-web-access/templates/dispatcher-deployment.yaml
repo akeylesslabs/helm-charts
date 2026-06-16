@@ -254,18 +254,28 @@ spec:
                   name: {{ $recSecretName | quote }}
                   key: {{ $recSecretAccessKeySecretKey | quote }}
 {{- end }}
+            {{- if $recEndpoint }}
             - name: RECORDING_S3_ENDPOINT
               value: {{ $recEndpoint | quote }}
+            {{- end }}
             - name: RECORDING_COMPRESS
               value: {{ ternary "true" "false" $recCompress | quote }}
+            {{- if $recSSEType }}
             - name: RECORDING_SSE_TYPE
               value: {{ $recSSEType | quote }}
+            {{- end }}
+            {{- if $recSSEKmsKey }}
             - name: RECORDING_SSE_KMS_KEY_ID
               value: {{ $recSSEKmsKey | quote }}
+            {{- end }}
             {{- if $recStatePath }}
             - name: RECORDING_UPLOADER_STATE_PATH
               value: {{ $recStatePath | quote }}
             {{- end }}
+{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+            - name: AKEYLESS_CA_BUNDLE
+              value: "/etc/ssl/certs/gw-cert.pem"
+{{- end }}
 {{- if .Values.dispatcher.env }}
           {{- toYaml .Values.dispatcher.env | nindent 12 }}
 {{- end }}
