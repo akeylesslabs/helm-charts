@@ -185,31 +185,32 @@ spec:
                 secretKeyRef:
                   name: {{ include "akeyless-gateway.clusterCache.secretName" . }}
                   key: cache-pass
-          {{- if or .Values.globalConfig.clusterCache.persistence.enabled (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) .Values.globalConfig.clusterCache.extraVolumesMounts }}
           volumeMounts:
-            {{- if .Values.globalConfig.clusterCache.persistence.enabled }}
+            # /data must be a writable, fsGroup-owned volume so Redis can write its RDB
+            # snapshot. Under strictSecurityPolicy the cache runs rootless (uid 1001) and
+            # the image's /data dir (owned by the image's redis uid) is not writable; with no
+            # volume mounted here bgsave fails with "Permission denied" -> MISCONF/stop-writes
+            # -> liveness probe fails -> CrashLoop. An emptyDir gets chowned to fsGroup 1001.
             - name: cache-data
               mountPath: /data
-            {{- end }}
             {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
             {{- include "akeyless-gateway.clusterCache.tlsVolumeMounts" . | nindent 12 -}}
             {{- end }}
             {{- with .Values.globalConfig.clusterCache.extraVolumesMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- end }}
-      {{- if or .Values.globalConfig.clusterCache.persistence.enabled (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) .Values.globalConfig.clusterCache.extraVolumes }}
       volumes:
-        {{- if .Values.globalConfig.clusterCache.persistence.enabled }}
         - name: cache-data
+          {{- if .Values.globalConfig.clusterCache.persistence.enabled }}
           persistentVolumeClaim:
             claimName: {{ .Values.globalConfig.clusterCache.persistence.existingClaim | default (include "akeyless-gateway.clusterCache.pvcName" .) }}
-        {{- end }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
         {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
         {{- include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 6 }}
         {{- end }}
         {{- with .Values.globalConfig.clusterCache.extraVolumes }}
         {{- toYaml . | nindent 6 }}
         {{- end }}
-      {{- end }}
 {{- end }}
