@@ -81,13 +81,13 @@ spec:
           imagePullPolicy: {{ .Values.sra.image.pullPolicy }}
           {{- include "akeyless-sra-ssh.containerSecurityContext" . | nindent 10 }}
           ports:
-          - containerPort: 2222
+          - containerPort: {{ .Values.sra.sshConfig.proxyPort | default 2200 }}
             name: ssh
           - containerPort: 9900
             name: curl-proxy
           env:
             - name: SSH_PROXY_PORT
-              value: "2222"
+              value: {{ .Values.sra.sshConfig.proxyPort | default 2200 | quote }}
             {{- if .Values.cacheHA.enabled }}
             - name: REDIS_SENTINEL_ADDR
               value: {{ include "akeyless-gateway.clusterCache.sentinelAddress" . }}
