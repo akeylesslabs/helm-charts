@@ -710,6 +710,12 @@ securityContext:
 {{- define "akeyless-sra-ssh.containerSecurityContext" -}}
 securityContext:
   allowPrivilegeEscalation: true
+  # The SSH bastion sets up a per-session chroot jail and bind-mounts /dev/pts, which requires the
+  # mount syscall. On nodes with AppArmor enabled, the default container profile blocks mount even
+  # when CAP_SYS_ADMIN is granted, so the bastion runs AppArmor-unconfined. Requires Kubernetes 1.30+;
+  # on older clusters use the container.apparmor.security.beta.kubernetes.io annotation instead.
+  appArmorProfile:
+    type: Unconfined
   {{- include "akeyless-gateway.sshBastionPhaseACaps" . | nindent 2 }}
 {{- end -}}
 

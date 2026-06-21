@@ -185,31 +185,31 @@ spec:
                 secretKeyRef:
                   name: {{ include "akeyless-gateway.clusterCache.secretName" . }}
                   key: cache-pass
-          {{- if or .Values.globalConfig.clusterCache.persistence.enabled (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) .Values.globalConfig.clusterCache.extraVolumesMounts }}
           volumeMounts:
-            {{- if .Values.globalConfig.clusterCache.persistence.enabled }}
+            # Redis writes its snapshot to /data. When strictSecurityPolicy runs the cache as a
+            # non-root user, /data must be a mounted volume so fsGroup grants write access — the PVC
+            # when persistence is enabled, otherwise an emptyDir. Without it the snapshot fails and
+            # the pod restarts.
             - name: cache-data
               mountPath: /data
-            {{- end }}
             {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
             {{- include "akeyless-gateway.clusterCache.tlsVolumeMounts" . | nindent 12 -}}
             {{- end }}
             {{- with .Values.globalConfig.clusterCache.extraVolumesMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- end }}
-      {{- if or .Values.globalConfig.clusterCache.persistence.enabled (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) .Values.globalConfig.clusterCache.extraVolumes }}
       volumes:
-        {{- if .Values.globalConfig.clusterCache.persistence.enabled }}
         - name: cache-data
+          {{- if .Values.globalConfig.clusterCache.persistence.enabled }}
           persistentVolumeClaim:
             claimName: {{ .Values.globalConfig.clusterCache.persistence.existingClaim | default (include "akeyless-gateway.clusterCache.pvcName" .) }}
-        {{- end }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
         {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
         {{- include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 6 }}
         {{- end }}
         {{- with .Values.globalConfig.clusterCache.extraVolumes }}
         {{- toYaml . | nindent 6 }}
         {{- end }}
-      {{- end }}
 {{- end }}
