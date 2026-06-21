@@ -186,11 +186,10 @@ spec:
                   name: {{ include "akeyless-gateway.clusterCache.secretName" . }}
                   key: cache-pass
           volumeMounts:
-            # /data must be a writable, fsGroup-owned volume so Redis can write its RDB
-            # snapshot. Under strictSecurityPolicy the cache runs rootless (uid 1001) and
-            # the image's /data dir (owned by the image's redis uid) is not writable; with no
-            # volume mounted here bgsave fails with "Permission denied" -> MISCONF/stop-writes
-            # -> liveness probe fails -> CrashLoop. An emptyDir gets chowned to fsGroup 1001.
+            # Redis writes its snapshot to /data. When strictSecurityPolicy runs the cache as a
+            # non-root user, /data must be a mounted volume so fsGroup grants write access — the PVC
+            # when persistence is enabled, otherwise an emptyDir. Without it the snapshot fails and
+            # the pod restarts.
             - name: cache-data
               mountPath: /data
             {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
