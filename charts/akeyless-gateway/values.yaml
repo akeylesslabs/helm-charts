@@ -629,7 +629,15 @@ sra:
       annotations: {}
       labels: {}
       type: LoadBalancer
+      ## External port clients connect to (advertised to users via EXTERNAL_SSH_PORT). The Service
+      ## forwards this to the container's named "ssh" port (sshConfig.proxyPort).
       port: 22
+
+    ## TCP port the SSH proxy process binds inside the container; also the Deployment containerPort
+    ## that the Service targets via the named "ssh" port. Must be unprivileged (>1024) because the
+    ## bastion drops CAP_NET_BIND_SERVICE, and must differ from the in-container sshd (2222, the
+    ## proxy's forward target) and the curl-proxy/API (9900). Do not set to 22 or 2222.
+    proxyPort: 2200
 
     livenessProbe:
       failureThreshold: 5
