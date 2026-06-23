@@ -604,6 +604,20 @@ Sets extra CSI provider pod annotations
 {{- end -}}
 
 {{/*
+Sets extra CSI provider pod labels on the DaemonSet pod template.
+*/}}
+{{- define "csi.pod.labels" -}}
+  {{- if .Values.csi.pod.labels }}
+      {{- $tp := typeOf .Values.csi.pod.labels }}
+      {{- if eq $tp "string" }}
+        {{- tpl .Values.csi.pod.labels . | nindent 8 }}
+      {{- else }}
+        {{- toYaml .Values.csi.pod.labels | nindent 8 }}
+      {{- end }}
+  {{- end }}
+{{- end -}}
+
+{{/*
 Sets extra CSI service account annotations
 */}}
 {{- define "csi.serviceAccount.annotations" -}}
