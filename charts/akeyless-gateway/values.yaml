@@ -632,6 +632,7 @@ sra:
       ## External port clients connect to (advertised to users via EXTERNAL_SSH_PORT). The Service
       ## forwards this to the container's named "ssh" port (sshConfig.proxyPort).
       port: 22
+      externalTrafficPolicy: ""
 
     ## TCP port the SSH proxy process binds inside the container; also the Deployment containerPort
     ## that the Service targets via the named "ssh" port. Must be unprivileged (>1024) because the
