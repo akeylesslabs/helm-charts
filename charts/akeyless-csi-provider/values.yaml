@@ -88,6 +88,16 @@ csi:
     # to the pod.
     annotations: {}
 
+    # Extra labels for the provider pod template (DaemonSet pod). This can either
+    # be YAML or a YAML-formatted multi-line templated string map.
+    #
+    # Required for Azure Workload Identity (and similar OIDC federation webhooks)
+    # so the mutating webhook injects federated token env vars into the provider:
+    #   azure.workload.identity/use: "true"
+    labels: {}
+    # labels:
+    #   azure.workload.identity/use: "true"
+
     # Toleration Settings for provider pods
     # This should be either a multi-line string or YAML matching the Toleration array
     # in a PodSpec.
@@ -100,7 +110,12 @@ csi:
     # Extra annotations for the serviceAccount definition. This can either be
     # YAML or a YAML-formatted multi-line templated string map of the
     # annotations to apply to the serviceAccount.
+    #
+    # For Azure Workload Identity, set the user-assigned managed identity client ID:
+    #   azure.workload.identity/client-id: "<MI_CLIENT_ID>"
     annotations: {}
+    # annotations:
+    #   azure.workload.identity/client-id: "<MI_CLIENT_ID>"
     labels: {}
 
   # Used to configure readinessProbe for the pods.
