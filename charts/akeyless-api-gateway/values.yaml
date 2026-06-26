@@ -312,6 +312,14 @@ gatewayAPI:
     # - hostname: "secure.gateway.local"
     #   servicePort: api
 
+  ## TCPRoutes — raw L4 for non-HTTP ports (KMIP 5696, an SSH bastion, etc.).
+  ## Each entry generates a TCP listener on the servicePort's number plus a
+  ## TCPRoute that forwards it to the backend. `name` must be unique;
+  ## `servicePort` must be a name from `service.ports`.
+  tcpRoutes: []
+    # - name: kmip
+    #   servicePort: kmip
+
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little

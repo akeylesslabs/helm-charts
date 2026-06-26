@@ -121,6 +121,17 @@
             },
             "required": ["servicePort"]
           }
+        },
+        "tcpRoutes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "servicePort": { "type": "string" }
+            },
+            "required": ["name", "servicePort"]
+          }
         }
       }
     }

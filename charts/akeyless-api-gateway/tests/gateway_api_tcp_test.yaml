@@ -1,0 +1,77 @@
+suite: akeyless-api-gateway TCPRoute (KMIP / raw-TCP) (ASM-16238)
+# Render tests for raw-L4 routing: an auto-generated TCP listener per tcpRoute
+# plus the TCPRoute resource, e.g. KMIP on 5696.
+set:
+  akeylessUserAuth.adminAccessId: p-1234567890
+  # Test-only base64-shaped placeholder; not a real credential.
+  akeylessUserAuth.adminAccessKey: ZHVtbXktYWNjZXNzLWtleQ==
+  gatewayAPI.enabled: true
+  gatewayAPI.gateway.gatewayClassName: cilium
+tests:
+  - it: renders no TCPRoute by default
+    template: templates/tcproute.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: auto-generates a TCP listener per tcpRoute on the service port number
+    template: templates/gateway.yaml
+    set:
+      gatewayAPI.tcpRoutes:
+        - name: kmip
+          servicePort: kmip
+    asserts:
+      - equal:
+          path: spec.listeners[1].name
+          value: tcp-kmip
+      - equal:
+          path: spec.listeners[1].protocol
+          value: TCP
+      - equal:
+          path: spec.listeners[1].port
+          value: 5696
+
+  - it: renders a TCPRoute (v1alpha2) bound to the matching listener + backend port
+    template: templates/tcproute.yaml
+    set:
+      gatewayAPI.tcpRoutes:
+        - name: kmip
+          servicePort: kmip
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: TCPRoute
+      - isAPIVersion:
+          of: gateway.networking.k8s.io/v1alpha2
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: tcp-kmip
+      - equal:
+          path: spec.rules[0].backendRefs[0].name
+          value: RELEASE-NAME-akeyless-api-gateway
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 5696
+
+  - it: supports multiple tcpRoutes (one TCPRoute + one TCP listener each)
+    template: templates/tcproute.yaml
+    set:
+      gatewayAPI.tcpRoutes:
+        - name: kmip
+          servicePort: kmip
+        - name: grpc-tcp
+          servicePort: grpc
+    asserts:
+      - hasDocuments:
+          count: 2
+
+  - it: "G4 — TCP route with unknown servicePort fails"
+    template: templates/tcproute.yaml
+    set:
+      gatewayAPI.tcpRoutes:
+        - name: bad
+          servicePort: nope
+    asserts:
+      - failedTemplate:
+          errorMessage: 'akeyless-api-gateway: gatewayAPI route references unknown servicePort "nope"; valid names: web, configure-app, legacy-api, api, hvp, kmip, grpc'

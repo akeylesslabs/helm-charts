@@ -51,5 +51,13 @@ spec:
           from: {{ include "akeyless-api-gw.gatewayAPI.allowedRoutesFrom" . }}
     {{- end }}
     {{- end }}
+    {{- range $r := $ga.tcpRoutes }}
+    - name: tcp-{{ $r.name }}
+      protocol: TCP
+      port: {{ include "akeyless-api-gw.gatewayAPI.portNumber" (dict "port" $r.servicePort "root" $) }}
+      allowedRoutes:
+        namespaces:
+          from: {{ include "akeyless-api-gw.gatewayAPI.allowedRoutesFrom" $ }}
+    {{- end }}
   {{- end }}
 {{- end -}}
