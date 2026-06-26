@@ -1,0 +1,30 @@
+{{- $ga := .Values.gatewayAPI | default dict -}}
+{{- if and $ga.enabled $ga.tlsRoutes -}}
+{{- $svc := include "akeyless-api-gw.fullname" . -}}
+{{- range $r := $ga.tlsRoutes }}
+---
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: TLSRoute
+metadata:
+  name: {{ include "akeyless-api-gw.fullname" $ }}-tls-{{ $r.servicePort }}
+  namespace: {{ $.Release.Namespace | quote }}
+  labels:
+    {{- include "akeyless-api-gw.labels" $ | nindent 4 }}
+spec:
+  parentRefs:
+  {{- if $ga.parentRefs }}
+    {{- include "akeyless-api-gw.gatewayAPI.parentRefs" $ | nindent 4 }}
+  {{- else }}
+    - name: {{ include "akeyless-api-gw.gatewayAPI.gatewayName" $ }}
+      sectionName: tls
+  {{- end }}
+  {{- with $r.hostname }}
+  hostnames:
+    - {{ . | quote }}
+  {{- end }}
+  rules:
+    - backendRefs:
+        - name: {{ $svc }}
+          port: {{ include "akeyless-api-gw.gatewayAPI.portNumber" (dict "port" $r.servicePort "root" $) }}
+{{- end }}
+{{- end -}}

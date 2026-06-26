@@ -83,6 +83,12 @@ throwaway variable); each illegal combination calls `fail`.
 {{- fail "akeyless-api-gateway: set gatewayAPI.parentRefs when gatewayAPI.gateway.create=false — there is no Gateway to attach routes to." -}}
 {{- end -}}
 {{- end -}}
+{{- if and $gw.create $ga.tlsRoutes -}}
+{{- $tls := $gw.tls | default dict -}}
+{{- if not (and $tls.enabled (eq ($tls.mode | default "Terminate") "Passthrough")) -}}
+{{- fail "akeyless-api-gateway: gatewayAPI.tlsRoutes require a TLS passthrough listener — set gatewayAPI.gateway.tls.enabled=true and gatewayAPI.gateway.tls.mode=Passthrough (or attach to an external Gateway that provides one)." -}}
+{{- end -}}
+{{- end -}}
 {{- range $ga.httpRoutes -}}{{- $_ := include "akeyless-api-gw.gatewayAPI.portNumber" (dict "port" .servicePort "root" $) -}}{{- end -}}
 {{- range $ga.tlsRoutes -}}{{- $_ := include "akeyless-api-gw.gatewayAPI.portNumber" (dict "port" .servicePort "root" $) -}}{{- end -}}
 {{- range $ga.tcpRoutes -}}{{- $_ := include "akeyless-api-gw.gatewayAPI.portNumber" (dict "port" .servicePort "root" $) -}}{{- end -}}

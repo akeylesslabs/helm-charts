@@ -252,9 +252,21 @@ gatewayAPI:
     annotations: {}
     labels: {}
 
+    ## TLS for the generated 443 listener.
+    ##   mode: Terminate   -> an `https:443` listener; the Gateway terminates TLS
+    ##                        using certificateRefs (HTTPRoutes serve it).
+    ##   mode: Passthrough -> a `tls:443` listener; TLS is forwarded to the
+    ##                        backend by SNI (use gatewayAPI.tlsRoutes below).
+    tls:
+      enabled: false
+      mode: Terminate
+      ## Secret(s) holding the TLS certificate for mode=Terminate, e.g.
+      ##   - name: akeyless-api-tls
+      certificateRefs: []
+
     ## Listener escape hatch. Leave empty to generate a default `http` listener
-    ## on port 80; HTTPS/TLS listeners are added by the TLS values below.
-    ## Provide a full Gateway-API listener list to take complete control.
+    ## on port 80 (plus a 443 listener when tls.enabled above). Provide a full
+    ## Gateway-API listener list to take complete control.
     listeners: []
 
     ## Which namespaces may attach routes to the generated listener.
@@ -292,6 +304,13 @@ gatewayAPI:
   ## Default path + pathType applied to each generated HTTPRoute rule.
   httpRoutePath: /
   httpRoutePathType: PathPrefix
+
+  ## TLSRoutes (SNI passthrough) — used when gatewayAPI.gateway.tls.mode is
+  ## Passthrough. TLS is forwarded to the backend, which terminates it.
+  ## `servicePort` must be a name from `service.ports`.
+  tlsRoutes: []
+    # - hostname: "secure.gateway.local"
+    #   servicePort: api
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious

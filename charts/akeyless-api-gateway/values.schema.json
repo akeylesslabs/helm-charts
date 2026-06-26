@@ -84,7 +84,15 @@
             "annotations": { "type": "object" },
             "labels": { "type": "object" },
             "listeners": { "type": "array" },
-            "allowedRoutes": { "type": "object" }
+            "allowedRoutes": { "type": "object" },
+            "tls": {
+              "type": "object",
+              "properties": {
+                "enabled": { "type": "boolean" },
+                "mode": { "type": "string", "enum": ["Terminate", "Passthrough"] },
+                "certificateRefs": { "type": "array" }
+              }
+            }
           }
         },
         "parentRefs": { "type": "array" },
@@ -102,7 +110,18 @@
           }
         },
         "httpRoutePath": { "type": "string" },
-        "httpRoutePathType": { "type": "string", "enum": ["Exact", "PathPrefix", "RegularExpression"] }
+        "httpRoutePathType": { "type": "string", "enum": ["Exact", "PathPrefix", "RegularExpression"] },
+        "tlsRoutes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "hostname": { "type": "string" },
+              "servicePort": { "type": "string" }
+            },
+            "required": ["servicePort"]
+          }
+        }
       }
     }
   },

@@ -1,0 +1,99 @@
+suite: akeyless-api-gateway TLS termination + TLSRoute (ASM-16238)
+# Render tests for the 443 listener (Terminate/Passthrough) and TLSRoute, plus
+# guard G5 (tlsRoutes require a passthrough listener).
+set:
+  akeylessUserAuth.adminAccessId: p-1234567890
+  # Test-only base64-shaped placeholder; not a real credential.
+  akeylessUserAuth.adminAccessKey: ZHVtbXktYWNjZXNzLWtleQ==
+  gatewayAPI.enabled: true
+  gatewayAPI.gateway.gatewayClassName: cilium
+tests:
+  - it: adds an https:443 Terminate listener with certificateRefs
+    template: templates/gateway.yaml
+    set:
+      gatewayAPI.gateway.tls.enabled: true
+      gatewayAPI.gateway.tls.mode: Terminate
+      gatewayAPI.gateway.tls.certificateRefs:
+        - name: akeyless-api-tls
+    asserts:
+      - equal:
+          path: spec.listeners[1].name
+          value: https
+      - equal:
+          path: spec.listeners[1].protocol
+          value: HTTPS
+      - equal:
+          path: spec.listeners[1].port
+          value: 443
+      - equal:
+          path: spec.listeners[1].tls.mode
+          value: Terminate
+      - equal:
+          path: spec.listeners[1].tls.certificateRefs[0].name
+          value: akeyless-api-tls
+
+  - it: adds a tls:443 Passthrough listener in passthrough mode
+    template: templates/gateway.yaml
+    set:
+      gatewayAPI.gateway.tls.enabled: true
+      gatewayAPI.gateway.tls.mode: Passthrough
+    asserts:
+      - equal:
+          path: spec.listeners[1].name
+          value: tls
+      - equal:
+          path: spec.listeners[1].protocol
+          value: TLS
+      - equal:
+          path: spec.listeners[1].tls.mode
+          value: Passthrough
+
+  - it: renders only the http listener when tls is disabled
+    template: templates/gateway.yaml
+    asserts:
+      - lengthEqual:
+          path: spec.listeners
+          count: 1
+
+  - it: renders no TLSRoute by default
+    template: templates/tlsroute.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders a TLSRoute (v1alpha2) attached to the tls listener
+    template: templates/tlsroute.yaml
+    set:
+      gatewayAPI.gateway.tls.enabled: true
+      gatewayAPI.gateway.tls.mode: Passthrough
+      gatewayAPI.tlsRoutes:
+        - hostname: secure.example.com
+          servicePort: api
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: TLSRoute
+      - isAPIVersion:
+          of: gateway.networking.k8s.io/v1alpha2
+      - equal:
+          path: spec.hostnames[0]
+          value: secure.example.com
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: tls
+      - equal:
+          path: spec.rules[0].backendRefs[0].name
+          value: RELEASE-NAME-akeyless-api-gateway
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 8081
+
+  - it: "G5 — tlsRoutes require a passthrough TLS listener"
+    set:
+      gatewayAPI.tlsRoutes:
+        - hostname: secure.example.com
+          servicePort: api
+    asserts:
+      - failedTemplate:
+          errorMessage: "akeyless-api-gateway: gatewayAPI.tlsRoutes require a TLS passthrough listener — set gatewayAPI.gateway.tls.enabled=true and gatewayAPI.gateway.tls.mode=Passthrough (or attach to an external Gateway that provides one)."

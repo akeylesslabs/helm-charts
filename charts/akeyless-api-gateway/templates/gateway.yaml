@@ -27,5 +27,29 @@ spec:
       allowedRoutes:
         namespaces:
           from: {{ include "akeyless-api-gw.gatewayAPI.allowedRoutesFrom" . }}
+    {{- $tls := $gw.tls | default dict }}
+    {{- if $tls.enabled }}
+    {{- if eq ($tls.mode | default "Terminate") "Passthrough" }}
+    - name: tls
+      protocol: TLS
+      port: 443
+      tls:
+        mode: Passthrough
+      allowedRoutes:
+        namespaces:
+          from: {{ include "akeyless-api-gw.gatewayAPI.allowedRoutesFrom" . }}
+    {{- else }}
+    - name: https
+      protocol: HTTPS
+      port: 443
+      tls:
+        mode: Terminate
+        certificateRefs:
+          {{- toYaml ($tls.certificateRefs | default list) | nindent 10 }}
+      allowedRoutes:
+        namespaces:
+          from: {{ include "akeyless-api-gw.gatewayAPI.allowedRoutesFrom" . }}
+    {{- end }}
+    {{- end }}
   {{- end }}
 {{- end -}}
