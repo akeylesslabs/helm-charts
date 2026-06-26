@@ -1,0 +1,72 @@
+suite: akeyless-api-gateway full Gateway API matrix (ASM-16238)
+# Composition proof: HTTPRoute + HTTPS termination + TCPRoute (KMIP) +
+# ReferenceGrant all render together in one install, with the Service on
+# ClusterIP and no Ingress.
+set:
+  akeylessUserAuth.adminAccessId: p-1234567890
+  # Test-only base64-shaped placeholder; not a real credential.
+  akeylessUserAuth.adminAccessKey: ZHVtbXktYWNjZXNzLWtleQ==
+  gatewayAPI.enabled: true
+  gatewayAPI.gateway.gatewayClassName: cilium
+  gatewayAPI.gateway.tls.enabled: true
+  gatewayAPI.gateway.tls.mode: Terminate
+  gatewayAPI.gateway.tls.certificateRefs:
+    - name: akeyless-api-tls
+  gatewayAPI.tcpRoutes:
+    - name: kmip
+      servicePort: kmip
+  gatewayAPI.referenceGrants:
+    - name: allow-gw
+      from:
+        - group: gateway.networking.k8s.io
+          kind: HTTPRoute
+          namespace: gateway
+      to:
+        - group: ""
+          kind: Service
+tests:
+  - it: renders the Gateway with http + https + tcp-kmip listeners
+    template: templates/gateway.yaml
+    asserts:
+      - lengthEqual:
+          path: spec.listeners
+          count: 3
+      - equal:
+          path: spec.listeners[0].name
+          value: http
+      - equal:
+          path: spec.listeners[1].name
+          value: https
+      - equal:
+          path: spec.listeners[2].name
+          value: tcp-kmip
+  - it: renders the default 5 HTTPRoutes
+    template: templates/httproute.yaml
+    asserts:
+      - hasDocuments:
+          count: 5
+  - it: renders the KMIP TCPRoute
+    template: templates/tcproute.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: TCPRoute
+  - it: renders the ReferenceGrant
+    template: templates/referencegrant.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ReferenceGrant
+  - it: keeps the Service on ClusterIP
+    template: templates/service.yaml
+    asserts:
+      - equal:
+          path: spec.type
+          value: ClusterIP
+  - it: renders no Ingress
+    template: templates/ingress.yaml
+    asserts:
+      - hasDocuments:
+          count: 0

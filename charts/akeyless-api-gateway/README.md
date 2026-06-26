@@ -30,6 +30,123 @@ To install the chart run:
 helm install RELEASE_NAME akeyless/akeyless-api-gateway
 ``` 
 
+## Kubernetes Gateway API
+
+This chart can expose the API Gateway through the [Kubernetes Gateway API](https://gateway-api.sigs.k8s.io/)
+as an **alternative to** the Ingress API. The Gateway API is the long-term
+successor to Ingress; major controllers (NGINX Gateway Fabric, Cilium, Istio,
+Kong, Envoy Gateway) implement it, and [ingress-nginx is retiring in March 2026](https://kubernetes.io/blog/2025/11/11/ingress-nginx-retirement/).
+
+`ingress` and `gatewayAPI` are **mutually exclusive** — enabling both fails the render.
+
+### Resources rendered
+
+| Values | Resource | API version |
+|---|---|---|
+| `gatewayAPI.gateway.create` | `Gateway` | `gateway.networking.k8s.io/v1` |
+| `gatewayAPI.httpRoutes` | `HTTPRoute` | `gateway.networking.k8s.io/v1` |
+| `gatewayAPI.tlsRoutes` | `TLSRoute` | `gateway.networking.k8s.io/v1alpha2` † |
+| `gatewayAPI.tcpRoutes` | `TCPRoute` | `gateway.networking.k8s.io/v1alpha2` † |
+| `gatewayAPI.referenceGrants` | `ReferenceGrant` | `gateway.networking.k8s.io/v1beta1` |
+
+† `TLSRoute`/`TCPRoute` are served only by the Gateway API **Experimental** channel CRDs (see Prerequisites).
+
+### Prerequisites
+
+1. Install the Gateway API CRDs. The **standard** channel covers `Gateway`/`GatewayClass`/`HTTPRoute`/`ReferenceGrant`:
+   ```sh
+   kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.2.0/standard-install.yaml
+   ```
+   For `tlsRoutes`/`tcpRoutes`, install the **experimental** channel instead:
+   ```sh
+   kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.2.0/experimental-install.yaml
+   ```
+2. Install a Gateway controller and note its GatewayClass name (e.g. `nginx`, `cilium`, `istio`). Raw `TCPRoute` support varies by controller — confirm yours implements it before enabling `tcpRoutes`.
+
+### Quick start (HTTP, NGINX Gateway Fabric)
+
+```yaml
+ingress:
+  enabled: false
+gatewayAPI:
+  enabled: true
+  gateway:
+    create: true
+    gatewayClassName: nginx
+  httpRoutes:
+    - { hostname: api.example.com, servicePort: api }
+    - { hostname: ui.example.com,  servicePort: web }
+```
+
+### HTTPS termination (Cilium)
+
+```yaml
+gatewayAPI:
+  enabled: true
+  gateway:
+    gatewayClassName: cilium
+    tls:
+      enabled: true
+      mode: Terminate
+      certificateRefs:
+        - name: akeyless-api-tls
+  httpRoutes:
+    - { hostname: api.example.com, servicePort: api }
+```
+
+### KMIP over raw TCP
+
+```yaml
+gatewayAPI:
+  enabled: true
+  gateway:
+    gatewayClassName: cilium
+  tcpRoutes:
+    - { name: kmip, servicePort: kmip }   # TCP listener on 5696 + TCPRoute
+```
+
+### Attach to a shared cluster Gateway (cross-namespace)
+
+```yaml
+gatewayAPI:
+  enabled: true
+  gateway:
+    create: false                  # do not create a Gateway
+  parentRefs:
+    - { name: shared-gateway, namespace: gateway, sectionName: https }
+  httpRoutes:
+    - { hostname: api.example.com, servicePort: api }
+  referenceGrants:                 # authorize the cross-namespace reference
+    - name: allow-gateway-ns
+      from:
+        - { group: gateway.networking.k8s.io, kind: HTTPRoute, namespace: gateway }
+      to:
+        - { group: "", kind: Service }
+```
+
+### Migrating from Ingress
+
+The `httpRoutes` surface mirrors `ingress.rules`, so migration is close to a key rename:
+
+| Ingress | Gateway API |
+|---|---|
+| `ingress.enabled: true` | `gatewayAPI.enabled: true` (and `ingress.enabled: false`) |
+| `ingress.ingressClassName: nginx` | `gatewayAPI.gateway.gatewayClassName: nginx` |
+| `ingress.rules[].{hostname,servicePort,path}` | `gatewayAPI.httpRoutes[].{hostname,servicePort,path}` |
+| `ingress.tls: true` + cert secret | `gatewayAPI.gateway.tls: {enabled: true, mode: Terminate, certificateRefs}` |
+
+### Fail-loud guards
+
+The chart refuses to render an ambiguous or unusable Gateway API configuration:
+
+| Guard | Rejected configuration |
+|---|---|
+| G1 | `ingress.enabled` **and** `gatewayAPI.enabled` both true |
+| G2 | `gateway.create: true` with an empty `gatewayClassName` |
+| G3 | `gateway.create: false` with empty `parentRefs` |
+| G4 | a route `servicePort` not present in `service.ports` |
+| G5 | `tlsRoutes` without a passthrough TLS listener |
+
 ## Parameters
 
 The following table lists the configurable parameters of the API Gateway chart and their default values.
@@ -66,6 +183,15 @@ The following table lists the configurable parameters of the API Gateway chart a
 | `ingress.path`                            | Path for the default host                                                                                            | `/`                      |
 | `ingress.tls`                             | Enable TLS configuration for the hostname                                                                            | `false`                  |
 | `ingress.certManager`                     | Add annotations for cert-manager                                                                                     | `false`                  |
+| `gatewayAPI.enabled`                      | Render Gateway API resources instead of an Ingress (mutually exclusive with `ingress.enabled`) | `false` |
+| `gatewayAPI.gateway.create`               | Create a Gateway (`false` = attach routes to an existing Gateway via `parentRefs`) | `true` |
+| `gatewayAPI.gateway.gatewayClassName`     | GatewayClass selecting the controller (nginx/cilium/istio/...) — required when `gateway.create=true` | `""` |
+| `gatewayAPI.gateway.tls`                  | 443 listener: `enabled`, `mode` (Terminate/Passthrough), `certificateRefs` | disabled |
+| `gatewayAPI.parentRefs`                   | Gateways routes attach to (empty = the created Gateway) | `[]` |
+| `gatewayAPI.httpRoutes`                   | HTTPRoutes — `{hostname, servicePort, path?}` (same shape as `ingress.rules`) | Check `values.yaml` file |
+| `gatewayAPI.tlsRoutes`                    | TLSRoutes (SNI passthrough) — `{hostname, servicePort}` | `[]` |
+| `gatewayAPI.tcpRoutes`                    | TCPRoutes (raw L4, e.g. KMIP) — `{name, servicePort}` | `[]` |
+| `gatewayAPI.referenceGrants`              | ReferenceGrants authorizing cross-namespace references | `[]` |
 
 ### HPA parameters
 
