@@ -1,0 +1,163 @@
+suite: akeyless-api-gateway Gateway + HTTPRoute (ASM-16238)
+# Render tests for the Gateway API foundation: the Gateway + HTTPRoute resources,
+# the ingress->ClusterIP behaviour switch, and the fail-loud guards G1..G4.
+set:
+  akeylessUserAuth.adminAccessId: p-1234567890
+  # Test-only base64-shaped placeholder; not a real credential.
+  akeylessUserAuth.adminAccessKey: ZHVtbXktYWNjZXNzLWtleQ==
+tests:
+  # ---------- disabled by default ----------
+  - it: renders no Gateway when gatewayAPI is disabled
+    template: templates/gateway.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: renders no HTTPRoute when gatewayAPI is disabled
+    template: templates/httproute.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  # ---------- Gateway ----------
+  - it: renders a Gateway (v1) with the chosen GatewayClass and a default http listener
+    template: templates/gateway.yaml
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.gatewayClassName: cilium
+    asserts:
+      - isKind:
+          of: Gateway
+      - isAPIVersion:
+          of: gateway.networking.k8s.io/v1
+      - equal:
+          path: spec.gatewayClassName
+          value: cilium
+      - equal:
+          path: spec.listeners[0].name
+          value: http
+      - equal:
+          path: spec.listeners[0].port
+          value: 80
+      - equal:
+          path: spec.listeners[0].allowedRoutes.namespaces.from
+          value: Same
+  - it: does not render a Gateway in attach mode (gateway.create=false)
+    template: templates/gateway.yaml
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.create: false
+      gatewayAPI.parentRefs:
+        - name: shared-gw
+          namespace: gateway
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  # ---------- HTTPRoute ----------
+  - it: renders one HTTPRoute per httpRoutes entry (v1)
+    template: templates/httproute.yaml
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.gatewayClassName: nginx
+    asserts:
+      - hasDocuments:
+          count: 5
+      - isKind:
+          of: HTTPRoute
+      - isAPIVersion:
+          of: gateway.networking.k8s.io/v1
+  - it: maps a named servicePort to the chart Service backend port number
+    template: templates/httproute.yaml
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.gatewayClassName: nginx
+      gatewayAPI.httpRoutes:
+        - hostname: console.example.com
+          servicePort: web
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: spec.hostnames[0]
+          value: console.example.com
+      - equal:
+          path: spec.rules[0].backendRefs[0].name
+          value: RELEASE-NAME-akeyless-api-gateway
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 18888
+      - equal:
+          path: spec.parentRefs[0].name
+          value: RELEASE-NAME-akeyless-api-gateway
+      - equal:
+          path: spec.rules[0].matches[0].path.type
+          value: PathPrefix
+  - it: attaches routes to explicit parentRefs (cross-namespace shared Gateway)
+    template: templates/httproute.yaml
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.create: false
+      gatewayAPI.parentRefs:
+        - name: shared-gw
+          namespace: gateway
+      gatewayAPI.httpRoutes:
+        - hostname: api.example.com
+          servicePort: api
+    asserts:
+      - equal:
+          path: spec.parentRefs[0].name
+          value: shared-gw
+      - equal:
+          path: spec.parentRefs[0].namespace
+          value: gateway
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 8081
+
+  # ---------- Service behaviour ----------
+  - it: switches the Service to ClusterIP under Gateway API
+    template: templates/service.yaml
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.gatewayClassName: cilium
+    asserts:
+      - equal:
+          path: spec.type
+          value: ClusterIP
+
+  # ---------- fail-loud guards ----------
+  - it: "G1 — fails when both ingress and gatewayAPI are enabled"
+    template: templates/gateway-api-validate.yaml
+    set:
+      ingress.enabled: true
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.gatewayClassName: cilium
+    asserts:
+      - failedTemplate:
+          errorMessage: "akeyless-api-gateway: ingress.enabled and gatewayAPI.enabled are mutually exclusive — enable exactly one north-south path (Ingress or Gateway API)."
+  - it: "G2 — fails when gateway.create=true but gatewayClassName is empty"
+    template: templates/gateway.yaml
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.create: true
+    asserts:
+      - failedTemplate:
+          errorMessage: "akeyless-api-gateway: gatewayAPI.gateway.gatewayClassName is required when gatewayAPI.gateway.create=true (e.g. nginx, cilium, istio, kong, envoy)."
+  - it: "G3 — fails when gateway.create=false but parentRefs is empty"
+    template: templates/gateway-api-validate.yaml
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.create: false
+    asserts:
+      - failedTemplate:
+          errorMessage: "akeyless-api-gateway: set gatewayAPI.parentRefs when gatewayAPI.gateway.create=false — there is no Gateway to attach routes to."
+  - it: "G4 — fails when a route references an unknown servicePort"
+    template: templates/httproute.yaml
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.gatewayClassName: cilium
+      gatewayAPI.httpRoutes:
+        - hostname: x.example.com
+          servicePort: nope
+    asserts:
+      - failedTemplate:
+          errorMessage: 'akeyless-api-gateway: gatewayAPI route references unknown servicePort "nope"; valid names: web, configure-app, legacy-api, api, hvp, kmip, grpc'

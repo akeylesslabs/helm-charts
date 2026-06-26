@@ -226,6 +226,73 @@ ingress:
 
   ## existingSecret: name-of-existing-secret
 
+## Kubernetes Gateway API support (ASM-16238) — an alternative to `ingress` for
+## clusters whose ingress controller has moved to the Gateway API
+## (NGINX Gateway Fabric, Cilium, Istio, Kong, Envoy Gateway, ...).
+## `ingress` and `gatewayAPI` are MUTUALLY EXCLUSIVE — enabling both fails the
+## render. Every route's backend is this chart's own Service.
+## ref: https://gateway-api.sigs.k8s.io/
+gatewayAPI:
+  ## Set to true to render Gateway API resources instead of an Ingress.
+  enabled: false
+
+  gateway:
+    ## create=true renders a Gateway owned by this release.
+    ## create=false attaches the routes to a pre-existing (shared) Gateway you
+    ## reference via `parentRefs` below.
+    create: true
+
+    ## Gateway name; defaults to the chart fullname when empty.
+    name: ""
+
+    ## REQUIRED when create=true. The GatewayClass selects the controller, e.g.
+    ## nginx (NGINX Gateway Fabric), cilium, istio, kong, envoy-gateway.
+    gatewayClassName: ""
+
+    annotations: {}
+    labels: {}
+
+    ## Listener escape hatch. Leave empty to generate a default `http` listener
+    ## on port 80; HTTPS/TLS listeners are added by the TLS values below.
+    ## Provide a full Gateway-API listener list to take complete control.
+    listeners: []
+
+    ## Which namespaces may attach routes to the generated listener.
+    allowedRoutes:
+      namespaces:
+        from: Same          # Same | All | Selector
+
+  ## parentRefs every route attaches to. Empty => the Gateway created above.
+  ## Point at a Gateway in another namespace to share a cluster Gateway (then
+  ## add a referenceGrant). Example:
+  ##   - name: shared-gateway
+  ##     namespace: gateway
+  ##     sectionName: https
+  parentRefs: []
+
+  ## HTTPRoutes — the same {hostname, servicePort} shape as `ingress.rules`, so
+  ## migrating from Ingress is a near-mechanical rename. `servicePort` must be a
+  ## name from `service.ports` above.
+  httpRoutes:
+    - hostname: "ui.gateway.local"
+      servicePort: web
+    - hostname: "hvp.gateway.local"
+      servicePort: hvp
+    - hostname: "rest.gateway.local"
+      servicePort: legacy-api
+    - hostname: "api.gateway.local"
+      servicePort: api
+    - hostname: "conf.gateway.local"
+      servicePort: configure-app
+    # - hostname: "ui.gateway.local"
+    #   servicePort: web
+    #   path: /custom            # overrides httpRoutePath for this route
+    #   pathType: PathPrefix     # Exact | PathPrefix | RegularExpression
+
+  ## Default path + pathType applied to each generated HTTPRoute rule.
+  httpRoutePath: /
+  httpRoutePathType: PathPrefix
+
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little

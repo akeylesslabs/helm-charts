@@ -1,0 +1,31 @@
+{{- $ga := .Values.gatewayAPI | default dict -}}
+{{- if and $ga.enabled (($ga.gateway | default dict).create) -}}
+{{- $gw := $ga.gateway -}}
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ include "akeyless-api-gw.gatewayAPI.gatewayName" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "akeyless-api-gw.labels" . | nindent 4 }}
+  {{- with $gw.labels }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $gw.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  gatewayClassName: {{ required "akeyless-api-gateway: gatewayAPI.gateway.gatewayClassName is required when gatewayAPI.gateway.create=true (e.g. nginx, cilium, istio, kong, envoy)." $gw.gatewayClassName }}
+  listeners:
+  {{- if $gw.listeners }}
+    {{- toYaml $gw.listeners | nindent 4 }}
+  {{- else }}
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: {{ include "akeyless-api-gw.gatewayAPI.allowedRoutesFrom" . }}
+  {{- end }}
+{{- end -}}

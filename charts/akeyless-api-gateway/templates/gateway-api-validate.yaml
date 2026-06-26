@@ -1,0 +1,7 @@
+{{- /*
+Render-time validation for the Gateway API surface. Emits no Kubernetes object;
+its only effect is to run the fail-loud guards (G1..G5) on every render so an
+illegal gatewayAPI configuration can never produce a (silently wrong) install.
+Guard unit tests target this template via failedTemplate assertions.
+*/ -}}
+{{- include "akeyless-api-gw.gatewayAPI.validate" . -}}

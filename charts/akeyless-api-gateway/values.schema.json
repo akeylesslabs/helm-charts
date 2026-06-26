@@ -69,6 +69,41 @@
         }
       },
       "type": "object"
+    },
+    "gatewayAPI": {
+      "type": "object",
+      "description": "Kubernetes Gateway API support (ASM-16238)",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "gateway": {
+          "type": "object",
+          "properties": {
+            "create": { "type": "boolean" },
+            "name": { "type": "string" },
+            "gatewayClassName": { "type": "string" },
+            "annotations": { "type": "object" },
+            "labels": { "type": "object" },
+            "listeners": { "type": "array" },
+            "allowedRoutes": { "type": "object" }
+          }
+        },
+        "parentRefs": { "type": "array" },
+        "httpRoutes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "hostname": { "type": "string" },
+              "servicePort": { "type": "string" },
+              "path": { "type": "string" },
+              "pathType": { "type": "string", "enum": ["Exact", "PathPrefix", "RegularExpression"] }
+            },
+            "required": ["servicePort"]
+          }
+        },
+        "httpRoutePath": { "type": "string" },
+        "httpRoutePathType": { "type": "string", "enum": ["Exact", "PathPrefix", "RegularExpression"] }
+      }
     }
   },
   "title": "Values",
