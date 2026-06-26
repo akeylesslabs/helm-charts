@@ -1,0 +1,68 @@
+suite: akeyless-api-gateway ReferenceGrant (cross-namespace) (ASM-16238)
+# Render tests for cross-namespace authorization: the ReferenceGrant resource
+# with verbatim from/to and an optional target namespace.
+set:
+  akeylessUserAuth.adminAccessId: p-1234567890
+  # Test-only base64-shaped placeholder; not a real credential.
+  akeylessUserAuth.adminAccessKey: ZHVtbXktYWNjZXNzLWtleQ==
+  gatewayAPI.enabled: true
+  gatewayAPI.gateway.gatewayClassName: cilium
+tests:
+  - it: renders no ReferenceGrant by default
+    template: templates/referencegrant.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders a ReferenceGrant (v1beta1) with verbatim from/to
+    template: templates/referencegrant.yaml
+    set:
+      gatewayAPI.referenceGrants:
+        - name: allow-gw-ns
+          from:
+            - group: gateway.networking.k8s.io
+              kind: HTTPRoute
+              namespace: gateway
+          to:
+            - group: ""
+              kind: Service
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ReferenceGrant
+      - isAPIVersion:
+          of: gateway.networking.k8s.io/v1beta1
+      - equal:
+          path: metadata.name
+          value: allow-gw-ns
+      - equal:
+          path: metadata.namespace
+          value: NAMESPACE
+      - equal:
+          path: spec.from[0].kind
+          value: HTTPRoute
+      - equal:
+          path: spec.from[0].namespace
+          value: gateway
+      - equal:
+          path: spec.to[0].kind
+          value: Service
+
+  - it: places the ReferenceGrant in an explicit target namespace
+    template: templates/referencegrant.yaml
+    set:
+      gatewayAPI.referenceGrants:
+        - name: allow-x
+          namespace: gateway
+          from:
+            - group: gateway.networking.k8s.io
+              kind: HTTPRoute
+              namespace: akeyless
+          to:
+            - group: ""
+              kind: Service
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: gateway

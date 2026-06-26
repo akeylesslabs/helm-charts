@@ -320,6 +320,23 @@ gatewayAPI:
     # - name: kmip
     #   servicePort: kmip
 
+  ## ReferenceGrants — authorize cross-namespace references. Gateway API denies
+  ## cross-namespace route<->Gateway and route<->backend references by default;
+  ## a ReferenceGrant in the TARGET namespace is the explicit, auditable grant.
+  ## Use this when a shared Gateway in another namespace routes to this chart's
+  ## Service, or when this chart's routes attach to a Gateway in another
+  ## namespace. Created in the release namespace unless `namespace` is set;
+  ## `from`/`to` are passed through verbatim to the ReferenceGrant spec.
+  referenceGrants: []
+    # - name: allow-shared-gateway-to-akeyless
+    #   from:
+    #     - group: gateway.networking.k8s.io
+    #       kind: HTTPRoute
+    #       namespace: gateway
+    #   to:
+    #     - group: ""
+    #       kind: Service
+
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little

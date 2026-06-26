@@ -1,0 +1,18 @@
+{{- $ga := .Values.gatewayAPI | default dict -}}
+{{- if and $ga.enabled $ga.referenceGrants -}}
+{{- range $g := $ga.referenceGrants }}
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: {{ $g.name }}
+  namespace: {{ $g.namespace | default $.Release.Namespace | quote }}
+  labels:
+    {{- include "akeyless-api-gw.labels" $ | nindent 4 }}
+spec:
+  from:
+    {{- toYaml $g.from | nindent 4 }}
+  to:
+    {{- toYaml $g.to | nindent 4 }}
+{{- end }}
+{{- end -}}

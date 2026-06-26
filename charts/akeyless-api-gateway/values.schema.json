@@ -132,6 +132,19 @@
             },
             "required": ["name", "servicePort"]
           }
+        },
+        "referenceGrants": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "namespace": { "type": "string" },
+              "from": { "type": "array" },
+              "to": { "type": "array" }
+            },
+            "required": ["name", "from", "to"]
+          }
         }
       }
     }
