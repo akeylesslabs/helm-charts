@@ -1,0 +1,5 @@
+# built binary (produced by `go build`); never committed
+/keyway
+# local receipts
+*.receipt.json
+keyway-receipt.json

@@ -1,0 +1,27 @@
+# keyway — chart render-test + lint runner config for akeylesslabs/helm-charts.
+#
+# Consumed by the tools/keyway Go tool (zero shell), exposed as
+# `nix run ./tools/keyway#keyway-{lint,unittest,ci}`. A missing file falls back
+# to these exact defaults, so this is documentation as much as configuration.
+
+# helm executable. The nix app injects a helm wrapped with the helm-unittest
+# plugin; locally it resolves from PATH.
+helmBinary: helm
+
+# directory holding the chart subdirectories (each a Chart.yaml).
+chartsDir: charts
+
+# explicit chart subset; empty => every charts/*/Chart.yaml.
+charts: []
+
+lint:
+  enabled: true
+  # warnings (e.g. a missing icon) do NOT fail the gate; flip to true to treat
+  # them as failures.
+  strict: false
+
+unittest:
+  enabled: true
+  # charts without a tests/ suite are SKIPPED (not failed) so render tests can be
+  # adopted chart-by-chart. Flip to true once every chart ships a suite.
+  requireTests: false

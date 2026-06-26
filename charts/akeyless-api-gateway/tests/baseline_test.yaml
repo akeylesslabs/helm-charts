@@ -1,0 +1,50 @@
+suite: akeyless-api-gateway baseline render
+# Proves the keyway helm-unittest render harness AND locks the chart's default
+# rendering contract: a Service exposing the named akeyless ports + a Deployment,
+# and NO Ingress unless ingress.enabled. Gateway API tests live in the
+# gateway_api_*_test.yaml suites added by the ASM-16238 stack.
+templates:
+  - templates/service.yaml
+  - templates/deployment.yaml
+  - templates/ingress.yaml
+set:
+  akeylessUserAuth.adminAccessId: p-1234567890
+  # Test-only base64-shaped placeholder; not a real credential.
+  akeylessUserAuth.adminAccessKey: ZHVtbXktYWNjZXNzLWtleQ==
+  akeylessUserAuth.clusterName: chart-testing
+  akeylessUserAuth.initialClusterDisplayName: chart-testing
+tests:
+  - it: renders a Service exposing the named akeyless ports
+    template: templates/service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: spec.ports[0].name
+          value: web
+      - contains:
+          path: spec.ports
+          content:
+            name: kmip
+            port: 5696
+            targetPort: kmip
+            protocol: TCP
+
+  - it: defaults the Service type to LoadBalancer
+    template: templates/service.yaml
+    asserts:
+      - equal:
+          path: spec.type
+          value: LoadBalancer
+
+  - it: renders a Deployment by default
+    template: templates/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+
+  - it: does not render an Ingress unless ingress.enabled
+    template: templates/ingress.yaml
+    asserts:
+      - hasDocuments:
+          count: 0

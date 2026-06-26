@@ -1,0 +1,28 @@
+name: Chart Render Test
+
+# Pure-render gate (no cluster): helm lint + helm-unittest, run by the keyway Go
+# tool. Per the keyway standard the workflow is a thin trigger — checkout, nix,
+# one `nix run` — with all logic in tools/keyway (zero shell).
+on:
+  pull_request:
+    paths:
+      - "charts/**"
+      - "tools/keyway/**"
+      - "keyway.yaml"
+      - ".github/workflows/chart_render_test.yaml"
+
+jobs:
+  render-test:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
+
+      - name: Keyway render gate (helm lint + helm-unittest)
+        run: nix run ./tools/keyway#keyway-ci -- --receipt keyway-receipt.json
