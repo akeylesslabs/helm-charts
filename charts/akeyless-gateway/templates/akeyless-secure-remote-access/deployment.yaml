@@ -98,13 +98,6 @@ spec:
             - name: GATEWAY_AUTHORIZED_ACCESS_ID
               value: {{ .Values.globalConfig.authorizedAccessIDs | quote }}
             {{- end }}
-            {{- if .Values.globalConfig.TLSConf.tlsExistingSecret }}
-            - name: AKEYLESS_GW_CERTIFICATE
-              valueFrom:
-                secretKeyRef:
-                  name: {{.Values.globalConfig.TLSConf.tlsExistingSecret | quote  }}
-                  key: {{ (.Values.globalConfig.TLSConf).tlsCertificateSecretKeyName | default "tlsCertificate" }}
-            {{- end }}
             - name: REMOTE_ACCESS_TYPE
               value: "web"
             {{- if .Values.globalConfig.gatewayAuth.azureObjectID }}
