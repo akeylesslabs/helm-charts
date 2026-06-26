@@ -66,7 +66,7 @@ spec:
           secret:
             secretName: {{ .Values.globalConfig.TLSConf.tlsExistingSecret }}
             items:
-              - key: tlsCertificate
+              - key: {{ (.Values.globalConfig.TLSConf).tlsCertificateSecretKeyName | default "tlsCertificate" }}
                 path: gw-cert.pem
         {{- end }}
         {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
@@ -103,7 +103,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{.Values.globalConfig.TLSConf.tlsExistingSecret | quote  }}
-                  key: tlsCertificate
+                  key: {{ (.Values.globalConfig.TLSConf).tlsCertificateSecretKeyName | default "tlsCertificate" }}
             {{- end }}
             - name: REMOTE_ACCESS_TYPE
               value: "web"
