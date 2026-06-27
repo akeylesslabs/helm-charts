@@ -1,4 +1,4 @@
-suite: akeyless-gateway gatewayAPI guards (ASM-16238)
+suite: akeyless-gateway gatewayAPI guards
 tests:
   - it: "G1 — gatewayAPI and the chart ingress are mutually exclusive"
     template: templates/gateway-api/gateway-api-validate.yaml
