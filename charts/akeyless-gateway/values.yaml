@@ -682,3 +682,38 @@ sra:
       enabled: false
       # minAvailable: ""
       # maxUnavailable: ""
+
+gatewayAPI:
+  enabled: false
+  backend:
+    serviceName: ""
+    ports:
+      - { name: gateway, port: 8000 }
+      - { name: kmip, port: 5696 }
+      - { name: hvp, port: 8200 }
+      - { name: ssh, port: 22 }
+  gateway:
+    create: true
+    name: ""
+    gatewayClassName: ""
+    annotations: {}
+    labels: {}
+    infrastructure: {}
+    addresses: []
+    tls:
+      enabled: false
+      mode: Terminate
+      certificateRefs: []
+      httpsRedirect: false
+    listeners: []
+    allowedRoutes:
+      namespaces:
+        from: Same
+  parentRefs: []
+  httpRoutePath: /
+  httpRoutePathType: PathPrefix
+  httpRoutes: []
+  tlsRoutes: []
+  tcpRoutes: []
+  referenceGrants: []
+  extraObjects: []
