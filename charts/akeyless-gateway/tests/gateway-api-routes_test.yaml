@@ -55,6 +55,27 @@ tests:
           path: spec.rules[0].backendRefs[0].port
           value: 5696
 
+  - it: HVP (HashiCorp Vault proxy) TCPRoute -> the gateway Service on the Vault port 8200
+    template: templates/gateway-api/tcproute.yaml
+    set:
+      gatewayAPI.tcpRoutes:
+        - name: hvp
+          servicePort: hvp
+    asserts:
+      - isKind:
+          of: TCPRoute
+      - isAPIVersion:
+          of: gateway.networking.k8s.io/v1alpha2
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: tcp-hvp
+      - equal:
+          path: spec.rules[0].backendRefs[0].name
+          value: RELEASE-NAME-akeyless-gateway
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 8200
+
   - it: SSH TCPRoute via serviceName override -> the separate SRA service on 22
     template: templates/gateway-api/tcproute.yaml
     set:

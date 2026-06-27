@@ -84,6 +84,20 @@ tests:
           path: spec.listeners[1].port
           value: 5696
 
+  - it: auto-generates a tcp-hvp listener on the Vault port 8200 (Vault client drop-in -> VAULT_ADDR unchanged)
+    template: templates/gateway-api/gateway.yaml
+    set:
+      gatewayAPI.tcpRoutes:
+        - name: hvp
+          servicePort: hvp
+    asserts:
+      - equal:
+          path: spec.listeners[1].name
+          value: tcp-hvp
+      - equal:
+          path: spec.listeners[1].port
+          value: 8200
+
   - it: does not render a Gateway in attach mode
     template: templates/gateway-api/gateway.yaml
     set:
