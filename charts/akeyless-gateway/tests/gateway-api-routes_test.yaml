@@ -1,4 +1,4 @@
-suite: akeyless-gateway gatewayAPI routes (ASM-16238)
+suite: akeyless-gateway gatewayAPI routes
 set:
   gatewayAPI.enabled: true
   gatewayAPI.gateway.gatewayClassName: cilium
