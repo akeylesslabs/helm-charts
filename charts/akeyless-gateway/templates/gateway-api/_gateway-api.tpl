@@ -74,7 +74,13 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- fail "akeyless-gateway gatewayAPI: tlsRoutes require a TLS passthrough listener — set gatewayAPI.gateway.tls.enabled=true and tls.mode=Passthrough." -}}
 {{- end -}}
 {{- end -}}
-{{- range $ga.httpRoutes -}}{{- $_ := include "gatewayApi.portNumber" (dict "port" .servicePort "root" $) -}}{{- end -}}
+{{- range $r := $ga.httpRoutes -}}
+{{- if $r.backendRefs -}}
+{{- range $b := $r.backendRefs -}}{{- $_ := include "gatewayApi.portNumber" (dict "port" $b.servicePort "root" $) -}}{{- end -}}
+{{- else -}}
+{{- $_ := include "gatewayApi.portNumber" (dict "port" $r.servicePort "root" $) -}}
+{{- end -}}
+{{- end -}}
 {{- range $ga.tlsRoutes -}}{{- $_ := include "gatewayApi.portNumber" (dict "port" .servicePort "root" $) -}}{{- end -}}
 {{- range $ga.tcpRoutes -}}{{- $_ := include "gatewayApi.portNumber" (dict "port" .servicePort "root" $) -}}{{- end -}}
 {{- end -}}
