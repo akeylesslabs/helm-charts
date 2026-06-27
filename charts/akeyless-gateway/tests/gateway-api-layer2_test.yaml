@@ -1,4 +1,4 @@
-suite: akeyless-gateway gatewayAPI Layer-2 HTTPRoute surface (ASM-16238)
+suite: akeyless-gateway gatewayAPI Layer-2 HTTPRoute surface
 templates:
   - templates/gateway-api/httproute.yaml
 set:
