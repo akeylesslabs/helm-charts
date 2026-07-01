@@ -14,6 +14,10 @@ inputs:
     description: Cilium chart version
     required: false
     default: 1.19.5
+  dataplane:
+    description: Enable L2 announcements and an in-subnet LoadBalancer pool so the Gateway IP is reachable
+    required: false
+    default: "false"
 
 runs:
   using: composite
@@ -36,10 +40,15 @@ runs:
       shell: bash
       env:
         CILIUM_VERSION: ${{ inputs.cilium-version }}
+        DATAPLANE: ${{ inputs.dataplane }}
       run: |
         helm repo add cilium https://helm.cilium.io/
         helm repo update
         control_plane_ip=$(kubectl get nodes -l node-role.kubernetes.io/control-plane -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
+        extra=()
+        if [ "$DATAPLANE" = "true" ]; then
+          extra+=(--set l2announcements.enabled=true --set k8sClientRateLimit.qps=10 --set k8sClientRateLimit.burst=20)
+        fi
         helm install cilium cilium/cilium \
           --namespace kube-system \
           --version "${CILIUM_VERSION}" \
@@ -48,6 +57,7 @@ runs:
           --set k8sServicePort=6443 \
           --set gatewayAPI.enabled=true \
           --set operator.replicas=1 \
+          "${extra[@]}" \
           --wait \
           --timeout 300s
 
@@ -61,15 +71,44 @@ runs:
     - name: Configure Cilium LoadBalancer IPAM
       if: inputs.controller == 'cilium'
       shell: bash
+      env:
+        DATAPLANE: ${{ inputs.dataplane }}
       run: |
-        cat <<'EOF' | kubectl apply -f -
+        block=192.0.2.0/24
+        if [ "$DATAPLANE" = "true" ]; then
+          subnet=$(docker network inspect kind -f '{{range .IPAM.Config}}{{.Subnet}} {{end}}' | tr ' ' '\n' | grep -E '^[0-9]+\.' | head -1)
+          net=${subnet%/*}
+          o1=${net%%.*}
+          rest=${net#*.}
+          o2=${rest%%.*}
+          block="${o1}.${o2}.255.0/24"
+          echo "loadbalancer pool derived from kind subnet ${subnet} -> ${block}"
+        fi
+        cat <<EOF | kubectl apply -f -
         apiVersion: cilium.io/v2
         kind: CiliumLoadBalancerIPPool
         metadata:
           name: gateway-api-test
         spec:
           blocks:
-            - cidr: 192.0.2.0/24
+            - cidr: ${block}
+        EOF
+
+    - name: Configure Cilium L2 announcements
+      if: inputs.controller == 'cilium' && inputs.dataplane == 'true'
+      shell: bash
+      run: |
+        kubectl wait --for=condition=established --timeout=60s crd/ciliuml2announcementpolicies.cilium.io
+        cat <<'EOF' | kubectl apply -f -
+        apiVersion: cilium.io/v2alpha1
+        kind: CiliumL2AnnouncementPolicy
+        metadata:
+          name: gateway-api-test
+        spec:
+          loadBalancerIPs: true
+          externalIPs: true
+          interfaces:
+            - ^eth[0-9]+
         EOF
 
     - name: Wait for cilium GatewayClass Accepted
