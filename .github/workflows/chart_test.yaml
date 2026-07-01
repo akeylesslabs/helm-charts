@@ -47,6 +47,19 @@ jobs:
             } >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Install helm-unittest plugin
+        if: steps.list-changed.outputs.changed == 'true'
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest --verify=false
+
+      - name: Run render unit tests
+        if: steps.list-changed.outputs.changed == 'true'
+        env:
+          CHANGED_CHARTS: ${{ steps.list-changed.outputs.changed-charts }}
+        run: |
+          while IFS= read -r chart; do
+            [ -d "$chart/tests" ] && helm unittest "$chart"
+          done <<< "$CHANGED_CHARTS"
+
       - name: Add dependency chart repos
         if: steps.list-changed.outputs.changed == 'true'
         run: |
