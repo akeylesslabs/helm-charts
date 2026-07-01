@@ -1,6 +1,6 @@
 apiVersion: v2
 name: akeyless-gateway
-version: 3.3.0
+version: 3.3.1
 description: A Helm chart for Kubernetes that deploys akeyless-gateway
 home: https://akeyless.atlassian.net/wiki/spaces/AK/pages/4184473615
 maintainers:
