@@ -26,6 +26,24 @@ httpProxySettings:
   https_proxy: ""
   no_proxy: ""
 
+# IPv6 / dual-stack.
+# ZTWA runs on IPv4, dual-stack, and IPv6-only clusters (e.g. EKS in IPv6 mode). The
+# images bind dual-stack listeners and resolve workers/dispatcher family-agnostically,
+# so no value is required for IPv6-only clusters.
+#
+# ipFamilyPolicy / ipFamilies are applied to the ZTWA Services only when set. Leave
+# unset to inherit the cluster default (single-stack of the cluster's primary family).
+# On dual-stack clusters, set PreferDualStack to expose Services on both families:
+#   ipFamilyPolicy: PreferDualStack
+#   ipFamilies: [IPv6, IPv4]
+#
+# IPv6-only prerequisite: pods reaching IPv4-only endpoints (Akeyless Gateway, S3 for
+# recording upload, IPv4-only target sites) require NAT64/DNS64 in the cluster (standard
+# on EKS IPv6). The dispatcher Squid egress guard denies cloud metadata over IPv6 and
+# the NAT64 well-known prefix.
+ipFamilyPolicy: ""
+ipFamilies: []
+
 deployment:
   labels: {}
 
