@@ -85,6 +85,12 @@
                                 "string"
                             ]
                         },
+                        "labels": {
+                            "type": [
+                                "object",
+                                "string"
+                            ]
+                        },
                         "tolerations": {
                             "type": [
                                 "null",
@@ -121,6 +127,12 @@
                     "type": "object",
                     "properties": {
                         "annotations": {
+                            "type": [
+                                "object",
+                                "string"
+                            ]
+                        },
+                        "labels": {
                             "type": [
                                 "object",
                                 "string"

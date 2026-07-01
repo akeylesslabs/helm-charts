@@ -9,9 +9,9 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     {{- if .Values.csi.daemonSet.labels }}
-      {{- toYaml .Values.csi.daemonSet.labels | nindent 4 }}
-  {{ template "csi.daemonSet.annotations" . }}
-  {{- end }}
+    {{- toYaml .Values.csi.daemonSet.labels | nindent 4 }}
+    {{- end }}
+  {{- template "csi.daemonSet.annotations" . }}
 spec:
   updateStrategy:
     type: {{ .Values.csi.daemonSet.updateStrategy.type }}
@@ -28,7 +28,8 @@ spec:
       labels:
         app.kubernetes.io/name: {{ template "akeyless.name" . }}-csi-provider
         app.kubernetes.io/instance: {{ .Release.Name }}
-      {{ template "csi.pod.annotations" . }}
+        {{- template "csi.pod.labels" . }}
+      {{- template "csi.pod.annotations" . }}
     spec:
       {{- if .Values.csi.priorityClassName }}
       priorityClassName: {{ .Values.csi.priorityClassName }}
