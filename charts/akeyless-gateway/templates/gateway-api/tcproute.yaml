@@ -1,0 +1,26 @@
+{{- $ga := .Values.gatewayAPI | default dict -}}
+{{- if and $ga.enabled $ga.tcpRoutes -}}
+{{- $default := include "gatewayApi.backendService" . -}}
+{{- range $r := $ga.tcpRoutes }}
+---
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: TCPRoute
+metadata:
+  name: {{ include "gatewayApi.gatewayName" $ }}-tcp-{{ $r.name }}
+  namespace: {{ $.Release.Namespace | quote }}
+  labels:
+    {{- include "gatewayApi.labels" $ | nindent 4 }}
+spec:
+  parentRefs:
+  {{- if $ga.parentRefs }}
+    {{- include "gatewayApi.parentRefs" $ | nindent 4 }}
+  {{- else }}
+    - name: {{ include "gatewayApi.gatewayName" $ }}
+      sectionName: tcp-{{ $r.name }}
+  {{- end }}
+  rules:
+    - backendRefs:
+        - name: {{ $r.serviceName | default $default }}
+          port: {{ include "gatewayApi.portNumber" (dict "port" $r.servicePort "root" $) }}
+{{- end }}
+{{- end -}}

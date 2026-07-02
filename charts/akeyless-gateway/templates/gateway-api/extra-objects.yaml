@@ -1,0 +1,5 @@
+{{- $ga := .Values.gatewayAPI | default dict -}}
+{{- range $obj := $ga.extraObjects }}
+---
+{{ tpl (toYaml $obj) $ }}
+{{- end }}

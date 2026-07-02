@@ -1,0 +1,52 @@
+suite: akeyless-gateway gatewayAPI matrix
+set:
+  gatewayAPI.enabled: true
+  gatewayAPI.gateway.gatewayClassName: cilium
+  gatewayAPI.gateway.tls.enabled: true
+  gatewayAPI.gateway.tls.mode: Terminate
+  gatewayAPI.gateway.tls.httpsRedirect: true
+  gatewayAPI.gateway.tls.certificateRefs:
+    - name: akeyless-api-tls
+  gatewayAPI.httpRoutes:
+    - hostname: gw.example.com
+      servicePort: gateway
+  gatewayAPI.tcpRoutes:
+    - name: kmip
+      servicePort: kmip
+    - name: ssh
+      servicePort: ssh
+      serviceName: ssh-RELEASE-NAME-akeyless-gateway
+tests:
+  - it: Gateway has http + https + tcp-kmip + tcp-ssh listeners
+    template: templates/gateway-api/gateway.yaml
+    asserts:
+      - lengthEqual:
+          path: spec.listeners
+          count: 4
+      - equal:
+          path: spec.listeners[0].name
+          value: http
+      - equal:
+          path: spec.listeners[1].name
+          value: https
+      - equal:
+          path: spec.listeners[2].name
+          value: tcp-kmip
+      - equal:
+          path: spec.listeners[3].name
+          value: tcp-ssh
+  - it: renders the HTTPRoute
+    template: templates/gateway-api/httproute.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+  - it: renders the HTTP->HTTPS redirect
+    template: templates/gateway-api/httproute-redirect.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+  - it: renders both TCPRoutes (kmip + ssh)
+    template: templates/gateway-api/tcproute.yaml
+    asserts:
+      - hasDocuments:
+          count: 2
