@@ -15,6 +15,33 @@ this README. Please refer to the Kubernetes and Helm documentation.
 
 The Kubernetes [metrics server](https://github.com/kubernetes-sigs/metrics-server) must be configured in your cluster.
 
+### Architecture support (amd64 / arm64)
+
+The Gateway and SRA (`zero-trust-bastion`) images are published as multi-arch
+manifests (`linux/amd64` and `linux/arm64`), so the chart runs on both x86_64 and
+arm64 nodes (e.g. AWS Graviton) with no changes — Kubernetes pulls the image
+variant matching each node's architecture. The chart sets no architecture
+`nodeSelector` by default.
+
+On a **mixed-architecture cluster**, pin the Gateway/SRA workloads to a specific
+node pool via the existing `nodeSelector` fields, for example:
+
+```yaml
+gateway:
+  deployment:
+    nodeSelector:
+      kubernetes.io/arch: arm64
+sra:
+  webConfig:
+    deployment:
+      nodeSelector:
+        kubernetes.io/arch: arm64
+  sshConfig:
+    deployment:
+      nodeSelector:
+        kubernetes.io/arch: arm64
+```
+
 
 ## Add Akeyless Repository
 
