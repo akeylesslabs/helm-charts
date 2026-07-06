@@ -306,6 +306,18 @@ gateway:
     #  seccompProfile:
     #    type: RuntimeDefault
 
+    ## Extra volumes to add to the Gateway pod.
+    extraVolumes: []
+      # - name: custom-secret
+      #   secret:
+      #     secretName: custom-secret
+
+    ## Extra volume mounts to add to the Gateway container.
+    extraVolumeMounts: []
+      # - name: custom-secret
+      #   mountPath: /etc/custom-secret
+      #   readOnly: true
+
     livenessProbe:
       initialDelaySeconds: 60
       periodSeconds: 30
