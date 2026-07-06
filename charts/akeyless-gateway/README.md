@@ -35,6 +35,23 @@ To install the chart run the following:
 helm install gateway akeyless/akeyless-gateway
 ```
 
+## Extra Volumes and Volume Mounts
+
+To add custom Kubernetes volumes to the Gateway pod and mount them into the Gateway container, configure `gateway.deployment.extraVolumes` and `gateway.deployment.extraVolumeMounts`:
+
+```yaml
+gateway:
+  deployment:
+    extraVolumes:
+      - name: custom-secret
+        secret:
+          secretName: custom-secret
+    extraVolumeMounts:
+      - name: custom-secret
+        mountPath: /etc/custom-secret
+        readOnly: true
+```
+
 ## Strict Security Policy (Kyverno/PSA Compliance)
 
 For environments requiring Kyverno or Pod Security Admission (PSA) `restricted` profile compliance, enable the `strictSecurityPolicy` toggle:
