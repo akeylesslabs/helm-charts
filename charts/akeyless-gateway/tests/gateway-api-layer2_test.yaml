@@ -1,0 +1,141 @@
+suite: akeyless-gateway gatewayAPI Layer-2 HTTPRoute surface
+templates:
+  - templates/gateway-api/httproute.yaml
+set:
+  gatewayAPI.enabled: true
+  gatewayAPI.gateway.gatewayClassName: eg
+tests:
+  - it: rich matches — path + header + method
+    set:
+      gatewayAPI.httpRoutes:
+        - hostname: gw.example.com
+          servicePort: gateway
+          matches:
+            - path: { type: PathPrefix, value: /api }
+              headers: [{ name: x-canary, value: "true" }]
+              method: GET
+    asserts:
+      - equal:
+          path: spec.rules[0].matches[0].path.value
+          value: /api
+      - equal:
+          path: spec.rules[0].matches[0].headers[0].name
+          value: x-canary
+      - equal:
+          path: spec.rules[0].matches[0].method
+          value: GET
+
+  - it: URLRewrite filter (ReplacePrefixMatch)
+    set:
+      gatewayAPI.httpRoutes:
+        - hostname: gw.example.com
+          servicePort: gateway
+          filters:
+            - type: URLRewrite
+              urlRewrite: { path: { type: ReplacePrefixMatch, replacePrefixMatch: / } }
+    asserts:
+      - equal:
+          path: spec.rules[0].filters[0].type
+          value: URLRewrite
+      - equal:
+          path: spec.rules[0].filters[0].urlRewrite.path.replacePrefixMatch
+          value: /
+
+  - it: request + response header modifier filters
+    set:
+      gatewayAPI.httpRoutes:
+        - hostname: gw.example.com
+          servicePort: gateway
+          filters:
+            - type: RequestHeaderModifier
+              requestHeaderModifier: { set: [{ name: x-env, value: prod }] }
+            - type: ResponseHeaderModifier
+              responseHeaderModifier: { set: [{ name: x-served-by, value: akeyless-gateway }] }
+    asserts:
+      - equal:
+          path: spec.rules[0].filters[0].requestHeaderModifier.set[0].name
+          value: x-env
+      - equal:
+          path: spec.rules[0].filters[1].responseHeaderModifier.set[0].value
+          value: akeyless-gateway
+
+  - it: request mirror filter
+    set:
+      gatewayAPI.httpRoutes:
+        - hostname: gw.example.com
+          servicePort: gateway
+          filters:
+            - type: RequestMirror
+              requestMirror: { backendRef: { name: mirror-svc, port: 8000 } }
+    asserts:
+      - equal:
+          path: spec.rules[0].filters[0].requestMirror.backendRef.name
+          value: mirror-svc
+
+  - it: weighted backends (canary split) with named-port resolution
+    set:
+      gatewayAPI.httpRoutes:
+        - hostname: gw.example.com
+          backendRefs:
+            - { servicePort: gateway, weight: 90 }
+            - { servicePort: gateway, serviceName: canary-akeyless-gateway, weight: 10 }
+    asserts:
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 8000
+      - equal:
+          path: spec.rules[0].backendRefs[0].weight
+          value: 90
+      - equal:
+          path: spec.rules[0].backendRefs[1].name
+          value: canary-akeyless-gateway
+      - equal:
+          path: spec.rules[0].backendRefs[1].weight
+          value: 10
+
+  - it: cross-namespace backendRef (pairs with a ReferenceGrant, if one exists on the cluster)
+    set:
+      gatewayAPI.httpRoutes:
+        - hostname: gw.example.com
+          backendRefs:
+            - { servicePort: gateway, serviceName: other-svc, namespace: other-ns }
+    asserts:
+      - equal:
+          path: spec.rules[0].backendRefs[0].namespace
+          value: other-ns
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 8000
+
+  - it: per-route timeouts
+    set:
+      gatewayAPI.httpRoutes:
+        - hostname: gw.example.com
+          servicePort: gateway
+          timeouts: { request: 30s, backendRequest: 25s }
+    asserts:
+      - equal:
+          path: spec.rules[0].timeouts.request
+          value: 30s
+      - equal:
+          path: spec.rules[0].timeouts.backendRequest
+          value: 25s
+
+  - it: Layer-1 route unchanged — single path match, single backend, no L2 fields
+    set:
+      gatewayAPI.httpRoutes:
+        - hostname: gw.example.com
+          servicePort: gateway
+    asserts:
+      - equal:
+          path: spec.rules[0].matches[0].path.value
+          value: /
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 8000
+      - notExists:
+          path: spec.rules[0].filters
+      - notExists:
+          path: spec.rules[0].timeouts
+      - notExists:
+          path: spec.rules[0].backendRefs[0].weight
