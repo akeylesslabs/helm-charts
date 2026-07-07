@@ -28,6 +28,10 @@ spec:
     spec:
       securityContext:
         fsGroup: 10000
+      hostAliases:
+        - ip: "127.0.0.1"
+          hostnames:
+            - "rbi.dispatcher"
       volumes:
         - name: akeyless-config
           emptyDir: {}

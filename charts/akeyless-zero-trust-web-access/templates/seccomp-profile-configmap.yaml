@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $.Release.Name }}-cm-seccomp-profile
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ $.Values.webWorker.containerName }}
+    chart: {{ $.Chart.Name }}
+  annotations:
+    akeyless.io/seccomp-install: >
+      Install this profile on each node at
+      /var/lib/kubelet/seccomp/profiles/ztwa-worker.json before deploying workers
+      with webWorker.securityContext.seccompProfile.type=Localhost.
+data:
+  ztwa-worker.json: |
+{{ .Files.Get "files/seccomp/ztwa-worker.json" | indent 4 }}
