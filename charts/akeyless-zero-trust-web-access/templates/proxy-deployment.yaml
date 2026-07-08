@@ -1,0 +1,147 @@
+{{- /* Access-ID used only to resolve the Akeyless Gateway DNS in the image entrypoint
+       (AKEYLESS_URL resolver). Prefer the list-only SAML access-id; fall back to the
+       first plaintext allowedAccessID. When IDs come from an existing secret, the
+       resolver falls back to the first entry of $allowedAccessIDs at runtime below. */}}
+{{- $resolverID := .Values.dispatcher.config.listOnlyCredentials.samlAccessID }}
+{{- if and (not $resolverID) .Values.dispatcher.config.privilegedAccess.allowedAccessIDs }}
+{{- $resolverID = first .Values.dispatcher.config.privilegedAccess.allowedAccessIDs }}
+{{- end }}
+{{- $replicas := .Values.webProxy.replicaCount }}
+{{- if kindIs "invalid" $replicas }}
+{{- $replicas = .Values.dispatcher.replicaCount }}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-proxy-deployment
+  namespace: {{ .Release.Namespace }}
+  labels:
+        {{- include "akeyless-zero-web-access.labels" . | nindent 4 }}
+    {{- if .Values.deployment.labels }}
+      {{- toYaml .Values.deployment.labels | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      app: web-proxy
+  replicas: {{ $replicas }}
+  template:
+    metadata:
+      labels:
+        app: web-proxy
+    spec:
+      securityContext:
+        fsGroup: 10000
+      volumes:
+        # Shared read-write config dir. The proxy needs zero privileged creds, so the
+        # dispatcher's privileged-access secret and -cm-akeyless configmap are NOT mounted.
+        - name: ng-config
+          emptyDir: {}
+{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+        - name: gw-signed-ca
+          secret:
+            secretName: {{ .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+            items:
+              - key: tls.crt
+                path: gw-cert.pem
+{{- end }}
+      initContainers:
+        - name: bootstrap
+          image: "{{ .Values.webProxy.initContainer.image.repository }}:{{ .Values.webProxy.initContainer.image.tag }}"
+          imagePullPolicy: {{ .Values.webProxy.initContainer.image.pullPolicy }}
+{{- if (eq (include "secret-exist" (dict "Root" $.Values.dispatcher.config.privilegedAccess.existingSecretNames "Name" "allowedIDs")) "true") }}
+          env:
+            - name: allowedAccessIDs
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.dispatcher.config.privilegedAccess.existingSecretNames.allowedIDs }}
+                  key: allowedAccessIDs
+{{- end }}
+          command: ['sh']
+          args:
+            - "-c"
+            - |
+              set -ex
+              echo "{{ required "API Gateway URL is required" .Values.dispatcher.config.apiGatewayURL }}" > /etc/akeyless/akeyless_config_file
+{{- if $resolverID }}
+              echo "cmd=auth&access-id={{ $resolverID }}" >> /etc/akeyless/akeyless_config_file
+{{- else if (eq (include "secret-exist" (dict "Root" $.Values.dispatcher.config.privilegedAccess.existingSecretNames "Name" "allowedIDs")) "true") }}
+              echo "cmd=auth&access-id=$(echo "$allowedAccessIDs" | cut -d',' -f1)" >> /etc/akeyless/akeyless_config_file
+{{- end }}
+{{- if (eq (include "secret-exist" (dict "Root" $.Values.dispatcher.config.privilegedAccess.existingSecretNames "Name" "allowedIDs")) "true") }}
+              echo "$allowedAccessIDs" > /etc/akeyless/allowed_access_ids
+{{- else if .Values.dispatcher.config.privilegedAccess.allowedAccessIDs }}
+              echo {{ range $index, $element := .Values.dispatcher.config.privilegedAccess.allowedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_access_ids
+{{- end }}
+          resources:
+{{- toYaml .Values.webProxy.initContainer.resources | nindent 12 }}
+          securityContext:
+            runAsUser: 65534
+            runAsGroup: 65534
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: ng-config
+              mountPath: /etc/akeyless
+{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+            - name: gw-signed-ca
+              mountPath: "/etc/ssl/certs/gw-cert.pem"
+              subPath: gw-cert.pem
+{{- end }}
+{{- with include "akeyless-zero-web-access.imagePullSecrets" (dict "Root" $ "initPullSecrets" .Values.webProxy.initContainer.imagePullSecrets "imagePullSecrets" .Values.webProxy.image.imagePullSecrets) }}{{ . | nindent 6 }}{{ end }}
+      containers:
+        - name: {{ .Values.webProxy.containerName }}
+          image: "{{ .Values.webProxy.image.repository }}:{{ .Values.webProxy.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.webProxy.image.pullPolicy }}
+          securityContext:
+            runAsUser: 65534
+            runAsGroup: 65534
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+          ports:
+            - containerPort: 19414
+              name: proxy
+          env:
+{{- if .Values.httpProxySettings.http_proxy }}
+            - name: HTTP_PROXY
+              value: {{ .Values.httpProxySettings.http_proxy }}
+            - name: http_proxy
+              value: {{ .Values.httpProxySettings.http_proxy }}
+{{- end }}
+{{- if .Values.httpProxySettings.https_proxy }}
+            - name: HTTPS_PROXY
+              value: {{ .Values.httpProxySettings.https_proxy }}
+            - name: https_proxy
+              value: {{ .Values.httpProxySettings.https_proxy }}
+{{- end }}
+{{- if .Values.httpProxySettings.no_proxy }}
+            - name: NO_PROXY
+              value: {{ .Values.httpProxySettings.no_proxy }}
+            - name: no_proxy
+              value: {{ .Values.httpProxySettings.no_proxy }}
+{{- end }}
+{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+            - name: AKEYLESS_CA_BUNDLE
+              value: "/etc/ssl/certs/gw-cert.pem"
+{{- end }}
+{{- if .Values.webProxy.env }}
+          {{- toYaml .Values.webProxy.env | nindent 12 }}
+{{- end }}
+          volumeMounts:
+            - name: ng-config
+              mountPath: /etc/akeyless
+{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+            - name: gw-signed-ca
+              mountPath: "/etc/ssl/certs/gw-cert.pem"
+              subPath: gw-cert.pem
+{{- end }}
+          resources:
+{{- toYaml .Values.webProxy.resources | nindent 12 }}
+          livenessProbe:
+            tcpSocket:
+              port: 19414
+{{- toYaml .Values.webProxy.livenessProbe | trim | nindent 12 }}
+          readinessProbe:
+            tcpSocket:
+              port: 19414
+{{- toYaml .Values.webProxy.readinessProbe | trim | nindent 12 }}

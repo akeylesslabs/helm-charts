@@ -221,7 +221,8 @@ dispatcher:
     labels: {}
     type: LoadBalancer
     port: 9000
-    proxyPort: 19414
+    # Proxy mode is now a dedicated backend. Its exposure moved to the webProxy block
+    # below (proxyPort was removed — the dispatcher no longer serves :19414).
 
   # Overridable defaults. Set resources: {} in your values file to clear.
   resources:
@@ -346,6 +347,86 @@ dispatcher:
     #     s3Bucket: high-priority-bucket
     #     s3Region: eu-west-1
     recording: {}
+
+# Proxy mode runs as its own Deployment + externally-exposed Service (split out of the
+# dispatcher). It needs zero privileged credentials — only the API Gateway URL and the
+# allowed access-IDs, both reused from dispatcher.config. Clients connect to the
+# <release>-proxy Service, NOT the dispatcher.
+webProxy:
+  # Number of proxy replicas. Commented out on purpose: when unset, it inherits
+  # dispatcher.replicaCount so a default install scales the proxy with the dispatcher.
+  # Set explicitly (including 0) to override.
+  # replicaCount: 1
+  initContainer:
+    image:
+      repository: busybox
+      tag: 1.30.1
+      pullPolicy: IfNotPresent
+    # Pull secret refs for the init container; merged on the pod with global and main
+    # image.imagePullSecrets, plus the legacy secret when dockerRepositoryCreds is set.
+    imagePullSecrets: []
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        memory: 512Mi
+  image:
+    repository: akeyless/zero-trust-web-proxy
+    pullPolicy: Always
+#    tag: latest
+    # Pull secret refs for the main proxy container; all lists are merged at pod
+    # spec.imagePullSecrets and deduplicated.
+    imagePullSecrets: []
+
+  containerName: "web-proxy"
+
+  service:
+    # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
+    annotations: {}
+    labels: {}
+    # LoadBalancer is the portable default external exposure (no ingress controller
+    # assumed). Override to NodePort/ClusterIP as needed.
+    type: LoadBalancer
+    port: 19414
+
+  # Optional L4 exposure via the Gateway API. The proxy speaks HTTP CONNECT / SOCKS,
+  # which a standard HTTP Ingress cannot carry — so this is a TCPRoute, not an Ingress.
+  # Off by default; requires a Gateway API controller and a pre-existing Gateway.
+  ingress:
+    enabled: false
+    # Name of the pre-existing Gateway (with a TCP listener) to attach the TCPRoute to.
+    parentGateway: ""
+
+  # Overridable defaults. Set resources: {} in your values file to clear.
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+
+  livenessProbe:
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+    periodSeconds: 10
+    failureThreshold: 6
+    successThreshold: 1
+
+  readinessProbe:
+    initialDelaySeconds: 5
+    timeoutSeconds: 3
+    periodSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+
+  # WEB_PROXY_TYPE selects the proxy engine on :19414 — Squid (HTTP, default) or a
+  # SOCKS5 server. The two are mutually exclusive. This knob moved here from
+  # dispatcher.env; set it via env passthrough:
+  # env:
+  #   - name: WEB_PROXY_TYPE
+  #     value: "SOCKS"
+  env: []
 
 webWorker:
   replicaCount: 5

@@ -120,6 +120,58 @@
         }
       }
     },
+    "webProxy": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "initContainer": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "imagePullSecrets": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": true,
+                "properties": { "name": { "type": "string" } },
+                "required": ["name"]
+              }
+            }
+          }
+        },
+        "image": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "imagePullSecrets": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": true,
+                "properties": { "name": { "type": "string" } },
+                "required": ["name"]
+              }
+            }
+          }
+        },
+        "service": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "type": { "type": "string" },
+            "port": { "type": "integer" }
+          }
+        },
+        "ingress": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "parentGateway": { "type": "string" }
+          }
+        }
+      }
+    },
     "validator": {
       "type": "object",
       "additionalProperties": true,

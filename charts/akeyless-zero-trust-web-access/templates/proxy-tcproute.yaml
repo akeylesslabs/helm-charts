@@ -1,0 +1,21 @@
+{{- if .Values.webProxy.ingress.enabled }}
+# The proxy speaks HTTP CONNECT / SOCKS (L4) and cannot be carried by a standard HTTP
+# Ingress. This optional route uses the Gateway API TCPRoute and requires a Gateway API
+# controller plus a pre-existing Gateway (referenced by webProxy.ingress.parentGateway)
+# with a TCP listener. It is off by default; the LoadBalancer Service is the portable
+# default exposure. Renders nothing when webProxy.ingress.enabled is false.
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: TCPRoute
+metadata:
+  name: {{ include "akeyless-zero-web-access.fullname" . }}-proxy
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{- include "akeyless-zero-web-access.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+    - name: {{ required "webProxy.ingress.parentGateway is required when webProxy.ingress.enabled is true" .Values.webProxy.ingress.parentGateway }}
+  rules:
+    - backendRefs:
+        - name: {{ include "akeyless-zero-web-access.fullname" . }}-proxy
+          port: {{ .Values.webProxy.service.port }}
+{{- end }}

@@ -30,3 +30,26 @@ This release supports IPv4, dual-stack, and IPv6-only clusters (e.g. EKS in IPv6
 - Rollback warning: on IPv6-only / IPv6-primary clusters, do NOT roll back to an
   older ZTWA version — earlier images bind IPv4-only and fail readiness on the IPv6
   pod IP with no workaround.
+
+Akeyless Zero Trust Web Access — V2 migration (BREAKING)
+========================================================
+
+Proxy mode was split out of the dispatcher into a dedicated backend. The dispatcher
+no longer listens on :19414.
+
+ACTION REQUIRED on upgrade:
+
+- Repoint proxy clients / DNS / firewall to the NEW proxy endpoint. The proxy is now
+  served by a dedicated Service:
+
+      {{ include "akeyless-zero-web-access.fullname" . }}-proxy   (port {{ .Values.webProxy.service.port }})
+
+  The dispatcher Service ({{ include "akeyless-zero-web-access.fullname" . }}-dispatcher)
+  keeps only the isolated-mode port ({{ .Values.dispatcher.service.port }}); its :19414 port is gone.
+- WEB_PROXY_TYPE moved from `dispatcher.env` to `webProxy.env`. If you set it under
+  `dispatcher.env`, move it or proxy mode selection is lost.
+- Pin the dispatcher, worker, and proxy images to the SAME tag (they release
+  lock-step). appVersion in Chart.yaml is that shared tag.
+- Optional L4 exposure: enable `webProxy.ingress.enabled` with a Gateway API
+  `TCPRoute` (requires a Gateway API controller). A standard HTTP Ingress cannot
+  carry the proxy (it speaks CONNECT / SOCKS).

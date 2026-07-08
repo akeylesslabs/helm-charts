@@ -4,7 +4,6 @@ services:
     image: "akeyless/zero-trust-web-dispatcher"
     ports:
       - "9000:9000"
-      - "19414:19414"
     volumes:
       - $PWD/shared:/etc/shared
     environment:
@@ -25,6 +24,24 @@ services:
     networks:
       vpcbr:
         ipv4_address: 10.5.0.2
+
+  # Proxy mode is now a dedicated backend. Host :19414 lands here directly (the
+  # dispatcher no longer serves it). Needs zero privileged creds.
+  proxy:
+    image: "akeyless/zero-trust-web-proxy"
+    ports:
+      - "19414:19414"
+    environment:
+      - AKEYLESS_GW_URL=https://rest.akeyless.io
+      - ALLOWED_ACCESS_IDS=<MUST_BE_PROVIDED>
+      # WEB_PROXY_TYPE selects the engine on :19414 — HTTP (Squid, default) or SOCKS.
+      #- WEB_PROXY_TYPE=HTTP
+      #- http_proxy=
+      #- https_proxy=
+      #- no_proxy=
+    restart: unless-stopped
+    networks:
+      - vpcbr
 
   worker:
     image: "akeyless/zero-trust-web-worker"
