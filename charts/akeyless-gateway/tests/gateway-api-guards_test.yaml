@@ -28,6 +28,16 @@ tests:
       - failedTemplate:
           errorMessage: "akeyless-gateway gatewayAPI: set parentRefs when gateway.create=false — there is no Gateway to attach routes to."
 
+  - it: "G4 — certificateRefs required when tls.enabled=true"
+    template: templates/gateway-api/gateway-api-validate.yaml
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.gatewayClassName: cilium
+      gatewayAPI.gateway.tls.enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: "akeyless-gateway gatewayAPI: gateway.tls.certificateRefs is required when gateway.tls.enabled=true — a Terminate listener cannot be applied without a certificate."
+
   - it: "G5 — unknown servicePort (lists the valid names)"
     template: templates/gateway-api/httproute.yaml
     set:
@@ -39,3 +49,19 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: 'akeyless-gateway gatewayAPI: route references unknown servicePort "nope"; valid names: gateway'
+
+  - it: "G6 — a quoted numeric servicePort still resolves (not misreported as unknown)"
+    template: templates/gateway-api/httproute.yaml
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.gatewayClassName: cilium
+      gatewayAPI.backend.ports:
+        - name: gateway
+          port: "8000"
+      gatewayAPI.httpRoutes:
+        - hostname: x.example.com
+          servicePort: gateway
+    asserts:
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 8000
