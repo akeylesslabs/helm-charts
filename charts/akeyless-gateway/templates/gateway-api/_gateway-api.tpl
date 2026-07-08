@@ -35,10 +35,11 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- $name := .port -}}
 {{- $root := .root -}}
 {{- $num := "" -}}
+{{- $found := false -}}
 {{- range ($root.Values.gatewayAPI.backend | default dict).ports -}}
-{{- if eq .name $name -}}{{- $num = .port -}}{{- end -}}
+{{- if eq .name $name -}}{{- $num = .port -}}{{- $found = true -}}{{- end -}}
 {{- end -}}
-{{- if kindIs "string" $num -}}
+{{- if not $found -}}
 {{- fail (printf "akeyless-gateway gatewayAPI: route references unknown servicePort %q; valid names: %s" $name (include "gatewayApi.portNames" $root)) -}}
 {{- end -}}
 {{- $num -}}
@@ -62,6 +63,10 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- if $gw.create -}}
 {{- if not $gw.gatewayClassName -}}
 {{- fail "akeyless-gateway gatewayAPI: gateway.gatewayClassName is required when gateway.create=true (e.g. cilium, nginx, istio, kong, envoy, aws-alb)." -}}
+{{- end -}}
+{{- $tls := $gw.tls | default dict -}}
+{{- if and $tls.enabled (not $tls.certificateRefs) -}}
+{{- fail "akeyless-gateway gatewayAPI: gateway.tls.certificateRefs is required when gateway.tls.enabled=true — a Terminate listener cannot be applied without a certificate." -}}
 {{- end -}}
 {{- else -}}
 {{- if not $ga.parentRefs -}}
