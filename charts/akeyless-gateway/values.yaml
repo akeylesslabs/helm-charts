@@ -306,6 +306,15 @@ gateway:
     #  seccompProfile:
     #    type: RuntimeDefault
 
+    ## Run the Gateway container with an immutable (read-only) root filesystem.
+    ## Opt-in and default-off: when disabled the deployment is unchanged.
+    ## When enabled, the chart sets the container securityContext.readOnlyRootFilesystem,
+    ## injects READ_ONLY_ROOT_FS=true, and mounts emptyDir volumes for the paths the
+    ## Gateway writes at runtime. Requires a Gateway image that supports READ_ONLY_ROOT_FS
+    ## (see the chart README for the minimum image version).
+    readOnlyRootFilesystem:
+      enabled: false
+
     ## Extra volumes to add to the Gateway pod.
     extraVolumes: []
       # - name: custom-secret
