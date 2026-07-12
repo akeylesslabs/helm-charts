@@ -31,25 +31,16 @@ This release supports IPv4, dual-stack, and IPv6-only clusters (e.g. EKS in IPv6
   older ZTWA version — earlier images bind IPv4-only and fail readiness on the IPv6
   pod IP with no workaround.
 
-Akeyless Zero Trust Web Access — V2 migration (BREAKING)
-========================================================
+{{- $wptInDispatcherEnv := false }}
+{{- range .Values.dispatcher.env }}{{- if eq (get . "name") "WEB_PROXY_TYPE" }}{{- $wptInDispatcherEnv = true }}{{- end }}{{- end }}
+{{- if $wptInDispatcherEnv }}
 
-Proxy mode was split out of the dispatcher into a dedicated backend. The dispatcher
-no longer listens on :19414.
+WARNING: WEB_PROXY_TYPE is set under "dispatcher.env" but the dispatcher no longer
+runs the proxy — the value is ignored there. Move it to "webProxy.env".
+{{- end }}
+{{- if .Values.dispatcher.service.proxyPort }}
 
-ACTION REQUIRED on upgrade:
-
-- Repoint proxy clients / DNS / firewall to the NEW proxy endpoint. The proxy is now
-  served by a dedicated Service:
-
-      {{ include "akeyless-zero-web-access.fullname" . }}-proxy   (port {{ .Values.webProxy.service.port }})
-
-  The dispatcher Service ({{ include "akeyless-zero-web-access.fullname" . }}-dispatcher)
-  keeps only the isolated-mode port ({{ .Values.dispatcher.service.port }}); its :19414 port is gone.
-- WEB_PROXY_TYPE moved from `dispatcher.env` to `webProxy.env`. If you set it under
-  `dispatcher.env`, move it or proxy mode selection is lost.
-- Pin the dispatcher, worker, and proxy images to the SAME tag (they release
-  lock-step). appVersion in Chart.yaml is that shared tag.
-- Optional L4 exposure: enable `webProxy.ingress.enabled` with a Gateway API
-  `TCPRoute` (requires a Gateway API controller). A standard HTTP Ingress cannot
-  carry the proxy (it speaks CONNECT / SOCKS).
+WARNING: "dispatcher.service.proxyPort" was removed — the value is ignored. The proxy
+is exposed by its own Service ({{ include "akeyless-zero-web-access.fullname" . }}-proxy);
+configure it via "webProxy.service".
+{{- end }}
