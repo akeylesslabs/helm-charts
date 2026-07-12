@@ -356,6 +356,9 @@ webProxy:
   # Number of proxy replicas. Commented out on purpose: when unset, it inherits
   # dispatcher.replicaCount so a default install scales the proxy with the dispatcher.
   # Set explicitly (including 0) to override.
+  # With HPA.enabled=true this MUST be set explicitly (template fails otherwise):
+  # the HPA owns the dispatcher's replicas, so the fallback would silently pin the
+  # proxy to the inert dispatcher.replicaCount value. The proxy has no HPA of its own.
   # replicaCount: 1
   initContainer:
     image:

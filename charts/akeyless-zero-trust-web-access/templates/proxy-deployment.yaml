@@ -1,5 +1,8 @@
 {{- $replicas := .Values.webProxy.replicaCount }}
 {{- if kindIs "invalid" $replicas }}
+{{- if .Values.HPA.enabled }}
+{{- fail "webProxy.replicaCount must be set explicitly when HPA.enabled=true: the dispatcher.replicaCount fallback does not track the HPA (the proxy has no HPA of its own)" }}
+{{- end }}
 {{- $replicas = .Values.dispatcher.replicaCount }}
 {{- end }}
 apiVersion: apps/v1
