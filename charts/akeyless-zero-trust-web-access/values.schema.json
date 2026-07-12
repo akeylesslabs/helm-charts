@@ -167,7 +167,8 @@
           "additionalProperties": true,
           "properties": {
             "enabled": { "type": "boolean" },
-            "parentGateway": { "type": "string" }
+            "parentGateway": { "type": "string" },
+            "sectionName": { "type": "string" }
           }
         }
       }

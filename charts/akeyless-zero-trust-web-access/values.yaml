@@ -397,6 +397,9 @@ webProxy:
     enabled: false
     # Name of the pre-existing Gateway (with a TCP listener) to attach the TCPRoute to.
     parentGateway: ""
+    # Listener name on that Gateway. Required by most controllers when the Gateway
+    # has more than one listener; leave empty for a single-listener Gateway.
+    sectionName: ""
 
   # Overridable defaults. Set resources: {} in your values file to clear.
   resources:

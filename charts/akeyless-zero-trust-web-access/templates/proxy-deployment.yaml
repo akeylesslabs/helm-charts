@@ -1,11 +1,3 @@
-{{- /* Access-ID used only to resolve the Akeyless Gateway DNS in the image entrypoint
-       (AKEYLESS_URL resolver). Prefer the list-only SAML access-id; fall back to the
-       first plaintext allowedAccessID. When IDs come from an existing secret, the
-       resolver falls back to the first entry of $allowedAccessIDs at runtime below. */}}
-{{- $resolverID := .Values.dispatcher.config.listOnlyCredentials.samlAccessID }}
-{{- if and (not $resolverID) .Values.dispatcher.config.privilegedAccess.allowedAccessIDs }}
-{{- $resolverID = first .Values.dispatcher.config.privilegedAccess.allowedAccessIDs }}
-{{- end }}
 {{- $replicas := .Values.webProxy.replicaCount }}
 {{- if kindIs "invalid" $replicas }}
 {{- $replicas = .Values.dispatcher.replicaCount }}
@@ -31,7 +23,9 @@ spec:
         app: web-proxy
     spec:
       securityContext:
-        fsGroup: 10000
+        # Match the runtime user (nobody). The dispatcher's fsGroup 10000 is its
+        # shared-upload PVC group; the proxy mounts no such volume.
+        fsGroup: 65534
       volumes:
         # Shared read-write config dir. The proxy needs zero privileged creds, so the
         # dispatcher's privileged-access secret and -cm-akeyless configmap are NOT mounted.
@@ -63,11 +57,6 @@ spec:
             - |
               set -ex
               echo "{{ required "API Gateway URL is required" .Values.dispatcher.config.apiGatewayURL }}" > /etc/akeyless/akeyless_config_file
-{{- if $resolverID }}
-              echo "cmd=auth&access-id={{ $resolverID }}" >> /etc/akeyless/akeyless_config_file
-{{- else if (eq (include "secret-exist" (dict "Root" $.Values.dispatcher.config.privilegedAccess.existingSecretNames "Name" "allowedIDs")) "true") }}
-              echo "cmd=auth&access-id=$(echo "$allowedAccessIDs" | cut -d',' -f1)" >> /etc/akeyless/akeyless_config_file
-{{- end }}
 {{- if (eq (include "secret-exist" (dict "Root" $.Values.dispatcher.config.privilegedAccess.existingSecretNames "Name" "allowedIDs")) "true") }}
               echo "$allowedAccessIDs" > /etc/akeyless/allowed_access_ids
 {{- else if .Values.dispatcher.config.privilegedAccess.allowedAccessIDs }}

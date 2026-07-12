@@ -14,6 +14,9 @@ metadata:
 spec:
   parentRefs:
     - name: {{ required "webProxy.ingress.parentGateway is required when webProxy.ingress.enabled is true" .Values.webProxy.ingress.parentGateway }}
+{{- with .Values.webProxy.ingress.sectionName }}
+      sectionName: {{ . }}
+{{- end }}
   rules:
     - backendRefs:
         - name: {{ include "akeyless-zero-web-access.fullname" . }}-proxy
