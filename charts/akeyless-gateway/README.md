@@ -77,6 +77,31 @@ This enforces:
 
 For comprehensive documentation, troubleshooting, and validation steps, see **[STRICT_SECURITY_POLICY.md](./STRICT_SECURITY_POLICY.md)**.
 
+## Read-Only Root Filesystem
+
+For environments that require an immutable container root filesystem, enable `gateway.deployment.readOnlyRootFilesystem`:
+
+```yaml
+gateway:
+  deployment:
+    readOnlyRootFilesystem:
+      enabled: true
+```
+
+The feature is **opt-in and default-off**. When disabled, the deployment is unchanged. When enabled, the chart:
+
+- Sets the container `securityContext.readOnlyRootFilesystem: true` (also works alongside `strictSecurityPolicy.enabled`).
+- Injects `READ_ONLY_ROOT_FS=true`, which tells the Gateway image to redirect its startup writes to writable volumes.
+- Mounts `emptyDir` volumes for the paths the Gateway writes at runtime: `/tmp`, `/run`, `/akeyless/tmp`, `/akeyless/bin`, `/var/run/akeyless`, `/var/log/akeyless`, `/var/log/supervisor`, `/var/akeyless/conf`, `/app`, `/download_center`, `/usr/local/share/ca-certificates`, `/etc/ssl/certs`, and the Gateway config dir.
+- On startup, the Gateway image seeds `/usr/local/share/ca-certificates` and `/etc/ssl/certs` from image-baked trust stores so `update-ca-certificates` and the CA Certificate Store work under read-only rootfs.
+
+**Requirements and limitations:**
+
+- **Minimum Gateway image version:** requires a Gateway image that supports `READ_ONLY_ROOT_FS` (image version `5.0.0` or later). CA Certificate Store with full OS trust store support requires an image that includes CA trust-store seed paths (`/opt/akeyless/ca-certificates-seed`, `/opt/akeyless/ssl-certs-seed`). Enabling the flag against an older image sets the env var but the image will attempt to write to the read-only rootfs and fail to start.
+- **Logging:** logs go to stdout/stderr (collected by the container runtime). File-based logging to the rootfs is not supported in this mode.
+- **Splunk forwarder:** not supported under a read-only rootfs.
+- **FIPS:** supported. Under a read-only rootfs the image activates FIPS via `OPENSSL_CONF` and selects the FIPS binary without mutating the rootfs.
+
 ## Argo CD Instructions
 When deploying the Akeyless Gateway with Argo CD, follow these instructions:
 ```yaml
