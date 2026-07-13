@@ -310,8 +310,10 @@ gateway:
     ## Opt-in and default-off: when disabled the deployment is unchanged.
     ## When enabled, the chart sets the container securityContext.readOnlyRootFilesystem,
     ## injects READ_ONLY_ROOT_FS=true, and mounts emptyDir volumes for the paths the
-    ## Gateway writes at runtime. Requires a Gateway image that supports READ_ONLY_ROOT_FS
-    ## (see the chart README for the minimum image version).
+    ## Gateway writes at runtime (including /usr/local/share/ca-certificates and
+    ## /etc/ssl/certs for CA Certificate Store / update-ca-certificates). Requires a
+    ## Gateway image that supports READ_ONLY_ROOT_FS and CA trust-store seeding (see
+    ## the chart README for the minimum image version).
     readOnlyRootFilesystem:
       enabled: false
 

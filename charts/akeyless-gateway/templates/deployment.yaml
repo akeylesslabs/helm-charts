@@ -148,6 +148,10 @@ spec:
           emptyDir: {}
         - name: download-center
           emptyDir: {}
+        - name: usr-local-ca-certificates
+          emptyDir: {}
+        - name: etc-ssl-certs
+          emptyDir: {}
       {{- end }}
       {{- end }}
       containers:
@@ -201,6 +205,12 @@ spec:
           volumeMounts:
             - name: akeyless-config
               mountPath: {{include "akeyless-gateway.root.config.path" $}}/.akeyless
+          {{- if .Values.gateway.deployment.readOnlyRootFilesystem.enabled }}
+            - name: usr-local-ca-certificates
+              mountPath: /usr/local/share/ca-certificates
+            - name: etc-ssl-certs
+              mountPath: /etc/ssl/certs
+          {{- end }}
           {{- if .Values.gateway.customCA.enabled }}
             - name: {{ .Values.gateway.customCA.volumeName }}
               mountPath: /etc/ssl/certs/ca-certificates.crt
