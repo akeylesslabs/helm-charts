@@ -4,45 +4,36 @@ tests:
     template: templates/gateway-api/gateway-api-validate.yaml
     set:
       gatewayAPI.enabled: true
-      gatewayAPI.gateway.gatewayClassName: cilium
       gateway.ingress.enabled: true
     asserts:
       - failedTemplate:
           errorMessage: "akeyless-gateway gatewayAPI: gatewayAPI.enabled and gateway.ingress.enabled are mutually exclusive — enable exactly one north-south path."
 
-  - it: "G2 — gatewayClassName required when create=true"
-    template: templates/gateway-api/gateway.yaml
-    set:
-      gatewayAPI.enabled: true
-      gatewayAPI.gateway.create: true
-    asserts:
-      - failedTemplate:
-          errorMessage: "akeyless-gateway gatewayAPI: gateway.gatewayClassName is required when gateway.create=true (e.g. cilium, nginx, istio, kong, envoy, aws-alb)."
-
-  - it: "G3 — parentRefs required when create=false"
-    template: templates/gateway-api/gateway-api-validate.yaml
-    set:
-      gatewayAPI.enabled: true
-      gatewayAPI.gateway.create: false
-    asserts:
-      - failedTemplate:
-          errorMessage: "akeyless-gateway gatewayAPI: set parentRefs when gateway.create=false — there is no Gateway to attach routes to."
-
-  - it: "G4 — certificateRefs required when tls.enabled=true"
-    template: templates/gateway-api/gateway-api-validate.yaml
-    set:
-      gatewayAPI.enabled: true
-      gatewayAPI.gateway.gatewayClassName: cilium
-      gatewayAPI.gateway.tls.enabled: true
-    asserts:
-      - failedTemplate:
-          errorMessage: "akeyless-gateway gatewayAPI: gateway.tls.certificateRefs is required when gateway.tls.enabled=true — a Terminate listener cannot be applied without a certificate."
-
-  - it: "G5 — unknown servicePort (lists the valid names)"
+  - it: "G2 — parentRefs required (httproute.yaml path)"
     template: templates/gateway-api/httproute.yaml
     set:
       gatewayAPI.enabled: true
-      gatewayAPI.gateway.gatewayClassName: cilium
+      gatewayAPI.httpRoutes:
+        - hostname: x.example.com
+          servicePort: gateway
+    asserts:
+      - failedTemplate:
+          errorMessage: "akeyless-gateway gatewayAPI: gatewayAPI.parentRefs is required — this slice attaches HTTPRoutes to an existing Gateway; it does not create one (Gateway creation is a separate, follow-on slice)."
+
+  - it: "G3 — parentRefs required (gatewayApi.validate path)"
+    template: templates/gateway-api/gateway-api-validate.yaml
+    set:
+      gatewayAPI.enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: "akeyless-gateway gatewayAPI: gatewayAPI.parentRefs is required — point at the existing Gateway to attach routes to (Gateway creation is a separate, follow-on slice)."
+
+  - it: "G4 — unknown servicePort (lists the valid names)"
+    template: templates/gateway-api/httproute.yaml
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.parentRefs:
+        - name: shared-gw
       gatewayAPI.httpRoutes:
         - hostname: x.example.com
           servicePort: nope
@@ -50,11 +41,12 @@ tests:
       - failedTemplate:
           errorMessage: 'akeyless-gateway gatewayAPI: route references unknown servicePort "nope"; valid names: gateway'
 
-  - it: "G6 — a quoted numeric servicePort still resolves (not misreported as unknown)"
+  - it: "G5 — a quoted numeric servicePort still resolves (not misreported as unknown)"
     template: templates/gateway-api/httproute.yaml
     set:
       gatewayAPI.enabled: true
-      gatewayAPI.gateway.gatewayClassName: cilium
+      gatewayAPI.parentRefs:
+        - name: shared-gw
       gatewayAPI.backend.ports:
         - name: gateway
           port: "8000"

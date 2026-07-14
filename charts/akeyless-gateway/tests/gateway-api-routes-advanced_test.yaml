@@ -1,9 +1,10 @@
-suite: akeyless-gateway gatewayAPI Layer-2 HTTPRoute surface
+suite: akeyless-gateway gatewayAPI — advanced route matching (matches, filters, weighted/cross-namespace backends, timeouts)
 templates:
   - templates/gateway-api/httproute.yaml
 set:
   gatewayAPI.enabled: true
-  gatewayAPI.gateway.gatewayClassName: eg
+  gatewayAPI.parentRefs:
+    - name: shared-gw
 tests:
   - it: rich matches — path + header + method
     set:
