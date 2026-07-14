@@ -695,7 +695,9 @@ sra:
       # minAvailable: ""
       # maxUnavailable: ""
 
-## Kubernetes Gateway API support (HTTPRoute only in this slice).
+## Kubernetes Gateway API support (HTTPRoute only in this slice — attaches to
+## an existing Gateway; this chart does not create one. Gateway creation is a
+## separate, follow-on slice).
 ## Mutually exclusive with gateway.ingress.enabled — enable exactly one.
 gatewayAPI:
   enabled: false
@@ -703,23 +705,15 @@ gatewayAPI:
     serviceName: ""
     ports:
       - {name: gateway, port: 8000}
-  gateway:
-    create: true
-    name: ""
-    gatewayClassName: ""
-    annotations: {}
-    labels: {}
-    infrastructure: {}
-    addresses: []
-    tls:
-      enabled: false
-      certificateRefs: []
-      httpsRedirect: false
-    listeners: []
-    allowedRoutes:
-      namespaces:
-        from: Same
+  ## Required when gatewayAPI.enabled=true — the existing Gateway(s) to attach
+  ## HTTPRoutes to.
   parentRefs: []
+  ## Optional standalone HTTP -> HTTPS redirect route, attached to the same
+  ## parentRefs by default (a specific listener section on that Gateway).
+  httpsRedirect:
+    enabled: false
+    sectionName: http
+    parentRefs: []
   httpRoutePath: /
   httpRoutePathType: PathPrefix
   httpRoutes: []

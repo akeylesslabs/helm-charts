@@ -7,22 +7,11 @@
 {{- end -}}
 {{- end -}}
 
-{{- define "gatewayApi.gatewayName" -}}
-{{- default (include "gatewayApi.backendService" .) .Values.gatewayAPI.gateway.name -}}
-{{- end -}}
-
 {{- define "gatewayApi.labels" -}}
 helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 app.kubernetes.io/name: akeyless-gateway-api
 app.kubernetes.io/instance: {{ .Release.Name }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- end -}}
-
-{{- define "gatewayApi.allowedRoutesFrom" -}}
-{{- $gw := .Values.gatewayAPI.gateway | default dict -}}
-{{- $ar := $gw.allowedRoutes | default dict -}}
-{{- $ns := $ar.namespaces | default dict -}}
-{{- $ns.from | default "Same" -}}
 {{- end -}}
 
 {{- define "gatewayApi.portNames" -}}
@@ -49,7 +38,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- if .Values.gatewayAPI.parentRefs -}}
 {{- toYaml .Values.gatewayAPI.parentRefs -}}
 {{- else -}}
-- name: {{ include "gatewayApi.gatewayName" . }}
+{{- fail "akeyless-gateway gatewayAPI: gatewayAPI.parentRefs is required — this slice attaches HTTPRoutes to an existing Gateway; it does not create one (Gateway creation is a separate, follow-on slice)." -}}
 {{- end -}}
 {{- end -}}
 
@@ -59,19 +48,8 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- if ((.Values.gateway | default dict).ingress | default dict).enabled -}}
 {{- fail "akeyless-gateway gatewayAPI: gatewayAPI.enabled and gateway.ingress.enabled are mutually exclusive — enable exactly one north-south path." -}}
 {{- end -}}
-{{- $gw := $ga.gateway | default dict -}}
-{{- if $gw.create -}}
-{{- if not $gw.gatewayClassName -}}
-{{- fail "akeyless-gateway gatewayAPI: gateway.gatewayClassName is required when gateway.create=true (e.g. cilium, nginx, istio, kong, envoy, aws-alb)." -}}
-{{- end -}}
-{{- $tls := $gw.tls | default dict -}}
-{{- if and $tls.enabled (not $tls.certificateRefs) -}}
-{{- fail "akeyless-gateway gatewayAPI: gateway.tls.certificateRefs is required when gateway.tls.enabled=true — a Terminate listener cannot be applied without a certificate." -}}
-{{- end -}}
-{{- else -}}
 {{- if not $ga.parentRefs -}}
-{{- fail "akeyless-gateway gatewayAPI: set parentRefs when gateway.create=false — there is no Gateway to attach routes to." -}}
-{{- end -}}
+{{- fail "akeyless-gateway gatewayAPI: gatewayAPI.parentRefs is required — point at the existing Gateway to attach routes to (Gateway creation is a separate, follow-on slice)." -}}
 {{- end -}}
 {{- range $r := $ga.httpRoutes -}}
 {{- if $r.backendRefs -}}
