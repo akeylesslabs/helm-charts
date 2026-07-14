@@ -1,11 +1,12 @@
 suite: akeyless-gateway gatewayAPI routes
 set:
   gatewayAPI.enabled: true
-  gatewayAPI.gateway.gatewayClassName: cilium
 tests:
   - it: HTTPRoute targets the gateway Service on the gateway port (8000)
     template: templates/gateway-api/httproute.yaml
     set:
+      gatewayAPI.parentRefs:
+        - name: shared-gw
       gatewayAPI.httpRoutes:
         - hostname: gw.example.com
           servicePort: gateway
@@ -20,11 +21,13 @@ tests:
           value: 8000
       - equal:
           path: spec.parentRefs[0].name
-          value: RELEASE-NAME-akeyless-gateway
+          value: shared-gw
 
   - it: multiple httpRoutes get unique names
     template: templates/gateway-api/httproute.yaml
     set:
+      gatewayAPI.parentRefs:
+        - name: shared-gw
       gatewayAPI.httpRoutes:
         - hostname: a.example.com
           servicePort: gateway
@@ -33,3 +36,48 @@ tests:
     asserts:
       - hasDocuments:
           count: 2
+
+  - it: httpsRedirect disabled by default — no redirect route rendered
+    template: templates/gateway-api/httproute-redirect.yaml
+    set:
+      gatewayAPI.parentRefs:
+        - name: shared-gw
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: httpsRedirect enabled — inherits the top-level parentRefs, default sectionName http
+    template: templates/gateway-api/httproute-redirect.yaml
+    set:
+      gatewayAPI.parentRefs:
+        - name: shared-gw
+      gatewayAPI.httpsRedirect.enabled: true
+    asserts:
+      - isKind:
+          of: HTTPRoute
+      - equal:
+          path: spec.parentRefs[0].name
+          value: shared-gw
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: http
+      - equal:
+          path: spec.rules[0].filters[0].requestRedirect.statusCode
+          value: 301
+
+  - it: httpsRedirect enabled with an explicit parentRefs override — uses that instead of the top-level default
+    template: templates/gateway-api/httproute-redirect.yaml
+    set:
+      gatewayAPI.parentRefs:
+        - name: shared-gw
+      gatewayAPI.httpsRedirect.enabled: true
+      gatewayAPI.httpsRedirect.parentRefs:
+        - name: other-gw
+          sectionName: custom
+    asserts:
+      - equal:
+          path: spec.parentRefs[0].name
+          value: other-gw
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: custom
