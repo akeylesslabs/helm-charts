@@ -14,9 +14,9 @@ sra:
 
 gatewayAPI:
   enabled: true
-  gateway:
-    create: true
-    gatewayClassName: cilium
+  parentRefs:
+    - name: shared-gw
+      namespace: chart-testing
   httpRoutes:
     - hostname: gw.example.com
       servicePort: gateway

@@ -1,6 +1,6 @@
 {{- $ga := .Values.gatewayAPI | default dict -}}
 {{- if $ga.enabled -}}
-{{- $name := printf "%s-gwapi-conformance" (include "gatewayApi.gatewayName" .) -}}
+{{- $name := printf "%s-gwapi-conformance" (include "gatewayApi.backendService" .) -}}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
