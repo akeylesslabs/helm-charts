@@ -44,6 +44,14 @@ jobs:
         run: |
           kubectl create namespace chart-testing --dry-run=client -o yaml | kubectl apply -f -
           kubectl apply -f .github/chart-fixtures/akeyless-gateway/ -n chart-testing
+          # The shared Gateway fixture lives here, not in .github/chart-fixtures/,
+          # because chart_test.yaml applies that shared directory on a plain kind
+          # cluster with no Gateway API CRDs installed — a Gateway-kind fixture
+          # there fails that unrelated, required job. This job installs the CRDs
+          # itself (setup-gateway-api-controller, above), so it's the only
+          # consumer of this fixture.
+          kubectl apply -f .github/gateway-api/fixtures/ -n chart-testing
+          kubectl wait --for=condition=Programmed gateways.gateway.networking.k8s.io/shared-gw -n chart-testing --timeout=120s
 
       - name: Install chart
         run: |
