@@ -37,6 +37,42 @@ tests:
       - hasDocuments:
           count: 2
 
+  - it: the a.example.com route gets the -http-0 suffix
+    template: templates/gateway-api/httproute.yaml
+    set:
+      gatewayAPI.parentRefs:
+        - name: shared-gw
+      gatewayAPI.httpRoutes:
+        - hostname: a.example.com
+          servicePort: gateway
+        - hostname: b.example.com
+          servicePort: gateway
+    documentSelector:
+      path: spec.hostnames[0]
+      value: a.example.com
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-gateway-http-0
+
+  - it: the b.example.com route gets the -http-1 suffix (proves index-based naming, not just presence)
+    template: templates/gateway-api/httproute.yaml
+    set:
+      gatewayAPI.parentRefs:
+        - name: shared-gw
+      gatewayAPI.httpRoutes:
+        - hostname: a.example.com
+          servicePort: gateway
+        - hostname: b.example.com
+          servicePort: gateway
+    documentSelector:
+      path: spec.hostnames[0]
+      value: b.example.com
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-gateway-http-1
+
   - it: httpsRedirect disabled by default — no redirect route rendered
     template: templates/gateway-api/httproute-redirect.yaml
     set:
