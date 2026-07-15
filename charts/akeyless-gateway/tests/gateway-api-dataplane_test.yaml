@@ -5,6 +5,7 @@ templates:
   - templates/gateway-api/extra-objects.yaml
 set:
   gatewayAPI.enabled: true
+  gatewayAPI.gateway.create: true
   gatewayAPI.gateway.gatewayClassName: cilium
   gatewayAPI.backend.ports:
     - {name: gateway, port: 8000}
