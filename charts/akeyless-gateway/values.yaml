@@ -705,7 +705,7 @@ gatewayAPI:
       - {name: hvp, port: 8200}
       - {name: ssh, port: 22}
   gateway:
-    create: true
+    create: false
     name: ""
     gatewayClassName: ""
     annotations: {}

@@ -1,6 +1,7 @@
 suite: akeyless-gateway gatewayAPI Gateway
 set:
   gatewayAPI.enabled: true
+  gatewayAPI.gateway.create: true
   gatewayAPI.gateway.gatewayClassName: cilium
 tests:
   - it: renders a Gateway (v1) named after the gateway Service, default http listener

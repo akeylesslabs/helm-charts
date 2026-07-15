@@ -1,6 +1,7 @@
 suite: akeyless-gateway gatewayAPI matrix
 set:
   gatewayAPI.enabled: true
+  gatewayAPI.gateway.create: true
   gatewayAPI.gateway.gatewayClassName: cilium
   gatewayAPI.gateway.tls.enabled: true
   gatewayAPI.gateway.tls.mode: Terminate
