@@ -3,6 +3,7 @@ templates:
   - templates/gateway-api/httproute.yaml
 set:
   gatewayAPI.enabled: true
+  gatewayAPI.gateway.create: true
   gatewayAPI.gateway.gatewayClassName: eg
 tests:
   - it: rich matches — path + header + method
