@@ -37,7 +37,16 @@ jobs:
       - name: Run chart-testing list-changed
         id: list-changed
         run: |
-          changed="$(ct list-changed --config .github/ct.yaml)"
+          # ct.yaml sets debug: true, which makes `ct` prefix its own
+          # command trace to stdout with ">>> ...". Filtering those lines
+          # out here (not just at each downstream consumer) keeps every
+          # reader of $CHANGED_CHARTS -- present and future -- fed only
+          # real chart paths instead of silently tolerating stray lines.
+          # Two separate substitutions so a real `ct` failure still aborts
+          # the step (bash -e) while grep matching nothing (no real chart
+          # changed) does not.
+          raw="$(ct list-changed --config .github/ct.yaml)"
+          changed="$(grep -v '^>>> ' <<< "$raw" || true)"
           if [[ -n "$changed" ]]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
             {
