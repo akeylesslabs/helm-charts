@@ -725,7 +725,4 @@ gatewayAPI:
   httpRoutePath: /
   httpRoutePathType: PathPrefix
   httpRoutes: []
-  tlsRoutes: []
-  tcpRoutes: []
   referenceGrants: []
-  extraObjects: []
