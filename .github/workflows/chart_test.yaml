@@ -57,6 +57,26 @@ jobs:
         if: steps.list-changed.outputs.changed == 'true'
         run: ct lint --config .github/ct.yaml
 
+      - name: Set up helm-unittest
+        if: steps.list-changed.outputs.changed == 'true'
+        # --verify=false: helm-unittest's plugin distribution ships no
+        # provenance/signature file, and the runner's Helm rejects an
+        # unverifiable plugin source by default without this flag.
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest --version v1.1.1 --verify=false
+
+      - name: Run helm-unittest
+        id: helm-unittest
+        if: steps.list-changed.outputs.changed == 'true'
+        env:
+          CHANGED_CHARTS: ${{ steps.list-changed.outputs.changed-charts }}
+        run: |
+          # helm unittest no-ops cleanly (exit 0, "0 passed, 0 total") on a
+          # chart with no tests/*_test.yaml suites, so this runs unconditionally
+          # per changed chart rather than needing to detect which ones have tests.
+          while IFS= read -r chart; do
+            helm unittest "$chart"
+          done <<< "$CHANGED_CHARTS"
+
       - name: Create kind cluster
         if: steps.list-changed.outputs.changed == 'true'
         uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # v1
