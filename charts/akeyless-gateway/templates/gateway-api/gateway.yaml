@@ -37,16 +37,6 @@ spec:
           from: {{ include "gatewayApi.allowedRoutesFrom" . }}
     {{- $tls := $gw.tls | default dict }}
     {{- if $tls.enabled }}
-    {{- if eq ($tls.mode | default "Terminate") "Passthrough" }}
-    - name: tls
-      protocol: TLS
-      port: 443
-      tls:
-        mode: Passthrough
-      allowedRoutes:
-        namespaces:
-          from: {{ include "gatewayApi.allowedRoutesFrom" . }}
-    {{- else }}
     - name: https
       protocol: HTTPS
       port: 443
@@ -59,15 +49,6 @@ spec:
       allowedRoutes:
         namespaces:
           from: {{ include "gatewayApi.allowedRoutesFrom" . }}
-    {{- end }}
-    {{- end }}
-    {{- range $r := $ga.tcpRoutes }}
-    - name: tcp-{{ $r.name }}
-      protocol: TCP
-      port: {{ include "gatewayApi.portNumber" (dict "port" $r.servicePort "root" $) }}
-      allowedRoutes:
-        namespaces:
-          from: {{ include "gatewayApi.allowedRoutesFrom" $ }}
     {{- end }}
   {{- end }}
 {{- end -}}
