@@ -206,7 +206,7 @@ The web worker runs a Chromium-based browser (`akeyless/zero-trust-web-worker`).
 - **Managed policies** — flat Chrome Enterprise JSON in `webWorker.config.policies`, mounted at `/etc/chromium/policies/managed/policies.json`. Operators overriding policies must use the Chrome schema (`URLAllowlist` / `URLBlocklist`, `ExtensionSettings`, etc.), not the legacy Firefox `policies.json` wrapper.
 - **Ephemeral `/config`** — an in-memory `emptyDir` prevents stale Chromium profile and extension cache across pod restarts.
 - **`/dev/shm`** — `2Gi` memory-backed `emptyDir` (matches compose `shm_size: 2g`).
-- **`DISPATCHER_DNS`** — defaults to `rbi.dispatcher` (nginx `server_name` in the dispatcher image). Worker pods resolve it via `hostAliases` to the dispatcher Service ClusterIP at install/upgrade time.
+- **`DISPATCHER_DNS`** — defaults to `rbi.dispatcher` (nginx `server_name` in the dispatcher image), set via `webWorker.config.dispatcherDNS`. Dispatcher pods alias it to `127.0.0.1`; worker pods resolve it via `hostAliases` to the dispatcher Service ClusterIP at install/upgrade time.
 - **`CHROMIUM_APP_URL`** — set in the worker image Dockerfile; override via `webWorker.env` only if needed.
 
 #### Upgrading from chart 3.x
@@ -431,7 +431,7 @@ A **Heavy browsing workload** example for the web worker main `resources` is in 
 | `dispatcher.config.disableSecureCookie`                              | Use browser secure cookie only (HTTPS)                                                                             | `true`                     |
 | `webWorker.config.displayWidth`                                      | Web worker display Width (in pixels) of the application's window.                                                  | `2560`                     |
 | `webWorker.config.displayHeight`                                     | Web worker display Height (in pixels) of the application's window.                                                 | `1200`                     |
-| `webWorker.config.dispatcherDNS`                                     | Internal DNS name for dispatcher nginx `server_name`; worker `DISPATCHER_DNS` env and `hostAliases`                  | `rbi.dispatcher`           |
+| `webWorker.config.dispatcherDNS`                                     | Internal DNS name for dispatcher nginx `server_name`; dispatcher/worker `hostAliases` and worker `DISPATCHER_DNS`     | `rbi.dispatcher`           |
 | `webWorker.securityContext.seccompProfile`                           | Worker container seccomp profile (`Localhost` + `profiles/ztwa-worker.json` by default)                              | See `values.yaml`          |
 | `dispatcher.config.allowedBastionUrls`                               | List of URLs that will be considered valid for redirection from the Portal back to the bastion                     | `[]`                       |
 | `dispatcher.config.allowedProxyUrls`                                 | List of URLs that will be considered valid for redirection from the Portal back to the web proxy service           | `[]`                       |
