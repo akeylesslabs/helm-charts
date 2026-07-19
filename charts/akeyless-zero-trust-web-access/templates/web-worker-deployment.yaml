@@ -23,14 +23,6 @@ spec:
       securityContext:
         fsGroup: 10000
         supplementalGroups: [72]
-{{- $dispatcherDNS := .Values.webWorker.config.dispatcherDNS | default "rbi.dispatcher" }}
-{{- $dispatcherSvc := lookup "v1" "Service" .Release.Namespace (printf "%s-dispatcher" (include "akeyless-zero-web-access.fullname" .)) }}
-{{- if $dispatcherSvc }}
-      hostAliases:
-        - ip: {{ $dispatcherSvc.spec.clusterIP | quote }}
-          hostnames:
-            - {{ $dispatcherDNS | quote }}
-{{- end }}
       volumes:
         - name: akeyless-conf
           emptyDir: {}
@@ -133,7 +125,7 @@ spec:
             - name: WEB_DISPATCHER_SERVICE_DNS
               value: {{ include "akeyless-zero-web-access.fullname" . }}-disc-disp
             - name: DISPATCHER_DNS
-              value: {{ $dispatcherDNS | quote }}
+              value: {{ include "akeyless-zero-web-access.fullname" . }}-dispatcher.{{ .Release.Namespace }}.svc
             - name: DES_DOWNLOAD_PATH
               value: /etc/shared/download
 {{- if .Values.httpProxySettings.http_proxy }}

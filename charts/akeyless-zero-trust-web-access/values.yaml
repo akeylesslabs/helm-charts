@@ -523,7 +523,7 @@ webWorker:
       localhostProfile: profiles/ztwa-worker.json
 
   config:
-    # Internal DNS name for dispatcher nginx server_name; used by dispatcher and worker hostAliases and worker DISPATCHER_DNS.
+    # Internal DNS name for dispatcher nginx server_name; used by dispatcher hostAliases (workers use the dispatcher Service DNS).
     dispatcherDNS: rbi.dispatcher
     displayWidth: 2560
     displayHeight: 1200
