@@ -539,7 +539,7 @@ webWorker:
     # Chromium managed policy format (flat Chrome Enterprise JSON). Override with valid JSON.
     policies: |
         {
-          "DeveloperToolsAvailability": 1,
+          "DeveloperToolsAvailability": 2,
           "PasswordManagerEnabled": false,
           "IncognitoModeAvailability": 1,
           "BrowserSignin": 0,
