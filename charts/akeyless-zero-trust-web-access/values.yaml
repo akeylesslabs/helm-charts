@@ -514,14 +514,6 @@ webWorker:
 
   env: []
 
-  # Seccomp: runtime/default baseline + clone/clone3/unshare for Chromium. Profile at
-  # files/seccomp/ztwa-worker.json — install on each node for type: Localhost (see README).
-  # Removing seccompProfile is unadvised — it may cause stability and performance issues.
-  securityContext:
-    seccompProfile:
-      type: Localhost
-      localhostProfile: profiles/ztwa-worker.json
-
   config:
     # Internal DNS name for dispatcher nginx server_name; used by dispatcher hostAliases (workers use the dispatcher Service DNS).
     dispatcherDNS: rbi.dispatcher

@@ -112,10 +112,6 @@ spec:
             runAsGroup: 1000
             runAsNonRoot: true
             allowPrivilegeEscalation: false
-{{- with .Values.webWorker.securityContext.seccompProfile }}
-            seccompProfile:
-{{- toYaml . | nindent 14 }}
-{{- end }}
           ports:
             - containerPort: 5800
               name: web

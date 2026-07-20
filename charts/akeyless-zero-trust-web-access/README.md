@@ -212,31 +212,7 @@ The web worker runs a Chromium-based browser (`akeyless/zero-trust-web-worker`).
 #### Upgrading from chart 3.x
 
 1. Rewrite any custom `webWorker.config.policies` from Firefox schema to Chrome Enterprise JSON.
-2. Install the worker seccomp profile on each node (see below) or override `webWorker.securityContext.seccompProfile.type` to `RuntimeDefault` if your cluster policy allows it.
-3. Review worker pod spec changes (`/config` emptyDir, policy mount path, `DISPATCHER_DNS`, seccomp) before rollout.
-
-#### Worker seccomp profile
-
-Chromium sandboxing requires `clone`, `clone3`, and `unshare` beyond the Kubernetes `runtime/default` baseline. The chart ships a confined custom profile at `files/seccomp/ztwa-worker.json` and renders a reference ConfigMap (`<release>-cm-seccomp-profile`).
-
-**Removing `webWorker.securityContext.seccompProfile` is unadvised** — it may cause stability and performance issues.
-
-**Cluster prerequisite:** for `type: Localhost`, copy the profile to `/var/lib/kubelet/seccomp/profiles/ztwa-worker.json` on each node:
-
-```bash
-kubectl get configmap <release>-cm-seccomp-profile -n <namespace> -o jsonpath='{.data.ztwa-worker\.json}' \
-  | sudo tee /var/lib/kubelet/seccomp/profiles/ztwa-worker.json
-```
-
-Default values:
-
-```yaml
-webWorker:
-  securityContext:
-    seccompProfile:
-      type: Localhost
-      localhostProfile: profiles/ztwa-worker.json
-```
+2. Review worker pod spec changes (`/config` emptyDir, policy mount path, `DISPATCHER_DNS`) before rollout.
 
 ### Cloud Identity Override (`dispatcher.config.cloudIdentity.type`)
 
@@ -432,6 +408,5 @@ A **Heavy browsing workload** example for the web worker main `resources` is in 
 | `webWorker.config.displayWidth`                                      | Web worker display Width (in pixels) of the application's window.                                                  | `2560`                     |
 | `webWorker.config.displayHeight`                                     | Web worker display Height (in pixels) of the application's window.                                                 | `1200`                     |
 | `webWorker.config.dispatcherDNS`                                     | Dispatcher nginx `server_name` / local `hostAliases` (workers use the dispatcher Service DNS for `DISPATCHER_DNS`)    | `rbi.dispatcher`           |
-| `webWorker.securityContext.seccompProfile`                           | Worker container seccomp profile (`Localhost` + `profiles/ztwa-worker.json` by default)                              | See `values.yaml`          |
 | `dispatcher.config.allowedBastionUrls`                               | List of URLs that will be considered valid for redirection from the Portal back to the bastion                     | `[]`                       |
 | `dispatcher.config.allowedProxyUrls`                                 | List of URLs that will be considered valid for redirection from the Portal back to the web proxy service           | `[]`                       |
