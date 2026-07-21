@@ -62,3 +62,33 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: 'akeyless-gateway gatewayAPI: route references unknown servicePort "nope"; valid names: gateway, kmip, hvp, ssh'
+
+  - it: "G6 — gateway.listeners override with tls.httpsRedirect (no way to know which custom listener to attach the redirect to)"
+    template: templates/gateway-api/gateway-api-validate.yaml
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.gatewayClassName: cilium
+      gatewayAPI.gateway.create: true
+      gatewayAPI.gateway.tls.httpsRedirect: true
+      gatewayAPI.gateway.listeners:
+        - name: custom-http
+          protocol: HTTP
+          port: 80
+    asserts:
+      - failedTemplate:
+          errorMessage: "akeyless-gateway gatewayAPI: tls.httpsRedirect assumes the chart's default listener names (http/https) — not supported together with a gateway.listeners override, since the redirect route has no way to know which of your custom listeners to attach to."
+
+  - it: "gateway.create=true combined with an explicit parentRefs override skips the redirect route, matching the main HTTPRoute's own override handling"
+    template: templates/gateway-api/httproute-redirect.yaml
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.create: true
+      gatewayAPI.gateway.gatewayClassName: cilium
+      gatewayAPI.parentRefs:
+        - name: shared-gw
+          namespace: gateway
+      gatewayAPI.gateway.tls.enabled: true
+      gatewayAPI.gateway.tls.httpsRedirect: true
+    asserts:
+      - hasDocuments:
+          count: 0
