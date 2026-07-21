@@ -62,3 +62,15 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: 'akeyless-gateway gatewayAPI: route references unknown servicePort "nope"; valid names: gateway, kmip, hvp, ssh'
+
+  - it: "G6 — tls.certManager.clusterIssuer set without tls.certificateRefs (cert-manager has no Secret name to issue into)"
+    template: templates/gateway-api/gateway-api-validate.yaml
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.gatewayClassName: cilium
+      gatewayAPI.gateway.create: true
+      gatewayAPI.gateway.tls.enabled: true
+      gatewayAPI.gateway.tls.certManager.clusterIssuer: letsencrypt-prod
+    asserts:
+      - failedTemplate:
+          errorMessage: "akeyless-gateway gatewayAPI: tls.certManager.clusterIssuer is set but tls.certificateRefs is empty — cert-manager needs an explicit Secret name to issue into; set tls.certificateRefs (e.g. [{name: <host>-tls}])."

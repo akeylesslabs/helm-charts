@@ -1,6 +1,11 @@
 {{- $ga := .Values.gatewayAPI | default dict -}}
 {{- if and $ga.enabled (($ga.gateway | default dict).create) -}}
 {{- $gw := $ga.gateway -}}
+{{- $certManager := ((($gw.tls | default dict).certManager) | default dict) -}}
+{{- $annotations := $gw.annotations | default dict -}}
+{{- if $certManager.clusterIssuer -}}
+{{- $annotations = merge $annotations (dict "cert-manager.io/cluster-issuer" $certManager.clusterIssuer) -}}
+{{- end }}
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
@@ -11,7 +16,7 @@ metadata:
   {{- with $gw.labels }}
     {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- with $gw.annotations }}
+  {{- with $annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}

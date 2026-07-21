@@ -72,6 +72,9 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- if and $tls.enabled (eq ($tls.mode | default "Terminate") "Passthrough") -}}
 {{- fail "akeyless-gateway gatewayAPI: tls.mode=Passthrough requires the TLSRoute/TCPRoute overlay (Tier 1.5) — this chart alone only supports tls.mode=Terminate." -}}
 {{- end -}}
+{{- if and (($tls.certManager | default dict).clusterIssuer) (not $tls.certificateRefs) -}}
+{{- fail "akeyless-gateway gatewayAPI: tls.certManager.clusterIssuer is set but tls.certificateRefs is empty — cert-manager needs an explicit Secret name to issue into; set tls.certificateRefs (e.g. [{name: <host>-tls}])." -}}
+{{- end -}}
 {{- range $r := $ga.httpRoutes -}}
 {{- if $r.backendRefs -}}
 {{- range $b := $r.backendRefs -}}{{- $_ := include "gatewayApi.portNumber" (dict "port" $b.servicePort "root" $) -}}{{- end -}}

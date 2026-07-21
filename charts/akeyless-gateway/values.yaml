@@ -717,6 +717,8 @@ gatewayAPI:
       mode: Terminate
       certificateRefs: []
       httpsRedirect: false
+      certManager:
+        clusterIssuer: ""
     listeners: []
     allowedRoutes:
       namespaces:
