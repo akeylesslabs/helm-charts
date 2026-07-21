@@ -1,0 +1,64 @@
+suite: akeyless-gateway gatewayAPI guards
+tests:
+  - it: "G1 — gatewayAPI and the chart ingress are mutually exclusive"
+    template: templates/gateway-api/gateway-api-validate.yaml
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.gatewayClassName: cilium
+      gateway.ingress.enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: "akeyless-gateway gatewayAPI: gatewayAPI.enabled and gateway.ingress.enabled are mutually exclusive — enable exactly one north-south path."
+
+  - it: "G2 — gatewayClassName required when create=true"
+    template: templates/gateway-api/gateway.yaml
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.create: true
+    asserts:
+      - failedTemplate:
+          errorMessage: "akeyless-gateway gatewayAPI: gateway.gatewayClassName is required when gateway.create=true (e.g. cilium, nginx, istio, kong, envoy, aws-alb)."
+
+  - it: "G3 — parentRefs required when create=false"
+    template: templates/gateway-api/gateway-api-validate.yaml
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.create: false
+    asserts:
+      - failedTemplate:
+          errorMessage: "akeyless-gateway gatewayAPI: set parentRefs when gateway.create=false — there is no Gateway to attach routes to."
+
+  - it: "default posture — gateway.create is unset, chart renders no Gateway (attach-mode out of the box)"
+    template: templates/gateway-api/gateway.yaml
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.parentRefs:
+        - name: shared-gw
+          namespace: gateway
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: "G4 — tls.mode=Passthrough requires the Tier 1.5 TLSRoute/TCPRoute overlay, not present in this chart alone"
+    template: templates/gateway-api/gateway-api-validate.yaml
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.gatewayClassName: cilium
+      gatewayAPI.gateway.create: true
+      gatewayAPI.gateway.tls.enabled: true
+      gatewayAPI.gateway.tls.mode: Passthrough
+    asserts:
+      - failedTemplate:
+          errorMessage: "akeyless-gateway gatewayAPI: tls.mode=Passthrough requires the TLSRoute/TCPRoute overlay (Tier 1.5) — this chart alone only supports tls.mode=Terminate."
+
+  - it: "G5 — unknown servicePort (lists the valid names)"
+    template: templates/gateway-api/httproute.yaml
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.gatewayClassName: cilium
+      gatewayAPI.httpRoutes:
+        - hostname: x.example.com
+          servicePort: nope
+    asserts:
+      - failedTemplate:
+          errorMessage: 'akeyless-gateway gatewayAPI: route references unknown servicePort "nope"; valid names: gateway, kmip, hvp, ssh'
