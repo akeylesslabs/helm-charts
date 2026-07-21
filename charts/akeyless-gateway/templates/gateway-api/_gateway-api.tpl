@@ -68,11 +68,9 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- fail "akeyless-gateway gatewayAPI: set parentRefs when gateway.create=false — there is no Gateway to attach routes to." -}}
 {{- end -}}
 {{- end -}}
-{{- if and $gw.create $ga.tlsRoutes -}}
 {{- $tls := $gw.tls | default dict -}}
-{{- if not (and $tls.enabled (eq ($tls.mode | default "Terminate") "Passthrough")) -}}
-{{- fail "akeyless-gateway gatewayAPI: tlsRoutes require a TLS passthrough listener — set gatewayAPI.gateway.tls.enabled=true and tls.mode=Passthrough." -}}
-{{- end -}}
+{{- if and $tls.enabled (eq ($tls.mode | default "Terminate") "Passthrough") -}}
+{{- fail "akeyless-gateway gatewayAPI: tls.mode=Passthrough requires the TLSRoute/TCPRoute overlay (Tier 1.5) — this chart alone only supports tls.mode=Terminate." -}}
 {{- end -}}
 {{- range $r := $ga.httpRoutes -}}
 {{- if $r.backendRefs -}}
@@ -81,7 +79,5 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- $_ := include "gatewayApi.portNumber" (dict "port" $r.servicePort "root" $) -}}
 {{- end -}}
 {{- end -}}
-{{- range $ga.tlsRoutes -}}{{- $_ := include "gatewayApi.portNumber" (dict "port" .servicePort "root" $) -}}{{- end -}}
-{{- range $ga.tcpRoutes -}}{{- $_ := include "gatewayApi.portNumber" (dict "port" .servicePort "root" $) -}}{{- end -}}
 {{- end -}}
 {{- end -}}

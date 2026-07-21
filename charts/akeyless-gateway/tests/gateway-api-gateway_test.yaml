@@ -58,47 +58,6 @@ tests:
           path: spec.listeners[1].tls.certificateRefs[0].name
           value: akeyless-api-tls
 
-  - it: tls Passthrough listener
-    template: templates/gateway-api/gateway.yaml
-    set:
-      gatewayAPI.gateway.tls.enabled: true
-      gatewayAPI.gateway.tls.mode: Passthrough
-    asserts:
-      - equal:
-          path: spec.listeners[1].name
-          value: tls
-      - equal:
-          path: spec.listeners[1].tls.mode
-          value: Passthrough
-
-  - it: auto-generates a tcp-<name> listener for tcpRoutes (KMIP)
-    template: templates/gateway-api/gateway.yaml
-    set:
-      gatewayAPI.tcpRoutes:
-        - name: kmip
-          servicePort: kmip
-    asserts:
-      - equal:
-          path: spec.listeners[1].name
-          value: tcp-kmip
-      - equal:
-          path: spec.listeners[1].port
-          value: 5696
-
-  - it: auto-generates a tcp-hvp listener on the Vault port 8200 (Vault client drop-in -> VAULT_ADDR unchanged)
-    template: templates/gateway-api/gateway.yaml
-    set:
-      gatewayAPI.tcpRoutes:
-        - name: hvp
-          servicePort: hvp
-    asserts:
-      - equal:
-          path: spec.listeners[1].name
-          value: tcp-hvp
-      - equal:
-          path: spec.listeners[1].port
-          value: 8200
-
   - it: does not render a Gateway in attach mode
     template: templates/gateway-api/gateway.yaml
     set:
@@ -146,13 +105,10 @@ tests:
           path: spec.listeners[0].allowedRoutes.namespaces.from
           value: All
 
-  - it: gateway.listeners is a full raw override — replaces the synthesized defaults entirely (tls/tcpRoutes settings are ignored once set)
+  - it: gateway.listeners is a full raw override — replaces the synthesized defaults entirely (tls settings are ignored once set)
     template: templates/gateway-api/gateway.yaml
     set:
       gatewayAPI.gateway.tls.enabled: true
-      gatewayAPI.tcpRoutes:
-        - name: kmip
-          servicePort: kmip
       gatewayAPI.gateway.listeners:
         - name: custom-http
           protocol: HTTP
