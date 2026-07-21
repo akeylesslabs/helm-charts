@@ -24,10 +24,12 @@ if [[ -z "${app_version}" ]]; then
   die "Required environment variable 'app_version' is not set"
 fi
 
-# Release gate for the legacy standalone SRA chart (ASM-18714). Default "false" so the bot
-# never auto-releases akeyless-secure-remote-access; set the RELEASE_LEGACY_SRA repo variable
-# to "true" to opt a legacy release in. See select_charts_for_service in common.sh.
-release_legacy_sra=$(echo "${RELEASE_LEGACY_SRA:-false}" | tr '[:upper:]' '[:lower:]')
+# Release gate for the legacy standalone SRA chart (ASM-18714). Read from the deployment
+# payload (release_legacy_sra), set by the triggering release workflow (e.g. the
+# zero-trust-bastion "Release Legacy SRA" input). Missing/empty -> "false", so the bot never
+# auto-releases akeyless-secure-remote-access unless the trigger explicitly opts in.
+release_legacy_sra=$(echo "$GITHUB_CONTEXT" | jq -r '.payload.release_legacy_sra | select (.!=null)')
+release_legacy_sra=$(echo "${release_legacy_sra:-false}" | tr '[:upper:]' '[:lower:]')
 
 select_charts_for_service "${service}" "${release_legacy_sra}"
 charts=("${selected_charts[@]}")
