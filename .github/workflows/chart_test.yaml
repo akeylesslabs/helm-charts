@@ -7,8 +7,23 @@ on:
       - ".github/chart-fixtures/**"
       - ".github/ct.yaml"
       - ".github/workflows/chart_test.yaml"
+      - ".github/scripts/**"
 
 jobs:
+  release-scripts-test:
+    # Unit tests for the release-automation shell logic (e.g. the legacy-SRA release gate,
+    # ASM-18714). Pure bash, no cluster needed.
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Run release-script unit tests
+        run: bash .github/scripts/test_select_charts.sh
+
+
   chart-test:
     # ubuntu-latest currently resolves to ubuntu-24.04, where kind/gateway
     # installs hit a runner-kernel-specific rsyslog permission failure.

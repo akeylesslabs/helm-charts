@@ -67,6 +67,9 @@ jobs:
         id: release
         env:
           GITHUB_CONTEXT: ${{ toJson(github.event.deployment) }}
+          # Release gate for the legacy standalone SRA chart (ASM-18714). Unset/empty -> "false",
+          # so akeyless-secure-remote-access is never auto-released. Set repo variable to "true" to opt in.
+          RELEASE_LEGACY_SRA: ${{ vars.RELEASE_LEGACY_SRA }}
         run: .github/scripts/latest_version_release.sh
 
       - name: Dispatch manifest update

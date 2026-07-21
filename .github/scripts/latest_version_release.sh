@@ -24,19 +24,18 @@ if [[ -z "${app_version}" ]]; then
   die "Required environment variable 'app_version' is not set"
 fi
 
-charts=()
-if [[ "${service}" == "gateway" ]]; then
-  charts+=("akeyless-api-gateway" "akeyless-gateway")
-elif [[ "${service}" == "zero-trust-bastion" ]]; then
-  charts+=("akeyless-secure-remote-access" "akeyless-gateway")
-elif [[ "${service}" == "zt-portal" ]]; then
- charts+=("akeyless-secure-remote-access")
-elif [[ "${service}" == "zero-trust-web-access" ]]; then
-  charts+=("akeyless-zero-trust-web-access")
-elif [[ "${service}" == "k8s-webhook" ]]; then
-  charts+=("akeyless-k8s-secrets-injection")
+# Release gate for the legacy standalone SRA chart (ASM-18714). Default "false" so the bot
+# never auto-releases akeyless-secure-remote-access; set the RELEASE_LEGACY_SRA repo variable
+# to "true" to opt a legacy release in. See select_charts_for_service in common.sh.
+release_legacy_sra=$(echo "${RELEASE_LEGACY_SRA:-false}" | tr '[:upper:]' '[:lower:]')
+
+select_charts_for_service "${service}" "${release_legacy_sra}"
+charts=("${selected_charts[@]}")
+
+if [[ ${#charts[@]} -eq 0 ]]; then
+  echo "No charts to release for service '${service}' (RELEASE_LEGACY_SRA=${release_legacy_sra}); the legacy SRA chart is gated off by default — skipping auto-release."
 else
-  die "Bad service name"
+  echo "Charts to release for service '${service}' (RELEASE_LEGACY_SRA=${release_legacy_sra}): ${charts[*]}"
 fi
 
 updated_charts_summary=()

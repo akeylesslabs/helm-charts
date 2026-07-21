@@ -15,6 +15,48 @@ function die() {
   exit 1
 }
 
+# Map a released service to the charts whose versions should be bumped.
+# The legacy standalone SRA chart (akeyless-secure-remote-access) is gated behind
+# release_legacy_sra and is only included when that flag is exactly "true". By default
+# it is skipped so the bot never auto-releases it (ASM-18714): the legacy chart lacks the
+# SSH-bastion securityContext contract of the unified akeyless-gateway chart and re-breaks
+# whenever a hardened non-root image is auto-bumped in. Cut a legacy release deliberately
+# via a reviewed chart PR, or by setting the RELEASE_LEGACY_SRA repo variable to "true".
+#
+# Args:  $1 = service name, $2 = release_legacy_sra ("true" to include the legacy SRA chart)
+# Sets global: selected_charts (array; may be empty for a legacy-only service when gated off)
+function select_charts_for_service() {
+  local service="$1"
+  local release_legacy_sra="$2"
+  selected_charts=()
+
+  case "${service}" in
+    gateway)
+      selected_charts+=("akeyless-api-gateway" "akeyless-gateway")
+      ;;
+    zero-trust-bastion)
+      selected_charts+=("akeyless-gateway")
+      if [[ "${release_legacy_sra}" == "true" ]]; then
+        selected_charts+=("akeyless-secure-remote-access")
+      fi
+      ;;
+    zt-portal)
+      if [[ "${release_legacy_sra}" == "true" ]]; then
+        selected_charts+=("akeyless-secure-remote-access")
+      fi
+      ;;
+    zero-trust-web-access)
+      selected_charts+=("akeyless-zero-trust-web-access")
+      ;;
+    k8s-webhook)
+      selected_charts+=("akeyless-k8s-secrets-injection")
+      ;;
+    *)
+      die "Bad service name"
+      ;;
+  esac
+}
+
 function bump_version() {
   current_version=$1
   bump_target=$2
