@@ -72,6 +72,9 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- if and $tls.enabled (eq ($tls.mode | default "Terminate") "Passthrough") -}}
 {{- fail "akeyless-gateway gatewayAPI: tls.mode=Passthrough requires the TLSRoute/TCPRoute overlay (Tier 1.5) — this chart alone only supports tls.mode=Terminate." -}}
 {{- end -}}
+{{- if and $gw.listeners $tls.httpsRedirect -}}
+{{- fail "akeyless-gateway gatewayAPI: tls.httpsRedirect assumes the chart's default listener names (http/https) — not supported together with a gateway.listeners override, since the redirect route has no way to know which of your custom listeners to attach to." -}}
+{{- end -}}
 {{- range $r := $ga.httpRoutes -}}
 {{- $_ := include "gatewayApi.portNumber" (dict "port" $r.servicePort "root" $) -}}
 {{- end -}}
