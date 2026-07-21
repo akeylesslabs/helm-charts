@@ -1,0 +1,28 @@
+{{- $ga := .Values.gatewayAPI | default dict -}}
+{{- if and $ga.enabled $ga.referenceGrants -}}
+{{- range $g := $ga.referenceGrants }}
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: {{ $g.name }}
+  namespace: {{ $g.namespace | default $.Release.Namespace | quote }}
+  labels:
+    {{- include "gatewayApi.labels" $ | nindent 4 }}
+spec:
+  from:
+    {{- range $f := $g.from }}
+    - group: {{ $f.group | default "" | quote }}
+      kind: {{ $f.kind | quote }}
+      namespace: {{ $f.namespace | quote }}
+    {{- end }}
+  to:
+    {{- range $t := $g.to }}
+    - group: {{ $t.group | default "" | quote }}
+      kind: {{ $t.kind | quote }}
+      {{- with $t.name }}
+      name: {{ . | quote }}
+      {{- end }}
+    {{- end }}
+{{- end }}
+{{- end -}}

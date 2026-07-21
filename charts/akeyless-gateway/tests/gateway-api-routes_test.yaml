@@ -1,0 +1,73 @@
+suite: akeyless-gateway gatewayAPI routes
+set:
+  gatewayAPI.enabled: true
+  gatewayAPI.gateway.create: true
+  gatewayAPI.gateway.gatewayClassName: cilium
+tests:
+  - it: HTTPRoute targets the gateway Service on the gateway port (8000)
+    template: templates/gateway-api/httproute.yaml
+    set:
+      gatewayAPI.httpRoutes:
+        - hostname: gw.example.com
+          servicePort: gateway
+    asserts:
+      - isKind:
+          of: HTTPRoute
+      - equal:
+          path: spec.rules[0].backendRefs[0].name
+          value: RELEASE-NAME-akeyless-gateway
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 8000
+      - equal:
+          path: spec.parentRefs[0].name
+          value: RELEASE-NAME-akeyless-gateway
+
+  - it: multiple httpRoutes get unique names
+    template: templates/gateway-api/httproute.yaml
+    set:
+      gatewayAPI.httpRoutes:
+        - hostname: a.example.com
+          servicePort: gateway
+        - hostname: b.example.com
+          servicePort: gateway
+    asserts:
+      - hasDocuments:
+          count: 2
+
+  - it: ReferenceGrant
+    template: templates/gateway-api/referencegrant.yaml
+    set:
+      gatewayAPI.referenceGrants:
+        - name: allow-gw
+          from:
+            - group: gateway.networking.k8s.io
+              kind: HTTPRoute
+              namespace: gateway
+          to:
+            - group: ""
+              kind: Service
+    asserts:
+      - isKind:
+          of: ReferenceGrant
+      - isAPIVersion:
+          of: gateway.networking.k8s.io/v1beta1
+
+  - it: ReferenceGrant defaults the required core group when omitted (to[].group="")
+    template: templates/gateway-api/referencegrant.yaml
+    set:
+      gatewayAPI.referenceGrants:
+        - name: allow-core-service
+          from:
+            - group: gateway.networking.k8s.io
+              kind: HTTPRoute
+              namespace: gateway
+          to:
+            - kind: Service
+    asserts:
+      - equal:
+          path: spec.to[0].group
+          value: ""
+      - equal:
+          path: spec.to[0].kind
+          value: Service

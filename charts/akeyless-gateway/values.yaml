@@ -181,13 +181,13 @@ cacheHA:
 
   auth: true
   authKey: redis-password
-  existingSecret: "{{ .Release.Name }}-cluster-cache-ha"
+  existingSecret: "{{.Release.Name }}-cluster-cache-ha"
 
   ## TLS is enabled by default when cacheHA is enabled
   ## To disable TLS, set tls ports (cacheHA.redis.tlsPort and cacheHA.sentinel.tlsPort) to 0
   ## and set cacheHA.redis.port to 6379 and cacheHA.sentinel.port to 26379
   tls:
-    secretName: "{{ .Release.Name }}-cluster-cache-ha-tls"
+    secretName: "{{.Release.Name }}-cluster-cache-ha-tls"
     certFile: tls.crt
     keyFile: tls.key
     caCertFile: ca.crt
@@ -694,3 +694,37 @@ sra:
       enabled: false
       # minAvailable: ""
       # maxUnavailable: ""
+
+gatewayAPI:
+  enabled: false
+  backend:
+    serviceName: ""
+    ports:
+      - {name: gateway, port: 8000}
+      - {name: kmip, port: 5696}
+      - {name: hvp, port: 8200}
+      - {name: ssh, port: 22}
+  gateway:
+    create: false
+    name: ""
+    gatewayClassName: ""
+    annotations: {}
+    labels: {}
+    infrastructure: {}
+    addresses: []
+    tls:
+      enabled: false
+      mode: Terminate
+      certificateRefs: []
+      httpsRedirect: false
+      certManager:
+        clusterIssuer: ""
+    listeners: []
+    allowedRoutes:
+      namespaces:
+        from: Same
+  parentRefs: []
+  httpRoutePath: /
+  httpRoutePathType: PathPrefix
+  httpRoutes: []
+  referenceGrants: []

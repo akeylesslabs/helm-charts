@@ -1,0 +1,64 @@
+suite: akeyless-gateway gatewayAPI matrix
+set:
+  gatewayAPI.enabled: true
+  gatewayAPI.gateway.create: true
+  gatewayAPI.gateway.gatewayClassName: cilium
+  gatewayAPI.gateway.tls.enabled: true
+  gatewayAPI.gateway.tls.mode: Terminate
+  gatewayAPI.gateway.tls.httpsRedirect: true
+  gatewayAPI.gateway.tls.certificateRefs:
+    - name: akeyless-api-tls
+  gatewayAPI.httpRoutes:
+    - hostname: gw.example.com
+      servicePort: gateway
+tests:
+  - it: Gateway has http + https listeners
+    template: templates/gateway-api/gateway.yaml
+    asserts:
+      - lengthEqual:
+          path: spec.listeners
+          count: 2
+      - equal:
+          path: spec.listeners[0].name
+          value: http
+      - equal:
+          path: spec.listeners[1].name
+          value: https
+  - it: renders the HTTPRoute
+    template: templates/gateway-api/httproute.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+  - it: renders the HTTP->HTTPS redirect
+    template: templates/gateway-api/httproute-redirect.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+
+  - it: "cert-manager: clusterIssuer injects the annotation when certificateRefs is set"
+    template: templates/gateway-api/gateway.yaml
+    set:
+      gatewayAPI.gateway.tls.certManager.clusterIssuer: letsencrypt-prod
+    asserts:
+      - equal:
+          path: metadata.annotations["cert-manager.io/cluster-issuer"]
+          value: letsencrypt-prod
+
+  - it: "cert-manager: a manually-set annotation of the same key wins over the derived one"
+    template: templates/gateway-api/gateway.yaml
+    set:
+      gatewayAPI.gateway.tls.certManager.clusterIssuer: letsencrypt-prod
+      gatewayAPI.gateway.annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-staging
+    asserts:
+      - equal:
+          path: metadata.annotations["cert-manager.io/cluster-issuer"]
+          value: letsencrypt-staging
+
+  - it: "cert-manager: no annotation block at all when clusterIssuer unset (byte-identical to Tier 1 baseline)"
+    template: templates/gateway-api/gateway.yaml
+    set:
+      gatewayAPI.gateway.tls.certManager.clusterIssuer: ""
+    asserts:
+      - notExists:
+          path: metadata.annotations
