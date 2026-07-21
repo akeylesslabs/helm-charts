@@ -40,7 +40,7 @@ For security reason, please limit the PersistentVolumes mount permissions to `06
 
 ### Session Recording (Optional)
 
-ZTWA can capture Firefox web sessions to video files (`.mp4`) and optionally upload them to S3-compatible storage.
+ZTWA can capture Chromium browser sessions to video files (`.mp4`) and optionally upload them to S3-compatible storage.
 
 #### Prerequisites
 
@@ -198,6 +198,21 @@ The dispatcher upload service tries credentials in this order:
 #### Backward Compatibility
 
 Existing deployments using `dispatcher.config.recording.*` and `webWorker.config.recording.*` continue to function identically. The unified `sessionRecording.*` section is **opt-in** and recommended for new deployments.
+
+### Chromium Worker (chart 4.0.0+)
+
+The web worker runs a Chromium-based browser (`akeyless/zero-trust-web-worker`). Key defaults:
+
+- **Managed policies** — flat Chrome Enterprise JSON in `webWorker.config.policies`, mounted at `/etc/chromium/policies/managed/policies.json`. Operators overriding policies must use the Chrome schema (`URLAllowlist` / `URLBlocklist`, `ExtensionSettings`, etc.), not the legacy Firefox `policies.json` wrapper.
+- **Ephemeral `/config`** — an in-memory `emptyDir` prevents stale Chromium profile and extension cache across pod restarts.
+- **`/dev/shm`** — `2Gi` memory-backed `emptyDir` (matches compose `shm_size: 2g`).
+- **`DISPATCHER_DNS`** — set to `<fullname>-dispatcher.<namespace>.svc` (dispatcher Service cluster DNS). Dispatcher pods alias `webWorker.config.dispatcherDNS` (default `rbi.dispatcher`, nginx `server_name`) to `127.0.0.1`.
+- **`CHROMIUM_APP_URL`** — set in the worker image Dockerfile; override via `webWorker.env` only if needed.
+
+#### Upgrading from chart 3.x
+
+1. Rewrite any custom `webWorker.config.policies` from Firefox schema to Chrome Enterprise JSON.
+2. Review worker pod spec changes (`/config` emptyDir, policy mount path, `DISPATCHER_DNS`) before rollout.
 
 ### Cloud Identity Override (`dispatcher.config.cloudIdentity.type`)
 
@@ -392,5 +407,6 @@ A **Heavy browsing workload** example for the web worker main `resources` is in 
 | `dispatcher.config.disableSecureCookie`                              | Use browser secure cookie only (HTTPS)                                                                             | `true`                     |
 | `webWorker.config.displayWidth`                                      | Web worker display Width (in pixels) of the application's window.                                                  | `2560`                     |
 | `webWorker.config.displayHeight`                                     | Web worker display Height (in pixels) of the application's window.                                                 | `1200`                     |
+| `webWorker.config.dispatcherDNS`                                     | Dispatcher nginx `server_name` / local `hostAliases` (workers use the dispatcher Service DNS for `DISPATCHER_DNS`)    | `rbi.dispatcher`           |
 | `dispatcher.config.allowedBastionUrls`                               | List of URLs that will be considered valid for redirection from the Portal back to the bastion                     | `[]`                       |
 | `dispatcher.config.allowedProxyUrls`                                 | List of URLs that will be considered valid for redirection from the Portal back to the web proxy service           | `[]`                       |

@@ -52,6 +52,10 @@ spec:
         - name: dshm
           emptyDir:
             medium: Memory
+            sizeLimit: 2Gi
+        - name: worker-config
+          emptyDir:
+            medium: Memory
         {{ if and .Values.persistence .Values.persistence.shareStorageVolume }}
         - name: {{ .Values.persistence.shareStorageVolume.name | title | lower }}
           persistentVolumeClaim:
@@ -73,7 +77,7 @@ spec:
               [ "$(ls /configmap_conf)" ] && cp /configmap_conf/* /var/akeyless/conf
 {{- end }}
               [ "$(ls /configmap_policy_conf)" ] && cp /configmap_policy_conf/* /var/akeyless/policy_conf/
-              jq -e . /var/akeyless/policy_conf/policies.json || (echo "Policies JSON validation failed! please correct the policies JSON structure in the values.yaml file" && exit 1)
+              jq -e . /var/akeyless/policy_conf/policies.json || (echo "Chrome policies JSON validation failed! please correct the policies JSON structure in values.yaml" && exit 1)
           resources:
 {{- toYaml .Values.webWorker.initContainer.resources | nindent 12 }}
           securityContext:
@@ -117,9 +121,7 @@ spec:
             - name: WEB_DISPATCHER_SERVICE_DNS
               value: {{ include "akeyless-zero-web-access.fullname" . }}-disc-disp
             - name: DISPATCHER_DNS
-              value: {{ include "akeyless-zero-web-access.fullname" . }}-dispatcher
-            - name: FF_PREF_HOMEPAGE
-              value: browser.startup.homepage=\"https://www.akeyless.io\"
+              value: {{ include "akeyless-zero-web-access.fullname" . }}-dispatcher.{{ .Release.Namespace }}.svc
             - name: DES_DOWNLOAD_PATH
               value: /etc/shared/download
 {{- if .Values.httpProxySettings.http_proxy }}
@@ -204,8 +206,10 @@ spec:
           volumeMounts:
           - name: dshm
             mountPath: /dev/shm
+          - name: worker-config
+            mountPath: /config
           - name: configmap-policies
-            mountPath: /usr/lib/firefox/distribution
+            mountPath: /etc/chromium/policies/managed
           - name: akeyless-conf
             mountPath: /var/akeyless/conf
           {{ if and .Values.persistence .Values.persistence.shareStorageVolume }}

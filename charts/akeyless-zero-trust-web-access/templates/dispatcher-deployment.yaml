@@ -28,6 +28,10 @@ spec:
     spec:
       securityContext:
         fsGroup: 10000
+      hostAliases:
+        - ip: "127.0.0.1"
+          hostnames:
+            - {{ .Values.webWorker.config.dispatcherDNS | default "rbi.dispatcher" | quote }}
       volumes:
         - name: akeyless-config
           emptyDir: {}

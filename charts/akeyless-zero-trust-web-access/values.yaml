@@ -497,7 +497,7 @@ webWorker:
   sessionCleanup:
     # How long to wait after `/tmp/occupied` is created before the probe is
     # allowed to declare the worker stranded. Must cover the worst-case
-    # browser-mount latency (token exchange + Firefox render). 30s is enough
+    # browser-mount latency (token exchange + Chromium startup). 30s is enough
     # for a healthy network; raise if your sessions need >30s warm-up.
     staleGraceSeconds: 30
 
@@ -515,6 +515,8 @@ webWorker:
   env: []
 
   config:
+    # Internal DNS name for dispatcher nginx server_name; used by dispatcher hostAliases (workers use the dispatcher Service DNS).
+    dispatcherDNS: rbi.dispatcher
     displayWidth: 2560
     displayHeight: 1200
 
@@ -526,61 +528,64 @@ webWorker:
     #     quality: "720p"
     recording: {}
 
+    # Chromium managed policy format (flat Chrome Enterprise JSON). Override with valid JSON.
     policies: |
         {
-          "policies": {
-            "BlockAboutConfig": true,
-            "BlockAboutAddons": true,
-            "BlockAboutProfiles": true,
-            "BlockAboutSupport": true,
-            "DisableDeveloperTools": true,
-            "DisableFirefoxAccounts": true,
-            "DisablePasswordReveal": true,
-            "DisablePrivateBrowsing": true,
-            "DisableProfileImport": true,
-            "DisableSafeMode": true,
-            "ExtensionUpdate": false,
-            "OfferToSaveLogins": false,
-            "OfferToSaveLoginsDefault": false,
-            "PasswordManagerEnabled": false,
-            "Proxy": {
-              "Mode": "none",
-              "Locked": true
-            },
-            "Preferences": {
-              "layout.forms.reveal-password-context-menu.enabled": {
-              "Value": false,
-              "Status": "locked"
-              }
-            },
-            "WebsiteFilter": {
-              "Block": [
-                "<all_urls>"
-              ],
-              "Exceptions": [
-                "https://*.akeyless.io/*",
-                "http://localhost:12411/*"
-              ]
-            },
-            "Handlers": {
-              "schemes": {
-                "mailto": {
-                  "action": "useHelperApp",
-                  "ask": false,
-                  "handlers": [{
-                    "name": "Block",
-                    "uriTemplate": "https://www.akeyless.io/"
-                  }]
-                }
-              }
-            },
-            "ExtensionSettings": {
-              "akeyless-sa@akeyless.io": {
-                "installation_mode": "force_installed",
-                "install_url": "file:///config/profile/extensions/akeyless-sa@akeyless.io.xpi",
-                "default_area": "navbar",
-                "updates_disabled": true
-              }
+          "DeveloperToolsAvailability": 2,
+          "PasswordManagerEnabled": false,
+          "IncognitoModeAvailability": 1,
+          "BrowserSignin": 0,
+          "SyncDisabled": true,
+          "HttpsOnlyMode": "force_enabled",
+          "HttpAllowlist": ["localhost", "127.0.0.1"],
+          "LoopbackNetworkAllowedForUrls": [
+            "http://localhost:12411",
+            "http://127.0.0.1:12411"
+          ],
+          "ProxySettings": {
+            "ProxyMode": "direct"
+          },
+          "SavingBrowserHistoryDisabled": true,
+          "SearchSuggestEnabled": false,
+          "SSLErrorOverrideAllowed": false,
+          "DisableSafeBrowsingProceedAnyway": true,
+          "UserFeedbackAllowed": false,
+          "AutofillAddressEnabled": false,
+          "AutofillCreditCardEnabled": false,
+          "TranslateEnabled": false,
+          "SpellCheckServiceEnabled": false,
+          "MetricsReportingEnabled": false,
+          "PromotionalTabsEnabled": false,
+          "BookmarkBarEnabled": false,
+          "BrowserAddPersonEnabled": false,
+          "BrowserGuestModeEnabled": false,
+          "ImportBookmarks": false,
+          "ImportHistory": false,
+          "ImportSavedPasswords": false,
+          "ImportAutofillFormData": false,
+          "ImportHomepage": false,
+          "ImportSearchEngine": false,
+          "URLBlocklist": ["*"],
+          "URLAllowlist": [
+            "akeyless.io",
+            "zerotrust.akeyless.io",
+            "duosecurity.com",
+            "wixpress.com",
+            "googleapis.com",
+            "akeyless-security.com",
+            "okta.com",
+            "slack.com",
+            "sendgrid.com",
+            "localhost",
+            "127.0.0.1",
+            "http://localhost:12411",
+            "http://localhost:12411/*",
+            "http://127.0.0.1:12411",
+            "http://127.0.0.1:12411/*"
+          ],
+          "ExtensionSettings": {
+            "cdghndnnjccefelakphihcjngdokccpm": {
+              "installation_mode": "allowed"
             }
           }
         }

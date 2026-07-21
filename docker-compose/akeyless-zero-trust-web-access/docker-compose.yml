@@ -2,10 +2,15 @@ version: "3.9"
 services:
   dispatcher:
     image: "akeyless/zero-trust-web-dispatcher"
+    group_add:
+      - "10000"
     ports:
       - "9000:9000"
     volumes:
       - $PWD/shared:/etc/shared
+      # Custom CA for HTTPS (curl, CLI, etc.): PEM bundle mounted where entrypoint expects it.
+      # Uncomment and point to your PEM file; then uncomment the matching env vars below.
+      # - /path/to/your-ca-bundle.pem:/var/akeyless/certs/ca-bundle.pem:ro
     environment:
       - CLUSTER_NAME=compose-ztwa
       - SERVICE_DNS=worker
@@ -17,6 +22,31 @@ services:
       - DISABLE_SECURE_COOKIE=true
       - LOG_FORWARDING=
       - ALLOWED_BASTION_URLS=
+      - ALLOWED_PROXY_URLS=
+      # ADMIN_ACCESS_ID_TYPE: cloud identity override. Forces dispatcher auth via the
+      # configured cloud identity instead of probing IMDS. Set to "aws_iam" | "azure_ad"
+      # | "gcp" when the container cannot reach the cloud metadata endpoint (e.g. EC2
+      # with IMDSv2 hop-limit=1). See https://docs.akeyless.io/docs/auth-with-aws#aws-instance-metadata-service
+      # - ADMIN_ACCESS_ID_TYPE=aws_iam
+      # Recording upload: when ENABLE_RECORDING_UPLOAD is not "true", the recording_uploader process does not run;
+      # all RECORDING_* variables below are ignored for upload. When ENABLE_RECORDING_UPLOAD=true, set bucket, region,
+      # and credentials (or rely on LOG_FORWARDING / logand.conf with target_log_type=aws_s3 for fallback).
+      # Prefer a .env file or compose override for secrets; do not commit real keys.
+      - ENABLE_RECORDING_UPLOAD=false
+      - RECORDING_S3_BUCKET=<MUST_BE_PROVIDED>
+      - RECORDING_S3_PREFIX=       # Optional
+      - RECORDING_S3_REGION=<MUST_BE_PROVIDED>
+      - RECORDING_S3_ACCESS_KEY_ID=<MUST_BE_PROVIDED>
+      - RECORDING_S3_ACCESS_KEY_SECRET=<MUST_BE_PROVIDED>
+      - RECORDING_S3_ENDPOINT=      # For S3-compatible stores (NetApp, MinIO)
+      - RECORDING_COMPRESS=false    # true | false
+      - RECORDING_SSE_TYPE=""       # "" (none) | "sse-s3" | "sse-kms"
+      - RECORDING_SSE_KMS_KEY_ID="" # For sse-kms only
+      # When using the ca-bundle mount above (or any PEM path), set both so OpenSSL/curl use it:
+      # - SSL_CERT_FILE=/var/akeyless/certs/ca-bundle.pem
+      # - CURL_CA_BUNDLE=/var/akeyless/certs/ca-bundle.pem
+      # Alternative: single path via AKEYLESS_CA_BUNDLE (entrypoint maps to SSL_CERT_FILE/CURL_CA_BUNDLE)
+      # - AKEYLESS_CA_BUNDLE=/var/akeyless/certs/ca-bundle.pem
       #- http_proxy=
       #- https_proxy=
       #- no_proxy=
@@ -24,6 +54,8 @@ services:
     networks:
       vpcbr:
         ipv4_address: 10.5.0.2
+        aliases:
+          - ztwa_dispatcher
 
   # Proxy mode is now a dedicated backend. Host :19414 lands here directly (the
   # dispatcher no longer serves it). Needs zero privileged creds.
@@ -45,18 +77,38 @@ services:
 
   worker:
     image: "akeyless/zero-trust-web-worker"
-    security_opt:
-      - seccomp=unconfined
+    ports:
+      - "5800:5800"
+      - "9190:9090"
+    # Runtime identity: jlesage app user is fixed at UID/GID 1000 (no dynamic passwd rewrite).
+    # Kubernetes: set securityContext.runAsUser/runAsGroup to 1000 and fsGroup to 10000.
+    # 72 = cinit group (jlesage); 10000 = /etc/shared GID.
+    group_add:
+      - "72"
+      - "10000"
     shm_size: '2gb'
+    # Ephemeral /config (tmpfs): jlesage declares VOLUME /config, which otherwise
+    # persists Chromium profile + stale extension SW cache across recreates.
+    tmpfs:
+      - /config:uid=1000,gid=1000,mode=0755
     volumes:
-      - $PWD/policies.json:/usr/lib/firefox/distribution/policies.json:ro
       - $PWD/shared:/etc/shared
+      # Custom CA: same path as dispatcher (policies.json Certificates.Install uses this path).
+      # Uncomment to replace the image default (symlink to system bundle) with your PEM:
+      # - /path/to/your-ca-bundle.pem:/var/akeyless/certs/ca-bundle.pem:ro
     environment:
       - INTERNAL_DISPATCHER_IP=10.5.0.2
+      - DISPATCHER_DNS=ztwa_dispatcher
       - DISPLAY_WIDTH=2560
       - DISPLAY_HEIGHT=1200
       - DLP_CONF=
       - LOG_FORWARDING=
+      - ENABLE_RECORDING=false  # true | false
+      - RECORDING_QUALITY=360p  # 144p | 240p | 360p | 480p | 720p | 1080p
+      # When using the ca-bundle mount above (or any PEM path), align curl/Go with the browser:
+      # - SSL_CERT_FILE=/var/akeyless/certs/ca-bundle.pem
+      # - CURL_CA_BUNDLE=/var/akeyless/certs/ca-bundle.pem
+      # - AKEYLESS_CA_BUNDLE=/var/akeyless/certs/ca-bundle.pem
       #- http_proxy=
       #- https_proxy=
       #- no_proxy=
@@ -87,4 +139,3 @@ networks:
      config:
        - subnet: 10.5.0.0/24
          gateway: 10.5.0.1
-
