@@ -1,0 +1,169 @@
+suite: akeyless-gateway gatewayAPI Gateway
+set:
+  gatewayAPI.enabled: true
+  gatewayAPI.gateway.create: true
+  gatewayAPI.gateway.gatewayClassName: cilium
+tests:
+  - it: renders a Gateway (v1) named after the gateway Service, default http listener
+    template: templates/gateway-api/gateway.yaml
+    asserts:
+      - isKind:
+          of: Gateway
+      - isAPIVersion:
+          of: gateway.networking.k8s.io/v1
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-gateway
+      - equal:
+          path: spec.gatewayClassName
+          value: cilium
+      - equal:
+          path: spec.listeners[0].name
+          value: http
+      - lengthEqual:
+          path: spec.listeners
+          count: 1
+
+  - it: AWS ALB — infrastructure.parametersRef + addresses
+    template: templates/gateway-api/gateway.yaml
+    set:
+      gatewayAPI.gateway.gatewayClassName: aws-alb
+      gatewayAPI.gateway.infrastructure:
+        parametersRef:
+          group: gateway.k8s.aws
+          kind: LoadBalancerConfiguration
+          name: alb
+      gatewayAPI.gateway.addresses:
+        - type: NamedAddress
+          value: akeyless-ip
+    asserts:
+      - equal:
+          path: spec.infrastructure.parametersRef.kind
+          value: LoadBalancerConfiguration
+      - equal:
+          path: spec.addresses[0].value
+          value: akeyless-ip
+
+  - it: https Terminate listener with certificateRefs
+    template: templates/gateway-api/gateway.yaml
+    set:
+      gatewayAPI.gateway.tls.enabled: true
+      gatewayAPI.gateway.tls.certificateRefs:
+        - name: akeyless-api-tls
+    asserts:
+      - equal:
+          path: spec.listeners[1].name
+          value: https
+      - equal:
+          path: spec.listeners[1].tls.certificateRefs[0].name
+          value: akeyless-api-tls
+
+  - it: does not render a Gateway in attach mode
+    template: templates/gateway-api/gateway.yaml
+    set:
+      gatewayAPI.gateway.create: false
+      gatewayAPI.parentRefs:
+        - name: shared-gw
+          namespace: gateway
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: gateway.name overrides the default backend-service-derived name
+    template: templates/gateway-api/gateway.yaml
+    set:
+      gatewayAPI.gateway.name: shared-edge-gw
+    asserts:
+      - equal:
+          path: metadata.name
+          value: shared-edge-gw
+
+  - it: gateway.annotations and gateway.labels merge onto the rendered Gateway metadata (additive, base chart labels survive)
+    template: templates/gateway-api/gateway.yaml
+    set:
+      gatewayAPI.gateway.annotations:
+        external-dns.alpha.kubernetes.io/hostname: gw.example.com
+      gatewayAPI.gateway.labels:
+        team: platform
+    asserts:
+      - equal:
+          path: metadata.annotations["external-dns.alpha.kubernetes.io/hostname"]
+          value: gw.example.com
+      - equal:
+          path: metadata.labels.team
+          value: platform
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: akeyless-gateway-api
+
+  - it: allowedRoutes.namespaces.from overrides the Same default (e.g. All, for a shared-Gateway posture)
+    template: templates/gateway-api/gateway.yaml
+    set:
+      gatewayAPI.gateway.allowedRoutes.namespaces.from: All
+    asserts:
+      - equal:
+          path: spec.listeners[0].allowedRoutes.namespaces.from
+          value: All
+
+  - it: gateway.listeners is a full raw override — replaces the synthesized defaults entirely (tls settings are ignored once set)
+    template: templates/gateway-api/gateway.yaml
+    set:
+      gatewayAPI.gateway.tls.enabled: true
+      gatewayAPI.gateway.listeners:
+        - name: custom-http
+          protocol: HTTP
+          port: 8080
+        - name: custom-grpc
+          protocol: HTTP
+          port: 9090
+    asserts:
+      - lengthEqual:
+          path: spec.listeners
+          count: 2
+      - equal:
+          path: spec.listeners[0].name
+          value: custom-http
+      - equal:
+          path: spec.listeners[1].name
+          value: custom-grpc
+
+  - it: renders an HTTP->HTTPS redirect when httpsRedirect
+    template: templates/gateway-api/httproute-redirect.yaml
+    set:
+      gatewayAPI.gateway.tls.enabled: true
+      gatewayAPI.gateway.tls.httpsRedirect: true
+    asserts:
+      - isKind:
+          of: HTTPRoute
+      - equal:
+          path: spec.rules[0].filters[0].requestRedirect.statusCode
+          value: 301
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: http
+
+  - it: httpsRedirect pins the main route to the https listener (so http:80 stays redirect-only)
+    template: templates/gateway-api/httproute.yaml
+    set:
+      gatewayAPI.gateway.tls.enabled: true
+      gatewayAPI.gateway.tls.mode: Terminate
+      gatewayAPI.gateway.tls.httpsRedirect: true
+      gatewayAPI.gateway.tls.certificateRefs:
+        - name: akeyless-api-tls
+      gatewayAPI.httpRoutes:
+        - hostname: gw.example.com
+          servicePort: gateway
+    asserts:
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: https
+
+  - it: without httpsRedirect the main route attaches to all listeners (no sectionName)
+    template: templates/gateway-api/httproute.yaml
+    set:
+      gatewayAPI.httpRoutes:
+        - hostname: gw.example.com
+          servicePort: gateway
+    asserts:
+      - notExists:
+          path: spec.parentRefs[0].sectionName

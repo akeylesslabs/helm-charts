@@ -1,0 +1,36 @@
+suite: akeyless-gateway gatewayAPI matrix
+set:
+  gatewayAPI.enabled: true
+  gatewayAPI.gateway.create: true
+  gatewayAPI.gateway.gatewayClassName: cilium
+  gatewayAPI.gateway.tls.enabled: true
+  gatewayAPI.gateway.tls.mode: Terminate
+  gatewayAPI.gateway.tls.httpsRedirect: true
+  gatewayAPI.gateway.tls.certificateRefs:
+    - name: akeyless-api-tls
+  gatewayAPI.httpRoutes:
+    - hostname: gw.example.com
+      servicePort: gateway
+tests:
+  - it: Gateway has http + https listeners
+    template: templates/gateway-api/gateway.yaml
+    asserts:
+      - lengthEqual:
+          path: spec.listeners
+          count: 2
+      - equal:
+          path: spec.listeners[0].name
+          value: http
+      - equal:
+          path: spec.listeners[1].name
+          value: https
+  - it: renders the HTTPRoute
+    template: templates/gateway-api/httproute.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+  - it: renders the HTTP->HTTPS redirect
+    template: templates/gateway-api/httproute-redirect.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
