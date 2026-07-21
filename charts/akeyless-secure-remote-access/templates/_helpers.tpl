@@ -202,3 +202,48 @@ Get the Ingress TLS secret.
         name: {{ include "akeyless-secure-remote-access.storageSecretName" . }}
         key: storage-pass
 {{- end }}
+
+{{/*
+SSH bastion capability set — Phase A (root + narrow caps). Ported from the unified
+akeyless-gateway chart (ASM-18714) so this legacy chart matches the securityContext contract
+the hardened zero-trust-bastion image (>= 3.1.0, non-root default) requires.
+Usage: {{ include "akeyless-sra-ssh.phaseACaps" . }}
+*/}}
+{{- define "akeyless-sra-ssh.phaseACaps" -}}
+capabilities:
+  drop:
+    - ALL
+  add:
+    - SYS_CHROOT     # sshd privilege separation: chroot("/run/sshd") [preauth]
+    - AUDIT_WRITE    # sshd session: linux_audit_write_entry after pubkey auth
+    - SYS_ADMIN      # Required for mount --bind /dev/pts
+    - MKNOD          # Required for mknod device nodes in jail
+    - DAC_OVERRIDE   # Required for adduser/deluser/jail permissions
+    - CHOWN          # Required by adduser + chroot setup
+    - SETUID         # Required by adduser + chroot setup
+    - SETGID         # Required by adduser + chroot setup
+    - FOWNER         # Required by adduser + chroot setup
+{{- end -}}
+
+{{/*
+SRA SSH bastion — Phase A only (root + narrow caps). The zero-trust-bastion image defaults to
+a non-root user; the bastion entrypoint still performs root-only setup (writes /etc/ssh/ca.pub,
+runs usermod), so the pod is pinned back to root here.
+*/}}
+{{- define "akeyless-sra-ssh.podSecurityContext" -}}
+securityContext:
+  runAsUser: 0
+  runAsGroup: 0
+{{- end -}}
+
+{{- define "akeyless-sra-ssh.containerSecurityContext" -}}
+securityContext:
+  allowPrivilegeEscalation: true
+  # The SSH bastion sets up a per-session chroot jail and bind-mounts /dev/pts, which requires the
+  # mount syscall. On nodes with AppArmor enabled, the default container profile blocks mount even
+  # when CAP_SYS_ADMIN is granted, so the bastion runs AppArmor-unconfined. Requires Kubernetes 1.30+;
+  # on older clusters use the container.apparmor.security.beta.kubernetes.io annotation instead.
+  appArmorProfile:
+    type: Unconfined
+  {{- include "akeyless-sra-ssh.phaseACaps" . | nindent 2 }}
+{{- end -}}

@@ -1,0 +1,26 @@
+# Test-only values to render the SRA SSH bastion StatefulSet for securityContext assertions
+# (ASM-18714). Deliberately NOT under charts/.../ci/ so `ct install` never tries to bring the
+# bastion up in kind — this fixture is for `helm template` render checks only.
+fullnameOverride: sra-ci
+dockerRepositoryCreds: eyJhdXRocyI6e319Cg==
+apiGatewayURL: https://rest.akeyless.io
+
+privilegedAccess:
+  accessID: p-dummy
+  accessKey: dummy-key
+
+ztbConfig:
+  enabled: false
+  service:
+    type: ClusterIP
+ztpConfig:
+  enabled: false
+  service:
+    type: ClusterIP
+
+sshConfig:
+  enabled: true
+  service:
+    type: ClusterIP
+  config:
+    CAPublicKey: "ssh-ed25519 AAAAdummy"

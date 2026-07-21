@@ -22,13 +22,7 @@ spec:
       labels:
         app: ssh-bastion
     spec:
-      {{- if .Values.sshConfig.securityContext }}
-        {{- if .Values.sshConfig.securityContext.enabled }}
-      securityContext:
-        runAsUser: {{ .Values.sshConfig.securityContext.runAsUser }}
-        fsGroup: {{ .Values.sshConfig.securityContext.fsGroup }}
-        {{- end }}
-      {{- end }}
+      {{- include "akeyless-sra-ssh.podSecurityContext" . | nindent 6 }}
       serviceAccountName: {{ template "akeyless-api-gw.getServiceAccountName" . }}
       {{- if .Values.sshConfig.nodeSelector }}
       nodeSelector:
@@ -124,16 +118,15 @@ spec:
         - name: {{ .Values.sshConfig.containerName }}
           image: "{{ .Values.sshConfig.image.repository | default "akeyless/zero-trust-bastion" }}:{{ .Values.sshConfig.image.tag | default .Chart.Annotations.ztbVersion }}"
           imagePullPolicy: {{ .Values.sshConfig.image.pullPolicy }}
-          securityContext:
-            privileged: true
-            capabilities:
-              add: ["SYS_ADMIN"]
+          {{- include "akeyless-sra-ssh.containerSecurityContext" . | nindent 10 }}
           ports:
-          - containerPort: 22
+          - containerPort: {{ .Values.sshConfig.proxyPort | default 2200 }}
             name: ssh
           - containerPort: 9900
             name: curl-proxy
           env:
+          - name: SSH_PROXY_PORT
+            value: {{ .Values.sshConfig.proxyPort | default 2200 | quote }}
           - name: EXTERNAL_SSH_PORT
             value: {{ .Values.sshConfig.service.port | quote }}
           - name: VERSION
