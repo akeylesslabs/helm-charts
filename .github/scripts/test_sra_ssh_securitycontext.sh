@@ -80,6 +80,22 @@ assert_present "SSH_PROXY_PORT value 2200"         'value: "2200"'
 assert_absent  "no CAP_NET_BIND_SERVICE granted"   "NET_BIND_SERVICE"
 assert_absent  "proxy not on privileged port 22"   "containerPort: 22[[:space:]]*$"
 
+# appArmorProfile is gated on Kubernetes 1.30, older clusters get the annotation fallback
+assert_absent "no AppArmor annotation on current kube" "container.apparmor.security.beta.kubernetes.io"
+old_rendered="$(helm template t "${chart}" -f "${values}" --kube-version 1.29.0 --show-only templates/statefulSet.yaml 2>/dev/null)"
+if grep -qE "^[[:space:]]*appArmorProfile:" <<<"${old_rendered}"; then
+  echo "FAIL - appArmorProfile field rendered on kube 1.29"
+  fail=1
+else
+  echo "ok   - no appArmorProfile field on kube 1.29"
+fi
+if grep -q "container.apparmor.security.beta.kubernetes.io/ssh-bastion: unconfined" <<<"${old_rendered}"; then
+  echo "ok   - AppArmor annotation fallback on kube 1.29"
+else
+  echo "FAIL - missing AppArmor annotation fallback on kube 1.29"
+  fail=1
+fi
+
 # Invalid proxyPort values must be rejected at render time
 for bad_port in 22 1024 2222 9900; do
   if helm template t "${chart}" -f "${values}" --set sshConfig.proxyPort="${bad_port}" >/dev/null 2>&1; then

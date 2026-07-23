@@ -237,10 +237,12 @@ securityContext:
 securityContext:
   allowPrivilegeEscalation: true
   # The bastion bind-mounts /dev/pts per session, and AppArmor's default profile blocks mount
-  # even with CAP_SYS_ADMIN, so it runs unconfined. Requires Kubernetes 1.30+. On older
-  # clusters use the container.apparmor.security.beta.kubernetes.io annotation instead.
+  # even with CAP_SYS_ADMIN, so it runs unconfined. The appArmorProfile field exists on
+  # Kubernetes 1.30+, older clusters get the fallback annotation in the StatefulSet.
+  {{- if semverCompare ">=1.30-0" .Capabilities.KubeVersion.Version }}
   appArmorProfile:
     type: Unconfined
+  {{- end }}
   {{- include "akeyless-sra-ssh.phaseACaps" . | nindent 2 }}
 {{- end -}}
 

@@ -19,6 +19,10 @@ spec:
       app: ssh-bastion
   template:
     metadata:
+      {{- if semverCompare "<1.30-0" .Capabilities.KubeVersion.Version }}
+      annotations:
+        container.apparmor.security.beta.kubernetes.io/{{ .Values.sshConfig.containerName }}: unconfined
+      {{- end }}
       labels:
         app: ssh-bastion
     spec:
