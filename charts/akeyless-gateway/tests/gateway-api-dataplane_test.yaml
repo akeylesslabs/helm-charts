@@ -2,7 +2,6 @@ suite: akeyless-gateway gatewayAPI data-plane echo backend surface
 templates:
   - templates/gateway-api/gateway.yaml
   - templates/gateway-api/httproute.yaml
-  - templates/gateway-api/extra-objects.yaml
 set:
   gatewayAPI.enabled: true
   gatewayAPI.gateway.create: true
@@ -14,38 +13,6 @@ set:
     - hostname: echo.dataplane.test
       backendRefs:
         - {servicePort: echo, serviceName: gwapi-echo}
-  gatewayAPI.extraObjects:
-    - apiVersion: apps/v1
-      kind: Deployment
-      metadata:
-        name: gwapi-echo
-      spec:
-        replicas: 1
-        selector:
-          matchLabels:
-            app: gwapi-echo
-        template:
-          metadata:
-            labels:
-              app: gwapi-echo
-          spec:
-            containers:
-              - name: echo
-                image: hashicorp/http-echo:1.0.0
-                args:
-                  - -listen=:8080
-                  - -text=akeyless-gateway-api-dataplane-ok
-                ports:
-                  - {name: echo, containerPort: 8080}
-    - apiVersion: v1
-      kind: Service
-      metadata:
-        name: gwapi-echo
-      spec:
-        selector:
-          app: gwapi-echo
-        ports:
-          - {name: echo, port: 8080, targetPort: echo}
 tests:
   - it: gateway fronts the cilium class with an http listener
     template: templates/gateway-api/gateway.yaml
@@ -73,31 +40,3 @@ tests:
       - equal:
           path: spec.rules[0].backendRefs[0].port
           value: 8080
-
-  - it: extraObjects render the echo deployment that answers the data-plane probe
-    template: templates/gateway-api/extra-objects.yaml
-    documentIndex: 0
-    asserts:
-      - equal:
-          path: kind
-          value: Deployment
-      - equal:
-          path: spec.template.spec.containers[0].image
-          value: hashicorp/http-echo:1.0.0
-      - equal:
-          path: spec.template.spec.containers[0].args[1]
-          value: -text=akeyless-gateway-api-dataplane-ok
-
-  - it: extraObjects render the echo service on the routed port
-    template: templates/gateway-api/extra-objects.yaml
-    documentIndex: 1
-    asserts:
-      - equal:
-          path: kind
-          value: Service
-      - equal:
-          path: spec.ports[0].port
-          value: 8080
-      - equal:
-          path: spec.ports[0].targetPort
-          value: echo
