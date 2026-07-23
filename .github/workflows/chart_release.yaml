@@ -66,8 +66,6 @@ jobs:
       - name: Update latest helm chart version
         id: release
         env:
-          # release_legacy_sra rides in this payload (ASM-18714): default false -> the legacy
-          # akeyless-secure-remote-access chart is not auto-released unless the trigger opts in.
           GITHUB_CONTEXT: ${{ toJson(github.event.deployment) }}
         run: .github/scripts/latest_version_release.sh
 
