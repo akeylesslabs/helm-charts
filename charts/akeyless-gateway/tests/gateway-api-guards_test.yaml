@@ -1,0 +1,92 @@
+suite: akeyless-gateway gatewayAPI guards
+tests:
+  - it: "G1 — gatewayAPI and the chart ingress are mutually exclusive"
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.create: true
+      gatewayAPI.gateway.gatewayClassName: cilium
+      gateway.ingress.enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: "gateway/ingress/enabled"
+
+  - it: "G2 — gatewayClassName required when create=true"
+    template: templates/gateway-api/gateway.yaml
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.create: true
+    asserts:
+      - failedTemplate:
+          errorMessage: "akeyless-gateway gatewayAPI: gateway.gatewayClassName is required when gateway.create=true (e.g. cilium, nginx, istio, kong, envoy, aws-alb)."
+
+  - it: "G3 — parentRefs required when create=false"
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.create: false
+    asserts:
+      - failedTemplate:
+          errorPattern: "gatewayAPI/parentRefs"
+
+  - it: "default posture — gateway.create is unset, chart renders no Gateway (attach-mode out of the box)"
+    template: templates/gateway-api/gateway.yaml
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.parentRefs:
+        - name: shared-gw
+          namespace: gateway
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: "G4 — tls.mode=Passthrough requires the Tier 1.5 TLSRoute/TCPRoute overlay, not present in this chart alone"
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.gatewayClassName: cilium
+      gatewayAPI.gateway.create: true
+      gatewayAPI.gateway.tls.enabled: true
+      gatewayAPI.gateway.tls.mode: Passthrough
+    asserts:
+      - failedTemplate:
+          errorPattern: "gatewayAPI/gateway/tls/mode"
+
+  - it: "G5 — unknown servicePort (lists the valid names)"
+    template: templates/gateway-api/httproute.yaml
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.create: true
+      gatewayAPI.gateway.gatewayClassName: cilium
+      gatewayAPI.httpRoutes:
+        - hostname: x.example.com
+          servicePort: nope
+    asserts:
+      - failedTemplate:
+          errorMessage: 'akeyless-gateway gatewayAPI: route references unknown servicePort "nope"; valid names: gateway, kmip, hvp, ssh'
+
+  - it: "G6 — gateway.listeners override with tls.httpsRedirect (no way to know which custom listener to attach the redirect to)"
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.gatewayClassName: cilium
+      gatewayAPI.gateway.create: true
+      gatewayAPI.gateway.tls.httpsRedirect: true
+      gatewayAPI.gateway.listeners:
+        - name: custom-http
+          protocol: HTTP
+          port: 80
+    asserts:
+      - failedTemplate:
+          errorPattern: "gatewayAPI/gateway/listeners"
+
+  - it: "gateway.create=true combined with an explicit parentRefs override skips the redirect route, matching the main HTTPRoute's own override handling"
+    template: templates/gateway-api/httproute.yaml
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.create: true
+      gatewayAPI.gateway.gatewayClassName: cilium
+      gatewayAPI.parentRefs:
+        - name: shared-gw
+          namespace: gateway
+      gatewayAPI.gateway.tls.enabled: true
+      gatewayAPI.gateway.tls.httpsRedirect: true
+    asserts:
+      - hasDocuments:
+          count: 0
