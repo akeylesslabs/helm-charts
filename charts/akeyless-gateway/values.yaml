@@ -725,4 +725,3 @@ gatewayAPI:
   httpRoutePath: /
   httpRoutePathType: PathPrefix
   httpRoutes: []
-  referenceGrants: []

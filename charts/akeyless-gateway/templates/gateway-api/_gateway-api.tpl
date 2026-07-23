@@ -73,11 +73,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- fail "akeyless-gateway gatewayAPI: tls.mode=Passthrough requires the TLSRoute/TCPRoute overlay (Tier 1.5) — this chart alone only supports tls.mode=Terminate." -}}
 {{- end -}}
 {{- range $r := $ga.httpRoutes -}}
-{{- if $r.backendRefs -}}
-{{- range $b := $r.backendRefs -}}{{- $_ := include "gatewayApi.portNumber" (dict "port" $b.servicePort "root" $) -}}{{- end -}}
-{{- else -}}
 {{- $_ := include "gatewayApi.portNumber" (dict "port" $r.servicePort "root" $) -}}
-{{- end -}}
 {{- end -}}
 {{- end -}}
 {{- end -}}

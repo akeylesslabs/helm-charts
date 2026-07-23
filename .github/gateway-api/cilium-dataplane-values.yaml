@@ -26,5 +26,5 @@ gatewayAPI:
       - {name: echo, port: 8080}
   httpRoutes:
     - hostname: echo.dataplane.test
-      backendRefs:
-        - {servicePort: echo, serviceName: gwapi-echo}
+      serviceName: gwapi-echo
+      servicePort: echo

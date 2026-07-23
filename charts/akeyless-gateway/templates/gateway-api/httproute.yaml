@@ -27,36 +27,11 @@ spec:
   {{- end }}
   rules:
     - matches:
-        {{- if $r.matches }}
-        {{- toYaml $r.matches | nindent 8 }}
-        {{- else }}
         - path:
             type: {{ $r.pathType | default $ga.httpRoutePathType | default "PathPrefix" }}
             value: {{ $r.path | default $ga.httpRoutePath | default "/" }}
-        {{- end }}
-      {{- with $r.filters }}
-      filters:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       backendRefs:
-        {{- if $r.backendRefs }}
-        {{- range $b := $r.backendRefs }}
-        - name: {{ $b.serviceName | default $default }}
-          port: {{ include "gatewayApi.portNumber" (dict "port" $b.servicePort "root" $) }}
-          {{- with $b.namespace }}
-          namespace: {{ . | quote }}
-          {{- end }}
-          {{- if hasKey $b "weight" }}
-          weight: {{ $b.weight }}
-          {{- end }}
-        {{- end }}
-        {{- else }}
         - name: {{ $r.serviceName | default $default }}
           port: {{ include "gatewayApi.portNumber" (dict "port" $r.servicePort "root" $) }}
-        {{- end }}
-      {{- with $r.timeouts }}
-      timeouts:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
 {{- end }}
 {{- end -}}

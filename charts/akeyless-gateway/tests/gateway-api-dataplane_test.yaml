@@ -11,8 +11,8 @@ set:
     - {name: echo, port: 8080}
   gatewayAPI.httpRoutes:
     - hostname: echo.dataplane.test
-      backendRefs:
-        - {servicePort: echo, serviceName: gwapi-echo}
+      serviceName: gwapi-echo
+      servicePort: echo
 tests:
   - it: gateway fronts the cilium class with an http listener
     template: templates/gateway-api/gateway.yaml
