@@ -24,13 +24,14 @@ tests:
       - equal:
           path: spec.listeners[1].name
           value: https
-  - it: renders the HTTPRoute
+  - it: renders the HTTPRoute and the HTTP->HTTPS redirect
     template: templates/gateway-api/httproute.yaml
     asserts:
       - hasDocuments:
-          count: 1
-  - it: renders the HTTP->HTTPS redirect
-    template: templates/gateway-api/httproute-redirect.yaml
-    asserts:
-      - hasDocuments:
-          count: 1
+          count: 2
+      - isKind:
+          of: HTTPRoute
+      - documentIndex: 1
+        matchRegex:
+          path: metadata.name
+          pattern: "-https-redirect$"

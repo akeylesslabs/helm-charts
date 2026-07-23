@@ -128,7 +128,7 @@ tests:
           value: custom-grpc
 
   - it: renders an HTTP->HTTPS redirect when httpsRedirect
-    template: templates/gateway-api/httproute-redirect.yaml
+    template: templates/gateway-api/httproute.yaml
     set:
       gatewayAPI.gateway.tls.enabled: true
       gatewayAPI.gateway.tls.httpsRedirect: true
@@ -154,7 +154,8 @@ tests:
         - hostname: gw.example.com
           servicePort: gateway
     asserts:
-      - equal:
+      - documentIndex: 0
+        equal:
           path: spec.parentRefs[0].sectionName
           value: https
 
