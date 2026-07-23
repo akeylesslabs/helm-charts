@@ -11,8 +11,8 @@ on:
 
 jobs:
   release-scripts-test:
-    # Unit tests for the release-automation shell logic (e.g. the legacy-SRA release gate,
-    # ASM-18714). Pure bash, no cluster needed.
+    # Unit tests for the release-automation shell logic (e.g. the legacy-SRA release gate).
+    # Pure bash, no cluster needed.
     runs-on: ubuntu-22.04
     permissions:
       contents: read

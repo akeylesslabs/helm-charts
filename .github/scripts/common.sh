@@ -15,16 +15,10 @@ function die() {
   exit 1
 }
 
-# Map a released service to the charts whose versions should be bumped.
-# The legacy standalone SRA chart (akeyless-secure-remote-access) is gated behind
-# release_legacy_sra and is only included when that flag is exactly "true". By default
-# it is skipped so the bot never auto-releases it (ASM-18714): the legacy chart lacks the
-# SSH-bastion securityContext contract of the unified akeyless-gateway chart and re-breaks
-# whenever a hardened non-root image is auto-bumped in. Cut a legacy release deliberately
-# via a reviewed chart PR, or by setting the RELEASE_LEGACY_SRA repo variable to "true".
-#
-# Args:  $1 = service name, $2 = release_legacy_sra ("true" to include the legacy SRA chart)
-# Sets global: selected_charts (array; may be empty for a legacy-only service when gated off)
+# Maps a released service ($1) to the charts to bump, into the selected_charts global.
+# The legacy akeyless-secure-remote-access chart is included only when $2 is exactly
+# "true": it lacks the unified chart's securityContext contract, so auto-bumping
+# hardened non-root images breaks it. Opt in via the RELEASE_LEGACY_SRA repo variable.
 function select_charts_for_service() {
   local service="$1"
   local release_legacy_sra="$2"

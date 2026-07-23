@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 #
-# Unit tests for select_charts_for_service (ASM-18714 legacy SRA release gate).
-# Verifies that the legacy standalone SRA chart (akeyless-secure-remote-access) is only
-# auto-released when RELEASE_LEGACY_SRA == "true", and that all other services are unaffected.
-#
-# Run locally:  bash .github/scripts/test_select_charts.sh
+# Unit tests for select_charts_for_service: the legacy SRA chart is selected only
+# when release_legacy_sra == "true"; all other services are unaffected.
+# Run:  bash .github/scripts/test_select_charts.sh
 
 dir_path="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 # shellcheck source=common.sh
