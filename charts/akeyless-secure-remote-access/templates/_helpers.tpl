@@ -202,3 +202,60 @@ Get the Ingress TLS secret.
         name: {{ include "akeyless-secure-remote-access.storageSecretName" . }}
         key: storage-pass
 {{- end }}
+
+{{/*
+SSH bastion capability set required by the zero-trust-bastion image (>= 3.1.0, non-root
+default). Keep in sync with the unified akeyless-gateway chart.
+*/}}
+{{- define "akeyless-sra-ssh.phaseACaps" -}}
+capabilities:
+  drop:
+    - ALL
+  add:
+    - SYS_CHROOT     # sshd privilege separation: chroot("/run/sshd") [preauth]
+    - AUDIT_WRITE    # sshd session: linux_audit_write_entry after pubkey auth
+    - SYS_ADMIN      # Required for mount --bind /dev/pts
+    - MKNOD          # Required for mknod device nodes in jail
+    - DAC_OVERRIDE   # Required for adduser/deluser/jail permissions
+    - CHOWN          # Required by adduser + chroot setup
+    - SETUID         # Required by adduser + chroot setup
+    - SETGID         # Required by adduser + chroot setup
+    - FOWNER         # Required by adduser + chroot setup
+{{- end -}}
+
+{{/*
+The zero-trust-bastion image defaults to a non-root user, but the bastion entrypoint performs
+root-only setup (writes /etc/ssh/ca.pub, runs usermod), so the pod is pinned to root.
+*/}}
+{{- define "akeyless-sra-ssh.podSecurityContext" -}}
+securityContext:
+  runAsUser: 0
+  runAsGroup: 0
+{{- end -}}
+
+{{- define "akeyless-sra-ssh.containerSecurityContext" -}}
+securityContext:
+  allowPrivilegeEscalation: true
+  # The bastion bind-mounts /dev/pts per session, and AppArmor's default profile blocks mount
+  # even with CAP_SYS_ADMIN, so it runs unconfined. The appArmorProfile field exists on
+  # Kubernetes 1.30+, older clusters get the fallback annotation in the StatefulSet.
+  {{- if semverCompare ">=1.30-0" .Capabilities.KubeVersion.Version }}
+  appArmorProfile:
+    type: Unconfined
+  {{- end }}
+  {{- include "akeyless-sra-ssh.phaseACaps" . | nindent 2 }}
+{{- end -}}
+
+{{/*
+Validated SSH proxy port, rejects privileged and reserved ports at render time.
+*/}}
+{{- define "akeyless-sra-ssh.proxyPort" -}}
+{{- $port := int (default 2200 .Values.sshConfig.proxyPort) -}}
+{{- if le $port 1024 -}}
+{{- fail (printf "sshConfig.proxyPort must be an unprivileged port above 1024, got %d" $port) -}}
+{{- end -}}
+{{- if or (eq $port 2222) (eq $port 9900) -}}
+{{- fail (printf "sshConfig.proxyPort must not be 2222 (in-container sshd) or 9900 (curl-proxy), got %d" $port) -}}
+{{- end -}}
+{{- $port -}}
+{{- end -}}

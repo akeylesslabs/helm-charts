@@ -371,10 +371,8 @@ sshConfig:
 
   nodeSelector:
   #     iam.gke.io/gke-metadata-server-enabled: "true"
-  securityContext:
-    enabled: false
-    fsGroup: 0
-    runAsUser: 0
+  ## The SSH bastion securityContext is chart-managed (root + narrow capability set,
+  ## required by the zero-trust-bastion image) and is not user-configurable.
 
   env: []
   initContainer:
@@ -388,6 +386,7 @@ sshConfig:
     #  repository: akeyless/zero-trust-bastion
     pullPolicy: IfNotPresent
   #  tag: latest
+  ## Pinned tag must be 3.1.0 or newer, older images ignore SSH_PROXY_PORT and cannot bind port 22 here.
 
   containerName: "ssh-bastion"
 
@@ -396,8 +395,13 @@ sshConfig:
     annotations: {}
     labels: {}
     type: LoadBalancer
+    ## External port clients connect to, forwarded to the container "ssh" port (sshConfig.proxyPort).
     port: 22
     curlProxyPort: 9900
+
+  ## Container port the SSH proxy binds (and the Service target). Must be above 1024 and
+  ## not 2222 (in-container sshd) or 9900 (curl-proxy). Validated at render time.
+  proxyPort: 2200
 
   # Akeyless requires data persistence to be shared within all pods in the cluster
   # Currently only ReadWriteMany is supported

@@ -5,10 +5,24 @@ on:
     paths:
       - "charts/**"
       - ".github/chart-fixtures/**"
+      - ".github/scripts/**"
       - ".github/ct.yaml"
       - ".github/workflows/chart_test.yaml"
 
 jobs:
+  sra-ssh-securitycontext-test:
+    # Render-asserts the SSH bastion securityContext contract, ct install can't cover it.
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - name: Set up Helm
+        uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2 # v5
+      - name: Assert SSH bastion securityContext
+        run: bash .github/scripts/test_sra_ssh_securitycontext.sh
+
   chart-test:
     # ubuntu-latest currently resolves to ubuntu-24.04, where kind/gateway
     # installs hit a runner-kernel-specific rsyslog permission failure.
