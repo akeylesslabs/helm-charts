@@ -1,0 +1,22 @@
+globalConfig:
+  gatewayAuth:
+    gatewayAccessType: access_key
+    gatewayCredentialsExistingSecret: akeyless-auth
+
+gateway:
+  service:
+    type: ClusterIP
+
+sra:
+  sshConfig:
+    service:
+      type: ClusterIP
+
+gatewayAPI:
+  enabled: true
+  gateway:
+    create: true
+    gatewayClassName: cilium
+  httpRoutes:
+    - hostname: gw.example.com
+      servicePort: gateway
