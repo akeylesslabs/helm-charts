@@ -1,0 +1,42 @@
+suite: akeyless-gateway gatewayAPI data-plane echo backend surface
+templates:
+  - templates/gateway-api/gateway.yaml
+  - templates/gateway-api/httproute.yaml
+set:
+  gatewayAPI.enabled: true
+  gatewayAPI.gateway.create: true
+  gatewayAPI.gateway.gatewayClassName: cilium
+  gatewayAPI.backend.ports:
+    - {name: gateway, port: 8000}
+    - {name: echo, port: 8080}
+  gatewayAPI.httpRoutes:
+    - hostname: echo.dataplane.test
+      serviceName: gwapi-echo
+      servicePort: echo
+tests:
+  - it: gateway fronts the cilium class with an http listener
+    template: templates/gateway-api/gateway.yaml
+    asserts:
+      - equal:
+          path: spec.gatewayClassName
+          value: cilium
+      - equal:
+          path: spec.listeners[0].protocol
+          value: HTTP
+      - equal:
+          path: spec.listeners[0].port
+          value: 80
+
+  - it: httproute binds the echo hostname to the echo backend port
+    template: templates/gateway-api/httproute.yaml
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: spec.hostnames[0]
+          value: echo.dataplane.test
+      - equal:
+          path: spec.rules[0].backendRefs[0].name
+          value: gwapi-echo
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 8080

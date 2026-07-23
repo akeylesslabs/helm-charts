@@ -18,7 +18,13 @@ jobs:
       matrix:
         include:
           - controller: cilium
-            gatewayClassName: cilium
+            scenario: status
+            values: .github/gateway-api/cilium-values.yaml
+            dataplane: "false"
+          - controller: cilium
+            scenario: dataplane
+            values: .github/gateway-api/cilium-dataplane-values.yaml
+            dataplane: "true"
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -44,21 +50,54 @@ jobs:
         uses: ./.github/actions/setup-gateway-api-controller
         with:
           controller: ${{ matrix.controller }}
+          dataplane: ${{ matrix.dataplane }}
 
       - name: Prepare release namespace
         run: |
           kubectl create namespace chart-testing --dry-run=client -o yaml | kubectl apply -f -
           kubectl apply -f .github/chart-fixtures/akeyless-gateway/ -n chart-testing
 
+      - name: Apply data-plane echo backend fixture
+        if: matrix.scenario == 'dataplane'
+        run: kubectl apply -f .github/gateway-api/echo-backend.yaml -n chart-testing
+
       - name: Install chart
         run: |
           helm install gw charts/akeyless-gateway \
             -n chart-testing \
-            --values .github/gateway-api/cilium-values.yaml \
+            --values ${{ matrix.values }} \
             --timeout 300s
 
       - name: Run conformance test
         run: helm test gw -n chart-testing --logs
+
+      - name: Data-plane conformance through the loadbalancer
+        if: matrix.scenario == 'dataplane'
+        run: |
+          kubectl rollout status deployment/gwapi-echo -n chart-testing --timeout=180s
+          gw_name=$(kubectl get gateways.gateway.networking.k8s.io -n chart-testing -o jsonpath='{.items[0].metadata.name}')
+          lb_ip=""
+          for i in $(seq 1 30); do
+            lb_ip=$(kubectl get gateways.gateway.networking.k8s.io "$gw_name" -n chart-testing -o jsonpath='{.status.addresses[0].value}')
+            if [ -n "$lb_ip" ]; then break; fi
+            sleep 5
+          done
+          if [ -z "$lb_ip" ]; then
+            echo "gateway has no loadbalancer address"
+            exit 1
+          fi
+          echo "gateway loadbalancer ip ${lb_ip}"
+          for i in $(seq 1 30); do
+            body=$(docker run --rm --network kind curlimages/curl:8.14.1 -sS -m 5 -H 'Host: echo.dataplane.test' "http://${lb_ip}/" || true)
+            echo "attempt ${i}: ${body}"
+            if echo "$body" | grep -q 'akeyless-gateway-api-dataplane-ok'; then
+              echo "data-plane reachable through the cilium loadbalancer"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "timeout waiting for a data-plane response through the loadbalancer"
+          exit 1
 
       - name: Dump diagnostics
         if: failure()
@@ -72,4 +111,6 @@ jobs:
           kubectl get pods -n chart-testing -o wide || true
           kubectl describe pods -n chart-testing || true
           kubectl get ciliumloadbalancerippools.cilium.io -o wide || true
+          kubectl get ciliuml2announcementpolicies.cilium.io -o wide || true
+          kubectl get leases -n kube-system -o wide || true
           kubectl get svc -n chart-testing -o wide || true
