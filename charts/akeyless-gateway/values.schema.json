@@ -23,8 +23,113 @@
             }
           }
         }
+      },
+      "gatewayAPI": {
+        "type": "object",
+        "properties": {
+          "gateway": {
+            "type": "object",
+            "properties": {
+              "tls": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "enum": ["Terminate"],
+                    "description": "akeyless-gateway gatewayAPI: this chart alone only supports tls.mode=Terminate; Passthrough requires the TLSRoute/TCPRoute overlay (Tier 1.5)."
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
+    "allOf": [
+      {
+        "if": {
+          "properties": {
+            "gatewayAPI": {
+              "properties": { "enabled": { "const": true } },
+              "required": ["enabled"]
+            }
+          },
+          "required": ["gatewayAPI"]
+        },
+        "then": {
+          "properties": {
+            "gateway": {
+              "properties": {
+                "ingress": {
+                  "properties": { "enabled": { "not": { "const": true } } }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "gatewayAPI": {
+              "properties": {
+                "enabled": { "const": true },
+                "gateway": {
+                  "properties": { "create": { "const": false } },
+                  "required": ["create"]
+                }
+              },
+              "required": ["enabled", "gateway"]
+            }
+          },
+          "required": ["gatewayAPI"]
+        },
+        "then": {
+          "properties": {
+            "gatewayAPI": {
+              "properties": {
+                "parentRefs": { "type": "array", "minItems": 1 }
+              },
+              "required": ["parentRefs"]
+            }
+          }
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "gatewayAPI": {
+              "properties": {
+                "enabled": { "const": true },
+                "gateway": {
+                  "properties": {
+                    "tls": {
+                      "properties": { "httpsRedirect": { "const": true } },
+                      "required": ["httpsRedirect"]
+                    }
+                  },
+                  "required": ["tls"]
+                }
+              },
+              "required": ["enabled", "gateway"]
+            }
+          },
+          "required": ["gatewayAPI"]
+        },
+        "then": {
+          "properties": {
+            "gatewayAPI": {
+              "properties": {
+                "gateway": {
+                  "properties": {
+                    "listeners": { "type": "array", "maxItems": 0 }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ],
     "title": "Values",
     "type": "object"
   }
