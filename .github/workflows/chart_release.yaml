@@ -48,6 +48,7 @@ jobs:
     permissions:
       contents: write
     outputs:
+      released: ${{ steps.release.outputs.released }}
       new_chart_version: ${{ steps.release.outputs.new_chart_version }}
       charts: ${{ steps.release.outputs.charts }}
       updated_charts_summary: ${{ steps.release.outputs.updated_charts_summary }}
@@ -70,6 +71,7 @@ jobs:
         run: .github/scripts/latest_version_release.sh
 
       - name: Dispatch manifest update
+        if: steps.release.outputs.released == 'true'
         uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9
         with:
           github-token: ${{ secrets.AKEYLESS_CI_COMMIT_PUSH_TOKEN }}
@@ -129,12 +131,19 @@ jobs:
       - name: Prepare Slack Message On Success
         id: slack-message-success-creator
         run: |
-          SLACK_MESSAGE="*Service:* $service
-          *Bump version:* $major_minor_patch
-          *App Version:* $app_version
-          *Charts:* $charts
-          *Release summary:* $updated_charts_summary
-          :helm:"
+          if [ -n "$charts" ]; then
+            SLACK_MESSAGE="*Service:* $service
+            *Bump version:* $major_minor_patch
+            *App Version:* $app_version
+            *Charts:* $charts
+            *Release summary:* $updated_charts_summary
+            :helm:"
+          else
+            SLACK_MESSAGE="*Service:* $service
+            *App Version:* $app_version
+            *Charts:* none, legacy SRA release gate is off, nothing was released
+            :no_bell:"
+          fi
           delimiter="$(openssl rand -hex 8)"
           {
             echo "slack-message<<${delimiter}"

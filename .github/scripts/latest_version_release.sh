@@ -35,10 +35,12 @@ select_charts_for_service "${service}" "${release_legacy_sra}"
 charts=("${selected_charts[@]}")
 
 if [[ ${#charts[@]} -eq 0 ]]; then
-  echo "No charts to release for service '${service}' (RELEASE_LEGACY_SRA=${release_legacy_sra}); the legacy SRA chart is gated off by default — skipping auto-release."
-else
-  echo "Charts to release for service '${service}' (RELEASE_LEGACY_SRA=${release_legacy_sra}): ${charts[*]}"
+  echo "No charts to release for service '${service}' (RELEASE_LEGACY_SRA=${release_legacy_sra}), the legacy SRA chart is gated off by default, skipping auto-release."
+  echo "released=false" >> "${GITHUB_OUTPUT}"
+  exit 0
 fi
+
+echo "Charts to release for service '${service}' (RELEASE_LEGACY_SRA=${release_legacy_sra}): ${charts[*]}"
 
 updated_charts_summary=()
 for chart in "${charts[@]}"; do
@@ -107,6 +109,7 @@ for chart in "${charts[@]}"; do
   popd
 done
 
+echo "released=true" >> "${GITHUB_OUTPUT}"
 echo "new_chart_version=$new_chart_version" >> "${GITHUB_ENV}"
 echo "new_chart_version=$new_chart_version" >> "${GITHUB_OUTPUT}"
 echo "charts=${charts[*]}" >> "${GITHUB_ENV}"
