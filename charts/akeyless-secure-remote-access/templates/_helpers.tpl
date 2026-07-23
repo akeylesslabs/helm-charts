@@ -204,10 +204,8 @@ Get the Ingress TLS secret.
 {{- end }}
 
 {{/*
-SSH bastion capability set — Phase A (root + narrow caps). Ported from the unified
-akeyless-gateway chart (ASM-18714) so this legacy chart matches the securityContext contract
-the hardened zero-trust-bastion image (>= 3.1.0, non-root default) requires.
-Usage: {{ include "akeyless-sra-ssh.phaseACaps" . }}
+SSH bastion capability set required by the zero-trust-bastion image (>= 3.1.0, non-root
+default). Keep in sync with the unified akeyless-gateway chart.
 */}}
 {{- define "akeyless-sra-ssh.phaseACaps" -}}
 capabilities:
@@ -226,9 +224,8 @@ capabilities:
 {{- end -}}
 
 {{/*
-SRA SSH bastion — Phase A only (root + narrow caps). The zero-trust-bastion image defaults to
-a non-root user; the bastion entrypoint still performs root-only setup (writes /etc/ssh/ca.pub,
-runs usermod), so the pod is pinned back to root here.
+The zero-trust-bastion image defaults to a non-root user, but the bastion entrypoint performs
+root-only setup (writes /etc/ssh/ca.pub, runs usermod), so the pod is pinned to root.
 */}}
 {{- define "akeyless-sra-ssh.podSecurityContext" -}}
 securityContext:
@@ -239,11 +236,24 @@ securityContext:
 {{- define "akeyless-sra-ssh.containerSecurityContext" -}}
 securityContext:
   allowPrivilegeEscalation: true
-  # The SSH bastion sets up a per-session chroot jail and bind-mounts /dev/pts, which requires the
-  # mount syscall. On nodes with AppArmor enabled, the default container profile blocks mount even
-  # when CAP_SYS_ADMIN is granted, so the bastion runs AppArmor-unconfined. Requires Kubernetes 1.30+;
-  # on older clusters use the container.apparmor.security.beta.kubernetes.io annotation instead.
+  # The bastion bind-mounts /dev/pts per session, and AppArmor's default profile blocks mount
+  # even with CAP_SYS_ADMIN, so it runs unconfined. Requires Kubernetes 1.30+. On older
+  # clusters use the container.apparmor.security.beta.kubernetes.io annotation instead.
   appArmorProfile:
     type: Unconfined
   {{- include "akeyless-sra-ssh.phaseACaps" . | nindent 2 }}
+{{- end -}}
+
+{{/*
+Validated SSH proxy port, rejects privileged and reserved ports at render time.
+*/}}
+{{- define "akeyless-sra-ssh.proxyPort" -}}
+{{- $port := int (default 2200 .Values.sshConfig.proxyPort) -}}
+{{- if le $port 1024 -}}
+{{- fail (printf "sshConfig.proxyPort must be an unprivileged port above 1024, got %d" $port) -}}
+{{- end -}}
+{{- if or (eq $port 2222) (eq $port 9900) -}}
+{{- fail (printf "sshConfig.proxyPort must not be 2222 (in-container sshd) or 9900 (curl-proxy), got %d" $port) -}}
+{{- end -}}
+{{- $port -}}
 {{- end -}}

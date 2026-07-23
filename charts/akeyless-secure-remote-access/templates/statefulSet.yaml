@@ -120,13 +120,13 @@ spec:
           imagePullPolicy: {{ .Values.sshConfig.image.pullPolicy }}
           {{- include "akeyless-sra-ssh.containerSecurityContext" . | nindent 10 }}
           ports:
-          - containerPort: {{ .Values.sshConfig.proxyPort | default 2200 }}
+          - containerPort: {{ include "akeyless-sra-ssh.proxyPort" . }}
             name: ssh
           - containerPort: 9900
             name: curl-proxy
           env:
           - name: SSH_PROXY_PORT
-            value: {{ .Values.sshConfig.proxyPort | default 2200 | quote }}
+            value: {{ include "akeyless-sra-ssh.proxyPort" . | quote }}
           - name: EXTERNAL_SSH_PORT
             value: {{ .Values.sshConfig.service.port | quote }}
           - name: VERSION

@@ -371,12 +371,8 @@ sshConfig:
 
   nodeSelector:
   #     iam.gke.io/gke-metadata-server-enabled: "true"
-  # NOTE (ASM-18714): the SSH bastion securityContext is no longer user-configurable here.
-  # The bastion is pinned to root with a narrow capability set (Phase A) via the
-  # akeyless-sra-ssh.podSecurityContext / containerSecurityContext helpers, because the
-  # zero-trust-bastion image (>= 3.1.0) defaults to a non-root user but the entrypoint still
-  # performs root-only setup (writes /etc/ssh, runs usermod). The old sshConfig.securityContext
-  # toggle (enabled/fsGroup/runAsUser) has been removed.
+  ## The SSH bastion securityContext is chart-managed (root + narrow capability set,
+  ## required by the zero-trust-bastion image) and is not user-configurable.
 
   env: []
   initContainer:
@@ -390,6 +386,7 @@ sshConfig:
     #  repository: akeyless/zero-trust-bastion
     pullPolicy: IfNotPresent
   #  tag: latest
+  ## Pinned tag must be 3.1.0 or newer, older images ignore SSH_PROXY_PORT and cannot bind port 22 here.
 
   containerName: "ssh-bastion"
 
@@ -398,15 +395,12 @@ sshConfig:
     annotations: {}
     labels: {}
     type: LoadBalancer
-    ## External port clients connect to (advertised via EXTERNAL_SSH_PORT). The Service forwards
-    ## this to the container's named "ssh" port (sshConfig.proxyPort).
+    ## External port clients connect to, forwarded to the container "ssh" port (sshConfig.proxyPort).
     port: 22
     curlProxyPort: 9900
 
-  ## TCP port the SSH proxy process binds inside the container; also the StatefulSet containerPort
-  ## that the Service targets via the named "ssh" port. Must be unprivileged (>1024) because the
-  ## bastion drops CAP_NET_BIND_SERVICE (ASM-18714), and must differ from the in-container sshd
-  ## (2222, the proxy's forward target) and the curl-proxy (9900). Do not set to 22 or 2222.
+  ## Container port the SSH proxy binds (and the Service target). Must be above 1024 and
+  ## not 2222 (in-container sshd) or 9900 (curl-proxy). Validated at render time.
   proxyPort: 2200
 
   # Akeyless requires data persistence to be shared within all pods in the cluster
