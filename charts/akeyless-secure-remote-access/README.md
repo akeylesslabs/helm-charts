@@ -158,7 +158,7 @@ The following table lists the configurable parameters of the SSH Bastion chart a
 |--------------------------------|------------------------------------------------------------------------------------------------|--------------------------|
 | `ssgConfig.enabled`            | Enable SSH Bastion                                                                             | `true`                   |
 | `sshConfig.image.repository`   | SSH Bastion image name                                                                         | `akeyless/ssh-bastion`   |
-| `sshConfig.image.tag`          | SSH Bastion image tag                                                                          | `latest`                 |      
+| `sshConfig.image.tag`          | SSH Bastion image tag. Must be `3.1.0` or newer, older images ignore `SSH_PROXY_PORT` and cannot bind port 22 under the chart's security settings | `latest`                 |      
 | `sshConfig.image.pullPolicy`   | SSH Bastion image pull policy                                                                  | `Always`                 |
 | `sshConfig.updateStrategy`     | Updating statefulset strategy                                                                  | `RollingUpdate`          |  
 | `sshConfig.containerName`      | SSH Bastion container name                                                                     | `ssh-proxy`              |  

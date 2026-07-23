@@ -5,15 +5,13 @@ on:
     paths:
       - "charts/**"
       - ".github/chart-fixtures/**"
-      - ".github/chart-tests/**"
       - ".github/scripts/**"
       - ".github/ct.yaml"
       - ".github/workflows/chart_test.yaml"
 
 jobs:
   sra-ssh-securitycontext-test:
-    # Render-assert that the legacy SRA SSH bastion keeps its root + narrow-caps contract
-    # (ASM-18714). ct install can't cover this — the SRA CI fixture disables SSH.
+    # Render-asserts the SSH bastion securityContext contract, ct install can't cover it.
     runs-on: ubuntu-22.04
     permissions:
       contents: read
