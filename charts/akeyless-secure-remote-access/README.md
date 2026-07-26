@@ -1,5 +1,9 @@
 # Akeyless Secure Remote Access
 
+# ⚠️ DEPRECATION NOTICE
+
+> **The akeyless-secure-remote-access chart is scheduled for deprecation on December 31, 2026.**
+
 Combines both Zero Trust Bastion and SSH-Bastion capabilities.
 In addition, There is [Zero Trust Portal](https://docs.akeyless.io/docs/access-resources-remotely#connect-from-the-secure-remote-access-portal) capability.
 
