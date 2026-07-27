@@ -1,0 +1,31 @@
+# Installs the SSH bastion so chart-testing verifies it starts on the non-root image:
+# without the chart's root + narrow-caps securityContext the entrypoint fails on /etc/ssh
+# and usermod, and the StatefulSet never becomes ready.
+fullnameOverride: sra-ssh-ci
+
+# Test-only empty docker config, base64 for {"auths":{}}; not a real credential.
+dockerRepositoryCreds: eyJhdXRocyI6e319Cg==
+apiGatewayURL: https://rest.akeyless.io
+
+privilegedAccess:
+  accessID: p-dummy
+  accessKey: dummy-key
+
+ztbConfig:
+  enabled: false
+  service:
+    type: ClusterIP
+
+ztpConfig:
+  enabled: false
+  service:
+    type: ClusterIP
+
+sshConfig:
+  enabled: true
+  service:
+    type: ClusterIP
+  config:
+    # Throwaway CA public key generated for CI. Public keys are not secrets, and the
+    # bastion refuses to start without a parsable one.
+    CAPublicKey: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAII5m2SUoDkjMnZD3XR37KYCmUM8c9lkzIbAIfVdEjCSs akeyless-chart-ci"
