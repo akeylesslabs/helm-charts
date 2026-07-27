@@ -3630,6 +3630,33 @@ entries:
   akeyless-gateway:
   - annotations:
       gatewayVersion: 5.0.1
+      sraVersion: 3.2.0
+    apiVersion: v2
+    appVersion: 5.0.1_3.2.0
+    created: "2026-07-27T14:48:27.549537626Z"
+    dependencies:
+    - alias: cacheHA
+      condition: cacheHA.enabled
+      name: redis-ha
+      repository: https://dandydeveloper.github.io/charts/
+      version: 4.35.10
+    description: A Helm chart for Kubernetes that deploys akeyless-gateway
+    digest: 559de444bd271470cf10dbd3a774932bd94ca4c0f9e18bed4015ed70d7bac1df
+    icon: https://akeyless-908832575.imgix.net/wp-content/uploads/2024/03/akeyless-2024.png?auto=format%2Ccompress&fm=webp&ixlib=php-3.3.0
+    keywords:
+    - akeyless-gateway
+    - sra
+    maintainers:
+    - email: support@akeyless.io
+      name: Akeyless
+      url: https://www.akeyless.io
+    name: akeyless-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-gateway-3.2.0/akeyless-gateway-3.2.0.tgz
+    version: 3.2.0
+  - annotations:
+      gatewayVersion: 5.0.1
       sraVersion: 3.1.0
     apiVersion: v2
     appVersion: 5.0.1_3.1.0
@@ -7697,6 +7724,24 @@ entries:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-secrets-injection-1.0.0/akeyless-secrets-injection-1.0.0.tgz
     version: 1.0.0
   akeyless-sra:
+  - annotations:
+      ztbVersion: 3.2.0
+      ztpVersion: 2.1.3
+    apiVersion: v2
+    appVersion: 3.2.0_2.1.3
+    created: "2026-07-27T14:48:27.729957808Z"
+    description: A Helm chart for Kubernetes akeyless-zero-trust-bastion, akeyless-ssh-bastion
+      and akeyless-zero-trust-portal deployments
+    digest: 65ddc443cc8d0e3471aac03f0d4e7411d62255b3a99b0933fe984925e13d2518
+    maintainers:
+    - email: support@akeyless.io
+      name: Akeyless
+      url: https://www.akeyless.io
+    name: akeyless-sra
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-sra-3.4.0/akeyless-sra-3.4.0.tgz
+    version: 3.4.0
   - annotations:
       ztbVersion: 3.1.0
       ztpVersion: 2.1.3
@@ -14359,4 +14404,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2026-07-27T12:09:18.224583317Z"
+generated: "2026-07-27T14:48:27.731655239Z"
