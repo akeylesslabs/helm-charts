@@ -44,6 +44,8 @@ tests:
       gatewayAPI.gateway.gatewayClassName: cilium
       gatewayAPI.gateway.create: true
       gatewayAPI.gateway.tls.enabled: true
+      gatewayAPI.gateway.tls.certificateRefs:
+        - name: akeyless-api-tls
       gatewayAPI.gateway.tls.mode: Passthrough
     asserts:
       - failedTemplate:
@@ -86,7 +88,38 @@ tests:
         - name: shared-gw
           namespace: gateway
       gatewayAPI.gateway.tls.enabled: true
+      gatewayAPI.gateway.tls.certificateRefs:
+        - name: akeyless-api-tls
       gatewayAPI.gateway.tls.httpsRedirect: true
     asserts:
       - hasDocuments:
           count: 0
+
+  - it: "G7 — certificateRefs required when tls.enabled=true on a created gateway"
+    # The Gateway API CRD enforces non-empty certificateRefs for Terminate
+    # listeners via CEL. Without this guard the chart renders a listener the
+    # API server then rejects with a generic CEL error instead of a clear
+    # chart-level message.
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.create: true
+      gatewayAPI.gateway.gatewayClassName: cilium
+      gatewayAPI.gateway.tls.enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: "certificateRefs"
+
+  - it: "G7 — attach mode (create=false) does not require certificateRefs"
+    template: templates/gateway-api/httproute.yaml
+    set:
+      gatewayAPI.enabled: true
+      gatewayAPI.gateway.create: false
+      gatewayAPI.gateway.tls.enabled: true
+      gatewayAPI.parentRefs:
+        - name: ext-gw
+      gatewayAPI.httpRoutes:
+        - hostname: gw.example.com
+          servicePort: gateway
+    asserts:
+      - isKind:
+          of: HTTPRoute
