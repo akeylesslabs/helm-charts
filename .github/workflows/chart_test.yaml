@@ -5,6 +5,7 @@ on:
     paths:
       - "charts/**"
       - ".github/chart-fixtures/**"
+      - ".github/scripts/**"
       - ".github/ct.yaml"
       - ".github/workflows/chart_test.yaml"
       - ".github/scripts/**"

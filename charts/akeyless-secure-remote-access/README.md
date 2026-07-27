@@ -1,5 +1,9 @@
 # Akeyless Secure Remote Access
 
+# ⚠️ DEPRECATION NOTICE
+
+> **The akeyless-secure-remote-access chart is scheduled for deprecation on December 31, 2026.**
+
 Combines both Zero Trust Bastion and SSH-Bastion capabilities.
 In addition, There is [Zero Trust Portal](https://docs.akeyless.io/docs/access-resources-remotely#connect-from-the-secure-remote-access-portal) capability.
 
@@ -158,7 +162,7 @@ The following table lists the configurable parameters of the SSH Bastion chart a
 |--------------------------------|------------------------------------------------------------------------------------------------|--------------------------|
 | `ssgConfig.enabled`            | Enable SSH Bastion                                                                             | `true`                   |
 | `sshConfig.image.repository`   | SSH Bastion image name                                                                         | `akeyless/ssh-bastion`   |
-| `sshConfig.image.tag`          | SSH Bastion image tag                                                                          | `latest`                 |      
+| `sshConfig.image.tag`          | SSH Bastion image tag. Must be `3.1.0` or newer, older images ignore `SSH_PROXY_PORT` and cannot bind port 22 under the chart's security settings | `latest`                 |      
 | `sshConfig.image.pullPolicy`   | SSH Bastion image pull policy                                                                  | `Always`                 |
 | `sshConfig.updateStrategy`     | Updating statefulset strategy                                                                  | `RollingUpdate`          |  
 | `sshConfig.containerName`      | SSH Bastion container name                                                                     | `ssh-proxy`              |  
