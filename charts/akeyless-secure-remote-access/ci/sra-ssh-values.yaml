@@ -25,6 +25,13 @@ sshConfig:
   enabled: true
   service:
     type: ClusterIP
+  # Non-default keepalive so the install path proves the env vars render and the bastion
+  # still starts. Zero on the target leg also covers the "set but falsy" rendering case.
+  keepalive:
+    clientAliveInterval: 30
+    clientAliveCountMax: 4
+    serverAliveInterval: 0
+    serverAliveCountMax: 2
   config:
     # Throwaway CA public key generated for CI. Public keys are not secrets, and the
     # bastion refuses to start without a parsable one.
