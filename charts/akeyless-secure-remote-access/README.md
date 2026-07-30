@@ -193,6 +193,20 @@ The following table lists the configurable parameters of the SSH Bastion chart a
 | `sshConfig.config.logForwarding.settings`           | Log forwarding configuration                                              | `nil`   |
 | `sshConfig.config.logForwarding.existingSecretName` | Existing secret that will old log forwarding configuration                | `nil`   |
 
+### SSH keepalive parameters
+
+A leg is dropped once `interval x count max` seconds pass with no probe reply. The image ships
+`120` and `2`, so the default window is 240 seconds on each leg. Leave a key unset to keep the
+image default. Set an interval to `0` to send no probes on that leg. Changes take effect on pod
+restart, and an `sshConfig.image.tag` older than `3.3.0` ignores these variables.
+
+| Parameter                                | Description                                                                 | Default |
+|------------------------------------------|-----------------------------------------------------------------------------|---------|
+| `sshConfig.keepalive.clientAliveInterval` | Seconds between bastion probes to the connected client                      | `120`   |
+| `sshConfig.keepalive.clientAliveCountMax` | Unanswered client probes before the bastion disconnects the session         | `2`     |
+| `sshConfig.keepalive.serverAliveInterval` | Seconds between bastion probes to the target host                           | `120`   |
+| `sshConfig.keepalive.serverAliveCountMax` | Unanswered target probes before the bastion gives up on the target          | `2`     |
+
 ### Persistence parameters
 
 | Parameter                       | Description                                                                                            | Default                  |
