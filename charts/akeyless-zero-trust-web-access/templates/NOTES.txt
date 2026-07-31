@@ -30,3 +30,17 @@ This release supports IPv4, dual-stack, and IPv6-only clusters (e.g. EKS in IPv6
 - Rollback warning: on IPv6-only / IPv6-primary clusters, do NOT roll back to an
   older ZTWA version — earlier images bind IPv4-only and fail readiness on the IPv6
   pod IP with no workaround.
+
+{{- $wptInDispatcherEnv := false }}
+{{- range .Values.dispatcher.env }}{{- if eq (get . "name") "WEB_PROXY_TYPE" }}{{- $wptInDispatcherEnv = true }}{{- end }}{{- end }}
+{{- if $wptInDispatcherEnv }}
+
+WARNING: WEB_PROXY_TYPE is set under "dispatcher.env" but the dispatcher no longer
+runs the proxy — the value is ignored there. Move it to "webProxy.env".
+{{- end }}
+{{- if .Values.dispatcher.service.proxyPort }}
+
+WARNING: "dispatcher.service.proxyPort" was removed — the value is ignored. The proxy
+is exposed by its own Service ({{ include "akeyless-zero-web-access.fullname" . }}-proxy);
+configure it via "webProxy.service".
+{{- end }}

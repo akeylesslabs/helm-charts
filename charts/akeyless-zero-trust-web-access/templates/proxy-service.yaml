@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "akeyless-zero-web-access.fullname" . }}-proxy
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: web-proxy-svc
+{{- include "akeyless-zero-web-access.labels" . | nindent 4 }}
+  {{- if .Values.webProxy.service.labels }}
+    {{- toYaml .Values.webProxy.service.labels | nindent 4 }}
+  {{- end }}
+  annotations:
+{{- toYaml .Values.webProxy.service.annotations | nindent 4 }}
+spec:
+  {{- with .Values.ipFamilyPolicy }}
+  ipFamilyPolicy: {{ . }}
+  {{- end }}
+  {{- with .Values.ipFamilies }}
+  ipFamilies:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  type: {{ .Values.webProxy.service.type }}
+  ports:
+    - name: proxy
+      port: {{ .Values.webProxy.service.port }}
+      targetPort: proxy
+      protocol: TCP
+  selector:
+    app: web-proxy

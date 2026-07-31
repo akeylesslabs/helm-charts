@@ -221,7 +221,8 @@ dispatcher:
     labels: {}
     type: LoadBalancer
     port: 9000
-    proxyPort: 19414
+    # Proxy mode is now a dedicated backend. Its exposure moved to the webProxy block
+    # below (proxyPort was removed — the dispatcher no longer serves :19414).
 
   # Overridable defaults. Set resources: {} in your values file to clear.
   resources:
@@ -347,6 +348,92 @@ dispatcher:
     #     s3Region: eu-west-1
     recording: {}
 
+# Proxy mode runs as its own Deployment + externally-exposed Service (split out of the
+# dispatcher). It needs zero privileged credentials — only the API Gateway URL and the
+# allowed access-IDs, both reused from dispatcher.config. Clients connect to the
+# <release>-proxy Service, NOT the dispatcher.
+webProxy:
+  # Number of proxy replicas. Commented out on purpose: when unset, it inherits
+  # dispatcher.replicaCount so a default install scales the proxy with the dispatcher.
+  # Set explicitly (including 0) to override.
+  # With HPA.enabled=true this MUST be set explicitly (template fails otherwise):
+  # the HPA owns the dispatcher's replicas, so the fallback would silently pin the
+  # proxy to the inert dispatcher.replicaCount value. The proxy has no HPA of its own.
+  # replicaCount: 1
+  initContainer:
+    image:
+      repository: busybox
+      tag: 1.30.1
+      pullPolicy: IfNotPresent
+    # Pull secret refs for the init container; merged on the pod with global and main
+    # image.imagePullSecrets, plus the legacy secret when dockerRepositoryCreds is set.
+    imagePullSecrets: []
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        memory: 512Mi
+  image:
+    repository: akeyless/zero-trust-web-proxy
+    pullPolicy: Always
+#    tag: latest
+    # Pull secret refs for the main proxy container; all lists are merged at pod
+    # spec.imagePullSecrets and deduplicated.
+    imagePullSecrets: []
+
+  containerName: "web-proxy"
+
+  service:
+    # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
+    annotations: {}
+    labels: {}
+    # LoadBalancer is the portable default external exposure (no ingress controller
+    # assumed). Override to NodePort/ClusterIP as needed.
+    type: LoadBalancer
+    port: 19414
+
+  # Optional L4 exposure via the Gateway API. The proxy speaks HTTP CONNECT / SOCKS,
+  # which a standard HTTP Ingress cannot carry — so this is a TCPRoute, not an Ingress.
+  # Off by default; requires a Gateway API controller and a pre-existing Gateway.
+  ingress:
+    enabled: false
+    # Name of the pre-existing Gateway (with a TCP listener) to attach the TCPRoute to.
+    parentGateway: ""
+    # Listener name on that Gateway. Required by most controllers when the Gateway
+    # has more than one listener; leave empty for a single-listener Gateway.
+    sectionName: ""
+
+  # Overridable defaults. Set resources: {} in your values file to clear.
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+
+  livenessProbe:
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+    periodSeconds: 10
+    failureThreshold: 6
+    successThreshold: 1
+
+  readinessProbe:
+    initialDelaySeconds: 5
+    timeoutSeconds: 3
+    periodSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+
+  # WEB_PROXY_TYPE selects the proxy engine on :19414 — Squid (HTTP, default) or a
+  # SOCKS5 server. The two are mutually exclusive. This knob moved here from
+  # dispatcher.env; set it via env passthrough:
+  # env:
+  #   - name: WEB_PROXY_TYPE
+  #     value: "SOCKS"
+  env: []
+
 webWorker:
   replicaCount: 5
   initContainer:
@@ -410,7 +497,7 @@ webWorker:
   sessionCleanup:
     # How long to wait after `/tmp/occupied` is created before the probe is
     # allowed to declare the worker stranded. Must cover the worst-case
-    # browser-mount latency (token exchange + Firefox render). 30s is enough
+    # browser-mount latency (token exchange + Chromium startup). 30s is enough
     # for a healthy network; raise if your sessions need >30s warm-up.
     staleGraceSeconds: 30
 
@@ -428,6 +515,8 @@ webWorker:
   env: []
 
   config:
+    # Internal DNS name for dispatcher nginx server_name; used by dispatcher hostAliases (workers use the dispatcher Service DNS).
+    dispatcherDNS: rbi.dispatcher
     displayWidth: 2560
     displayHeight: 1200
 
@@ -439,61 +528,64 @@ webWorker:
     #     quality: "720p"
     recording: {}
 
+    # Chromium managed policy format (flat Chrome Enterprise JSON). Override with valid JSON.
     policies: |
         {
-          "policies": {
-            "BlockAboutConfig": true,
-            "BlockAboutAddons": true,
-            "BlockAboutProfiles": true,
-            "BlockAboutSupport": true,
-            "DisableDeveloperTools": true,
-            "DisableFirefoxAccounts": true,
-            "DisablePasswordReveal": true,
-            "DisablePrivateBrowsing": true,
-            "DisableProfileImport": true,
-            "DisableSafeMode": true,
-            "ExtensionUpdate": false,
-            "OfferToSaveLogins": false,
-            "OfferToSaveLoginsDefault": false,
-            "PasswordManagerEnabled": false,
-            "Proxy": {
-              "Mode": "none",
-              "Locked": true
-            },
-            "Preferences": {
-              "layout.forms.reveal-password-context-menu.enabled": {
-              "Value": false,
-              "Status": "locked"
-              }
-            },
-            "WebsiteFilter": {
-              "Block": [
-                "<all_urls>"
-              ],
-              "Exceptions": [
-                "https://*.akeyless.io/*",
-                "http://localhost:12411/*"
-              ]
-            },
-            "Handlers": {
-              "schemes": {
-                "mailto": {
-                  "action": "useHelperApp",
-                  "ask": false,
-                  "handlers": [{
-                    "name": "Block",
-                    "uriTemplate": "https://www.akeyless.io/"
-                  }]
-                }
-              }
-            },
-            "ExtensionSettings": {
-              "akeyless-sa@akeyless.io": {
-                "installation_mode": "force_installed",
-                "install_url": "file:///config/profile/extensions/akeyless-sa@akeyless.io.xpi",
-                "default_area": "navbar",
-                "updates_disabled": true
-              }
+          "DeveloperToolsAvailability": 2,
+          "PasswordManagerEnabled": false,
+          "IncognitoModeAvailability": 1,
+          "BrowserSignin": 0,
+          "SyncDisabled": true,
+          "HttpsOnlyMode": "force_enabled",
+          "HttpAllowlist": ["localhost", "127.0.0.1"],
+          "LoopbackNetworkAllowedForUrls": [
+            "http://localhost:12411",
+            "http://127.0.0.1:12411"
+          ],
+          "ProxySettings": {
+            "ProxyMode": "direct"
+          },
+          "SavingBrowserHistoryDisabled": true,
+          "SearchSuggestEnabled": false,
+          "SSLErrorOverrideAllowed": false,
+          "DisableSafeBrowsingProceedAnyway": true,
+          "UserFeedbackAllowed": false,
+          "AutofillAddressEnabled": false,
+          "AutofillCreditCardEnabled": false,
+          "TranslateEnabled": false,
+          "SpellCheckServiceEnabled": false,
+          "MetricsReportingEnabled": false,
+          "PromotionalTabsEnabled": false,
+          "BookmarkBarEnabled": false,
+          "BrowserAddPersonEnabled": false,
+          "BrowserGuestModeEnabled": false,
+          "ImportBookmarks": false,
+          "ImportHistory": false,
+          "ImportSavedPasswords": false,
+          "ImportAutofillFormData": false,
+          "ImportHomepage": false,
+          "ImportSearchEngine": false,
+          "URLBlocklist": ["*"],
+          "URLAllowlist": [
+            "akeyless.io",
+            "zerotrust.akeyless.io",
+            "duosecurity.com",
+            "wixpress.com",
+            "googleapis.com",
+            "akeyless-security.com",
+            "okta.com",
+            "slack.com",
+            "sendgrid.com",
+            "localhost",
+            "127.0.0.1",
+            "http://localhost:12411",
+            "http://localhost:12411/*",
+            "http://127.0.0.1:12411",
+            "http://127.0.0.1:12411/*"
+          ],
+          "ExtensionSettings": {
+            "cdghndnnjccefelakphihcjngdokccpm": {
+              "installation_mode": "allowed"
             }
           }
         }

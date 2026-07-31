@@ -40,7 +40,7 @@ For security reason, please limit the PersistentVolumes mount permissions to `06
 
 ### Session Recording (Optional)
 
-ZTWA can capture Firefox web sessions to video files (`.mp4`) and optionally upload them to S3-compatible storage.
+ZTWA can capture Chromium browser sessions to video files (`.mp4`) and optionally upload them to S3-compatible storage.
 
 #### Prerequisites
 
@@ -199,6 +199,21 @@ The dispatcher upload service tries credentials in this order:
 
 Existing deployments using `dispatcher.config.recording.*` and `webWorker.config.recording.*` continue to function identically. The unified `sessionRecording.*` section is **opt-in** and recommended for new deployments.
 
+### Chromium Worker (chart 4.0.0+)
+
+The web worker runs a Chromium-based browser (`akeyless/zero-trust-web-worker`). Key defaults:
+
+- **Managed policies** — flat Chrome Enterprise JSON in `webWorker.config.policies`, mounted at `/etc/chromium/policies/managed/policies.json`. Operators overriding policies must use the Chrome schema (`URLAllowlist` / `URLBlocklist`, `ExtensionSettings`, etc.), not the legacy Firefox `policies.json` wrapper.
+- **Ephemeral `/config`** — an in-memory `emptyDir` prevents stale Chromium profile and extension cache across pod restarts.
+- **`/dev/shm`** — `2Gi` memory-backed `emptyDir` (matches compose `shm_size: 2g`).
+- **`DISPATCHER_DNS`** — set to `<fullname>-dispatcher.<namespace>.svc` (dispatcher Service cluster DNS). Dispatcher pods alias `webWorker.config.dispatcherDNS` (default `rbi.dispatcher`, nginx `server_name`) to `127.0.0.1`.
+- **`CHROMIUM_APP_URL`** — set in the worker image Dockerfile; override via `webWorker.env` only if needed.
+
+#### Upgrading from chart 3.x
+
+1. Rewrite any custom `webWorker.config.policies` from Firefox schema to Chrome Enterprise JSON.
+2. Review worker pod spec changes (`/config` emptyDir, policy mount path, `DISPATCHER_DNS`) before rollout.
+
 ### Cloud Identity Override (`dispatcher.config.cloudIdentity.type`)
 
 The dispatcher determines its cloud provider by probing the instance
@@ -324,6 +339,19 @@ The following table lists the configurable parameters of the Zero Trust Web Acce
 | `webWorker.readinessProbe`                | Readiness probe configuration for Zero Trust Web Access Web Worker                                                   | Check `values.yaml` file                                     |         
 | `webWorker.resources.limits`              | The resources limits for Zero Trust Web Access Web Worker containers (If HPA is enabled these must be set)           | `memory: 2Gi`                                                |
 | `webWorker.resources.requests`            | The requested resources for Zero Trust Web Access Web Worker containers (If HPA is enabled these must be set)        | `cpu: 1000m, memory: 1Gi`                                    |
+| `webProxy.image.repository`               | Zero Trust Web Access Proxy image name                                                                              | `akeyless/zero-trust-web-proxy`                              |
+| `webProxy.image.tag`                      | Zero Trust Web Access Proxy image tag (defaults to the chart `appVersion`)                                          | `nil`                                                        |
+| `webProxy.image.pullPolicy`               | Zero Trust Web Access Proxy image pull policy                                                                       | `Always`                                                     |
+| `webProxy.image.imagePullSecrets`         | Extra pull secret refs for the web proxy main container; merged at the pod                                         | `[]`                                                         |
+| `webProxy.initContainer.imagePullSecrets` | Extra pull secret refs for the web proxy init container; merged at the pod                                         | `[]`                                                         |
+| `webProxy.initContainer.resources`        | Init container resource requests/limits                                                                            | `requests: cpu: 100m, memory: 128Mi; limits: memory: 512Mi` |
+| `webProxy.containerName`                  | Zero Trust Web Access Proxy container name                                                                          | `web-proxy`                                                  |
+| `webProxy.replicaCount`                   | Number of Zero Trust Web Access Proxy nodes (unset → inherits `dispatcher.replicaCount`)                            | `nil`                                                        |
+| `webProxy.env`                            | Extra env for the proxy container (e.g. `WEB_PROXY_TYPE: SOCKS`)                                                    | `[]`                                                         |
+| `webProxy.livenessProbe`                  | Liveness probe configuration for Zero Trust Web Access Proxy                                                        | Check `values.yaml` file                                     |
+| `webProxy.readinessProbe`                 | Readiness probe configuration for Zero Trust Web Access Proxy                                                       | Check `values.yaml` file                                     |
+| `webProxy.resources.limits`               | The resources limits for Zero Trust Web Access Proxy containers                                                    | `memory: 1Gi`                                                |
+| `webProxy.resources.requests`             | The requested resources for Zero Trust Web Access Proxy containers                                                 | `cpu: 500m, memory: 512Mi`                                   |
 
 A **Heavy browsing workload** example for the web worker main `resources` is in `values.yaml` as a commented block under `webWorker.resources` (see `akeyless-zero-trust-web-access/values.yaml`).
 
@@ -334,7 +362,12 @@ A **Heavy browsing workload** example for the web worker main `resources` is in 
 | `dispatcher.service.type`                 | Kubernetes service type                                                                                              | `LoadBalancer`                                               |
 | `dispatcher.service.port`                 | Dispatcher service port                                                                                              | `9000`                                                       |
 | `dispatcher.service.annotations`          | Dispatcher service extra annotations                                                                                 | `{}`                                                         |
+| `webProxy.service.type`                   | Web Proxy Kubernetes service type (portable external exposure; override to NodePort/ClusterIP)                       | `LoadBalancer`                                               |
 | `webProxy.service.port`                   | Web Proxy service port                                                                                               | `19414`                                                      |
+| `webProxy.service.annotations`            | Web Proxy service extra annotations                                                                                  | `{}`                                                         |
+| `webProxy.ingress.enabled`                | Enable the optional Gateway API `TCPRoute` for the proxy (L4; requires a Gateway API controller)                     | `false`                                                      |
+| `webProxy.ingress.parentGateway`          | Name of the pre-existing Gateway (TCP listener) the `TCPRoute` attaches to                                           | `""`                                                         |
+| `webProxy.ingress.sectionName`            | Listener name on the parent Gateway (required by most controllers when it has multiple listeners)                    | `""`                                                         |
 | `webWorker.service.port`                  | Web Worker service port                                                                                              | `5800`                                                       |
 | `webWorker.service.annotations`           | Web Worker service extra annotations                                                                                 | `{}`                                                         |
 | `dispatcher.ingress.enabled`              | Enable ingress resource                                                                                              | `false`                                                      |
@@ -374,5 +407,6 @@ A **Heavy browsing workload** example for the web worker main `resources` is in 
 | `dispatcher.config.disableSecureCookie`                              | Use browser secure cookie only (HTTPS)                                                                             | `true`                     |
 | `webWorker.config.displayWidth`                                      | Web worker display Width (in pixels) of the application's window.                                                  | `2560`                     |
 | `webWorker.config.displayHeight`                                     | Web worker display Height (in pixels) of the application's window.                                                 | `1200`                     |
+| `webWorker.config.dispatcherDNS`                                     | Dispatcher nginx `server_name` / local `hostAliases` (workers use the dispatcher Service DNS for `DISPATCHER_DNS`)    | `rbi.dispatcher`           |
 | `dispatcher.config.allowedBastionUrls`                               | List of URLs that will be considered valid for redirection from the Portal back to the bastion                     | `[]`                       |
 | `dispatcher.config.allowedProxyUrls`                                 | List of URLs that will be considered valid for redirection from the Portal back to the web proxy service           | `[]`                       |
