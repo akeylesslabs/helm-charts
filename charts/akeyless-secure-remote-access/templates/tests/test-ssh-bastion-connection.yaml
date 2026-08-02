@@ -1,0 +1,30 @@
+{{- if eq .Values.sshConfig.enabled true }}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "akeyless-secure-remote-access.fullname" . }}-test-ssh-connection"
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "akeyless-secure-remote-access.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  containers:
+    - name: ssh-banner-check
+      image: "{{ .Values.sshConfig.initContainer.image.repository }}:{{ .Values.sshConfig.initContainer.image.tag }}"
+      imagePullPolicy: {{ .Values.sshConfig.initContainer.image.pullPolicy }}
+      command: ["sh", "-c"]
+      args:
+        - |
+          set -e
+          host="ssh-{{ include "akeyless-secure-remote-access.fullname" . }}"
+          port="{{ .Values.sshConfig.service.port }}"
+          banner="$(nc -w 10 "${host}" "${port}" </dev/null | head -c 8)"
+          echo "banner: ${banner}"
+          case "${banner}" in
+            SSH-2.0*) echo "ok - SSH bastion is serving" ;;
+            *) echo "FAIL - no SSH banner from ${host}:${port}"; exit 1 ;;
+          esac
+{{- end }}
