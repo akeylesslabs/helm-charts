@@ -84,11 +84,10 @@ For environments that require an immutable container root filesystem, enable `ga
 ```yaml
 gateway:
   deployment:
-    readOnlyRootFilesystem:
-      enabled: true
+    readOnlyRootFilesystem: true
 ```
 
-The feature is **opt-in and default-off**. When disabled, the deployment is unchanged. When enabled, the chart:
+The feature is **opt-in and default-off**. When false, the deployment is unchanged. When true, the chart:
 
 - Sets the container `securityContext.readOnlyRootFilesystem: true` (also works alongside `strictSecurityPolicy.enabled`).
 - Injects `READ_ONLY_ROOT_FS=true`, which tells the Gateway image to redirect its startup writes to writable volumes.

@@ -71,7 +71,7 @@ spec:
         {{- toYaml .Values.gateway.deployment.tolerations | nindent 8 }}
       {{- end }}
       {{- include "akeyless-gateway.imagePullSecrets" . | indent 2 }}
-      {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true) (.Values.gateway.secretsStore.enabled) (.Values.gateway.akeylessConfigVol) (.Values.gateway.deployment.extraVolumes) (.Values.gateway.deployment.readOnlyRootFilesystem.enabled) }}
+      {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true) (.Values.gateway.secretsStore.enabled) (.Values.gateway.akeylessConfigVol) (.Values.gateway.deployment.extraVolumes) (.Values.gateway.deployment.readOnlyRootFilesystem) }}
       volumes:
         - name: akeyless-config
           {{- if .Values.gateway.akeylessConfigVol }}
@@ -126,7 +126,7 @@ spec:
       {{- with .Values.gateway.deployment.extraVolumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if .Values.gateway.deployment.readOnlyRootFilesystem.enabled }}
+      {{- if .Values.gateway.deployment.readOnlyRootFilesystem }}
       ## Writable volumes required when the root filesystem is read-only.
         - name: tmp
           emptyDir: {}
@@ -158,7 +158,7 @@ spec:
         - name: {{ include "akeyless-gateway.containerName" . }}
           image: "{{ include "akeyless-gateway.gatewayImage" . }}"
           imagePullPolicy: {{ .Values.gateway.deployment.image.pullPolicy }}
-          {{- if or .Values.gateway.deployment.containerSecurityContext .Values.strictSecurityPolicy.enabled .Values.gateway.deployment.readOnlyRootFilesystem.enabled }}
+          {{- if or .Values.gateway.deployment.containerSecurityContext .Values.strictSecurityPolicy.enabled .Values.gateway.deployment.readOnlyRootFilesystem }}
           securityContext:
             {{- if .Values.strictSecurityPolicy.enabled }}
             runAsNonRoot: true
@@ -168,12 +168,12 @@ spec:
             capabilities:
               drop:
                 - ALL
-            readOnlyRootFilesystem: {{ .Values.gateway.deployment.readOnlyRootFilesystem.enabled }}
+            readOnlyRootFilesystem: {{ .Values.gateway.deployment.readOnlyRootFilesystem }}
             {{- else }}
             {{- with .Values.gateway.deployment.containerSecurityContext }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-            {{- if .Values.gateway.deployment.readOnlyRootFilesystem.enabled }}
+            {{- if .Values.gateway.deployment.readOnlyRootFilesystem }}
             readOnlyRootFilesystem: true
             {{- end }}
             {{- end }}
@@ -201,11 +201,11 @@ spec:
               path: /health
               port: 8080
           {{- toYaml .Values.gateway.deployment.readinessProbe | trim | nindent 12 }}
-          {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true) (.Values.gateway.secretsStore.enabled) (.Values.gateway.akeylessConfigVol) (.Values.gateway.deployment.extraVolumeMounts) (.Values.gateway.deployment.readOnlyRootFilesystem.enabled)}}
+          {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true) (.Values.gateway.secretsStore.enabled) (.Values.gateway.akeylessConfigVol) (.Values.gateway.deployment.extraVolumeMounts) (.Values.gateway.deployment.readOnlyRootFilesystem)}}
           volumeMounts:
             - name: akeyless-config
               mountPath: {{include "akeyless-gateway.root.config.path" $}}/.akeyless
-          {{- if .Values.gateway.deployment.readOnlyRootFilesystem.enabled }}
+          {{- if .Values.gateway.deployment.readOnlyRootFilesystem }}
             - name: usr-local-ca-certificates
               mountPath: /usr/local/share/ca-certificates
             - name: etc-ssl-certs
@@ -246,7 +246,7 @@ spec:
           {{- with .Values.gateway.deployment.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if .Values.gateway.deployment.readOnlyRootFilesystem.enabled }}
+          {{- if .Values.gateway.deployment.readOnlyRootFilesystem }}
             - name: tmp
               mountPath: /tmp
             - name: run
@@ -291,7 +291,7 @@ spec:
           {{- toYaml .Values.gateway.resources | nindent 12 }}
           {{- end }}
           env:
-            {{- if .Values.gateway.deployment.readOnlyRootFilesystem.enabled }}
+            {{- if .Values.gateway.deployment.readOnlyRootFilesystem }}
             - name: READ_ONLY_ROOT_FS
               value: "true"
             {{- end }}
