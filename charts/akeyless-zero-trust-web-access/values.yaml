@@ -512,6 +512,13 @@ webWorker:
     timeoutSeconds: 5
     successThreshold: 1
 
+  readinessProbe:
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    failureThreshold: 6
+    timeoutSeconds: 3
+    successThreshold: 1
+
   env: []
 
   config:
@@ -531,7 +538,7 @@ webWorker:
     # Chromium managed policy format (flat Chrome Enterprise JSON). Override with valid JSON.
     policies: |
         {
-          "DeveloperToolsAvailability": 2,
+          "DeveloperToolsAvailability": 1,
           "PasswordManagerEnabled": false,
           "IncognitoModeAvailability": 1,
           "BrowserSignin": 0,
@@ -582,12 +589,7 @@ webWorker:
             "http://localhost:12411/*",
             "http://127.0.0.1:12411",
             "http://127.0.0.1:12411/*"
-          ],
-          "ExtensionSettings": {
-            "cdghndnnjccefelakphihcjngdokccpm": {
-              "installation_mode": "allowed"
-            }
-          }
+          ]
         }
 
 dlp:

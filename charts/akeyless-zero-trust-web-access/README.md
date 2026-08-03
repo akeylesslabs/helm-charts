@@ -203,8 +203,8 @@ Existing deployments using `dispatcher.config.recording.*` and `webWorker.config
 
 The web worker runs a Chromium-based browser (`akeyless/zero-trust-web-worker`). Key defaults:
 
-- **Managed policies** — flat Chrome Enterprise JSON in `webWorker.config.policies`, mounted at `/etc/chromium/policies/managed/policies.json`. Operators overriding policies must use the Chrome schema (`URLAllowlist` / `URLBlocklist`, `ExtensionSettings`, etc.), not the legacy Firefox `policies.json` wrapper.
-- **Ephemeral `/config`** — an in-memory `emptyDir` prevents stale Chromium profile and extension cache across pod restarts.
+- **Managed policies** — flat Chrome Enterprise JSON in `webWorker.config.policies`, mounted at `/etc/chromium/policies/managed/policies.json`. Operators overriding policies must use the Chrome schema (`URLAllowlist` / `URLBlocklist`, etc.), not the legacy Firefox `policies.json` wrapper. The sideloaded extension has been removed; navigation and credential injection are driven by the worker agent over CDP, so the policy no longer allowlists an extension ID.
+- **Ephemeral `/config`** — an in-memory `emptyDir` prevents stale Chromium profile data across pod restarts.
 - **`/dev/shm`** — `2Gi` memory-backed `emptyDir` (matches compose `shm_size: 2g`).
 - **`DISPATCHER_DNS`** — set to `<fullname>-dispatcher.<namespace>.svc` (dispatcher Service cluster DNS). Dispatcher pods alias `webWorker.config.dispatcherDNS` (default `rbi.dispatcher`, nginx `server_name`) to `127.0.0.1`.
 - **`CHROMIUM_APP_URL`** — set in the worker image Dockerfile; override via `webWorker.env` only if needed.

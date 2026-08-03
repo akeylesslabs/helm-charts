@@ -1,5 +1,5 @@
 {
-  "DeveloperToolsAvailability": 2,
+  "DeveloperToolsAvailability": 1,
   "PasswordManagerEnabled": false,
   "IncognitoModeAvailability": 1,
   "BrowserSignin": 0,
@@ -50,10 +50,5 @@
     "http://localhost:12411/*",
     "http://127.0.0.1:12411",
     "http://127.0.0.1:12411/*"
-  ],
-  "ExtensionSettings": {
-    "cdghndnnjccefelakphihcjngdokccpm": {
-      "installation_mode": "allowed"
-    }
-  }
+  ]
 }
