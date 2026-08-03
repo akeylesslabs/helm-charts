@@ -235,6 +235,11 @@ spec:
               command:
                 - /var/akeyless/scripts/worker_liveness.sh
 {{- toYaml .Values.webWorker.livenessProbe | trim | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: agent
+{{- toYaml .Values.webWorker.readinessProbe | trim | nindent 12 }}
           lifecycle:
             preStop:
               exec:
