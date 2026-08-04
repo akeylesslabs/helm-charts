@@ -45,6 +45,13 @@ image:
   pullPolicy: Always
   tag: latest
 
+# Filesystem layout of the gateway image.
+# Leave unset to auto-detect: akeyless/base runs as root (/root), while
+# akeyless/gateway runs as the non-root "akeyless" user (/home/akeyless).
+# Set explicitly to true (root) or false (non-root) when using a mirrored or
+# renamed registry where the repository name does not reveal the image flavor.
+# gatewayRootMode:
+
 # Uncomment for downloading Akeyless artifacts from fixed repository
 # ref: https://docs.akeyless.io/docs/advanced-k8s-gateway-configuration#fixed-artifact-repository
 # fixedArtifactRepository: "artifacts.site2.akeyless.io"

@@ -175,12 +175,33 @@ Generate chart secret name
 Check customer fragment
 */}}
 
+{{/*
+Home directory the gateway process resolves at runtime.
+akeyless/base runs as root ($HOME=/root); akeyless/gateway runs as the
+non-root "akeyless" user ($HOME=/home/akeyless). gatewayRootMode overrides
+the auto-detection for mirrored or renamed registries.
+*/}}
 {{- define "akeyless-api-gw.root.config.path" -}}
-{{- if or (.Values.akeylessStrictMode) (hasSuffix "-akeyless" .Values.image.tag)   }}
-     {{- printf "/home/akeyless" -}}
-{{- else }}
-     {{- printf "/root" -}}
+{{- if not (kindIs "invalid" .Values.gatewayRootMode) -}}
+    {{- if .Values.gatewayRootMode -}}
+        {{- printf "/root" -}}
+    {{- else -}}
+        {{- printf "/home/akeyless" -}}
+    {{- end -}}
+{{- else if or (.Values.akeylessStrictMode) (hasSuffix "-akeyless" .Values.image.tag) (contains "gateway" .Values.image.repository) -}}
+    {{- printf "/home/akeyless" -}}
+{{- else -}}
+    {{- printf "/root" -}}
 {{- end -}}
+{{- end -}}
+
+{{/*
+The single directory that holds customer_fragments.json, logand.conf and the
+TLS material. Every mount, copy and env var derives from this one expression
+so the write path and the read path cannot drift apart.
+*/}}
+{{- define "akeyless-api-gw.akeyless.config.dir" -}}
+{{- printf "%s/.akeyless" (include "akeyless-api-gw.root.config.path" .) -}}
 {{- end -}}
 {{- define "akeyless-api-gw.customerFragmentExist" -}}
     {{- if .Values.customerFragments -}}
