@@ -15,9 +15,6 @@
     {{- fail "webhook.tls.existingSecretName is set, so the chart no longer generates a CA. Set webhook.tls.caBundle to the PEM CA that signed the certificate, or webhook.tls.caBundleAnnotations to let a controller such as cert-manager's ca-injector populate it." }}
   {{- end }}
 {{- else }}
-  {{/* No user-managed certificate: generate a self-signed CA and serving certificate.
-       This is non-deterministic and renders differently every time, which is what makes the
-       default configuration drift under GitOps. See webhook.tls in values.yaml. */}}
   {{- $ca := genCA "webhook-ca" 3650 }}
   {{- $cn := printf "%s.%s.svc" $fullName .Release.Namespace }}
   {{- $servingCert = genSignedCert $cn nil (list $cn "") 365 $ca }}
