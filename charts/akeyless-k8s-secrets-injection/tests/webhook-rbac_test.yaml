@@ -1,0 +1,128 @@
+suite: akeyless-secrets-injection webhook RBAC
+templates:
+  - templates/webhook-role.yaml
+release:
+  name: injector
+  namespace: akeyless
+tests:
+  - it: "a default install creates no cluster-scoped RBAC"
+    asserts:
+      - hasDocuments:
+          count: 2
+      - isKind:
+          of: Role
+        documentIndex: 0
+      - isKind:
+          of: RoleBinding
+        documentIndex: 1
+
+  - it: "the secrets grant is namespaced to the release"
+    asserts:
+      - equal:
+          path: metadata.name
+          value: injector-akeyless-secrets-injection-role
+        documentIndex: 0
+      - equal:
+          path: metadata.namespace
+          value: akeyless
+        documentIndex: 0
+      - contains:
+          path: rules
+          content:
+            apiGroups: [""]
+            resources: ["secrets"]
+            verbs: ["get", "watch"]
+        documentIndex: 0
+
+  - it: "the binding points at this release's Role and ServiceAccount"
+    asserts:
+      - equal:
+          path: roleRef.kind
+          value: Role
+        documentIndex: 1
+      - equal:
+          path: roleRef.name
+          value: injector-akeyless-secrets-injection-role
+        documentIndex: 1
+      - contains:
+          path: subjects
+          content:
+            kind: ServiceAccount
+            name: injector-akeyless-secrets-injection
+            namespace: akeyless
+        documentIndex: 1
+
+  - it: "restartRollout adds a release-scoped ClusterRole and binding"
+    set:
+      restartRollout.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 4
+      - isKind:
+          of: ClusterRole
+        documentIndex: 2
+      - equal:
+          path: metadata.name
+          value: injector-akeyless-secrets-injection-restart-rollout
+        documentIndex: 2
+      - isKind:
+          of: ClusterRoleBinding
+        documentIndex: 3
+      - equal:
+          path: metadata.name
+          value: injector-akeyless-secrets-injection-restart-rollout
+        documentIndex: 3
+      - equal:
+          path: roleRef.name
+          value: injector-akeyless-secrets-injection-restart-rollout
+        documentIndex: 3
+
+  - it: "the restartRollout ClusterRole never carries the secrets grant"
+    set:
+      restartRollout.enabled: true
+    asserts:
+      - notContains:
+          path: rules
+          content:
+            apiGroups: [""]
+            resources: ["secrets"]
+            verbs: ["get", "watch"]
+        documentIndex: 2
+
+  - it: "a second release in the same cluster gets its own names"
+    release:
+      name: other
+      namespace: other-ns
+    set:
+      restartRollout.enabled: true
+    asserts:
+      - equal:
+          path: metadata.name
+          value: other-akeyless-secrets-injection-role
+        documentIndex: 0
+      - equal:
+          path: metadata.namespace
+          value: other-ns
+        documentIndex: 0
+      - equal:
+          path: metadata.name
+          value: other-akeyless-secrets-injection-restart-rollout
+        documentIndex: 2
+
+  - it: "fullnameOverride scopes every RBAC name"
+    set:
+      fullnameOverride: my-injector
+      restartRollout.enabled: true
+    asserts:
+      - equal:
+          path: metadata.name
+          value: my-injector-role
+        documentIndex: 0
+      - equal:
+          path: metadata.name
+          value: my-injector-role-binding
+        documentIndex: 1
+      - equal:
+          path: metadata.name
+          value: my-injector-restart-rollout
+        documentIndex: 2
