@@ -77,6 +77,43 @@ mutatingWebhook:
   matchConditions: []
 debug: false
 
+# Inbound TLS for the webhook server (the certificate the Kubernetes API server validates
+# when it calls this webhook on service.internalPort).
+#
+# By default the chart generates a self-signed CA and serving certificate at render time.
+# Because that generation is non-deterministic, every `helm template` / `helm upgrade`
+# produces a new keypair. GitOps controllers such as ArgoCD render the chart on every sync,
+# see the Secret and the MutatingWebhookConfiguration as drifted, and with self-heal enabled
+# push the new values continuously. This causes `tls: bad certificate` handshake errors and
+# rolls the webhook pods on every sync.
+#
+# Set `existingSecretName` to a user-managed Secret (for example one issued by cert-manager)
+# to disable certificate generation entirely and make the rendered output deterministic.
+# The webhook server watches that Secret and hot-reloads the certificate on rotation, so no
+# pod restart is required when the certificate is renewed.
+#
+# When `existingSecretName` is set you must also tell the API server which CA to trust, via
+# either `caBundle` or `caBundleAnnotations`. The chart fails rendering if neither is set.
+#
+# Example, cert-manager issuing the certificate and injecting the CA bundle:
+# webhook:
+#   tls:
+#     existingSecretName: akeyless-injector-tls
+#     caBundleAnnotations:
+#       cert-manager.io/inject-ca-from: "akeyless/akeyless-injector-tls"
+webhook:
+  tls:
+    # Name of an existing Secret in the release namespace containing `tls.crt` and `tls.key`.
+    # When empty the chart generates and manages a self-signed certificate (default behavior).
+    existingSecretName: ""
+    # PEM-encoded CA certificate placed in the MutatingWebhookConfiguration `caBundle`.
+    # Provide the raw PEM; the chart base64-encodes it. Only used with `existingSecretName`.
+    caBundle: ""
+    # Annotations added to the MutatingWebhookConfiguration, for controllers that inject the
+    # `caBundle` themselves (for example cert-manager's ca-injector).
+    # Only used with `existingSecretName`.
+    caBundleAnnotations: {}
+
 gatewayCert:
   #  Specifies an existing secret for gateway tls certificate must include:
   # - tls.crt (base64)
