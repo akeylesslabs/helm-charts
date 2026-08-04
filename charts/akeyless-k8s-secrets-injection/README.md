@@ -101,6 +101,31 @@ spec:
     kind: Issuer
 ```
 
+`caBundleAnnotations` leaves `caBundle` out of the rendered `MutatingWebhookConfiguration` and lets
+ca-injector write it into the live object. A GitOps controller renders the chart without that field,
+reads the live value as drift, and with self-heal enabled strips it on the next sync, leaving the API
+server unable to validate the webhook. Exclude the field from drift detection. ArgoCD:
+
+```yaml
+ignoreDifferences:
+  - group: admissionregistration.k8s.io
+    kind: MutatingWebhookConfiguration
+    name: RELEASE_NAME-akeyless-secrets-injection
+    jsonPointers:
+      - /webhooks/0/clientConfig/caBundle
+```
+
+Flux, on the HelmRelease:
+
+```yaml
+driftDetection:
+  mode: enabled
+  ignore:
+    - paths: ["/webhooks/0/clientConfig/caBundle"]
+      target:
+        kind: MutatingWebhookConfiguration
+```
+
 With a CA you manage outside the cluster, supply the PEM directly instead — the chart
 base64-encodes it:
 
@@ -113,6 +138,11 @@ webhook:
       ...
       -----END CERTIFICATE-----
 ```
+
+The Secret must not be named `RELEASE_NAME-akeyless-secrets-injection`, the name the chart uses for
+its own resources. The chart stops emitting a Secret at that name in this mode, so `helm upgrade` on
+an existing release would delete the Secret the pods mount. The chart rejects that name at render
+time.
 
 The Secret must contain `tls.crt` and `tls.key`, and must exist before the webhook pods start. The
 webhook reads the mounted certificate at startup and exits if it is missing, so pods will crash-loop
