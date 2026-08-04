@@ -1,8 +1,26 @@
-{{ $ca := genCA "webhook-ca" 3650 }}
 {{ $fullName := include "vault-secrets-webhook.fullname" . }}
-{{ $cn := printf "%s.%s.svc" $fullName .Release.Namespace }}
-{{ $cert := genSignedCert $cn nil (list $cn "") 365 $ca }}
 {{ $mutatingWebhook := .Values.mutatingWebhook | default dict }}
+{{ $tls := fromYaml (include "vault-secrets-webhook.tls" .) }}
+{{ $existingSecret := include "vault-secrets-webhook.existingTLSSecretName" . }}
+{{ $caBundle := $tls.caBundle | default "" }}
+{{ $caBundleAnnotations := $tls.caBundleAnnotations | default dict }}
+{{ $servingCert := dict }}
+{{ $generatedCA := dict }}
+
+{{- if $existingSecret }}
+  {{- if and (not $caBundle) (not $caBundleAnnotations) }}
+    {{- fail "webhook.tls.existingSecretName is set, so the chart no longer generates a CA. Set webhook.tls.caBundle to the PEM CA that signed the certificate, or webhook.tls.caBundleAnnotations to let a controller such as cert-manager's ca-injector populate it." }}
+  {{- end }}
+{{- else }}
+  {{/* No user-managed certificate: generate a self-signed CA and serving certificate.
+       This is non-deterministic and renders differently every time, which is what makes the
+       default configuration drift under GitOps. See webhook.tls in values.yaml. */}}
+  {{- $ca := genCA "webhook-ca" 3650 }}
+  {{- $cn := printf "%s.%s.svc" $fullName .Release.Namespace }}
+  {{- $servingCert = genSignedCert $cn nil (list $cn "") 365 $ca }}
+  {{- $generatedCA = $ca }}
+  {{- $caBundle = $ca.Cert }}
+{{- end }}
 
 apiVersion: v1
 kind: List
@@ -10,20 +28,27 @@ metadata:
   name: {{ $fullName }}-webhook
 items:
 
+{{- if not $existingSecret }}
+
 - apiVersion: v1
   kind: Secret
   metadata:
     name: {{ $fullName }}
     namespace: {{ .Release.Namespace }}
   data:
-    tls.crt: {{ b64enc $cert.Cert }}
-    tls.key: {{ b64enc $cert.Key }}
-    ca.crt: {{ b64enc $ca.Cert }}
+    tls.crt: {{ b64enc $servingCert.Cert }}
+    tls.key: {{ b64enc $servingCert.Key }}
+    ca.crt: {{ b64enc $generatedCA.Cert }}
+{{- end }}
 
 - apiVersion: admissionregistration.k8s.io/v1
   kind: MutatingWebhookConfiguration
   metadata:
     name: {{ $fullName }}
+    {{- with $caBundleAnnotations }}
+    annotations:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
   webhooks:
   - name: pods.{{ $fullName }}.admission
     clientConfig:
@@ -31,7 +56,9 @@ items:
         namespace: {{ .Release.Namespace }}
         name: {{ $fullName }}
         path: /pods
-      caBundle: {{ b64enc $ca.Cert }}
+      {{- if $caBundle }}
+      caBundle: {{ b64enc $caBundle }}
+      {{- end }}
     rules:
     - operations:
       - CREATE
