@@ -122,11 +122,6 @@ jobs:
             if [[ -d "$fixture_dir" ]]; then
               kubectl apply -f "$fixture_dir/" -n chart-testing
             fi
-            # Sibling file, not inside fixture_dir: kubectl apply -f on a directory
-            # errors on unrecognized extensions rather than skipping them.
-            # Lines are "<secret-name> <dns-name>". The keypair is minted per run
-            # rather than committed, so no private key lands in the repo and no
-            # checked-in certificate expires into a red build.
             tls_conf=".github/chart-fixtures/${chart_name}-tls.conf"
             if [[ -f "$tls_conf" ]]; then
               while read -r secret_name dns_name _rest; do

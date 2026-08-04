@@ -43,24 +43,15 @@ Create the name of the service account to use
 {{- end -}}
 
 
-{{/*
-Inbound TLS settings for the webhook server.
-*/}}
 {{- define "vault-secrets-webhook.tls" -}}
 {{- (.Values.webhook | default dict).tls | default dict | toYaml -}}
 {{- end -}}
 
-{{/*
-Name of the user-managed serving certificate Secret, or "" when the chart generates its own.
-*/}}
 {{- define "vault-secrets-webhook.existingTLSSecretName" -}}
 {{- $tls := fromYaml (include "vault-secrets-webhook.tls" .) -}}
 {{- $tls.existingSecretName | default "" -}}
 {{- end -}}
 
-{{/*
-Name of the Secret that holds the serving certificate, whether user-managed or chart-generated.
-*/}}
 {{- define "vault-secrets-webhook.tlsSecretName" -}}
 {{- include "vault-secrets-webhook.existingTLSSecretName" . | default (include "vault-secrets-webhook.fullname" .) -}}
 {{- end -}}
