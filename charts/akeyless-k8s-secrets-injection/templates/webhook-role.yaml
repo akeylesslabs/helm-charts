@@ -1,13 +1,38 @@
-
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: Role
 metadata:
-  name: akyeless-injector-role
+  name: {{ template "vault-secrets-webhook.fullname" . }}-role
+  namespace: {{ .Release.Namespace }}
 rules:
 - apiGroups: [""]
   resources: ["secrets"]
   verbs: ["get", "watch"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ template "vault-secrets-webhook.fullname" . }}-role-binding
+  namespace: {{ .Release.Namespace }}
+subjects:
+- kind: ServiceAccount
+  name: {{ template "vault-secrets-webhook.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace | quote }}
+roleRef:
+  kind: Role
+  name: {{ template "vault-secrets-webhook.fullname" . }}-role
+  apiGroup: rbac.authorization.k8s.io
+
 {{- if .Values.restartRollout.enabled }}
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ template "vault-secrets-webhook.fullname" . }}-restart-rollout
+rules:
 - apiGroups: ["apps"]
   resources: ["deployments", "daemonsets", "statefulsets"]
   verbs: ["get", "list", "patch", "watch"]
@@ -20,19 +45,19 @@ rules:
 - apiGroups: [""]
   resources: ["events"]
   verbs: ["patch", "create"]
-{{end}}
 
 ---
 
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: akeyless-injector-role-binding
+  name: {{ template "vault-secrets-webhook.fullname" . }}-restart-rollout
 subjects:
 - kind: ServiceAccount
   name: {{ template "vault-secrets-webhook.serviceAccountName" . }}
   namespace: {{ .Release.Namespace | quote }}
 roleRef:
   kind: ClusterRole
-  name: akyeless-injector-role
+  name: {{ template "vault-secrets-webhook.fullname" . }}-restart-rollout
   apiGroup: rbac.authorization.k8s.io
+{{- end }}

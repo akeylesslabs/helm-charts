@@ -59,6 +59,21 @@ mutatingWebhook:
   failurePolicy: Fail
 ```
 
+### Upgrading to 3.0.0
+
+The webhook's permission to read Secrets is now a namespaced `Role` in the release namespace
+instead of a cluster-wide `ClusterRole`. The webhook only ever reads its own serving-certificate
+Secret, so the cluster-wide grant was never used.
+
+A default install now creates no cluster-scoped objects at all. The `ClusterRole` is created only
+when `restartRollout.enabled` is set, since that feature does list Deployments, DaemonSets,
+StatefulSets and Namespaces across the cluster. All four RBAC objects are named after the release,
+so the chart can now be installed more than once in the same cluster.
+
+The old objects were named `akyeless-injector-role` and `akeyless-injector-role-binding`, fixed
+strings shared by every release. `helm upgrade` removes them. If you have your own RoleBinding,
+policy or aggregation rule referring to either name, update it before upgrading.
+
 ### Webhook serving certificate (GitOps / cert-manager)
 
 By default the chart generates a self-signed CA and serving certificate while rendering. That
