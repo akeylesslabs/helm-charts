@@ -1,6 +1,14 @@
 {{- if and .Values.akeylessStrictMode .Values.gatewayRootMode }}
   {{- fail "ERROR: Cannot combine akeylessStrictMode=true with gatewayRootMode=true. akeylessStrictMode selects the non-root gateway image tag, but gatewayRootMode=true forces root-mode paths. Please set gatewayRootMode=false (or leave it unset) when using akeylessStrictMode." }}
 {{- end }}
+{{- if .Values.gatewayRootMode }}
+  {{- if and .Values.deployment.containerSecurityContext (hasKey .Values.deployment.containerSecurityContext "runAsUser") (not (kindIs "invalid" (get .Values.deployment.containerSecurityContext "runAsUser"))) (ne (toString (get .Values.deployment.containerSecurityContext "runAsUser")) "0") }}
+    {{- fail (printf "ERROR: Cannot combine gatewayRootMode=true with deployment.containerSecurityContext.runAsUser=%v. gatewayRootMode=true forces /root as the config path, but the container would run as a non-root uid that cannot read it. Please set gatewayRootMode=false, or set deployment.containerSecurityContext.runAsUser to 0 (or remove it)." (get .Values.deployment.containerSecurityContext "runAsUser")) }}
+  {{- end }}
+  {{- if and .Values.deployment.securityContext .Values.deployment.securityContext.enabled (not (kindIs "invalid" .Values.deployment.securityContext.runAsUser)) (ne (toString .Values.deployment.securityContext.runAsUser) "0") }}
+    {{- fail (printf "ERROR: Cannot combine gatewayRootMode=true with deployment.securityContext.runAsUser=%v (deployment.securityContext.enabled=true). gatewayRootMode=true forces /root as the config path, but the pod would run as a non-root uid that cannot read it. Please set gatewayRootMode=false, or set deployment.securityContext.runAsUser to 0 (or remove it)." .Values.deployment.securityContext.runAsUser) }}
+  {{- end }}
+{{- end }}
 {{- $mountCertPaths := "/opt/akeyless/cache/certs" -}}
 {{- $tlsKeyCertPath := printf "%s/tls.key" $mountCertPaths }}
 {{- $tlsCACertPath := printf "%s/tls.crt" $mountCertPaths }}

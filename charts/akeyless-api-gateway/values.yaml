@@ -47,13 +47,15 @@ image:
 
 # Filesystem layout of the gateway image.
 # Leave unset to auto-detect, in this order: an explicit runAsUser on
-# deployment.containerSecurityContext or deployment.securityContext (container
-# wins over pod; a null runAsUser counts as unset), then image.repository /
-# image.tag: akeyless/base runs as root (/root), while akeyless/gateway runs
-# as the non-root "akeyless" user (/home/akeyless).
+# deployment.containerSecurityContext, or on deployment.securityContext when
+# deployment.securityContext.enabled: true (container wins over pod; a null
+# runAsUser counts as unset), then image.repository / image.tag:
+# akeyless/base runs as root (/root), while akeyless/gateway runs as the
+# non-root "akeyless" user (/home/akeyless).
 # Set explicitly to true (root) or false (non-root) to skip all of the above,
-# e.g. for a mirrored/renamed registry. Combining gatewayRootMode: true with
-# akeylessStrictMode: true is a contradiction and fails the render.
+# e.g. for a mirrored/renamed registry. gatewayRootMode: true fails the render
+# if combined with akeylessStrictMode: true, or with a non-root runAsUser from
+# either securityContext above.
 # gatewayRootMode:
 
 # Uncomment for downloading Akeyless artifacts from fixed repository
