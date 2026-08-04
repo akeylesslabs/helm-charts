@@ -1,4 +1,3 @@
-# Regression test for the extraVolumes variant of ASM-19002.
 # When persistence is enabled the cache-data item sits at 8 spaces in the
 # Deployment volumes list. extraVolumes was injected with `nindent 6`, so any
 # combination of persistence (or TLS) with extraVolumes produced two list items

@@ -306,4 +306,3 @@ akeyless-ssh:
 For questions or issues:
 - Docs: https://docs.akeyless.io/docs/gateway-chart
 - Slack: #akeyless-support
-- Jira: ASM-17961 (original hardening epic)
