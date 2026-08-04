@@ -172,14 +172,22 @@ Generate chart secret name
 {{- end -}}
 
 {{/*
-Check customer fragment
-*/}}
-
-{{/*
 Home directory the gateway process resolves at runtime.
 akeyless/base runs as root ($HOME=/root); akeyless/gateway runs as the
-non-root "akeyless" user ($HOME=/home/akeyless). gatewayRootMode overrides
-the auto-detection for mirrored or renamed registries.
+non-root "akeyless" user ($HOME=/home/akeyless). Resolution order (first
+match wins):
+  1. gatewayRootMode, when explicitly set (true=/root, false=/home/akeyless).
+     This always wins, including over an explicit runAsUser: 0 below.
+  2. deployment.containerSecurityContext.runAsUser, when set. Container-level
+     securityContext wins over pod-level when both are present.
+  3. deployment.securityContext.runAsUser, when deployment.securityContext.enabled
+     is true.
+  4. Auto-detect from akeylessStrictMode, an image.tag ending in "-akeyless",
+     or an image.repository whose final path segment is exactly "gateway".
+akeylessStrictMode=true selects the non-root image tag suffix, so combining
+it with gatewayRootMode=true is a self-contradictory root/non-root request;
+deployment.yaml fails the render for that combination rather than silently
+picking one.
 */}}
 {{- define "akeyless-api-gw.root.config.path" -}}
 {{- if not (kindIs "invalid" .Values.gatewayRootMode) -}}
@@ -188,7 +196,19 @@ the auto-detection for mirrored or renamed registries.
     {{- else -}}
         {{- printf "/home/akeyless" -}}
     {{- end -}}
-{{- else if or (.Values.akeylessStrictMode) (hasSuffix "-akeyless" .Values.image.tag) (contains "gateway" .Values.image.repository) -}}
+{{- else if and .Values.deployment.containerSecurityContext (hasKey .Values.deployment.containerSecurityContext "runAsUser") -}}
+    {{- if eq (toString (get .Values.deployment.containerSecurityContext "runAsUser")) "0" -}}
+        {{- printf "/root" -}}
+    {{- else -}}
+        {{- printf "/home/akeyless" -}}
+    {{- end -}}
+{{- else if and .Values.deployment.securityContext .Values.deployment.securityContext.enabled -}}
+    {{- if eq (toString .Values.deployment.securityContext.runAsUser) "0" -}}
+        {{- printf "/root" -}}
+    {{- else -}}
+        {{- printf "/home/akeyless" -}}
+    {{- end -}}
+{{- else if or (.Values.akeylessStrictMode) (hasSuffix "-akeyless" .Values.image.tag) (regexMatch "(^|/)gateway$" .Values.image.repository) -}}
     {{- printf "/home/akeyless" -}}
 {{- else -}}
     {{- printf "/root" -}}
@@ -196,13 +216,22 @@ the auto-detection for mirrored or renamed registries.
 {{- end -}}
 
 {{/*
-The single directory that holds customer_fragments.json, logand.conf and the
-TLS material. Every mount, copy and env var derives from this one expression
-so the write path and the read path cannot drift apart.
+The directory used for the volume mount and the copy targets for
+customer_fragments.json, logand.conf and the TLS material. AKEYLESS_FRAGEMENT_DIR
+is set from this same helper, but it only redirects where the gateway process
+looks for the customer fragment: logand.conf and the TLS cert/key have no such
+env var and are always read from the process's real $HOME/.akeyless. If this
+helper's resolution ever disagreed with the runtime $HOME, the fragment would
+still load but audit forwarding and the custom TLS material would silently
+stop resolving.
 */}}
 {{- define "akeyless-api-gw.akeyless.config.dir" -}}
 {{- printf "%s/.akeyless" (include "akeyless-api-gw.root.config.path" .) -}}
 {{- end -}}
+
+{{/*
+Check customer fragment
+*/}}
 {{- define "akeyless-api-gw.customerFragmentExist" -}}
     {{- if .Values.customerFragments -}}
         {{ include "akeyless-api-gw.secretName" . }}

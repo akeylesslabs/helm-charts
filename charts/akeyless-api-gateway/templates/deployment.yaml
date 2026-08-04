@@ -1,3 +1,6 @@
+{{- if and .Values.akeylessStrictMode .Values.gatewayRootMode }}
+  {{- fail "ERROR: Cannot combine akeylessStrictMode=true with gatewayRootMode=true. akeylessStrictMode selects the non-root gateway image tag, but gatewayRootMode=true forces root-mode paths. Please set gatewayRootMode=false (or leave it unset) when using akeylessStrictMode." }}
+{{- end }}
 {{- $mountCertPaths := "/opt/akeyless/cache/certs" -}}
 {{- $tlsKeyCertPath := printf "%s/tls.key" $mountCertPaths }}
 {{- $tlsCACertPath := printf "%s/tls.crt" $mountCertPaths }}

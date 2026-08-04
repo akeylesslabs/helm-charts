@@ -35,6 +35,7 @@
         }
       }
     },
+    "gatewayRootMode": { "type": ["boolean", "null"] },
     "akeylessUserAuth": {
       "description": "Akeyless authentication configuration",
       "properties": {
