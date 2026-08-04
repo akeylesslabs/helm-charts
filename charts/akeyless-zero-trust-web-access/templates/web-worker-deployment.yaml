@@ -173,7 +173,7 @@ spec:
        the in-image defaults (config.go: clientConnectTimeoutSeconds=90,
        intervalSeconds=30s, maxDurationSeconds=4h) take effect. Required
        to defend against "browser opened but client never connected" pods
-       and runaway recordings — see ASM-17214 lifecycle gaps. */}}
+       and runaway recordings. */}}
 {{- if and .Values.sessionRecording .Values.sessionRecording.watchdog }}
   {{- with .Values.sessionRecording.watchdog }}
     {{- if .clientConnectTimeoutSeconds }}

@@ -1,4 +1,3 @@
-# Regression test for ASM-19002.
 # Standalone cluster cache with TLS enabled *and* persistence enabled renders
 # two items in the Deployment volumes list. Before the fix the tlsVolume helper
 # was injected with `nindent 6` while the cache-data item sat at 8 spaces,
