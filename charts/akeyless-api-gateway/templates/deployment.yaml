@@ -1,12 +1,51 @@
 {{- if and .Values.akeylessStrictMode .Values.gatewayRootMode }}
   {{- fail "ERROR: Cannot combine akeylessStrictMode=true with gatewayRootMode=true. akeylessStrictMode selects the non-root gateway image tag, but gatewayRootMode=true forces root-mode paths. Please set gatewayRootMode=false (or leave it unset) when using akeylessStrictMode." }}
 {{- end }}
-{{- if .Values.gatewayRootMode }}
-  {{- if and .Values.deployment.containerSecurityContext (hasKey .Values.deployment.containerSecurityContext "runAsUser") (not (kindIs "invalid" (get .Values.deployment.containerSecurityContext "runAsUser"))) (ne (toString (get .Values.deployment.containerSecurityContext "runAsUser")) "0") }}
-    {{- fail (printf "ERROR: Cannot combine gatewayRootMode=true with deployment.containerSecurityContext.runAsUser=%v. gatewayRootMode=true forces /root as the config path, but the container would run as a non-root uid that cannot read it. Please set gatewayRootMode=false, or set deployment.containerSecurityContext.runAsUser to 0 (or remove it)." (get .Values.deployment.containerSecurityContext "runAsUser")) }}
+{{/*
+Guard the resolved path itself, not the inputs that can produce it: /root is
+reachable both explicitly (gatewayRootMode: true) and automatically (an
+explicit runAsUser: 0 on either securityContext, or the plain image.repository
+auto-detect fallback), so every one of those routes must be checked here, not
+just the gatewayRootMode branch.
+*/}}
+{{- $resolvedConfigPath := include "akeyless-api-gw.root.config.path" $ }}
+{{- if eq $resolvedConfigPath "/root" }}
+  {{- $mainImageIsNonRootFlavor := or (.Values.akeylessStrictMode) (hasSuffix "-akeyless" .Values.image.tag) (regexMatch "(^|/)gateway$" .Values.image.repository) }}
+
+  {{/* api-gateway container: containerSecurityContext wins, then pod securityContext, then the main image's own default. */}}
+  {{- $mainProblem := "" -}}
+  {{- $mainFixHint := "" -}}
+  {{- $mainIsRoot := true -}}
+  {{- if and .Values.deployment.containerSecurityContext (hasKey .Values.deployment.containerSecurityContext "runAsUser") (not (kindIs "invalid" (get .Values.deployment.containerSecurityContext "runAsUser"))) -}}
+    {{- $mainUid := toString (get .Values.deployment.containerSecurityContext "runAsUser") -}}
+    {{- $mainProblem = printf "deployment.containerSecurityContext.runAsUser=%s" $mainUid -}}
+    {{- $mainFixHint = "deployment.containerSecurityContext.runAsUser to 0" -}}
+    {{- $mainIsRoot = eq $mainUid "0" -}}
+  {{- else if and .Values.deployment.securityContext .Values.deployment.securityContext.enabled (not (kindIs "invalid" .Values.deployment.securityContext.runAsUser)) -}}
+    {{- $mainUid := toString .Values.deployment.securityContext.runAsUser -}}
+    {{- $mainProblem = printf "deployment.securityContext.runAsUser=%s" $mainUid -}}
+    {{- $mainFixHint = "deployment.securityContext.runAsUser to 0" -}}
+    {{- $mainIsRoot = eq $mainUid "0" -}}
+  {{- else if $mainImageIsNonRootFlavor -}}
+    {{- $mainProblem = "no securityContext override, so it runs at image.repository/image.tag's own non-root default uid" -}}
+    {{- $mainFixHint = "deployment.containerSecurityContext.runAsUser to 0 explicitly" -}}
+    {{- $mainIsRoot = false -}}
+  {{- end -}}
+
+  {{/* bootstrap init container: pod securityContext applies to it, containerSecurityContext does not. Otherwise it runs at its own image's default (root, for the busybox init image). */}}
+  {{- $bootstrapProblem := "" -}}
+  {{- $bootstrapIsRoot := true -}}
+  {{- if and .Values.deployment.securityContext .Values.deployment.securityContext.enabled (not (kindIs "invalid" .Values.deployment.securityContext.runAsUser)) -}}
+    {{- $bootstrapUid := toString .Values.deployment.securityContext.runAsUser -}}
+    {{- $bootstrapProblem = printf "deployment.securityContext.runAsUser=%s, which applies to it because deployment.containerSecurityContext does not" $bootstrapUid -}}
+    {{- $bootstrapIsRoot = eq $bootstrapUid "0" -}}
+  {{- end -}}
+
+  {{- if not $mainIsRoot }}
+    {{- fail (printf "ERROR: The gateway config path resolved to /root, but the api-gateway container would run as a non-root uid (%s). logand.conf and the TLS material would be copied to /root/.akeyless, which that uid cannot read. Set %s, or change gatewayRootMode / image.repository / image.tag so the resolved path matches the container's actual uid." $mainProblem $mainFixHint) }}
   {{- end }}
-  {{- if and .Values.deployment.securityContext .Values.deployment.securityContext.enabled (not (kindIs "invalid" .Values.deployment.securityContext.runAsUser)) (ne (toString .Values.deployment.securityContext.runAsUser) "0") }}
-    {{- fail (printf "ERROR: Cannot combine gatewayRootMode=true with deployment.securityContext.runAsUser=%v (deployment.securityContext.enabled=true). gatewayRootMode=true forces /root as the config path, but the pod would run as a non-root uid that cannot read it. Please set gatewayRootMode=false, or set deployment.securityContext.runAsUser to 0 (or remove it)." .Values.deployment.securityContext.runAsUser) }}
+  {{- if not $bootstrapIsRoot }}
+    {{- fail (printf "ERROR: The gateway config path resolved to /root, but the bootstrap init container would run as a non-root uid (%s). Set deployment.securityContext.runAsUser to 0, or change gatewayRootMode / image.repository / image.tag so the resolved path matches the pod's actual uid." $bootstrapProblem) }}
   {{- end }}
 {{- end }}
 {{- $mountCertPaths := "/opt/akeyless/cache/certs" -}}
