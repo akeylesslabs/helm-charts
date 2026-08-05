@@ -7,12 +7,20 @@ reachable both explicitly (gatewayRootMode: true) and automatically (an
 explicit runAsUser: 0 on either securityContext, or the plain image.repository
 auto-detect fallback), so every one of those routes must be checked here, not
 just the gatewayRootMode branch.
+
+Once gatewayRootMode is explicitly set, image.repository/image.tag are no
+longer consulted here at all: they are name-based guesses, and gatewayRootMode
+exists specifically so a mirrored or renamed registry can override that
+guess. Re-applying the guess under an explicit override would refuse a
+correct, user-asserted configuration (e.g. akeyless/base mirrored to a
+gateway-named repo). The name-based signal stays legitimate only on the
+auto-detect path, i.e. when gatewayRootMode is unset.
 */}}
 {{- $resolvedConfigPath := include "akeyless-api-gw.root.config.path" $ }}
 {{- if eq $resolvedConfigPath "/root" }}
-  {{- $mainImageIsNonRootFlavor := or (.Values.akeylessStrictMode) (hasSuffix "-akeyless" .Values.image.tag) (regexMatch "(^|/)gateway$" .Values.image.repository) }}
+  {{- $gatewayRootModeSet := not (kindIs "invalid" .Values.gatewayRootMode) }}
 
-  {{/* api-gateway container: containerSecurityContext wins, then pod securityContext, then the main image's own default. */}}
+  {{/* api-gateway container: containerSecurityContext wins, then pod securityContext, then (only when gatewayRootMode is unset) the main image's own name-based default. */}}
   {{- $mainProblem := "" -}}
   {{- $mainFixHint := "" -}}
   {{- $mainIsRoot := true -}}
@@ -26,7 +34,7 @@ just the gatewayRootMode branch.
     {{- $mainProblem = printf "deployment.securityContext.runAsUser=%s" $mainUid -}}
     {{- $mainFixHint = "deployment.securityContext.runAsUser to 0" -}}
     {{- $mainIsRoot = eq $mainUid "0" -}}
-  {{- else if $mainImageIsNonRootFlavor -}}
+  {{- else if and (not $gatewayRootModeSet) (or (hasSuffix "-akeyless" (toString .Values.image.tag)) (regexMatch "(^|/)gateway$" .Values.image.repository)) -}}
     {{- $mainProblem = "no securityContext override, so it runs at image.repository/image.tag's own non-root default uid" -}}
     {{- $mainFixHint = "deployment.containerSecurityContext.runAsUser to 0 explicitly" -}}
     {{- $mainIsRoot = false -}}
