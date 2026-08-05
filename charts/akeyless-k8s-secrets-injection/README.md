@@ -107,6 +107,9 @@ reads the live value as drift, and with self-heal enabled strips it on the next 
 server unable to validate the webhook. Exclude the field from drift detection. ArgoCD:
 
 ```yaml
+syncPolicy:
+  syncOptions:
+    - RespectIgnoreDifferences=true
 ignoreDifferences:
   - group: admissionregistration.k8s.io
     kind: MutatingWebhookConfiguration
@@ -114,6 +117,10 @@ ignoreDifferences:
     jsonPointers:
       - /webhooks/0/clientConfig/caBundle
 ```
+
+`ignoreDifferences` alone only affects how ArgoCD calculates the diff. Without
+`RespectIgnoreDifferences=true` the sync still applies the manifest without `caBundle` and
+removes the injected value.
 
 Flux, on the HelmRelease:
 
@@ -139,10 +146,11 @@ webhook:
       -----END CERTIFICATE-----
 ```
 
-The Secret must not be named `RELEASE_NAME-akeyless-secrets-injection`, the name the chart uses for
-its own resources. The chart stops emitting a Secret at that name in this mode, so `helm upgrade` on
-an existing release would delete the Secret the pods mount. The chart rejects that name at render
-time.
+The Secret must not be named after the chart's own generated full name, which is
+`RELEASE_NAME-akeyless-secrets-injection` by default and whatever you set in `fullnameOverride`
+otherwise. The chart stops emitting a Secret at that name in this mode, so `helm upgrade` on an
+existing release would delete the Secret the pods mount. The chart rejects that name at render time,
+including the `fullnameOverride` case.
 
 The Secret must contain `tls.crt` and `tls.key`, and must exist before the webhook pods start. The
 webhook reads the mounted certificate at startup and exits if it is missing, so pods will crash-loop
