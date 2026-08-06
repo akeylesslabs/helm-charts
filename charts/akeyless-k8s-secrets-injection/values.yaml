@@ -79,6 +79,18 @@ mutatingWebhook:
     existingSecretName: ""
     caBundle: ""
     caBundleAnnotations: {}
+    certManager:
+      enabled: false
+      certificateName: ""
+      secretName: ""
+      dnsNames: []
+      duration: ""
+      renewBefore: ""
+      privateKey: {}
+      issuerRef:
+        name: ""
+        kind: Issuer
+        group: cert-manager.io
 debug: false
 
 gatewayCert:

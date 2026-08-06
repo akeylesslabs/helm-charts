@@ -6,6 +6,11 @@
 {{ $caBundleAnnotations := $tls.caBundleAnnotations | default dict }}
 {{ $servingCert := dict }}
 {{ $generatedCA := dict }}
+{{ $certManager := fromYaml (include "vault-secrets-webhook.certManager" .) }}
+
+{{- if and $certManager.enabled (not $caBundle) (not $caBundleAnnotations) }}
+  {{- $caBundleAnnotations = dict "cert-manager.io/inject-ca-from" (printf "%s/%s" .Release.Namespace (include "vault-secrets-webhook.certificateName" .)) }}
+{{- end }}
 
 {{- if $existingSecret }}
   {{- if eq $existingSecret $fullName }}

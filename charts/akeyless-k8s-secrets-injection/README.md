@@ -78,7 +78,34 @@ neither is set. Both belong to this mode only: rendering also fails if `caBundle
 without `existingSecretName`, since the chart writes its own generated CA into `caBundle` there and
 an injector would overwrite it with an unrelated one.
 
-With cert-manager issuing the certificate and injecting the CA bundle:
+#### With cert-manager: let the chart own the Certificate
+
+If cert-manager is installed, this is the shortest correct configuration. The chart renders the
+`Certificate`, points itself at the Secret cert-manager issues, and annotates the
+`MutatingWebhookConfiguration` so ca-injector fills in `caBundle`. No Secret to create by hand:
+
+```yaml
+mutatingWebhook:
+  tls:
+    certManager:
+      enabled: true
+      issuerRef:
+        name: my-issuer
+        kind: Issuer
+```
+
+The `Certificate` and the Secret are both named `RELEASE_NAME-akeyless-secrets-injection-tls` by
+default; `certificateName` and `secretName` override them independently. `dnsNames` defaults to the
+webhook Service's in-cluster names, and `duration`, `renewBefore` and `privateKey` pass through to
+the `Certificate` untouched. Rendering fails if `issuerRef.name` is empty, or if
+`existingSecretName` is set at the same time, since the two are alternatives.
+
+The drift caveat below still applies: ca-injector writes `caBundle` into the live object, so a
+self-healing controller must be told to leave that field alone.
+
+#### With a Secret you create yourself
+
+Point the chart at an existing Secret and supply the CA bundle separately:
 
 ```yaml
 mutatingWebhook:

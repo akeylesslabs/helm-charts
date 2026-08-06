@@ -47,9 +47,27 @@ Create the name of the service account to use
 {{- (.Values.mutatingWebhook | default dict).tls | default dict | toYaml -}}
 {{- end -}}
 
+{{- define "vault-secrets-webhook.certManager" -}}
+{{- $tls := fromYaml (include "vault-secrets-webhook.tls" .) -}}
+{{- $tls.certManager | default dict | toYaml -}}
+{{- end -}}
+
+{{- define "vault-secrets-webhook.certificateName" -}}
+{{- $cm := fromYaml (include "vault-secrets-webhook.certManager" .) -}}
+{{- $cm.certificateName | default (printf "%s-tls" (include "vault-secrets-webhook.fullname" .)) -}}
+{{- end -}}
+
+{{- define "vault-secrets-webhook.certManagerSecretName" -}}
+{{- $cm := fromYaml (include "vault-secrets-webhook.certManager" .) -}}
+{{- if $cm.enabled -}}
+{{- $cm.secretName | default (include "vault-secrets-webhook.certificateName" .) -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "vault-secrets-webhook.existingTLSSecretName" -}}
 {{- $tls := fromYaml (include "vault-secrets-webhook.tls" .) -}}
-{{- $tls.existingSecretName | default "" -}}
+{{- $managed := include "vault-secrets-webhook.certManagerSecretName" . -}}
+{{- $managed | default ($tls.existingSecretName | default "") -}}
 {{- end -}}
 
 {{- define "vault-secrets-webhook.tlsSecretName" -}}
