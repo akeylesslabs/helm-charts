@@ -98,6 +98,38 @@ jobs:
             helm unittest "$chart"
           done <<< "$CHANGED_CHARTS"
 
+      - name: Check render determinism
+        id: determinism
+        if: steps.list-changed.outputs.changed == 'true'
+        env:
+          CHANGED_CHARTS: ${{ steps.list-changed.outputs.changed-charts }}
+        run: |
+          while IFS= read -r chart; do
+            chart_name=$(basename "$chart")
+            conf=".github/chart-fixtures/${chart_name}-deterministic.conf"
+            if [[ ! -f "$conf" ]]; then
+              continue
+            fi
+            while read -r values_file _rest; do
+              [[ -z "${values_file}" || "${values_file}" == \#* ]] && continue
+              values_path="${chart}/ci/${values_file}"
+              if [[ ! -f "$values_path" ]]; then
+                echo "::error file=${conf}::${values_path} listed but not found"
+                exit 1
+              fi
+              helm template determinism "$chart" --namespace chart-testing \
+                --values "$values_path" > "${RUNNER_TEMP}/determinism-a.yaml"
+              helm template determinism "$chart" --namespace chart-testing \
+                --values "$values_path" > "${RUNNER_TEMP}/determinism-b.yaml"
+              if diff -u "${RUNNER_TEMP}/determinism-a.yaml" "${RUNNER_TEMP}/determinism-b.yaml"; then
+                echo "${values_path}: two renders identical"
+              else
+                echo "::error file=${values_path}::two renders of this path differ, so a GitOps controller will see drift on every sync"
+                exit 1
+              fi
+            done < "$conf"
+          done <<< "$CHANGED_CHARTS"
+
       - name: Create kind cluster
         if: steps.list-changed.outputs.changed == 'true'
         uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # v1
