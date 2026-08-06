@@ -4,7 +4,7 @@ tests:
     set:
       gatewayAPI.enabled: true
       gatewayAPI.gateway.create: true
-      gatewayAPI.gateway.gatewayClassName: cilium
+      gatewayAPI.gateway.gatewayClassName: example-gateway-class
       gateway.ingress.enabled: true
     asserts:
       - failedTemplate:
@@ -41,7 +41,7 @@ tests:
   - it: "G4 — tls.mode=Passthrough requires the Tier 1.5 TLSRoute/TCPRoute overlay, not present in this chart alone"
     set:
       gatewayAPI.enabled: true
-      gatewayAPI.gateway.gatewayClassName: cilium
+      gatewayAPI.gateway.gatewayClassName: example-gateway-class
       gatewayAPI.gateway.create: true
       gatewayAPI.gateway.tls.enabled: true
       gatewayAPI.gateway.tls.certificateRefs:
@@ -56,7 +56,7 @@ tests:
     set:
       gatewayAPI.enabled: true
       gatewayAPI.gateway.create: true
-      gatewayAPI.gateway.gatewayClassName: cilium
+      gatewayAPI.gateway.gatewayClassName: example-gateway-class
       gatewayAPI.httpRoutes:
         - hostname: x.example.com
           servicePort: nope
@@ -67,7 +67,7 @@ tests:
   - it: "G6 — gateway.listeners override with tls.httpsRedirect (no way to know which custom listener to attach the redirect to)"
     set:
       gatewayAPI.enabled: true
-      gatewayAPI.gateway.gatewayClassName: cilium
+      gatewayAPI.gateway.gatewayClassName: example-gateway-class
       gatewayAPI.gateway.create: true
       gatewayAPI.gateway.tls.httpsRedirect: true
       gatewayAPI.gateway.listeners:
@@ -83,7 +83,7 @@ tests:
     set:
       gatewayAPI.enabled: true
       gatewayAPI.gateway.create: true
-      gatewayAPI.gateway.gatewayClassName: cilium
+      gatewayAPI.gateway.gatewayClassName: example-gateway-class
       gatewayAPI.parentRefs:
         - name: shared-gw
           namespace: gateway
@@ -103,7 +103,7 @@ tests:
     set:
       gatewayAPI.enabled: true
       gatewayAPI.gateway.create: true
-      gatewayAPI.gateway.gatewayClassName: cilium
+      gatewayAPI.gateway.gatewayClassName: example-gateway-class
       gatewayAPI.gateway.tls.enabled: true
     asserts:
       - failedTemplate:
