@@ -306,6 +306,17 @@ gateway:
     #  seccompProfile:
     #    type: RuntimeDefault
 
+    ## Run the Gateway container with an immutable (read-only) root filesystem.
+    ## Opt-in and default-off: when false the deployment is unchanged.
+    ## When true, the chart sets the container securityContext.readOnlyRootFilesystem,
+    ## injects READ_ONLY_ROOT_FS=true, and mounts emptyDir volumes for the paths the
+    ## Gateway writes at runtime (including /usr/local/share/ca-certificates and
+    ## /etc/ssl/certs for CA Certificate Store / update-ca-certificates). Requires a
+    ## Gateway image that supports READ_ONLY_ROOT_FS and CA trust-store seeding (see
+    ## the chart README for the minimum image version). File-based LOG_FORWARDING /
+    ## Splunk are not supported in this mode (logs must use stdout/stderr).
+    readOnlyRootFilesystem: false
+
     ## Extra volumes to add to the Gateway pod.
     extraVolumes: []
       # - name: custom-secret
