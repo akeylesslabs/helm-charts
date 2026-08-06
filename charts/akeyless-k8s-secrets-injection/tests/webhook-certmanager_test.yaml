@@ -1,0 +1,170 @@
+suite: akeyless-secrets-injection webhook cert-manager
+release:
+  name: injector
+  namespace: akeyless
+tests:
+  - it: "no Certificate is rendered by default"
+    template: templates/webhook-certificate.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: "enabling cert-manager renders a Certificate for the webhook service name"
+    template: templates/webhook-certificate.yaml
+    set:
+      webhook.tls.certManager.enabled: true
+      webhook.tls.certManager.issuerRef.name: my-issuer
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.name
+          value: injector-akeyless-secrets-injection-tls
+      - equal:
+          path: metadata.namespace
+          value: akeyless
+      - equal:
+          path: spec.secretName
+          value: injector-akeyless-secrets-injection-tls
+      - equal:
+          path: spec.dnsNames
+          value:
+            - injector-akeyless-secrets-injection.akeyless.svc
+            - injector-akeyless-secrets-injection.akeyless.svc.cluster.local
+      - equal:
+          path: spec.issuerRef
+          value:
+            name: my-issuer
+            kind: Issuer
+            group: cert-manager.io
+
+  - it: "cert-manager mode emits no chart Secret and leaves caBundle to the injector"
+    template: templates/apiservice-webhook.yaml
+    set:
+      webhook.tls.certManager.enabled: true
+      webhook.tls.certManager.issuerRef.name: my-issuer
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: items[0].kind
+          value: MutatingWebhookConfiguration
+      - equal:
+          path: items[0].metadata.annotations["cert-manager.io/inject-ca-from"]
+          value: akeyless/injector-akeyless-secrets-injection-tls
+      - isNull:
+          path: items[0].webhooks[0].clientConfig.caBundle
+      - isNull:
+          path: items[1]
+
+  - it: "cert-manager mode mounts the issued Secret and points the watch at it"
+    template: templates/webhook-deployment.yaml
+    set:
+      webhook.tls.certManager.enabled: true
+      webhook.tls.certManager.issuerRef.name: my-issuer
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: serving-cert
+            secret:
+              defaultMode: 420
+              secretName: injector-akeyless-secrets-injection-tls
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TLS_SECRET_NAME
+            value: injector-akeyless-secrets-injection-tls
+
+  - it: "certificateName and secretName can be set independently"
+    template: templates/webhook-certificate.yaml
+    set:
+      webhook.tls.certManager.enabled: true
+      webhook.tls.certManager.issuerRef.name: my-issuer
+      webhook.tls.certManager.certificateName: injector-cert
+      webhook.tls.certManager.secretName: injector-cert-secret
+    asserts:
+      - equal:
+          path: metadata.name
+          value: injector-cert
+      - equal:
+          path: spec.secretName
+          value: injector-cert-secret
+
+  - it: "a custom certificateName is what the CA injection annotation points at"
+    template: templates/apiservice-webhook.yaml
+    set:
+      webhook.tls.certManager.enabled: true
+      webhook.tls.certManager.issuerRef.name: my-issuer
+      webhook.tls.certManager.certificateName: injector-cert
+    asserts:
+      - equal:
+          path: items[0].metadata.annotations["cert-manager.io/inject-ca-from"]
+          value: akeyless/injector-cert
+
+  - it: "dnsNames, duration, renewBefore and privateKey pass through"
+    template: templates/webhook-certificate.yaml
+    set:
+      webhook.tls.certManager.enabled: true
+      webhook.tls.certManager.issuerRef.name: my-issuer
+      webhook.tls.certManager.dnsNames:
+        - injector.example.svc
+      webhook.tls.certManager.duration: 2160h
+      webhook.tls.certManager.renewBefore: 360h
+      webhook.tls.certManager.privateKey:
+        algorithm: ECDSA
+        size: 256
+    asserts:
+      - equal:
+          path: spec.dnsNames
+          value:
+            - injector.example.svc
+      - equal:
+          path: spec.duration
+          value: 2160h
+      - equal:
+          path: spec.renewBefore
+          value: 360h
+      - equal:
+          path: spec.privateKey.algorithm
+          value: ECDSA
+
+  - it: "a ClusterIssuer reference passes through"
+    template: templates/webhook-certificate.yaml
+    set:
+      webhook.tls.certManager.enabled: true
+      webhook.tls.certManager.issuerRef.name: platform-ca
+      webhook.tls.certManager.issuerRef.kind: ClusterIssuer
+    asserts:
+      - equal:
+          path: spec.issuerRef.kind
+          value: ClusterIssuer
+
+  - it: "an explicit caBundle wins over the injection annotation"
+    template: templates/apiservice-webhook.yaml
+    set:
+      webhook.tls.certManager.enabled: true
+      webhook.tls.certManager.issuerRef.name: my-issuer
+      webhook.tls.caBundle: TESTCA
+    asserts:
+      - equal:
+          path: items[0].webhooks[0].clientConfig.caBundle
+          value: VEVTVENB
+      - isNull:
+          path: items[0].metadata.annotations
+
+  - it: "cert-manager together with existingSecretName is rejected"
+    set:
+      webhook.tls.certManager.enabled: true
+      webhook.tls.certManager.issuerRef.name: my-issuer
+      webhook.tls.existingSecretName: akeyless-injector-tls
+    asserts:
+      - failedTemplate:
+          errorPattern: "both set"
+
+  - it: "cert-manager without an issuerRef name is rejected"
+    set:
+      webhook.tls.certManager.enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: "issuerRef.name is empty"
