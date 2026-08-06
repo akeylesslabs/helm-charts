@@ -1,0 +1,75 @@
+name: Gateway API Test
+
+on:
+  pull_request:
+    paths:
+      - "charts/akeyless-gateway/**"
+      - ".github/gateway-api/**"
+      - ".github/actions/setup-gateway-api-controller/**"
+      - ".github/workflows/gateway-api-test.yaml"
+
+jobs:
+  gateway-api-test:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - controller: cilium
+            gatewayClassName: cilium
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Helm
+        uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2 # v5
+
+      - name: Build chart dependencies
+        run: |
+          helm repo add dandydeveloper https://dandydeveloper.github.io/charts/
+          helm repo update
+          helm dependency build charts/akeyless-gateway
+
+      - name: Create kind cluster
+        uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # v1
+        with:
+          config: .github/gateway-api/kind-cilium.yaml
+
+      - name: Setup Gateway API controller
+        uses: ./.github/actions/setup-gateway-api-controller
+        with:
+          controller: ${{ matrix.controller }}
+
+      - name: Prepare release namespace
+        run: |
+          kubectl create namespace chart-testing --dry-run=client -o yaml | kubectl apply -f -
+          kubectl apply -f .github/chart-fixtures/akeyless-gateway/ -n chart-testing
+
+      - name: Install chart
+        run: |
+          helm install gw charts/akeyless-gateway \
+            -n chart-testing \
+            --values .github/gateway-api/cilium-values.yaml \
+            --timeout 300s
+
+      - name: Run conformance test
+        run: helm test gw -n chart-testing --logs
+
+      - name: Dump diagnostics
+        if: failure()
+        run: |
+          kubectl get gatewayclasses.gateway.networking.k8s.io -o wide || true
+          kubectl get gateways.gateway.networking.k8s.io -n chart-testing -o wide || true
+          kubectl describe gateways.gateway.networking.k8s.io -n chart-testing || true
+          kubectl get httproutes.gateway.networking.k8s.io -n chart-testing -o yaml || true
+          kubectl -n kube-system get pods -o wide || true
+          kubectl get events -n chart-testing --sort-by lastTimestamp -o wide || true
+          kubectl get pods -n chart-testing -o wide || true
+          kubectl describe pods -n chart-testing || true
+          kubectl get ciliumloadbalancerippools.cilium.io -o wide || true
+          kubectl get svc -n chart-testing -o wide || true
