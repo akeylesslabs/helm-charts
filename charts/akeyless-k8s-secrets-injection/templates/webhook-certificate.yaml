@@ -1,0 +1,42 @@
+{{- $cm := fromYaml (include "vault-secrets-webhook.certManager" .) }}
+{{- if $cm.enabled }}
+{{- $fullName := include "vault-secrets-webhook.fullname" . }}
+{{- $tls := fromYaml (include "vault-secrets-webhook.tls" .) }}
+{{- $issuerRef := $cm.issuerRef | default dict }}
+{{- if $tls.existingSecretName }}
+{{- fail "webhook.tls.certManager.enabled and webhook.tls.existingSecretName both set. cert-manager mode already points the chart at the Secret it issues, so the two are alternatives. Keep certManager.enabled for an issued certificate, or existingSecretName for one you manage yourself." }}
+{{- end }}
+{{- if not $issuerRef.name }}
+{{- fail "webhook.tls.certManager.enabled is set but webhook.tls.certManager.issuerRef.name is empty. cert-manager cannot issue without an Issuer or ClusterIssuer to issue from." }}
+{{- end }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "vault-secrets-webhook.certificateName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "vault-secrets-webhook.labels" . | nindent 4 }}
+spec:
+  secretName: {{ include "vault-secrets-webhook.certManagerSecretName" . }}
+  {{- with $cm.duration }}
+  duration: {{ . }}
+  {{- end }}
+  {{- with $cm.renewBefore }}
+  renewBefore: {{ . }}
+  {{- end }}
+  {{- with $cm.privateKey }}
+  privateKey:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  dnsNames:
+  {{- with $cm.dnsNames }}
+    {{- tpl (toYaml .) $ | nindent 4 }}
+  {{- else }}
+    - {{ printf "%s.%s.svc" $fullName .Release.Namespace }}
+    - {{ printf "%s.%s.svc.cluster.local" $fullName .Release.Namespace }}
+  {{- end }}
+  issuerRef:
+    name: {{ $issuerRef.name }}
+    kind: {{ $issuerRef.kind | default "Issuer" }}
+    group: {{ $issuerRef.group | default "cert-manager.io" }}
+{{- end }}
