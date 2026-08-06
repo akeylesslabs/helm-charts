@@ -97,8 +97,8 @@ The feature is **opt-in and default-off**. When false, the deployment is unchang
 **Requirements and limitations:**
 
 - **Minimum Gateway image version:** requires a Gateway image that supports `READ_ONLY_ROOT_FS` (image version `5.0.0` or later). CA Certificate Store with full OS trust store support requires an image that includes CA trust-store seed paths (`/opt/akeyless/ca-certificates-seed`, `/opt/akeyless/ssl-certs-seed`). Enabling the flag against an older image sets the env var but the image will attempt to write to the read-only rootfs and fail to start.
-- **Logging:** logs go to stdout/stderr (collected by the container runtime). File-based logging to the rootfs is not supported in this mode.
-- **Splunk forwarder:** not supported under a read-only rootfs.
+- **Logging:** logs go to stdout/stderr (collected by the container runtime). File-based logging to the rootfs is not supported in this mode — including the `LOG_FORWARDING` env that would write `~/.akeyless/logand.conf` (skipped when `READ_ONLY_ROOT_FS=true`).
+- **Splunk forwarder / file-based log forwarding:** not supported under a read-only rootfs.
 - **FIPS:** supported. Under a read-only rootfs the image activates FIPS via `OPENSSL_CONF` and selects the FIPS binary without mutating the rootfs.
 
 ## Argo CD Instructions
