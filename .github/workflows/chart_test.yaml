@@ -124,6 +124,14 @@ jobs:
             fi
           done <<< "$CHANGED_CHARTS"
 
+      - name: Mint the injector's TLS fixture
+        if: steps.list-changed.outputs.changed == 'true'
+        uses: pleme-io/actions/kube-tls-fixture@2aa8787f645191fcb4ae0f4f1dfccbaaeb4aa872
+        with:
+          conf: .github/chart-fixtures/akeyless-k8s-secrets-injection-tls.conf
+          namespace: chart-testing
+          skip-if-absent: "true"
+
       - name: Run chart-testing install
         id: ct-install
         if: steps.list-changed.outputs.changed == 'true'
