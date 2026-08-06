@@ -15,6 +15,9 @@
     {{- fail "webhook.tls.existingSecretName is set, so the chart no longer generates a CA. Set webhook.tls.caBundle to the PEM CA that signed the certificate, or webhook.tls.caBundleAnnotations to let a controller such as cert-manager's ca-injector populate it." }}
   {{- end }}
 {{- else }}
+  {{- if $caBundleAnnotations }}
+    {{- fail "webhook.tls.caBundleAnnotations applies only when webhook.tls.existingSecretName is set. The chart generates its own CA in this mode and writes the matching caBundle itself, so a CA injector acting on these annotations would replace it with an unrelated CA and the API server could no longer validate the webhook. Set existingSecretName, or remove the annotations." }}
+  {{- end }}
   {{- $ca := genCA "webhook-ca" 3650 }}
   {{- $cn := printf "%s.%s.svc" $fullName .Release.Namespace }}
   {{- $servingCert = genSignedCert $cn nil (list $cn "") 365 $ca }}
