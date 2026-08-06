@@ -73,10 +73,12 @@ across renders. The webhook server watches the Secret and reloads the certificat
 is rotated, so renewal does not require a pod restart.
 
 Because the chart no longer owns a CA in this mode, you must also tell the API server which CA to
-trust, using either `mutatingWebhook.tls.caBundle` or `mutatingWebhook.tls.caBundleAnnotations`. Rendering fails if
-neither is set. Both belong to this mode only: rendering also fails if `caBundleAnnotations` is set
-without `existingSecretName`, since the chart writes its own generated CA into `caBundle` there and
-an injector would overwrite it with an unrelated one.
+trust, using either `mutatingWebhook.tls.caBundle` or `mutatingWebhook.tls.caBundleAnnotations`.
+Rendering fails if neither is set, and if both are set, since they are two writers for the same
+field and the result oscillates. Both belong to this mode only: rendering fails if either is set
+without `existingSecretName`, because the chart writes its own generated CA into `caBundle` there,
+so a supplied bundle would be discarded and an injector would overwrite the generated one. A
+`caBundle` that carries no PEM certificate block is rejected as well.
 
 #### With cert-manager: let the chart own the Certificate
 

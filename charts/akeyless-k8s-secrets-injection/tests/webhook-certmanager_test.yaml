@@ -145,11 +145,14 @@ tests:
     set:
       mutatingWebhook.tls.certManager.enabled: true
       mutatingWebhook.tls.certManager.issuerRef.name: my-issuer
-      mutatingWebhook.tls.caBundle: TESTCA
+      mutatingWebhook.tls.caBundle: |
+        -----BEGIN CERTIFICATE-----
+        TESTCA
+        -----END CERTIFICATE-----
     asserts:
       - equal:
           path: items[0].webhooks[0].clientConfig.caBundle
-          value: VEVTVENB
+          value: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tClRFU1RDQQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
       - isNull:
           path: items[0].metadata.annotations
 
