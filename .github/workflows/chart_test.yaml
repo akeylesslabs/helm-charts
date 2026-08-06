@@ -131,10 +131,14 @@ jobs:
                   -addext "subjectAltName=DNS:${dns_name}" \
                   -keyout "${RUNNER_TEMP}/${secret_name}.key" \
                   -out "${RUNNER_TEMP}/${secret_name}.crt" 2>/dev/null
-                kubectl create secret tls "${secret_name}" \
-                  --cert="${RUNNER_TEMP}/${secret_name}.crt" \
-                  --key="${RUNNER_TEMP}/${secret_name}.key" \
+                kubectl create secret generic "${secret_name}" \
+                  --type=kubernetes.io/tls \
+                  --from-file=tls.crt="${RUNNER_TEMP}/${secret_name}.crt" \
+                  --from-file=tls.key="${RUNNER_TEMP}/${secret_name}.key" \
+                  --from-file=ca.crt="${RUNNER_TEMP}/${secret_name}.crt" \
                   -n chart-testing --dry-run=client -o yaml | kubectl apply -f -
+                kubectl annotate secret "${secret_name}" -n chart-testing \
+                  cert-manager.io/allow-direct-injection=true --overwrite
               done < "$tls_conf"
             fi
           done <<< "$CHANGED_CHARTS"
