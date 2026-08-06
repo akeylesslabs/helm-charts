@@ -25,6 +25,27 @@ jobs:
         run: bash .github/scripts/test_select_charts.sh
 
 
+  render-determinism:
+    # Renders only, so it needs no cluster and does not share chart-test's
+    # ubuntu-22.04 pin. It runs on 24.04 because the tatara-script release
+    # binary is linked against glibc 2.39, which 22.04 does not carry.
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Helm
+        uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2 # v5
+
+      - name: Check render determinism
+        uses: pleme-io/actions/helm-render-determinism@c80c5efc019b83ee27d0475eaa97f78dabc5e98d
+
+
   chart-test:
     # ubuntu-latest currently resolves to ubuntu-24.04, where kind/gateway
     # installs hit a runner-kernel-specific rsyslog permission failure.
