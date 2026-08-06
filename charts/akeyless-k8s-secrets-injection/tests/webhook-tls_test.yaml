@@ -122,3 +122,11 @@ tests:
     asserts:
       - failedTemplate:
           errorPattern: "must not be"
+
+  - it: "caBundleAnnotations without existingSecretName is rejected"
+    set:
+      webhook.tls.caBundleAnnotations:
+        cert-manager.io/inject-ca-from: akeyless/akeyless-injector-tls
+    asserts:
+      - failedTemplate:
+          errorPattern: "caBundleAnnotations applies only when"

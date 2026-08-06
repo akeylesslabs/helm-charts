@@ -74,7 +74,9 @@ is rotated, so renewal does not require a pod restart.
 
 Because the chart no longer owns a CA in this mode, you must also tell the API server which CA to
 trust, using either `webhook.tls.caBundle` or `webhook.tls.caBundleAnnotations`. Rendering fails if
-neither is set.
+neither is set. Both belong to this mode only: rendering also fails if `caBundleAnnotations` is set
+without `existingSecretName`, since the chart writes its own generated CA into `caBundle` there and
+an injector would overwrite it with an unrelated one.
 
 With cert-manager issuing the certificate and injecting the CA bundle:
 
@@ -133,7 +135,7 @@ driftDetection:
         kind: MutatingWebhookConfiguration
 ```
 
-With a CA you manage outside the cluster, supply the PEM directly instead — the chart
+With a CA you manage outside the cluster, supply the PEM directly instead. The chart
 base64-encodes it:
 
 ```yaml
