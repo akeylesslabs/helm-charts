@@ -42,23 +42,24 @@ tests:
             name: TLS_SECRET_NAME
             value: injector-akeyless-secrets-injection
 
-  - it: "caBundle is ignored while the chart still generates its own CA"
-    template: templates/apiservice-webhook.yaml
+  - it: "caBundle without existingSecretName is rejected"
     set:
-      webhook.tls.caBundle: TESTCA
+      webhook.tls.caBundle: |
+        -----BEGIN CERTIFICATE-----
+        TESTCA
+        -----END CERTIFICATE-----
     asserts:
-      - equal:
-          path: items[0].kind
-          value: Secret
-      - notEqual:
-          path: items[1].webhooks[0].clientConfig.caBundle
-          value: VEVTVENB
+      - failedTemplate:
+          errorPattern: "caBundle applies only when"
 
   - it: "existingSecretName with an explicit caBundle emits no Secret"
     template: templates/apiservice-webhook.yaml
     set:
       webhook.tls.existingSecretName: akeyless-injector-tls
-      webhook.tls.caBundle: TESTCA
+      webhook.tls.caBundle: |
+        -----BEGIN CERTIFICATE-----
+        TESTCA
+        -----END CERTIFICATE-----
     asserts:
       - hasDocuments:
           count: 1
@@ -67,7 +68,7 @@ tests:
           value: MutatingWebhookConfiguration
       - equal:
           path: items[0].webhooks[0].clientConfig.caBundle
-          value: VEVTVENB
+          value: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tClRFU1RDQQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
       - isNull:
           path: items[1]
 
@@ -93,7 +94,10 @@ tests:
     template: templates/webhook-deployment.yaml
     set:
       webhook.tls.existingSecretName: akeyless-injector-tls
-      webhook.tls.caBundle: TESTCA
+      webhook.tls.caBundle: |
+        -----BEGIN CERTIFICATE-----
+        TESTCA
+        -----END CERTIFICATE-----
     asserts:
       - contains:
           path: spec.template.spec.volumes
@@ -118,7 +122,10 @@ tests:
   - it: "existingSecretName equal to the chart's own resource name is rejected"
     set:
       webhook.tls.existingSecretName: injector-akeyless-secrets-injection
-      webhook.tls.caBundle: TESTCA
+      webhook.tls.caBundle: |
+        -----BEGIN CERTIFICATE-----
+        TESTCA
+        -----END CERTIFICATE-----
     asserts:
       - failedTemplate:
           errorPattern: "must not be"
@@ -130,3 +137,24 @@ tests:
     asserts:
       - failedTemplate:
           errorPattern: "caBundleAnnotations applies only when"
+
+  - it: "caBundle and caBundleAnnotations together are rejected"
+    set:
+      webhook.tls.existingSecretName: akeyless-injector-tls
+      webhook.tls.caBundle: |
+        -----BEGIN CERTIFICATE-----
+        TESTCA
+        -----END CERTIFICATE-----
+      webhook.tls.caBundleAnnotations:
+        cert-manager.io/inject-ca-from: akeyless/akeyless-injector-tls
+    asserts:
+      - failedTemplate:
+          errorPattern: "two writers for the same"
+
+  - it: "a caBundle that is not a PEM certificate is rejected"
+    set:
+      webhook.tls.existingSecretName: akeyless-injector-tls
+      webhook.tls.caBundle: bm90LWEtcGVt
+    asserts:
+      - failedTemplate:
+          errorPattern: "does not contain a PEM certificate block"

@@ -12,6 +12,13 @@
   {{- $caBundleAnnotations = dict "cert-manager.io/inject-ca-from" (printf "%s/%s" .Release.Namespace (include "vault-secrets-webhook.certificateName" .)) }}
 {{- end }}
 
+{{- if and $caBundle $caBundleAnnotations }}
+  {{- fail "webhook.tls.caBundle and webhook.tls.caBundleAnnotations are both set. They are two writers for the same clientConfig.caBundle field: the chart renders the literal value and a CA injector then overwrites it, and a self-healing GitOps controller reverts that on the next sync. The result oscillates and the API server intermittently cannot validate the webhook. Pick one." }}
+{{- end }}
+{{- if and $caBundle (not (contains "-----BEGIN CERTIFICATE-----" $caBundle)) }}
+  {{- fail "webhook.tls.caBundle does not contain a PEM certificate block. The chart base64-encodes this value into clientConfig.caBundle, where an unparsable value blocks Pod creation in every selected namespace once the API server rejects the webhook's certificate. Supply the PEM text of the CA, not a base64 blob, a path or a Secret reference." }}
+{{- end }}
+
 {{- if $existingSecret }}
   {{- if eq $existingSecret $fullName }}
     {{- fail (printf "webhook.tls.existingSecretName must not be %q, the name the chart uses for its own generated Secret. The chart stops emitting that Secret when existingSecretName is set, so helm upgrade on an existing release deletes the Secret the webhook pods mount. Give the user-managed Secret a different name." $fullName) }}
@@ -22,6 +29,9 @@
 {{- else }}
   {{- if $caBundleAnnotations }}
     {{- fail "webhook.tls.caBundleAnnotations applies only when webhook.tls.existingSecretName is set. The chart generates its own CA in this mode and writes the matching caBundle itself, so a CA injector acting on these annotations would replace it with an unrelated CA and the API server could no longer validate the webhook. Set existingSecretName, or remove the annotations." }}
+  {{- end }}
+  {{- if $caBundle }}
+    {{- fail "webhook.tls.caBundle applies only when webhook.tls.existingSecretName is set or cert-manager mode is enabled. The chart generates its own CA here and overwrites this value with it, so the certificate you supplied would be silently discarded and the webhook would keep serving the chart's own. Set existingSecretName, or remove caBundle." }}
   {{- end }}
   {{- $ca := genCA "webhook-ca" 3650 }}
   {{- $cn := printf "%s.%s.svc" $fullName .Release.Namespace }}
