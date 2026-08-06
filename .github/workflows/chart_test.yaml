@@ -43,7 +43,7 @@ jobs:
         uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2 # v5
 
       - name: Check render determinism
-        uses: pleme-io/actions/helm-render-determinism@2aa8787f645191fcb4ae0f4f1dfccbaaeb4aa872
+        uses: pleme-io/actions/helm-render-determinism@c80c5efc019b83ee27d0475eaa97f78dabc5e98d
 
 
   chart-test:
@@ -142,25 +142,6 @@ jobs:
             fixture_dir=".github/chart-fixtures/${chart_name}"
             if [[ -d "$fixture_dir" ]]; then
               kubectl apply -f "$fixture_dir/" -n chart-testing
-            fi
-            tls_conf=".github/chart-fixtures/${chart_name}-tls.conf"
-            if [[ -f "$tls_conf" ]]; then
-              while read -r secret_name dns_name _rest; do
-                [[ -z "${secret_name}" || "${secret_name}" == \#* ]] && continue
-                openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
-                  -subj "/CN=${dns_name}" \
-                  -addext "subjectAltName=DNS:${dns_name}" \
-                  -keyout "${RUNNER_TEMP}/${secret_name}.key" \
-                  -out "${RUNNER_TEMP}/${secret_name}.crt" 2>/dev/null
-                kubectl create secret generic "${secret_name}" \
-                  --type=kubernetes.io/tls \
-                  --from-file=tls.crt="${RUNNER_TEMP}/${secret_name}.crt" \
-                  --from-file=tls.key="${RUNNER_TEMP}/${secret_name}.key" \
-                  --from-file=ca.crt="${RUNNER_TEMP}/${secret_name}.crt" \
-                  -n chart-testing --dry-run=client -o yaml | kubectl apply -f -
-                kubectl annotate secret "${secret_name}" -n chart-testing \
-                  cert-manager.io/allow-direct-injection=true --overwrite
-              done < "$tls_conf"
             fi
           done <<< "$CHANGED_CHARTS"
 
