@@ -131,6 +131,8 @@ tests:
     template: templates/gateway-api/httproute.yaml
     set:
       gatewayAPI.gateway.tls.enabled: true
+      gatewayAPI.gateway.tls.certificateRefs:
+        - name: akeyless-api-tls
       gatewayAPI.gateway.tls.httpsRedirect: true
     asserts:
       - isKind:

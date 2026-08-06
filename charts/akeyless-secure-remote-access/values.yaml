@@ -403,6 +403,20 @@ sshConfig:
   ## not 2222 (in-container sshd) or 9900 (curl-proxy). Validated at render time.
   proxyPort: 2200
 
+  ## SSH keepalive probes, left unset so the sra image keeps deciding the defaults.
+  ## A leg drops once "interval x count max" seconds pass with no reply, so the shipped
+  ## 120 and 2 give a 240 second window. clientAlive covers the client to gateway leg,
+  ## serverAlive the gateway to target leg. Lower them when a firewall, NAT, or load
+  ## balancer reaps idle connections sooner than that, and raise them to keep long idle
+  ## sessions alive at the cost of holding credentials for an abandoned session longer.
+  ## Set an interval to 0 to send no probes on that leg. Changes need a pod restart, and
+  ## a sra image older than the release that added these variables ignores them.
+  keepalive: {}
+    # clientAliveInterval: 120
+    # clientAliveCountMax: 2
+    # serverAliveInterval: 120
+    # serverAliveCountMax: 2
+
   # Akeyless requires data persistence to be shared within all pods in the cluster
   # Currently only ReadWriteMany is supported
   # accessMode: ReadWriteMany
