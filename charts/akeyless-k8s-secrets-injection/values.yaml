@@ -77,6 +77,12 @@ mutatingWebhook:
   matchConditions: []
 debug: false
 
+webhook:
+  tls:
+    existingSecretName: ""
+    caBundle: ""
+    caBundleAnnotations: {}
+
 gatewayCert:
   #  Specifies an existing secret for gateway tls certificate must include:
   # - tls.crt (base64)
