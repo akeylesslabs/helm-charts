@@ -180,6 +180,9 @@ re-derived at each call site.
 Call as: include "akeyless-api-gw.effective-uid" (dict "ctx" $ "scope" "main"|"bootstrap")
 */}}
 {{- define "akeyless-api-gw.effective-uid" -}}
+{{- if not (has .scope (list "main" "bootstrap")) -}}
+  {{- fail (printf "akeyless-api-gw.effective-uid: scope must be \"main\" or \"bootstrap\", got %q" .scope) -}}
+{{- end -}}
 {{- $d := .ctx.Values.deployment -}}
 {{- $csc := $d.containerSecurityContext -}}
 {{- if and (eq .scope "main") $csc (hasKey $csc "runAsUser") (not (kindIs "invalid" (get $csc "runAsUser"))) -}}

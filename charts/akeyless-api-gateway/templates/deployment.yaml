@@ -15,10 +15,18 @@ consulted here at all -- that key exists precisely to override the name guess.
   {{- $mainUid := include "akeyless-api-gw.effective-uid" (dict "ctx" $ "scope" "main") }}
   {{- $bootstrapUid := include "akeyless-api-gw.effective-uid" (dict "ctx" $ "scope" "bootstrap") }}
 
+  {{/* Label only, for the message below -- the pass/fail decision above already came from $mainUid via the helper. */}}
+  {{- $mainKeyLabel := "deployment.containerSecurityContext.runAsUser or deployment.securityContext.runAsUser" -}}
+  {{- if and .Values.deployment.containerSecurityContext (hasKey .Values.deployment.containerSecurityContext "runAsUser") (not (kindIs "invalid" (get .Values.deployment.containerSecurityContext "runAsUser"))) -}}
+    {{- $mainKeyLabel = "deployment.containerSecurityContext.runAsUser" -}}
+  {{- else if and .Values.deployment.securityContext .Values.deployment.securityContext.enabled (not (kindIs "invalid" .Values.deployment.securityContext.runAsUser)) -}}
+    {{- $mainKeyLabel = "deployment.securityContext.runAsUser" -}}
+  {{- end -}}
+
   {{- $mainProblem := "" -}}
   {{- $mainIsRoot := true -}}
   {{- if ne $mainUid "" -}}
-    {{- $mainProblem = printf "runAsUser=%s (from deployment.containerSecurityContext or deployment.securityContext)" $mainUid -}}
+    {{- $mainProblem = printf "%s=%s" $mainKeyLabel $mainUid -}}
     {{- $mainIsRoot = eq $mainUid "0" -}}
   {{- else if and (not $gatewayRootModeSet) (or (hasSuffix "-akeyless" (toString .Values.image.tag)) (regexMatch "(^|/)gateway$" .Values.image.repository)) -}}
     {{- $mainProblem = "no securityContext override, so it runs at image.repository/image.tag's own non-root default uid" -}}
@@ -28,7 +36,7 @@ consulted here at all -- that key exists precisely to override the name guess.
   {{- $bootstrapIsRoot := or (eq $bootstrapUid "") (eq $bootstrapUid "0") -}}
 
   {{- if not $mainIsRoot }}
-    {{- fail (printf "ERROR: The gateway config path resolved to /root, but the api-gateway container would run as a non-root uid (%s). Set deployment.containerSecurityContext.runAsUser or deployment.securityContext.runAsUser to 0, or change gatewayRootMode / image.repository / image.tag so the resolved path matches the container's actual uid." $mainProblem) }}
+    {{- fail (printf "ERROR: The gateway config path resolved to /root, but the api-gateway container would run as a non-root uid (%s). logand.conf and the TLS material would be copied to /root/.akeyless, which that uid cannot read. Set %s to 0, or change gatewayRootMode / image.repository / image.tag so the resolved path matches the container's actual uid." $mainProblem $mainKeyLabel) }}
   {{- end }}
   {{- if not $bootstrapIsRoot }}
     {{- fail (printf "ERROR: The gateway config path resolved to /root, but the bootstrap init container would run as a non-root uid (deployment.securityContext.runAsUser=%s, which applies to it because deployment.containerSecurityContext does not). Set deployment.securityContext.runAsUser to 0, or change gatewayRootMode / image.repository / image.tag so the resolved path matches the pod's actual uid." $bootstrapUid) }}
