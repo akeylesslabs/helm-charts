@@ -15,15 +15,36 @@ tests:
   - it: uses custom clusterDomain in internal service URLs
     template: templates/akeyless-secure-remote-access/deployment.yaml
     set:
-      clusterDomain: taz-iam-int-1.local
+      clusterDomain: custom.local
     asserts:
       - contains:
           path: spec.template.spec.containers[0].env
           content:
             name: INTERNAL_GATEWAY_API
-            value: http://RELEASE-NAME-akeyless-gateway-internal.NAMESPACE.svc.taz-iam-int-1.local:8080
+            value: http://RELEASE-NAME-akeyless-gateway-internal.NAMESPACE.svc.custom.local:8080
       - contains:
           path: spec.template.spec.containers[0].env
           content:
             name: GATEWAY_URL
-            value: http://RELEASE-NAME-akeyless-gateway.NAMESPACE.svc.taz-iam-int-1.local:8000
+            value: http://RELEASE-NAME-akeyless-gateway.NAMESPACE.svc.custom.local:8000
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REMOTE_ACCESS_SSH_SERVICE_INTERNAL_URL
+            value: http://ssh-RELEASE-NAME-akeyless-gateway-internal.NAMESPACE.svc.custom.local:9900
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REMOTE_ACCESS_SSH_ENDPOINT
+            value: ssh-RELEASE-NAME-akeyless-gateway.NAMESPACE.svc.custom.local:22
+
+  - it: gateway deployment uses custom clusterDomain for SRA web internal URL
+    template: templates/deployment.yaml
+    set:
+      clusterDomain: custom.local
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REMOTE_ACCESS_WEB_SERVICE_INTERNAL_URL
+            value: http://web-RELEASE-NAME-akeyless-gateway.NAMESPACE.svc.custom.local:8888
