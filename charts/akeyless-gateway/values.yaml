@@ -4,7 +4,7 @@
 
 ## Kubernetes cluster DNS domain suffix for internal service URLs.
 ## Default clusters use cluster.local (service FQDN: <svc>.<ns>.svc.cluster.local).
-## Set to your cluster's DNS domain when it differs (e.g. taz-iam-int-1.local → svc.taz-iam-int-1.local).
+## Set to your cluster's DNS domain when it differs (e.g. custom.local → svc.custom.local).
 ##
 clusterDomain: cluster.local
 

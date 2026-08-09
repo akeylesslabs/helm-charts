@@ -37,10 +37,10 @@ helm install gateway akeyless/akeyless-gateway
 
 ## Cluster DNS Domain
 
-Clusters whose DNS search domain is not the default `svc.cluster.local` (for example `svc.taz-iam-int-1.local`) must set `clusterDomain` so SRA internal service URLs resolve correctly:
+Clusters whose DNS search domain is not the default `svc.cluster.local` (for example `svc.custom.local`) must set `clusterDomain` so SRA internal service URLs resolve correctly:
 
 ```yaml
-clusterDomain: taz-iam-int-1.local
+clusterDomain: custom.local
 ```
 
 ## Extra Volumes and Volume Mounts
