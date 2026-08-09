@@ -2,58 +2,36 @@
   {{- fail "ERROR: Cannot combine akeylessStrictMode=true with gatewayRootMode=true. akeylessStrictMode selects the non-root gateway image tag, but gatewayRootMode=true forces root-mode paths. Please set gatewayRootMode=false (or leave it unset) when using akeylessStrictMode." }}
 {{- end }}
 {{/*
-Guard the resolved path itself, not the inputs that can produce it: /root is
-reachable both explicitly (gatewayRootMode: true) and automatically (an
-explicit runAsUser: 0 on either securityContext, or the plain image.repository
-auto-detect fallback), so every one of those routes must be checked here, not
-just the gatewayRootMode branch.
-
-Once gatewayRootMode is explicitly set, image.repository/image.tag are no
-longer consulted here at all: they are name-based guesses, and gatewayRootMode
-exists specifically so a mirrored or renamed registry can override that
-guess. Re-applying the guess under an explicit override would refuse a
-correct, user-asserted configuration (e.g. akeyless/base mirrored to a
-gateway-named repo). The name-based signal stays legitimate only on the
-auto-detect path, i.e. when gatewayRootMode is unset.
+Guard the RESOLVED config path, not the inputs that produce it: /root is
+reachable via gatewayRootMode, either securityContext's runAsUser, or the
+image-name auto-detect fallback, and every route must land a container that
+can actually read it.
+Once gatewayRootMode is explicitly set, image.repository/image.tag are not
+consulted here at all -- that key exists precisely to override the name guess.
 */}}
 {{- $resolvedConfigPath := include "akeyless-api-gw.root.config.path" $ }}
 {{- if eq $resolvedConfigPath "/root" }}
   {{- $gatewayRootModeSet := not (kindIs "invalid" .Values.gatewayRootMode) }}
+  {{- $mainUid := include "akeyless-api-gw.effective-uid" (dict "ctx" $ "scope" "main") }}
+  {{- $bootstrapUid := include "akeyless-api-gw.effective-uid" (dict "ctx" $ "scope" "bootstrap") }}
 
-  {{/* api-gateway container: containerSecurityContext wins, then pod securityContext, then (only when gatewayRootMode is unset) the main image's own name-based default. */}}
   {{- $mainProblem := "" -}}
-  {{- $mainFixHint := "" -}}
   {{- $mainIsRoot := true -}}
-  {{- if and .Values.deployment.containerSecurityContext (hasKey .Values.deployment.containerSecurityContext "runAsUser") (not (kindIs "invalid" (get .Values.deployment.containerSecurityContext "runAsUser"))) -}}
-    {{- $mainUid := toString (get .Values.deployment.containerSecurityContext "runAsUser") -}}
-    {{- $mainProblem = printf "deployment.containerSecurityContext.runAsUser=%s" $mainUid -}}
-    {{- $mainFixHint = "deployment.containerSecurityContext.runAsUser to 0" -}}
-    {{- $mainIsRoot = eq $mainUid "0" -}}
-  {{- else if and .Values.deployment.securityContext .Values.deployment.securityContext.enabled (not (kindIs "invalid" .Values.deployment.securityContext.runAsUser)) -}}
-    {{- $mainUid := toString .Values.deployment.securityContext.runAsUser -}}
-    {{- $mainProblem = printf "deployment.securityContext.runAsUser=%s" $mainUid -}}
-    {{- $mainFixHint = "deployment.securityContext.runAsUser to 0" -}}
+  {{- if ne $mainUid "" -}}
+    {{- $mainProblem = printf "runAsUser=%s (from deployment.containerSecurityContext or deployment.securityContext)" $mainUid -}}
     {{- $mainIsRoot = eq $mainUid "0" -}}
   {{- else if and (not $gatewayRootModeSet) (or (hasSuffix "-akeyless" (toString .Values.image.tag)) (regexMatch "(^|/)gateway$" .Values.image.repository)) -}}
     {{- $mainProblem = "no securityContext override, so it runs at image.repository/image.tag's own non-root default uid" -}}
-    {{- $mainFixHint = "deployment.containerSecurityContext.runAsUser to 0 explicitly" -}}
     {{- $mainIsRoot = false -}}
   {{- end -}}
 
-  {{/* bootstrap init container: pod securityContext applies to it, containerSecurityContext does not. Otherwise it runs at its own image's default (root, for the busybox init image). */}}
-  {{- $bootstrapProblem := "" -}}
-  {{- $bootstrapIsRoot := true -}}
-  {{- if and .Values.deployment.securityContext .Values.deployment.securityContext.enabled (not (kindIs "invalid" .Values.deployment.securityContext.runAsUser)) -}}
-    {{- $bootstrapUid := toString .Values.deployment.securityContext.runAsUser -}}
-    {{- $bootstrapProblem = printf "deployment.securityContext.runAsUser=%s, which applies to it because deployment.containerSecurityContext does not" $bootstrapUid -}}
-    {{- $bootstrapIsRoot = eq $bootstrapUid "0" -}}
-  {{- end -}}
+  {{- $bootstrapIsRoot := or (eq $bootstrapUid "") (eq $bootstrapUid "0") -}}
 
   {{- if not $mainIsRoot }}
-    {{- fail (printf "ERROR: The gateway config path resolved to /root, but the api-gateway container would run as a non-root uid (%s). logand.conf and the TLS material would be copied to /root/.akeyless, which that uid cannot read. Set %s, or change gatewayRootMode / image.repository / image.tag so the resolved path matches the container's actual uid." $mainProblem $mainFixHint) }}
+    {{- fail (printf "ERROR: The gateway config path resolved to /root, but the api-gateway container would run as a non-root uid (%s). Set deployment.containerSecurityContext.runAsUser or deployment.securityContext.runAsUser to 0, or change gatewayRootMode / image.repository / image.tag so the resolved path matches the container's actual uid." $mainProblem) }}
   {{- end }}
   {{- if not $bootstrapIsRoot }}
-    {{- fail (printf "ERROR: The gateway config path resolved to /root, but the bootstrap init container would run as a non-root uid (%s). Set deployment.securityContext.runAsUser to 0, or change gatewayRootMode / image.repository / image.tag so the resolved path matches the pod's actual uid." $bootstrapProblem) }}
+    {{- fail (printf "ERROR: The gateway config path resolved to /root, but the bootstrap init container would run as a non-root uid (deployment.securityContext.runAsUser=%s, which applies to it because deployment.containerSecurityContext does not). Set deployment.securityContext.runAsUser to 0, or change gatewayRootMode / image.repository / image.tag so the resolved path matches the pod's actual uid." $bootstrapUid) }}
   {{- end }}
 {{- end }}
 {{- $mountCertPaths := "/opt/akeyless/cache/certs" -}}
