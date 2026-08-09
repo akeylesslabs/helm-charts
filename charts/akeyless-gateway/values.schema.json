@@ -1,6 +1,11 @@
 {
     "$schema": "https://json-schema.org/draft-07/schema#",
     "properties": {
+      "clusterDomain": {
+        "type": "string",
+        "default": "cluster.local",
+        "description": "Kubernetes cluster DNS domain suffix for internal service URLs (e.g. cluster.local yields <svc>.<ns>.svc.cluster.local)."
+      },
       "globalConfig": {
         "type": "object",
         "properties": {
