@@ -172,11 +172,35 @@ Generate chart secret name
 {{- end -}}
 
 {{/*
-The effective runAsUser for a container scope, as a string; empty when
-nothing explicit is set. containerSecurityContext is consulted only for
+Canonicalize a runAsUser value (an int, or a numeric string like "00") to its
+minimal decimal string form, so "00", "000" and 0 all compare equal, and so
+does any other run of leading zeros ("0100" -> "100"). Deliberately does NOT
+use a numeric-parsing function (sprig's int/int64/atoi): a leading zero makes
+those parse as octal ("0100" -> 64), which is not the value anyone typing
+"0100" means. Pure string manipulation avoids that trap entirely. A value
+that is not purely decimal digits (empty string included) is returned
+unchanged -- this function must never map a non-numeric or empty value to
+"0", only ever canonicalize a value that already looks numeric.
+*/}}
+{{- define "akeyless-api-gw.canonical-uid" -}}
+{{- $raw := toString . -}}
+{{- if not (regexMatch "^[0-9]+$" $raw) -}}
+  {{- $raw -}}
+{{- else if regexMatch "^0+$" $raw -}}
+  {{- printf "0" -}}
+{{- else -}}
+  {{- regexReplaceAll "^0+" $raw "" -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+The effective runAsUser for a container scope, as a canonical string; empty
+when nothing explicit is set. containerSecurityContext is consulted only for
 scope "main" -- the init container never receives it, only the pod-level
 securityContext -- so that asymmetry lives here, once, instead of being
-re-derived at each call site.
+re-derived at each call site. Canonicalized once, here, so every downstream
+consumer (the path resolver, both guards, and their messages) compares the
+same normalized form instead of each needing its own numeric comparison.
 Call as: include "akeyless-api-gw.effective-uid" (dict "ctx" $ "scope" "main"|"bootstrap")
 */}}
 {{- define "akeyless-api-gw.effective-uid" -}}
@@ -186,9 +210,9 @@ Call as: include "akeyless-api-gw.effective-uid" (dict "ctx" $ "scope" "main"|"b
 {{- $d := .ctx.Values.deployment -}}
 {{- $csc := $d.containerSecurityContext -}}
 {{- if and (eq .scope "main") $csc (hasKey $csc "runAsUser") (not (kindIs "invalid" (get $csc "runAsUser"))) -}}
-  {{- toString (get $csc "runAsUser") -}}
+  {{- include "akeyless-api-gw.canonical-uid" (get $csc "runAsUser") -}}
 {{- else if and $d.securityContext $d.securityContext.enabled (not (kindIs "invalid" $d.securityContext.runAsUser)) -}}
-  {{- toString $d.securityContext.runAsUser -}}
+  {{- include "akeyless-api-gw.canonical-uid" $d.securityContext.runAsUser -}}
 {{- end -}}
 {{- end -}}
 
