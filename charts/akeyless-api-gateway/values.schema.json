@@ -35,6 +35,21 @@
         }
       }
     },
+    "gatewayRootMode": { "type": ["boolean", "null"] },
+    "deployment": {
+      "properties": {
+        "securityContext": {
+          "properties": {
+            "runAsUser": { "type": ["integer", "string", "null"], "pattern": "^[0-9]+$" }
+          }
+        },
+        "containerSecurityContext": {
+          "properties": {
+            "runAsUser": { "type": ["integer", "string", "null"], "pattern": "^[0-9]+$" }
+          }
+        }
+      }
+    },
     "akeylessUserAuth": {
       "description": "Akeyless authentication configuration",
       "properties": {

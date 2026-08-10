@@ -172,16 +172,107 @@ Generate chart secret name
 {{- end -}}
 
 {{/*
+Canonicalize a runAsUser value (an int, or a numeric string like "00") to its
+minimal decimal string form, so "00", "000" and 0 all compare equal, and so
+does any other run of leading zeros ("0100" -> "100"). Deliberately does NOT
+use a numeric-parsing function (sprig's int/int64/atoi): a leading zero makes
+those parse as octal ("0100" -> 64), which is not the value anyone typing
+"0100" means. Pure string manipulation avoids that trap entirely. A value
+that is not purely decimal digits (empty string included) is returned
+unchanged -- this function must never map a non-numeric or empty value to
+"0", only ever canonicalize a value that already looks numeric.
+*/}}
+{{- define "akeyless-api-gw.canonical-uid" -}}
+{{- $raw := toString . -}}
+{{- if not (regexMatch "^[0-9]+$" $raw) -}}
+  {{- $raw -}}
+{{- else if regexMatch "^0+$" $raw -}}
+  {{- printf "0" -}}
+{{- else -}}
+  {{- regexReplaceAll "^0+" $raw "" -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+The effective runAsUser for a container scope, as a canonical string; empty
+when nothing explicit is set. containerSecurityContext is consulted only for
+scope "main" -- the init container never receives it, only the pod-level
+securityContext -- so that asymmetry lives here, once, instead of being
+re-derived at each call site. Canonicalized once, here, so every downstream
+consumer (the path resolver, both guards, and their messages) compares the
+same normalized form instead of each needing its own numeric comparison.
+Call as: include "akeyless-api-gw.effective-uid" (dict "ctx" $ "scope" "main"|"bootstrap")
+*/}}
+{{- define "akeyless-api-gw.effective-uid" -}}
+{{- if not (has .scope (list "main" "bootstrap")) -}}
+  {{- fail (printf "akeyless-api-gw.effective-uid: scope must be \"main\" or \"bootstrap\", got %q" .scope) -}}
+{{- end -}}
+{{- $d := .ctx.Values.deployment -}}
+{{- $csc := $d.containerSecurityContext -}}
+{{- if and (eq .scope "main") $csc (hasKey $csc "runAsUser") (not (kindIs "invalid" (get $csc "runAsUser"))) -}}
+  {{- include "akeyless-api-gw.canonical-uid" (get $csc "runAsUser") -}}
+{{- else if and $d.securityContext $d.securityContext.enabled (not (kindIs "invalid" $d.securityContext.runAsUser)) -}}
+  {{- include "akeyless-api-gw.canonical-uid" $d.securityContext.runAsUser -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Home directory the gateway process resolves at runtime.
+akeyless/base runs as root ($HOME=/root); akeyless/gateway runs as the
+non-root "akeyless" user ($HOME=/home/akeyless). Resolution order (first
+match wins):
+  1. gatewayRootMode, when explicitly set (true=/root, false=/home/akeyless).
+     This always wins, including over an explicit runAsUser: 0 below.
+  2. The effective uid for scope "main" (see akeyless-api-gw.effective-uid):
+     deployment.containerSecurityContext.runAsUser wins over pod-level
+     deployment.securityContext.runAsUser when both are present; an explicit
+     null at either level is Kubernetes' way of saying "no override" and
+     falls through to the next rule, same as absent.
+  3. Auto-detect from akeylessStrictMode, an image.tag ending in "-akeyless",
+     or an image.repository whose final path segment is exactly "gateway".
+akeylessStrictMode=true selects the non-root image tag suffix, so combining
+it with gatewayRootMode=true is a self-contradictory root/non-root request;
+deployment.yaml fails the render for that combination rather than silently
+picking one.
+*/}}
+{{- define "akeyless-api-gw.root.config.path" -}}
+{{- $mainUid := include "akeyless-api-gw.effective-uid" (dict "ctx" . "scope" "main") -}}
+{{- if not (kindIs "invalid" .Values.gatewayRootMode) -}}
+    {{- if .Values.gatewayRootMode -}}
+        {{- printf "/root" -}}
+    {{- else -}}
+        {{- printf "/home/akeyless" -}}
+    {{- end -}}
+{{- else if ne $mainUid "" -}}
+    {{- if eq $mainUid "0" -}}
+        {{- printf "/root" -}}
+    {{- else -}}
+        {{- printf "/home/akeyless" -}}
+    {{- end -}}
+{{- else if or (.Values.akeylessStrictMode) (hasSuffix "-akeyless" .Values.image.tag) (regexMatch "(^|/)gateway$" .Values.image.repository) -}}
+    {{- printf "/home/akeyless" -}}
+{{- else -}}
+    {{- printf "/root" -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+The directory used for the volume mount and the copy targets for
+customer_fragments.json, logand.conf and the TLS material. AKEYLESS_FRAGEMENT_DIR
+is set from this same helper, but it only redirects where the gateway process
+looks for the customer fragment: logand.conf and the TLS cert/key have no such
+env var and are always read from the process's real $HOME/.akeyless. If this
+helper's resolution ever disagreed with the runtime $HOME, the fragment would
+still load but audit forwarding and the custom TLS material would silently
+stop resolving.
+*/}}
+{{- define "akeyless-api-gw.akeyless.config.dir" -}}
+{{- printf "%s/.akeyless" (include "akeyless-api-gw.root.config.path" .) -}}
+{{- end -}}
+
+{{/*
 Check customer fragment
 */}}
-
-{{- define "akeyless-api-gw.root.config.path" -}}
-{{- if or (.Values.akeylessStrictMode) (hasSuffix "-akeyless" .Values.image.tag)   }}
-     {{- printf "/home/akeyless" -}}
-{{- else }}
-     {{- printf "/root" -}}
-{{- end -}}
-{{- end -}}
 {{- define "akeyless-api-gw.customerFragmentExist" -}}
     {{- if .Values.customerFragments -}}
         {{ include "akeyless-api-gw.secretName" . }}

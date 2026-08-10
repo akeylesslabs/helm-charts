@@ -1,3 +1,47 @@
+{{- if and .Values.akeylessStrictMode .Values.gatewayRootMode }}
+  {{- fail "ERROR: Cannot combine akeylessStrictMode=true with gatewayRootMode=true. akeylessStrictMode selects the non-root gateway image tag, but gatewayRootMode=true forces root-mode paths. Please set gatewayRootMode=false (or leave it unset) when using akeylessStrictMode." }}
+{{- end }}
+{{/*
+Guard the RESOLVED config path, not the inputs that produce it: /root is
+reachable via gatewayRootMode, either securityContext's runAsUser, or the
+image-name auto-detect fallback, and every route must land a container that
+can actually read it.
+Once gatewayRootMode is explicitly set, image.repository/image.tag are not
+consulted here at all -- that key exists precisely to override the name guess.
+*/}}
+{{- $resolvedConfigPath := include "akeyless-api-gw.root.config.path" $ }}
+{{- if eq $resolvedConfigPath "/root" }}
+  {{- $gatewayRootModeSet := not (kindIs "invalid" .Values.gatewayRootMode) }}
+  {{- $mainUid := include "akeyless-api-gw.effective-uid" (dict "ctx" $ "scope" "main") }}
+  {{- $bootstrapUid := include "akeyless-api-gw.effective-uid" (dict "ctx" $ "scope" "bootstrap") }}
+
+  {{/* Label only, for the message below -- the pass/fail decision above already came from $mainUid via the helper. */}}
+  {{- $mainKeyLabel := "deployment.containerSecurityContext.runAsUser or deployment.securityContext.runAsUser" -}}
+  {{- if and .Values.deployment.containerSecurityContext (hasKey .Values.deployment.containerSecurityContext "runAsUser") (not (kindIs "invalid" (get .Values.deployment.containerSecurityContext "runAsUser"))) -}}
+    {{- $mainKeyLabel = "deployment.containerSecurityContext.runAsUser" -}}
+  {{- else if and .Values.deployment.securityContext .Values.deployment.securityContext.enabled (not (kindIs "invalid" .Values.deployment.securityContext.runAsUser)) -}}
+    {{- $mainKeyLabel = "deployment.securityContext.runAsUser" -}}
+  {{- end -}}
+
+  {{- $mainProblem := "" -}}
+  {{- $mainIsRoot := true -}}
+  {{- if ne $mainUid "" -}}
+    {{- $mainProblem = printf "%s=%s" $mainKeyLabel $mainUid -}}
+    {{- $mainIsRoot = eq $mainUid "0" -}}
+  {{- else if and (not $gatewayRootModeSet) (or (hasSuffix "-akeyless" (toString .Values.image.tag)) (regexMatch "(^|/)gateway$" .Values.image.repository)) -}}
+    {{- $mainProblem = "no securityContext override, so it runs at image.repository/image.tag's own non-root default uid" -}}
+    {{- $mainIsRoot = false -}}
+  {{- end -}}
+
+  {{- $bootstrapIsRoot := or (eq $bootstrapUid "") (eq $bootstrapUid "0") -}}
+
+  {{- if not $mainIsRoot }}
+    {{- fail (printf "ERROR: The gateway config path resolved to /root, but the api-gateway container would run as a non-root uid (%s). logand.conf and the TLS material would be copied to /root/.akeyless, which that uid cannot read. Set %s to 0, or change gatewayRootMode / image.repository / image.tag so the resolved path matches the container's actual uid." $mainProblem $mainKeyLabel) }}
+  {{- end }}
+  {{- if not $bootstrapIsRoot }}
+    {{- fail (printf "ERROR: The gateway config path resolved to /root, but the bootstrap init container would run as a non-root uid (deployment.securityContext.runAsUser=%s, which applies to it because deployment.containerSecurityContext does not). Set deployment.securityContext.runAsUser to 0, or change gatewayRootMode / image.repository / image.tag so the resolved path matches the pod's actual uid." $bootstrapUid) }}
+  {{- end }}
+{{- end }}
 {{- $mountCertPaths := "/opt/akeyless/cache/certs" -}}
 {{- $tlsKeyCertPath := printf "%s/tls.key" $mountCertPaths }}
 {{- $tlsCACertPath := printf "%s/tls.crt" $mountCertPaths }}
@@ -108,16 +152,16 @@ spec:
             - |
               set -ex
             {{- if not (eq (include "akeyless-api-gw.customerFragmentExist" .) "") }}
-              [ "$(ls /customer_fragments)" ] && cp /customer_fragments/* {{include "akeyless-api-gw.root.config.path" $}}/.akeyless
+              [ "$(ls /customer_fragments)" ] && cp /customer_fragments/* {{ include "akeyless-api-gw.akeyless.config.dir" $ }}
             {{- end }}
             {{- if eq (include "akeyless-api-gw.logandConfExist" .) "true"}}
-              cp /logand_conf/logand.conf {{include "akeyless-api-gw.root.config.path" $}}/.akeyless/logand.conf
+              cp /logand_conf/logand.conf {{ include "akeyless-api-gw.akeyless.config.dir" $ }}/logand.conf
             {{- end }}
             {{- if eq (include "akeyless-api-gw.tlsCertificateExist" .) "true"}}
-              cp /tls_conf/{{ include "akeyless-api-gw.certFileName" . }} {{include "akeyless-api-gw.root.config.path" $}}/.akeyless/akeyless-api-cert.crt
+              cp /tls_conf/{{ include "akeyless-api-gw.certFileName" . }} {{ include "akeyless-api-gw.akeyless.config.dir" $ }}/akeyless-api-cert.crt
             {{- end }}
             {{- if eq (include "akeyless-api-gw.tlsPrivateKeyExist" .) "true"}}
-              cp /tls_conf/{{ include "akeyless-api-gw.keyFileName" . }} {{include "akeyless-api-gw.root.config.path" $}}/.akeyless/akeyless-api-cert.key
+              cp /tls_conf/{{ include "akeyless-api-gw.keyFileName" . }} {{ include "akeyless-api-gw.akeyless.config.dir" $ }}/akeyless-api-cert.key
             {{- end }}
           volumeMounts:
           {{- if not (eq (include "akeyless-api-gw.customerFragmentExist" .) "") }}
@@ -125,7 +169,7 @@ spec:
               mountPath: /customer_fragments
           {{- end }}
             - name: akeyless-config
-              mountPath: {{include "akeyless-api-gw.root.config.path" $}}/.akeyless
+              mountPath: {{ include "akeyless-api-gw.akeyless.config.dir" $ }}
           {{- if eq (include "akeyless-api-gw.logandConfExist" .) "true"}}
             - name: logand-conf
               mountPath: /logand_conf
@@ -191,7 +235,7 @@ spec:
               readOnly: true
             {{- end }}
             - name: akeyless-config
-              mountPath: {{include "akeyless-api-gw.root.config.path" $}}/.akeyless
+              mountPath: {{ include "akeyless-api-gw.akeyless.config.dir" $ }}
           {{- if and (.Values.metrics.enabled) (not (eq (include "akeyless-api-gw.metricsSecretExist" .) "")) }}
             - name: otelcol-metrics-config
               mountPath: /akeyless/otel-config.yaml
@@ -205,6 +249,8 @@ spec:
           resources:
 {{- toYaml .Values.resources | nindent 12 }}
           env:
+            - name: AKEYLESS_FRAGEMENT_DIR
+              value: {{ include "akeyless-api-gw.akeyless.config.dir" $ | quote }}
           {{- if .Values.fixedArtifactRepository }}
             - name: ARTIFACTS_REPO
               value: {{ .Values.fixedArtifactRepository  }}
