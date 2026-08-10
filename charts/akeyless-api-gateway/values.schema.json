@@ -40,12 +40,12 @@
       "properties": {
         "securityContext": {
           "properties": {
-            "runAsUser": { "type": ["integer", "null"] }
+            "runAsUser": { "type": ["integer", "string", "null"], "pattern": "^[0-9]+$" }
           }
         },
         "containerSecurityContext": {
           "properties": {
-            "runAsUser": { "type": ["integer", "null"] }
+            "runAsUser": { "type": ["integer", "string", "null"], "pattern": "^[0-9]+$" }
           }
         }
       }
