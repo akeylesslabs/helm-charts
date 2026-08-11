@@ -6,8 +6,9 @@ tests:
   - it: "default path generates the Secret and a caBundle"
     template: templates/apiservice-webhook.yaml
     asserts:
-      - hasDocuments:
-          count: 1
+      - lengthEqual:
+          path: items
+          count: 2
       - equal:
           path: items[0].kind
           value: Secret
@@ -45,7 +46,7 @@ tests:
   - it: "caBundle is ignored while the chart still generates its own CA"
     template: templates/apiservice-webhook.yaml
     set:
-      webhook.tls.caBundle: TESTCA
+      mutatingWebhook.tls.caBundle: TESTCA
     asserts:
       - equal:
           path: items[0].kind
@@ -57,10 +58,11 @@ tests:
   - it: "existingSecretName with an explicit caBundle emits no Secret"
     template: templates/apiservice-webhook.yaml
     set:
-      webhook.tls.existingSecretName: akeyless-injector-tls
-      webhook.tls.caBundle: TESTCA
+      mutatingWebhook.tls.existingSecretName: akeyless-injector-tls
+      mutatingWebhook.tls.caBundle: TESTCA
     asserts:
-      - hasDocuments:
+      - lengthEqual:
+          path: items
           count: 1
       - equal:
           path: items[0].kind
@@ -74,8 +76,8 @@ tests:
   - it: "existingSecretName with caBundleAnnotations leaves caBundle to the injector"
     template: templates/apiservice-webhook.yaml
     set:
-      webhook.tls.existingSecretName: akeyless-injector-tls
-      webhook.tls.caBundleAnnotations:
+      mutatingWebhook.tls.existingSecretName: akeyless-injector-tls
+      mutatingWebhook.tls.caBundleAnnotations:
         cert-manager.io/inject-ca-from: akeyless/akeyless-injector-tls
     asserts:
       - equal:
@@ -92,8 +94,8 @@ tests:
   - it: "existingSecretName mounts the user Secret and points the watch at it"
     template: templates/webhook-deployment.yaml
     set:
-      webhook.tls.existingSecretName: akeyless-injector-tls
-      webhook.tls.caBundle: TESTCA
+      mutatingWebhook.tls.existingSecretName: akeyless-injector-tls
+      mutatingWebhook.tls.caBundle: TESTCA
     asserts:
       - contains:
           path: spec.template.spec.volumes
@@ -110,23 +112,34 @@ tests:
 
   - it: "existingSecretName with no CA source is rejected"
     set:
-      webhook.tls.existingSecretName: akeyless-injector-tls
+      mutatingWebhook.tls.existingSecretName: akeyless-injector-tls
     asserts:
       - failedTemplate:
-          errorPattern: "webhook.tls.caBundle"
+          errorPattern: "mutatingWebhook.tls.caBundle"
 
   - it: "existingSecretName equal to the chart's own resource name is rejected"
     set:
-      webhook.tls.existingSecretName: injector-akeyless-secrets-injection
-      webhook.tls.caBundle: TESTCA
+      mutatingWebhook.tls.existingSecretName: injector-akeyless-secrets-injection
+      mutatingWebhook.tls.caBundle: TESTCA
     asserts:
       - failedTemplate:
           errorPattern: "must not be"
 
   - it: "caBundleAnnotations without existingSecretName is rejected"
     set:
-      webhook.tls.caBundleAnnotations:
+      mutatingWebhook.tls.caBundleAnnotations:
         cert-manager.io/inject-ca-from: akeyless/akeyless-injector-tls
     asserts:
       - failedTemplate:
           errorPattern: "caBundleAnnotations applies only when"
+
+  - it: "tls never reaches the rendered webhook object"
+    template: templates/apiservice-webhook.yaml
+    set:
+      mutatingWebhook.tls.existingSecretName: akeyless-injector-tls
+      mutatingWebhook.tls.caBundle: TESTCA
+    asserts:
+      - isNull:
+          path: items[0].webhooks[0].tls
+      - isNull:
+          path: items[0].tls

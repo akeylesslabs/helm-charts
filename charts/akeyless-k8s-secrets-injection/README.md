@@ -67,13 +67,13 @@ keypair. GitOps controllers such as ArgoCD render the chart on every sync cycle,
 and self-heal enabled they continuously detect drift and push a new certificate. This produces
 `tls: bad certificate` handshake errors and rolls the webhook pods on every sync.
 
-Set `webhook.tls.existingSecretName` to a Secret you manage yourself to turn certificate generation
+Set `mutatingWebhook.tls.existingSecretName` to a Secret you manage yourself to turn certificate generation
 off. The chart then stops emitting the Secret, and the rendered output becomes byte-for-byte stable
 across renders. The webhook server watches the Secret and reloads the certificate in place when it
 is rotated, so renewal does not require a pod restart.
 
 Because the chart no longer owns a CA in this mode, you must also tell the API server which CA to
-trust, using either `webhook.tls.caBundle` or `webhook.tls.caBundleAnnotations`. Rendering fails if
+trust, using either `mutatingWebhook.tls.caBundle` or `mutatingWebhook.tls.caBundleAnnotations`. Rendering fails if
 neither is set. Both belong to this mode only: rendering also fails if `caBundleAnnotations` is set
 without `existingSecretName`, since the chart writes its own generated CA into `caBundle` there and
 an injector would overwrite it with an unrelated one.
@@ -81,7 +81,7 @@ an injector would overwrite it with an unrelated one.
 With cert-manager issuing the certificate and injecting the CA bundle:
 
 ```yaml
-webhook:
+mutatingWebhook:
   tls:
     existingSecretName: akeyless-injector-tls
     caBundleAnnotations:
@@ -139,7 +139,7 @@ With a CA you manage outside the cluster, supply the PEM directly instead. The c
 base64-encodes it:
 
 ```yaml
-webhook:
+mutatingWebhook:
   tls:
     existingSecretName: akeyless-injector-tls
     caBundle: |
@@ -155,8 +155,18 @@ existing release would delete the Secret the pods mount. The chart rejects that 
 including the `fullnameOverride` case.
 
 The Secret must contain `tls.crt` and `tls.key`, and must exist before the webhook pods start. The
-webhook reads the mounted certificate at startup and exits if it is missing, so pods will crash-loop
-until the issuer has populated the Secret and then recover on their own.
+three failure modes differ, and so does what you will see:
+
+- **Secret absent.** The kubelet cannot mount the volume, so the pod never starts and stays in
+  `ContainerCreating` with a `FailedMount` event. There is no crash-loop, because no container runs.
+- **Secret present but missing `tls.crt` or `tls.key`.** The volume has no `items` list, so whatever
+  keys exist are mounted and the container starts. The webhook then finds no certificate at
+  `/var/serving-cert` and exits, so the pod crash-loops.
+- **Secret present with invalid TLS data.** The container starts and the webhook fails at handshake
+  time, which surfaces as `tls: bad certificate` on the API server rather than as a pod failure.
+
+The first two resolve on their own once the issuer populates the Secret; neither needs manual
+intervention.
 
 The following tables lists configurable parameters of the vault-secrets-webhook chart and their default values.
 
@@ -173,9 +183,9 @@ The following tables lists configurable parameters of the vault-secrets-webhook 
 | `mutatingWebhook.objectSelector`  | Object selector for the mutating webhook. Rendered with `tpl`, so values can reference release context. | Excludes the release name |
 | `mutatingWebhook.timeoutSeconds`  | Webhook request timeout in seconds | `10` |
 | `mutatingWebhook.matchConditions` | CEL match conditions for the mutating webhook. Rendered with `tpl`, so values can reference release context. | `[]` |
-| `webhook.tls.existingSecretName`  | Existing Secret with `tls.crt`/`tls.key` for the webhook server. When set, the chart does not generate or manage a certificate. | `""` |
-| `webhook.tls.caBundle`            | PEM CA certificate written to the `MutatingWebhookConfiguration` `caBundle`. Only used with `existingSecretName`. | `""` |
-| `webhook.tls.caBundleAnnotations` | Annotations on the `MutatingWebhookConfiguration`, for controllers that inject `caBundle` themselves (for example cert-manager's ca-injector). Only used with `existingSecretName`. | `{}` |
+| `mutatingWebhook.tls.existingSecretName`  | Existing Secret with `tls.crt`/`tls.key` for the webhook server. When set, the chart does not generate or manage a certificate. | `""` |
+| `mutatingWebhook.tls.caBundle`            | PEM CA certificate written to the `MutatingWebhookConfiguration` `caBundle`. Only used with `existingSecretName`. | `""` |
+| `mutatingWebhook.tls.caBundleAnnotations` | Annotations on the `MutatingWebhookConfiguration`, for controllers that inject `caBundle` themselves (for example cert-manager's ca-injector). Only used with `existingSecretName`. | `{}` |
 | `deployment.nodeSelector`         | Node selector for webhook pods | `null` |
 | `deployment.tolerations`          | Tolerations configuration for webhook pods | `{ enabled: false, data: [] }` |
 | `deployment.affinity`             | Affinity configuration for webhook pods | `{ enabled: false }` |

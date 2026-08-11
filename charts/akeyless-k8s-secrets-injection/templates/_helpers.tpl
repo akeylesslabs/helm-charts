@@ -44,7 +44,7 @@ Create the name of the service account to use
 
 
 {{- define "vault-secrets-webhook.tls" -}}
-{{- (.Values.webhook | default dict).tls | default dict | toYaml -}}
+{{- (.Values.mutatingWebhook | default dict).tls | default dict | toYaml -}}
 {{- end -}}
 
 {{- define "vault-secrets-webhook.existingTLSSecretName" -}}
