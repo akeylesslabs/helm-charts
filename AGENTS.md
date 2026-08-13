@@ -83,7 +83,7 @@ Service-to-chart mappings in `.github/scripts/latest_version_release.sh`:
 
 ### `akeyless-k8s-secrets-injection`
 
-- `templates/apiservice-webhook.yaml` creates a generated CA/cert Secret and one `MutatingWebhookConfiguration`. Setting `.Values.webhook.tls.existingSecretName` skips the Secret and the `genCA`/`genSignedCert` calls so the render is deterministic for GitOps; `caBundle` then comes from `.Values.webhook.tls.caBundle` or is left to a `caBundleAnnotations` injector.
+- `templates/apiservice-webhook.yaml` creates a generated CA/cert Secret and one `MutatingWebhookConfiguration`. Setting `.Values.mutatingWebhook.tls.existingSecretName` skips the Secret and the `genCA`/`genSignedCert` calls so the render is deterministic for GitOps; `caBundle` then comes from `.Values.mutatingWebhook.tls.caBundle` or is left to a `caBundleAnnotations` injector. `tls` is in the `omit` list in `apiservice-webhook.yaml`, so it does not leak into the rendered webhook through the `mutatingWebhook` pass-through.
 - Do not use `lookup` to stabilize the generated certificate. It returns empty during `helm template`, which is exactly how ArgoCD renders, so it would not address the drift it appears to fix.
 - New Kubernetes `MutatingWebhook` fields can generally be passed through `.Values.mutatingWebhook` without changing the template.
 - Use `.Values.mutatingWebhook.failurePolicy` for the webhook failure policy. The old top-level `webhookFailurePolicy` value was removed in chart `2.0.0`.
