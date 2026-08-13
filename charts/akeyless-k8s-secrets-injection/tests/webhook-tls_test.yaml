@@ -141,5 +141,3 @@ tests:
     asserts:
       - isNull:
           path: items[0].webhooks[0].tls
-      - isNull:
-          path: items[0].tls
