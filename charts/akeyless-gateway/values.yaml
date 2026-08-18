@@ -2,6 +2,12 @@
 ## Global ##
 ############
 
+## Kubernetes cluster DNS domain suffix for internal service URLs.
+## Default clusters use cluster.local (service FQDN: <svc>.<ns>.svc.cluster.local).
+## Set to your cluster's DNS domain when it differs (e.g. custom.local → svc.custom.local).
+##
+clusterDomain: cluster.local
+
 ## Strict Security Policy Toggle (Kyverno/PSA compliance)
 ## When enabled, enforces non-root execution (UID/GID/fsGroup hardcoded to 1001),
 ## capability drops, resource limits, and hardening on Gateway, Cache, and SRA Web.

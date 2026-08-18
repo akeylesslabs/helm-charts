@@ -1,0 +1,50 @@
+suite: akeyless-gateway clusterDomain
+set:
+  sra.enabled: true
+  sra.sshConfig.CAPublicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC7 test
+tests:
+  - it: defaults internal service URLs to svc.cluster.local
+    template: templates/akeyless-secure-remote-access/deployment.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: INTERNAL_GATEWAY_API
+            value: http://RELEASE-NAME-akeyless-gateway-internal.NAMESPACE.svc.cluster.local:8080
+
+  - it: uses custom clusterDomain in internal service URLs
+    template: templates/akeyless-secure-remote-access/deployment.yaml
+    set:
+      clusterDomain: custom.local
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: INTERNAL_GATEWAY_API
+            value: http://RELEASE-NAME-akeyless-gateway-internal.NAMESPACE.svc.custom.local:8080
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GATEWAY_URL
+            value: http://RELEASE-NAME-akeyless-gateway.NAMESPACE.svc.custom.local:8000
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REMOTE_ACCESS_SSH_SERVICE_INTERNAL_URL
+            value: http://ssh-RELEASE-NAME-akeyless-gateway-internal.NAMESPACE.svc.custom.local:9900
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REMOTE_ACCESS_SSH_ENDPOINT
+            value: ssh-RELEASE-NAME-akeyless-gateway.NAMESPACE.svc.custom.local:22
+
+  - it: gateway deployment uses custom clusterDomain for SRA web internal URL
+    template: templates/deployment.yaml
+    set:
+      clusterDomain: custom.local
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REMOTE_ACCESS_WEB_SERVICE_INTERNAL_URL
+            value: http://web-RELEASE-NAME-akeyless-gateway.NAMESPACE.svc.custom.local:8888
