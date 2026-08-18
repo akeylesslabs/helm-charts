@@ -1,6 +1,13 @@
 {
     "$schema": "https://json-schema.org/draft-07/schema#",
     "properties": {
+      "clusterDomain": {
+        "type": "string",
+        "default": "cluster.local",
+        "description": "Kubernetes cluster DNS domain suffix for internal service URLs (e.g. cluster.local yields <svc>.<ns>.svc.cluster.local).",
+        "maxLength": 253,
+        "pattern": "^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$|^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$"
+      },
       "globalConfig": {
         "type": "object",
         "properties": {
