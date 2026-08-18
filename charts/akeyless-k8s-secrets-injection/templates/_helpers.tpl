@@ -43,6 +43,19 @@ Create the name of the service account to use
 {{- end -}}
 
 
+{{- define "vault-secrets-webhook.tls" -}}
+{{- (.Values.mutatingWebhook | default dict).tls | default dict | toYaml -}}
+{{- end -}}
+
+{{- define "vault-secrets-webhook.existingTLSSecretName" -}}
+{{- $tls := fromYaml (include "vault-secrets-webhook.tls" .) -}}
+{{- $tls.existingSecretName | default "" -}}
+{{- end -}}
+
+{{- define "vault-secrets-webhook.tlsSecretName" -}}
+{{- include "vault-secrets-webhook.existingTLSSecretName" . | default (include "vault-secrets-webhook.fullname" .) -}}
+{{- end -}}
+
 {{- define "hpa.api.version" }}
     {{- if .Capabilities.APIVersions.Has "autoscaling/v2" }}
         {{- printf "autoscaling/v2" }}
