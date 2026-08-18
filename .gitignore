@@ -9,8 +9,6 @@
 #Ignore manifest work directory
 manifest_work_dir/
 
-.claude/settings.local.json
-
 Chart.lock
 /charts/*/charts/
 **/charts/*.tgz
@@ -18,6 +16,5 @@ Chart.lock
 values.yaml.tmp
 
 # AI tool configs
-.claude/settings.local.json
 .codex/config.toml
 .cursor/settings.json

@@ -417,7 +417,7 @@ webWorker:
   # Tighter defaults than the chart used to ship with: failureThreshold * periodSeconds
   # is the upper bound on how long a dead-agent pod stays stranded. With these values,
   # recycle happens within ~30 seconds of the third consecutive failure, vs. the older
-  # 60 * 30s = 30-minute window that hid the ASM-17214 lifecycle regression.
+  # 60 * 30s = 30-minute window that hid the earlier lifecycle regression.
   livenessProbe:
     initialDelaySeconds: 60
     periodSeconds: 10
