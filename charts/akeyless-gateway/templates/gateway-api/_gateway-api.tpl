@@ -51,29 +51,3 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 - name: {{ include "gatewayApi.gatewayName" . }}
 {{- end -}}
 {{- end -}}
-
-{{- define "gatewayApi.validate" -}}
-{{- $ga := .Values.gatewayAPI | default dict -}}
-{{- if $ga.enabled -}}
-{{- if ((.Values.gateway | default dict).ingress | default dict).enabled -}}
-{{- fail "akeyless-gateway gatewayAPI: gatewayAPI.enabled and gateway.ingress.enabled are mutually exclusive — enable exactly one north-south path." -}}
-{{- end -}}
-{{- $gw := $ga.gateway | default dict -}}
-{{- if $gw.create -}}
-{{- if not $gw.gatewayClassName -}}
-{{- fail "akeyless-gateway gatewayAPI: gateway.gatewayClassName is required when gateway.create=true (e.g. cilium, nginx, istio, kong, envoy, aws-alb)." -}}
-{{- end -}}
-{{- else -}}
-{{- if not $ga.parentRefs -}}
-{{- fail "akeyless-gateway gatewayAPI: set parentRefs when gateway.create=false — there is no Gateway to attach routes to." -}}
-{{- end -}}
-{{- end -}}
-{{- $tls := $gw.tls | default dict -}}
-{{- if and $tls.enabled (eq ($tls.mode | default "Terminate") "Passthrough") -}}
-{{- fail "akeyless-gateway gatewayAPI: tls.mode=Passthrough requires the TLSRoute/TCPRoute overlay (Tier 1.5) — this chart alone only supports tls.mode=Terminate." -}}
-{{- end -}}
-{{- range $r := $ga.httpRoutes -}}
-{{- $_ := include "gatewayApi.portNumber" (dict "port" $r.servicePort "root" $) -}}
-{{- end -}}
-{{- end -}}
-{{- end -}}

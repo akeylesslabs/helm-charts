@@ -1,0 +1,15 @@
+# ct install fixture: exercises the Gateway API path end-to-end against a real
+# API server. Without this, gatewayAPI defaults to disabled and `ct install`
+# renders none of the gateway-api/ templates -- the feature would ship with
+# lint + unit coverage only, never validated against live CRD schemas.
+gatewayAPI:
+  enabled: true
+  gateway:
+    create: true
+    # No controller runs in the kind cluster, so the Gateway stays
+    # unprogrammed. That is fine: helm --wait does not gate on custom
+    # resources, and the point here is CRD schema validation on apply.
+    gatewayClassName: cilium
+  httpRoutes:
+    - hostname: gw.ci.example.com
+      servicePort: gateway

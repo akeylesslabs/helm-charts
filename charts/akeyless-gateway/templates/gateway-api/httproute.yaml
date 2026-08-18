@@ -1,9 +1,9 @@
 {{- $ga := .Values.gatewayAPI | default dict -}}
-{{- if and $ga.enabled $ga.httpRoutes -}}
-{{- $default := include "gatewayApi.backendService" . -}}
 {{- $gw := $ga.gateway | default dict -}}
 {{- $tls := $gw.tls | default dict -}}
 {{- $httpsRedirect := and $gw.create $tls.enabled (eq ($tls.mode | default "Terminate") "Terminate") $tls.httpsRedirect (not $ga.parentRefs) -}}
+{{- if and $ga.enabled $ga.httpRoutes -}}
+{{- $default := include "gatewayApi.backendService" . -}}
 {{- range $i, $r := $ga.httpRoutes }}
 ---
 apiVersion: gateway.networking.k8s.io/v1
@@ -34,4 +34,24 @@ spec:
         - name: {{ $r.serviceName | default $default }}
           port: {{ include "gatewayApi.portNumber" (dict "port" $r.servicePort "root" $) }}
 {{- end }}
+{{- end -}}
+{{- if and $ga.enabled $httpsRedirect }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ include "gatewayApi.gatewayName" . }}-https-redirect
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "gatewayApi.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+    - name: {{ include "gatewayApi.gatewayName" . }}
+      sectionName: http
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301
 {{- end -}}
