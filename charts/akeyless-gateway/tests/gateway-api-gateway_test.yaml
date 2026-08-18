@@ -2,7 +2,7 @@ suite: akeyless-gateway gatewayAPI Gateway
 set:
   gatewayAPI.enabled: true
   gatewayAPI.gateway.create: true
-  gatewayAPI.gateway.gatewayClassName: cilium
+  gatewayAPI.gateway.gatewayClassName: example-gateway-class
 tests:
   - it: renders a Gateway (v1) named after the gateway Service, default http listener
     template: templates/gateway-api/gateway.yaml
@@ -16,7 +16,7 @@ tests:
           value: RELEASE-NAME-akeyless-gateway
       - equal:
           path: spec.gatewayClassName
-          value: cilium
+          value: example-gateway-class
       - equal:
           path: spec.listeners[0].name
           value: http

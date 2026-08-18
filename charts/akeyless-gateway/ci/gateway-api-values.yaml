@@ -9,7 +9,7 @@ gatewayAPI:
     # No controller runs in the kind cluster, so the Gateway stays
     # unprogrammed. That is fine: helm --wait does not gate on custom
     # resources, and the point here is CRD schema validation on apply.
-    gatewayClassName: cilium
+    gatewayClassName: example-gateway-class
   httpRoutes:
     - hostname: gw.ci.example.com
       servicePort: gateway
