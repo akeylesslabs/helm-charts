@@ -88,7 +88,7 @@ services:
       - "10000"
     shm_size: '2gb'
     # Ephemeral /config (tmpfs): jlesage declares VOLUME /config, which otherwise
-    # persists Chromium profile + stale extension SW cache across recreates.
+    # persists stale Chromium profile data across recreates.
     tmpfs:
       - /config:uid=1000,gid=1000,mode=0755
     volumes:
