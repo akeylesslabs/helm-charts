@@ -19,16 +19,14 @@ spec:
       app: ssh-bastion
   template:
     metadata:
+      {{- if semverCompare "<1.30-0" .Capabilities.KubeVersion.Version }}
+      annotations:
+        container.apparmor.security.beta.kubernetes.io/{{ .Values.sshConfig.containerName }}: unconfined
+      {{- end }}
       labels:
         app: ssh-bastion
     spec:
-      {{- if .Values.sshConfig.securityContext }}
-        {{- if .Values.sshConfig.securityContext.enabled }}
-      securityContext:
-        runAsUser: {{ .Values.sshConfig.securityContext.runAsUser }}
-        fsGroup: {{ .Values.sshConfig.securityContext.fsGroup }}
-        {{- end }}
-      {{- end }}
+      {{- include "akeyless-sra-ssh.podSecurityContext" . | nindent 6 }}
       serviceAccountName: {{ template "akeyless-api-gw.getServiceAccountName" . }}
       {{- if .Values.sshConfig.nodeSelector }}
       nodeSelector:
@@ -124,18 +122,35 @@ spec:
         - name: {{ .Values.sshConfig.containerName }}
           image: "{{ .Values.sshConfig.image.repository | default "akeyless/zero-trust-bastion" }}:{{ .Values.sshConfig.image.tag | default .Chart.Annotations.ztbVersion }}"
           imagePullPolicy: {{ .Values.sshConfig.image.pullPolicy }}
-          securityContext:
-            privileged: true
-            capabilities:
-              add: ["SYS_ADMIN"]
+          {{- include "akeyless-sra-ssh.containerSecurityContext" . | nindent 10 }}
           ports:
-          - containerPort: 22
+          - containerPort: {{ include "akeyless-sra-ssh.proxyPort" . }}
             name: ssh
           - containerPort: 9900
             name: curl-proxy
           env:
+          - name: SSH_PROXY_PORT
+            value: {{ include "akeyless-sra-ssh.proxyPort" . | quote }}
           - name: EXTERNAL_SSH_PORT
             value: {{ .Values.sshConfig.service.port | quote }}
+{{- with .Values.sshConfig.keepalive }}
+{{- if kindIs "invalid" .clientAliveInterval | not }}
+          - name: SSH_CLIENT_ALIVE_INTERVAL
+            value: {{ .clientAliveInterval | quote }}
+{{- end }}
+{{- if kindIs "invalid" .clientAliveCountMax | not }}
+          - name: SSH_CLIENT_ALIVE_COUNT_MAX
+            value: {{ .clientAliveCountMax | quote }}
+{{- end }}
+{{- if kindIs "invalid" .serverAliveInterval | not }}
+          - name: SSH_SERVER_ALIVE_INTERVAL
+            value: {{ .serverAliveInterval | quote }}
+{{- end }}
+{{- if kindIs "invalid" .serverAliveCountMax | not }}
+          - name: SSH_SERVER_ALIVE_COUNT_MAX
+            value: {{ .serverAliveCountMax | quote }}
+{{- end }}
+{{- end }}
           - name: VERSION
             value: {{ .Chart.Annotations.ztbVersion }}
 {{- if .Values.clusterName }}
