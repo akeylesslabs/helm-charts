@@ -148,6 +148,22 @@ globalConfig:
       # storageClass: ""
       # size: 10Gi
 
+    ## Scheduling for the standalone cluster cache pod.
+    ## Each key falls back to the matching gateway.deployment value while left
+    ## unset, which is how the cache behaved before these keys existed. Set a key
+    ## to an empty value to give the cache no constraint of its own.
+    ##
+    tolerations:
+    # - key: "key"
+    #   operator: "Equal"
+    #   value: "value"
+    nodeSelector:
+    affinity:
+    #   enabled: true
+    #   data:
+    #     nodeAffinity: {}
+    topologySpreadConstraints:
+
     ## Pod-level security context for the cache pod.
     ## fsGroup: 1000 is the GID of the redis group in the official Redis Alpine image and is
     ## required when persistence.enabled=true so that the mounted /data volume is chown'ed
