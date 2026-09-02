@@ -14,6 +14,12 @@ metadata:
   {{- toYaml .Values.sra.sshConfig.service.annotations | nindent 4 }}
 spec:
   type: {{ required "A valid .Values.sra.sshConfig.service.type entry required!" .Values.sra.sshConfig.service.type }}
+  {{- with .Values.sra.sshConfig.service.externalTrafficPolicy }}
+  {{- if not (or (eq $.Values.sra.sshConfig.service.type "LoadBalancer") (eq $.Values.sra.sshConfig.service.type "NodePort")) }}
+  {{- fail "sra.sshConfig.service.externalTrafficPolicy is only valid when sra.sshConfig.service.type is LoadBalancer or NodePort" }}
+  {{- end }}
+  externalTrafficPolicy: {{ . }}
+  {{- end }}
   ports:
     - port: {{ .Values.sra.sshConfig.service.port }}
       targetPort: ssh
