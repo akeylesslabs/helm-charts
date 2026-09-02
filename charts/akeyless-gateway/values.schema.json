@@ -31,6 +31,25 @@
           }
         }
       },
+      "sra": {
+        "type": "object",
+        "properties": {
+          "sshConfig": {
+            "type": "object",
+            "properties": {
+              "service": {
+                "type": "object",
+                "properties": {
+                  "externalTrafficPolicy": {
+                    "enum": ["", "Cluster", "Local"],
+                    "description": "akeyless-gateway sra.sshConfig.service: Kubernetes accepts only Cluster or Local, and only on an externally-accessible Service. Empty is the shipped default, renders nothing, and never mutates an existing release on upgrade."
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       "gatewayAPI": {
         "type": "object",
         "properties": {

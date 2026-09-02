@@ -1,0 +1,60 @@
+suite: akeyless-gateway SRA SSH service externalTrafficPolicy
+templates:
+  - templates/akeyless-secure-remote-access/service.yaml
+set:
+  sra.enabled: true
+  sra.sshConfig.CAPublicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC7 test
+tests:
+  - it: omits externalTrafficPolicy when unset, so an existing release is not mutated on upgrade
+    asserts:
+      - notExists:
+          path: spec.externalTrafficPolicy
+        documentSelector:
+          path: metadata.name
+          value: ssh-RELEASE-NAME-akeyless-gateway
+
+  - it: sets externalTrafficPolicy on a LoadBalancer service
+    set:
+      sra.sshConfig.service.externalTrafficPolicy: Local
+    asserts:
+      - equal:
+          path: spec.externalTrafficPolicy
+          value: Local
+        documentSelector:
+          path: metadata.name
+          value: ssh-RELEASE-NAME-akeyless-gateway
+
+  - it: sets externalTrafficPolicy on a NodePort service
+    set:
+      sra.sshConfig.service.type: NodePort
+      sra.sshConfig.service.externalTrafficPolicy: Cluster
+    asserts:
+      - equal:
+          path: spec.externalTrafficPolicy
+          value: Cluster
+        documentSelector:
+          path: metadata.name
+          value: ssh-RELEASE-NAME-akeyless-gateway
+
+  - it: refuses externalTrafficPolicy on a ClusterIP service instead of emitting a manifest the API rejects
+    set:
+      sra.sshConfig.service.type: ClusterIP
+      sra.sshConfig.service.externalTrafficPolicy: Local
+    asserts:
+      - failedTemplate:
+          errorMessage: "sra.sshConfig.service.externalTrafficPolicy is set to 'Local' but sra.sshConfig.service.type is 'ClusterIP'; externalTrafficPolicy is only valid for LoadBalancer or NodePort"
+
+  - it: leaves the internal and web services without externalTrafficPolicy
+    set:
+      sra.sshConfig.service.externalTrafficPolicy: Local
+    asserts:
+      - notExists:
+          path: spec.externalTrafficPolicy
+        documentSelector:
+          path: metadata.name
+          value: ssh-RELEASE-NAME-akeyless-gateway-internal
+      - notExists:
+          path: spec.externalTrafficPolicy
+        documentSelector:
+          path: metadata.name
+          value: web-RELEASE-NAME-akeyless-gateway

@@ -19,6 +19,12 @@ spec:
   loadBalancerIP: {{ . | quote }}
   {{- end }}
   {{- end }}
+  {{- with .Values.sra.sshConfig.service.externalTrafficPolicy }}
+  {{- if not (has $.Values.sra.sshConfig.service.type (list "LoadBalancer" "NodePort")) }}
+  {{- fail (printf "sra.sshConfig.service.externalTrafficPolicy is set to '%s' but sra.sshConfig.service.type is '%s'; externalTrafficPolicy is only valid for LoadBalancer or NodePort" . $.Values.sra.sshConfig.service.type) }}
+  {{- end }}
+  externalTrafficPolicy: {{ . }}
+  {{- end }}
   ports:
     - port: {{ .Values.sra.sshConfig.service.port }}
       targetPort: ssh
