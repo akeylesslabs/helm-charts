@@ -31,6 +31,24 @@
           }
         }
       },
+      "gateway": {
+        "type": "object",
+        "properties": {
+          "service": {
+            "type": "object",
+            "properties": {
+              "loadBalancerIP": {
+                "type": "string",
+                "description": "akeyless-gateway gateway.service: a pre-allocated LoadBalancer address. Only rendered when the RESOLVED type is LoadBalancer. Empty is the shipped default and renders nothing, so an existing release's address is never moved on upgrade."
+              },
+              "externalTrafficPolicy": {
+                "enum": ["", "Cluster", "Local"],
+                "description": "akeyless-gateway gateway.service: Kubernetes accepts only Cluster or Local, and only on an externally-accessible Service. Empty is the shipped default, renders nothing, and never mutates an existing release on upgrade."
+              }
+            }
+          }
+        }
+      },
       "sra": {
         "type": "object",
         "properties": {
