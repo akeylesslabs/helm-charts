@@ -1,71 +1,149 @@
 {
-    "$schema": "https://json-schema.org/draft-07/schema#",
-    "properties": {
-      "clusterDomain": {
-        "type": "string",
-        "default": "cluster.local",
-        "description": "Kubernetes cluster DNS domain suffix for internal service URLs (e.g. cluster.local yields <svc>.<ns>.svc.cluster.local).",
-        "maxLength": 253,
-        "pattern": "^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$|^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$"
-      },
-      "globalConfig": {
-        "type": "object",
-        "properties": {
-          "allowedAccessPermissions": {
-            "type": "array",
-            "description": "List of allowed access permissions",
-            "items": {
-              "type": "object",
-              "properties": {
-                "name": { "type": "string" },
-                "access_id": { "type": "string" },
-                "sub_claims": { "type": "object" },
-                "case_sensitive": { "type": "boolean" },
-                "permissions": {
-                  "type": "array",
-                  "items": { "type": "string" }
-                }
-              },
-              "required": ["name", "access_id"]
-            }
-          }
-        }
-      },
-      "sra": {
-        "type": "object",
-        "properties": {
-          "sshConfig": {
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "properties": {
+    "clusterDomain": {
+      "type": "string",
+      "default": "cluster.local",
+      "description": "Kubernetes cluster DNS domain suffix for internal service URLs (e.g. cluster.local yields <svc>.<ns>.svc.cluster.local).",
+      "maxLength": 253,
+      "pattern": "^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$|^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$"
+    },
+    "globalConfig": {
+      "type": "object",
+      "properties": {
+        "allowedAccessPermissions": {
+          "type": "array",
+          "description": "List of allowed access permissions",
+          "items": {
             "type": "object",
             "properties": {
-              "service": {
-                "type": "object",
-                "properties": {
-                  "loadBalancerIP": {
-                    "type": "string",
-                    "description": "akeyless-gateway sra.sshConfig.service: a pre-allocated LoadBalancer address. Only rendered when type is LoadBalancer. Empty is the shipped default and renders nothing, so an existing release is never mutated on upgrade."
-                  },
-                  "externalTrafficPolicy": {
-                    "enum": ["", "Cluster", "Local"],
-                    "description": "akeyless-gateway sra.sshConfig.service: Kubernetes accepts only Cluster or Local, and only on an externally-accessible Service. Empty is the shipped default, renders nothing, and never mutates an existing release on upgrade."
-                  }
+              "name": {
+                "type": "string"
+              },
+              "access_id": {
+                "type": "string"
+              },
+              "sub_claims": {
+                "type": "object"
+              },
+              "case_sensitive": {
+                "type": "boolean"
+              },
+              "permissions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "name",
+              "access_id"
+            ]
+          }
+        }
+      }
+    },
+    "sra": {
+      "type": "object",
+      "properties": {
+        "sshConfig": {
+          "type": "object",
+          "properties": {
+            "service": {
+              "type": "object",
+              "properties": {
+                "loadBalancerIP": {
+                  "type": "string",
+                  "description": "akeyless-gateway sra.sshConfig.service: a pre-allocated LoadBalancer address. Only rendered when type is LoadBalancer. Empty is the shipped default and renders nothing, so an existing release is never mutated on upgrade."
+                },
+                "externalTrafficPolicy": {
+                  "enum": [
+                    "",
+                    "Cluster",
+                    "Local"
+                  ],
+                  "description": "akeyless-gateway sra.sshConfig.service: Kubernetes accepts only Cluster or Local, and only on an externally-accessible Service. Empty is the shipped default, renders nothing, and never mutates an existing release on upgrade."
                 }
               }
             }
           }
         }
+      }
+    },
+    "gatewayAPI": {
+      "type": "object",
+      "properties": {
+        "gateway": {
+          "type": "object",
+          "properties": {
+            "tls": {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "enum": [
+                    "Terminate"
+                  ],
+                  "description": "akeyless-gateway gatewayAPI: this chart alone only supports tls.mode=Terminate; Passthrough requires the TLSRoute/TCPRoute overlay (Tier 1.5)."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "gateway": {
+      "type": "object",
+      "properties": {
+        "service": {
+          "type": "object",
+          "properties": {
+            "loadBalancerIP": {
+              "type": "string",
+              "description": "akeyless-gateway gateway.service: a pre-allocated LoadBalancer address. Only rendered when the RESOLVED type is LoadBalancer. Empty is the shipped default and renders nothing, so an existing release's address is never moved on upgrade."
+            },
+            "externalTrafficPolicy": {
+              "enum": [
+                "",
+                "Cluster",
+                "Local"
+              ],
+              "description": "akeyless-gateway gateway.service: Kubernetes accepts only Cluster or Local, and only on an externally-accessible Service. Empty is the shipped default, renders nothing, and never mutates an existing release on upgrade."
+            }
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "gatewayAPI": {
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            },
+            "required": [
+              "enabled"
+            ]
+          }
+        },
+        "required": [
+          "gatewayAPI"
+        ]
       },
-      "gatewayAPI": {
-        "type": "object",
+      "then": {
         "properties": {
           "gateway": {
-            "type": "object",
             "properties": {
-              "tls": {
-                "type": "object",
+              "ingress": {
                 "properties": {
-                  "mode": {
-                    "enum": ["Terminate"],
-                    "description": "akeyless-gateway gatewayAPI: this chart alone only supports tls.mode=Terminate; Passthrough requires the TLSRoute/TCPRoute overlay (Tier 1.5)."
+                  "enabled": {
+                    "not": {
+                      "const": true
+                    }
                   }
                 }
               }
@@ -74,127 +152,96 @@
         }
       }
     },
-    "allOf": [
-      {
-        "if": {
-          "properties": {
-            "gatewayAPI": {
-              "properties": { "enabled": { "const": true } },
-              "required": ["enabled"]
-            }
-          },
-          "required": ["gatewayAPI"]
-        },
-        "then": {
-          "properties": {
-            "gateway": {
-              "properties": {
-                "ingress": {
-                  "properties": { "enabled": { "not": { "const": true } } }
-                }
-              }
-            }
-          }
-        }
-      },
-      {
-        "if": {
-          "properties": {
-            "gatewayAPI": {
-              "properties": {
-                "enabled": { "const": true },
-                "gateway": {
-                  "properties": { "create": { "const": false } },
-                  "required": ["create"]
-                }
+    {
+      "if": {
+        "properties": {
+          "gatewayAPI": {
+            "properties": {
+              "enabled": {
+                "const": true
               },
-              "required": ["enabled", "gateway"]
-            }
-          },
-          "required": ["gatewayAPI"]
-        },
-        "then": {
-          "properties": {
-            "gatewayAPI": {
-              "properties": {
-                "parentRefs": { "type": "array", "minItems": 1 }
-              },
-              "required": ["parentRefs"]
-            }
-          }
-        }
-      },
-      {
-        "if": {
-          "properties": {
-            "gatewayAPI": {
-              "properties": {
-                "enabled": { "const": true },
-                "gateway": {
-                  "properties": {
-                    "tls": {
-                      "properties": { "httpsRedirect": { "const": true } },
-                      "required": ["httpsRedirect"]
-                    }
-                  },
-                  "required": ["tls"]
-                }
-              },
-              "required": ["enabled", "gateway"]
-            }
-          },
-          "required": ["gatewayAPI"]
-        },
-        "then": {
-          "properties": {
-            "gatewayAPI": {
-              "properties": {
-                "gateway": {
-                  "properties": {
-                    "listeners": { "type": "array", "maxItems": 0 }
+              "gateway": {
+                "properties": {
+                  "create": {
+                    "const": false
                   }
-                }
+                },
+                "required": [
+                  "create"
+                ]
               }
-            }
+            },
+            "required": [
+              "enabled",
+              "gateway"
+            ]
+          }
+        },
+        "required": [
+          "gatewayAPI"
+        ]
+      },
+      "then": {
+        "properties": {
+          "gatewayAPI": {
+            "properties": {
+              "parentRefs": {
+                "type": "array",
+                "minItems": 1
+              }
+            },
+            "required": [
+              "parentRefs"
+            ]
           }
         }
-      },
-      {
-        "$comment": "G7 - a Terminate listener needs certs. Scoped to the synthesized-listener path: a full gateway.listeners override replaces them entirely and never consults tls.*",
-        "if": {
-          "properties": {
-            "gatewayAPI": {
-              "properties": {
-                "enabled": { "const": true },
-                "gateway": {
-                  "properties": {
-                    "create": { "const": true },
-                    "listeners": { "type": "array", "maxItems": 0 },
-                    "tls": {
-                      "properties": { "enabled": { "const": true } },
-                      "required": ["enabled"]
-                    }
-                  },
-                  "required": ["create", "tls"]
-                }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "gatewayAPI": {
+            "properties": {
+              "enabled": {
+                "const": true
               },
-              "required": ["enabled", "gateway"]
-            }
-          },
-          "required": ["gatewayAPI"]
+              "gateway": {
+                "properties": {
+                  "tls": {
+                    "properties": {
+                      "httpsRedirect": {
+                        "const": true
+                      }
+                    },
+                    "required": [
+                      "httpsRedirect"
+                    ]
+                  }
+                },
+                "required": [
+                  "tls"
+                ]
+              }
+            },
+            "required": [
+              "enabled",
+              "gateway"
+            ]
+          }
         },
-        "then": {
-          "properties": {
-            "gatewayAPI": {
-              "properties": {
-                "gateway": {
-                  "properties": {
-                    "tls": {
-                      "properties": {
-                        "certificateRefs": { "type": "array", "minItems": 1 }
-                      },
-                      "required": ["certificateRefs"]
-                    }
+        "required": [
+          "gatewayAPI"
+        ]
+      },
+      "then": {
+        "properties": {
+          "gatewayAPI": {
+            "properties": {
+              "gateway": {
+                "properties": {
+                  "listeners": {
+                    "type": "array",
+                    "maxItems": 0
                   }
                 }
               }
@@ -202,8 +249,77 @@
           }
         }
       }
-    ],
-    "title": "Values",
-    "type": "object"
-  }
-  
+    },
+    {
+      "$comment": "G7 - a Terminate listener needs certs. Scoped to the synthesized-listener path: a full gateway.listeners override replaces them entirely and never consults tls.*",
+      "if": {
+        "properties": {
+          "gatewayAPI": {
+            "properties": {
+              "enabled": {
+                "const": true
+              },
+              "gateway": {
+                "properties": {
+                  "create": {
+                    "const": true
+                  },
+                  "listeners": {
+                    "type": "array",
+                    "maxItems": 0
+                  },
+                  "tls": {
+                    "properties": {
+                      "enabled": {
+                        "const": true
+                      }
+                    },
+                    "required": [
+                      "enabled"
+                    ]
+                  }
+                },
+                "required": [
+                  "create",
+                  "tls"
+                ]
+              }
+            },
+            "required": [
+              "enabled",
+              "gateway"
+            ]
+          }
+        },
+        "required": [
+          "gatewayAPI"
+        ]
+      },
+      "then": {
+        "properties": {
+          "gatewayAPI": {
+            "properties": {
+              "gateway": {
+                "properties": {
+                  "tls": {
+                    "properties": {
+                      "certificateRefs": {
+                        "type": "array",
+                        "minItems": 1
+                      }
+                    },
+                    "required": [
+                      "certificateRefs"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "title": "Values",
+  "type": "object"
+}

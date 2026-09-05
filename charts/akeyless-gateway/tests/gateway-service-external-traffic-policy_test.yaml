@@ -1,0 +1,144 @@
+suite: akeyless-gateway main gateway service loadBalancerIP and externalTrafficPolicy
+templates:
+  - templates/svc.yaml
+tests:
+  - it: omits both when unset, so an existing release is not mutated on upgrade
+    # The one that matters most. These fields are added to a chart with live
+    # releases; if either rendered by default, the next `helm upgrade` would
+    # hand the cloud controller a new spec to act on and could move a live
+    # address. Absence is the contract, so absence is what is asserted.
+    asserts:
+      - notExists:
+          path: spec.loadBalancerIP
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-gateway
+      - notExists:
+          path: spec.externalTrafficPolicy
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-gateway
+
+  - it: sets loadBalancerIP on a LoadBalancer service
+    set:
+      gateway.service.type: LoadBalancer
+      gateway.service.loadBalancerIP: 203.0.113.10
+    asserts:
+      - equal:
+          path: spec.loadBalancerIP
+          value: 203.0.113.10
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-gateway
+
+  - it: omits loadBalancerIP on a NodePort service even when the value is set
+    # Kubernetes ignores loadBalancerIP on a non-LoadBalancer Service, so
+    # rendering it would put a field in the spec that reads as applied and
+    # does nothing.
+    set:
+      gateway.service.type: NodePort
+      gateway.service.loadBalancerIP: 203.0.113.10
+    asserts:
+      - notExists:
+          path: spec.loadBalancerIP
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-gateway
+
+  - it: sets externalTrafficPolicy on a LoadBalancer service
+    set:
+      gateway.service.type: LoadBalancer
+      gateway.service.externalTrafficPolicy: Local
+    asserts:
+      - equal:
+          path: spec.externalTrafficPolicy
+          value: Local
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-gateway
+
+  - it: sets externalTrafficPolicy on a NodePort service
+    set:
+      gateway.service.type: NodePort
+      gateway.service.externalTrafficPolicy: Cluster
+    asserts:
+      - equal:
+          path: spec.externalTrafficPolicy
+          value: Cluster
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-gateway
+
+  - it: refuses to render externalTrafficPolicy on a ClusterIP service
+    # Kubernetes SILENTLY IGNORES externalTrafficPolicy on ClusterIP rather
+    # than rejecting it, so without this guard the value would look applied
+    # and do nothing. Failing the render is the only place it can be caught.
+    set:
+      gateway.service.type: ClusterIP
+      gateway.service.externalTrafficPolicy: Local
+    asserts:
+      - failedTemplate:
+          errorMessage: >-
+            gateway.service.externalTrafficPolicy is set to 'Local' but the resolved gateway
+            Service type is 'ClusterIP'; externalTrafficPolicy is only valid for LoadBalancer or NodePort
+
+  - it: the guard reads the RESOLVED type, not the raw value, when ingress is enabled
+    # svc.yaml used to decide `type` in two branches: with ingress enabled an
+    # unset type resolves to NodePort via `default`, and with it disabled the
+    # same unset type fails `required`. A guard reading
+    # .Values.gateway.service.type directly would see empty here and either
+    # mis-fire or wrongly pass. NodePort is valid, so this must RENDER.
+    set:
+      gateway.ingress.enabled: true
+      gateway.service.type: ""
+      gateway.service.externalTrafficPolicy: Local
+    asserts:
+      - equal:
+          path: spec.type
+          value: NodePort
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-gateway
+      - equal:
+          path: spec.externalTrafficPolicy
+          value: Local
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-gateway
+
+  - it: still requires a type when ingress is disabled
+    # The `required` on the non-ingress branch predates this change and must
+    # survive resolving the type into a variable.
+    set:
+      gateway.ingress.enabled: false
+      gateway.service.type: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: A valid .Values.gateway.service.type entry required!
+
+  - it: leaves the internal ClusterIP service untouched
+    # It is ClusterIP by chart decision and carries the gateway's internal API.
+    # Neither new field may leak onto it.
+    set:
+      sra.enabled: true
+      sra.sshConfig.CAPublicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC7 test
+      gateway.service.type: LoadBalancer
+      gateway.service.loadBalancerIP: 203.0.113.10
+      gateway.service.externalTrafficPolicy: Local
+    asserts:
+      - equal:
+          path: spec.type
+          value: ClusterIP
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-gateway-internal
+      - notExists:
+          path: spec.loadBalancerIP
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-gateway-internal
+      - notExists:
+          path: spec.externalTrafficPolicy
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-gateway-internal
