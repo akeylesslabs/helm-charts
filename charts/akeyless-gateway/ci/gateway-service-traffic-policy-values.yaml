@@ -1,0 +1,50 @@
+# ct install case: the main gateway Service's loadBalancerIP and
+# externalTrafficPolicy, against a real API server.
+#
+# WHY THIS EXISTS ALONGSIDE THE UNIT TESTS
+# tests/gateway-service-external-traffic-policy_test.yaml proves what the chart
+# RENDERS. It cannot prove that Kubernetes ACCEPTS what was rendered, because
+# helm-unittest never talks to an API server. These two fields are exactly the
+# case where that gap matters: externalTrafficPolicy is validated by the API
+# server against the Service type, and a rendered-but-rejected Service would
+# pass every unit test and fail at install.
+#
+# So this file is the other half — one `ct install` into kind that puts both
+# fields on a live Service and lets the API server be the judge.
+#
+# WHY LoadBalancer RATHER THAN NodePort
+# Both are valid for externalTrafficPolicy, but only LoadBalancer exercises
+# loadBalancerIP as well, so one install covers both new fields instead of two.
+# kind has no LoadBalancer provider and the Service will sit at <pending>
+# forever — that is fine and is not what is being tested. The chart's own
+# default is already type: LoadBalancer and `ct install` passes with it today,
+# which is the evidence that helm's --wait does not block on an unprovisioned
+# ingress here.
+#
+# The address is from TEST-NET-3 (RFC 5737, reserved for documentation), so it
+# can never collide with a real allocation if this file is ever copied into an
+# environment that does have a LoadBalancer provider.
+#
+# NOT COVERED HERE, DELIBERATELY
+# The rejected combination — externalTrafficPolicy on a ClusterIP Service — is
+# a render-time failure, so it belongs in the unit suite where a failed
+# template is an assertable outcome. `ct install` can only assert that an
+# install SUCCEEDS; a case designed to fail would just look like a broken CI
+# job. That case is tests/gateway-service-external-traffic-policy_test.yaml,
+# "refuses to render externalTrafficPolicy on a ClusterIP service".
+#
+# SRA is left disabled, matching every other ci values file here. Enabling it
+# would add the ssh and web deployments to this install for no gain: the SRA
+# SSH Service's equivalent fields are #438's, and giving them their own case
+# belongs in that PR rather than being smuggled into this one.
+
+globalConfig:
+  gatewayAuth:
+    gatewayAccessType: access_key
+    gatewayCredentialsExistingSecret: akeyless-auth
+
+gateway:
+  service:
+    type: LoadBalancer
+    loadBalancerIP: 203.0.113.10
+    externalTrafficPolicy: Local
