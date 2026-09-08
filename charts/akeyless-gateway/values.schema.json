@@ -31,6 +31,29 @@
           }
         }
       },
+      "sra": {
+        "type": "object",
+        "properties": {
+          "sshConfig": {
+            "type": "object",
+            "properties": {
+              "service": {
+                "type": "object",
+                "properties": {
+                  "loadBalancerIP": {
+                    "type": "string",
+                    "description": "akeyless-gateway sra.sshConfig.service: a pre-allocated LoadBalancer address. Only rendered when type is LoadBalancer. Empty is the shipped default and renders nothing, so an existing release is never mutated on upgrade."
+                  },
+                  "externalTrafficPolicy": {
+                    "enum": ["", "Cluster", "Local"],
+                    "description": "akeyless-gateway sra.sshConfig.service: Kubernetes accepts only Cluster or Local, and only on an externally-accessible Service. Empty is the shipped default, renders nothing, and never mutates an existing release on upgrade."
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       "gatewayAPI": {
         "type": "object",
         "properties": {

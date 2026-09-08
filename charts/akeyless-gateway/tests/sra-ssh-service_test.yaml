@@ -1,0 +1,63 @@
+suite: akeyless-gateway SRA SSH service loadBalancerIP
+templates:
+  - templates/akeyless-secure-remote-access/service.yaml
+set:
+  sra.enabled: true
+  sra.sshConfig.CAPublicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC7 test
+tests:
+  - it: omits loadBalancerIP when unset
+    asserts:
+      - notExists:
+          path: spec.loadBalancerIP
+        documentSelector:
+          path: metadata.name
+          value: ssh-RELEASE-NAME-akeyless-gateway
+
+  - it: pins loadBalancerIP on the LoadBalancer service
+    set:
+      sra.sshConfig.service.loadBalancerIP: 203.0.113.10
+    asserts:
+      - equal:
+          path: spec.type
+          value: LoadBalancer
+        documentSelector:
+          path: metadata.name
+          value: ssh-RELEASE-NAME-akeyless-gateway
+      - equal:
+          path: spec.loadBalancerIP
+          value: 203.0.113.10
+        documentSelector:
+          path: metadata.name
+          value: ssh-RELEASE-NAME-akeyless-gateway
+
+  - it: omits loadBalancerIP when the service is not a LoadBalancer
+    set:
+      sra.sshConfig.service.type: ClusterIP
+      sra.sshConfig.service.loadBalancerIP: 203.0.113.10
+    asserts:
+      - equal:
+          path: spec.type
+          value: ClusterIP
+        documentSelector:
+          path: metadata.name
+          value: ssh-RELEASE-NAME-akeyless-gateway
+      - notExists:
+          path: spec.loadBalancerIP
+        documentSelector:
+          path: metadata.name
+          value: ssh-RELEASE-NAME-akeyless-gateway
+
+  - it: leaves the internal and web services without loadBalancerIP
+    set:
+      sra.sshConfig.service.loadBalancerIP: 203.0.113.10
+    asserts:
+      - notExists:
+          path: spec.loadBalancerIP
+        documentSelector:
+          path: metadata.name
+          value: ssh-RELEASE-NAME-akeyless-gateway-internal
+      - notExists:
+          path: spec.loadBalancerIP
+        documentSelector:
+          path: metadata.name
+          value: web-RELEASE-NAME-akeyless-gateway
