@@ -72,7 +72,7 @@ tests:
             gateway.service.externalTrafficPolicy is set to 'Local' but the resolved gateway
             Service type is 'ClusterIP'; externalTrafficPolicy is only valid for LoadBalancer or NodePort
 
-  - it: the guard reads the RESOLVED type, not the raw value, when ingress is enabled
+  - it: the guard reads the resolved type, not the raw value, when ingress is enabled
     set:
       gateway.ingress.enabled: true
       gateway.service.type: ""
