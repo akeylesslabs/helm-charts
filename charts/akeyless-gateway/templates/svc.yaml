@@ -1,18 +1,4 @@
 ---
-{{- /*
-Resolve the Service type ONCE, before it is used.
-
-It was previously decided inside the `if`, in two branches — the ingress-enabled
-one defaulting to NodePort and the other `required`. Both new fields below have
-to test the type, and reading `.Values.gateway.service.type` directly would read
-the WRONG value on the ingress branch, where an unset type resolves to NodePort
-via the default rather than staying empty. Resolving here keeps one answer for
-`type:`, for the loadBalancerIP condition, and for the externalTrafficPolicy
-guard, so the three cannot disagree.
-
-Rendering is unchanged: with ingress enabled an unset type still yields NodePort,
-and with it disabled an unset type still fails the same `required`.
-*/ -}}
 {{- $svcType := .Values.gateway.service.type }}
 {{- if .Values.gateway.ingress.enabled }}
 {{- $svcType = default "NodePort" $svcType }}
@@ -73,12 +59,6 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "akeyless-gateway.labels" . | nindent 4 }}
-  {{- /*
-  ClusterIP, deliberately not configurable. loadBalancerIP is meaningless here
-  and Kubernetes SILENTLY IGNORES externalTrafficPolicy on a ClusterIP Service
-  rather than rejecting it, so exposing either would be a knob that reads as
-  applied and does nothing.
-  */}}
 spec:
   type: ClusterIP
   ports:
