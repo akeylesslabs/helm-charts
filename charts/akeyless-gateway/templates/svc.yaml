@@ -1,4 +1,10 @@
 ---
+{{- $svcType := .Values.gateway.service.type }}
+{{- if .Values.gateway.ingress.enabled }}
+{{- $svcType = default "NodePort" $svcType }}
+{{- else }}
+{{- $svcType = required "A valid .Values.gateway.service.type entry required!" $svcType }}
+{{- end }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -12,10 +18,17 @@ metadata:
   annotations:
   {{- toYaml .Values.gateway.service.annotations | nindent 4 }}
 spec:
-  {{- if .Values.gateway.ingress.enabled }}
-  type: {{ .Values.gateway.service.type | default "NodePort" }}
-  {{- else }}
-  type: {{ required "A valid .Values.gateway.service.type entry required!" .Values.gateway.service.type }}
+  type: {{ $svcType }}
+  {{- if eq $svcType "LoadBalancer" }}
+  {{- with .Values.gateway.service.loadBalancerIP }}
+  loadBalancerIP: {{ . | quote }}
+  {{- end }}
+  {{- end }}
+  {{- with .Values.gateway.service.externalTrafficPolicy }}
+  {{- if not (has $svcType (list "LoadBalancer" "NodePort")) }}
+  {{- fail (printf "gateway.service.externalTrafficPolicy is set to '%s' but the resolved gateway Service type is '%s'; externalTrafficPolicy is only valid for LoadBalancer or NodePort" . $svcType) }}
+  {{- end }}
+  externalTrafficPolicy: {{ . }}
   {{- end }}
   ports:
     - port: {{ .Values.gateway.service.port }}

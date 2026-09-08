@@ -31,9 +31,49 @@
           }
         }
       },
+      "gateway": {
+        "type": "object",
+        "properties": {
+          "service": {
+            "type": "object",
+            "properties": {
+              "loadBalancerIP": {
+                "type": "string",
+                "description": "Pre-allocated LoadBalancer address. Rendered only when the resolved Service type is LoadBalancer."
+              },
+              "externalTrafficPolicy": {
+                "enum": ["", "Cluster", "Local"],
+                "description": "External traffic policy. Rendered only when the resolved Service type is LoadBalancer or NodePort."
+              }
+            }
+          }
+        }
+      },
       "sra": {
         "type": "object",
         "properties": {
+          "webConfig": {
+            "type": "object",
+            "properties": {
+              "service": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "enum": ["ClusterIP", "NodePort", "LoadBalancer"],
+                    "description": "SRA web Service type. Defaults to ClusterIP."
+                  },
+                  "loadBalancerIP": {
+                    "type": "string",
+                    "description": "Pre-allocated LoadBalancer address. Rendered only when the resolved Service type is LoadBalancer."
+                  },
+                  "externalTrafficPolicy": {
+                    "enum": ["", "Cluster", "Local"],
+                    "description": "External traffic policy. Rendered only when the resolved Service type is LoadBalancer or NodePort."
+                  }
+                }
+              }
+            }
+          },
           "sshConfig": {
             "type": "object",
             "properties": {

@@ -341,6 +341,9 @@ gateway:
     labels: {}
     type: LoadBalancer
 
+    loadBalancerIP: ""
+    externalTrafficPolicy: ""
+
     ## Gateway service port
     ##
     port: 8000
@@ -523,6 +526,10 @@ sra:
   ## The below section is for the Remote Access Web app
   ##
   webConfig:
+    service:
+      type: ClusterIP
+      loadBalancerIP: ""
+      externalTrafficPolicy: ""
     deployment:
       annotations: {}
       labels: {}
