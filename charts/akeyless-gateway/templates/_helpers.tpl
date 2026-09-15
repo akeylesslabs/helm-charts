@@ -129,7 +129,7 @@ Generate chart secret name
   {{- printf "image: %s:%s\n" (required "A valid .Values.globalConfig.clusterCache.image.repository entry required!" .Values.globalConfig.clusterCache.image.repository) (required "A valid .Values.globalConfig.clusterCache.image.tag entry required!" .Values.globalConfig.clusterCache.image.tag | toString)  -}}
   {{- printf "imagePullPolicy: %s" (.Values.globalConfig.clusterCache.image.imagePullPolicy | default "IfNotPresent"  | quote ) -}}
   {{- else -}}
-  {{- printf "image: %s\n" ("public.ecr.aws/docker/library/redis:8.6.3-alpine" | quote) -}}
+  {{- printf "image: %s\n" ("public.ecr.aws/docker/library/redis:8.6.6-alpine" | quote) -}}
   {{- printf "imagePullPolicy: %s\n" ("IfNotPresent" | quote) -}}
   {{- end -}}
 {{- end -}}
@@ -543,29 +543,33 @@ app.kubernetes.io/instance: {{ .Release.Name }}
     value: "true"
 {{- end -}}
 
+{{- define "akeyless-gateway.clusterSvcDomain" -}}
+svc.{{ default "cluster.local" .Values.clusterDomain }}
+{{- end -}}
+
 {{- define "akeyless-gateway.unifiedGatewayConfig" }}
   {{ include "akeyless-gateway.unifiedGatewayFlag" . }}
   - name: GATEWAY_URL
-    value: "http://{{ include "akeyless-gateway.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:8000"
+    value: "http://{{ include "akeyless-gateway.fullname" . }}.{{ .Release.Namespace }}.{{ include "akeyless-gateway.clusterSvcDomain" . }}:8000"
   - name: INTERNAL_GATEWAY_API
-    value: "http://{{ include "akeyless-gateway.fullname" . }}-internal.{{ .Release.Namespace }}.svc.cluster.local:8080"
+    value: "http://{{ include "akeyless-gateway.fullname" . }}-internal.{{ .Release.Namespace }}.{{ include "akeyless-gateway.clusterSvcDomain" . }}:8080"
 {{- end -}}
 
 {{- define "akeyless-gateway.SraWebServiceConfig" }}
   - name: REMOTE_ACCESS_WEB_SERVICE_INTERNAL_URL
-    value: "http://web-{{ include "akeyless-gateway.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:8888"
+    value: "http://web-{{ include "akeyless-gateway.fullname" . }}.{{ .Release.Namespace }}.{{ include "akeyless-gateway.clusterSvcDomain" . }}:8888"
 {{- end -}}
 
 {{- define "akeyless-gateway.SraSshServiceConfig" }}
   - name: REMOTE_ACCESS_SSH_SERVICE_INTERNAL_URL
-    value: "http://ssh-{{ include "akeyless-gateway.fullname" . }}-internal.{{ .Release.Namespace }}.svc.cluster.local:9900"
+    value: "http://ssh-{{ include "akeyless-gateway.fullname" . }}-internal.{{ .Release.Namespace }}.{{ include "akeyless-gateway.clusterSvcDomain" . }}:9900"
 {{- end -}}
 
 {{- define "akeyless-gateway.unifiedGatewaySraWebConfig" }}
   {{ include "akeyless-gateway.unifiedGatewayConfig" . }}
   {{ include "akeyless-gateway.SraSshServiceConfig" . }}
   - name: REMOTE_ACCESS_SSH_ENDPOINT
-    value: "ssh-{{ include "akeyless-gateway.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.sra.sshConfig.service.port }}"
+    value: "ssh-{{ include "akeyless-gateway.fullname" . }}.{{ .Release.Namespace }}.{{ include "akeyless-gateway.clusterSvcDomain" . }}:{{ .Values.sra.sshConfig.service.port }}"
 {{- end -}}
 
 {{- define "akeyless-gateway.unifiedGatewaySraGatewayConfig" }}

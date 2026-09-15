@@ -1,0 +1,57 @@
+suite: akeyless-gateway topologySpreadConstraints
+set:
+  gateway.deployment.topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/name: akeyless-gateway
+tests:
+  - it: gateway renders topologySpreadConstraints with affinity at its default
+    template: templates/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[0].topologyKey
+          value: topology.kubernetes.io/zone
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[0].whenUnsatisfiable
+          value: ScheduleAnyway
+      - notExists:
+          path: spec.template.spec.affinity
+
+  - it: cache renders topologySpreadConstraints with affinity at its default
+    template: templates/akeyless-cache/cache.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[0].topologyKey
+          value: topology.kubernetes.io/zone
+      - notExists:
+          path: spec.template.spec.affinity
+
+  - it: gateway renders affinity and topologySpreadConstraints together
+    template: templates/deployment.yaml
+    set:
+      gateway.deployment.affinity.enabled: true
+      gateway.deployment.affinity.data:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/os
+                    operator: In
+                    values: [linux]
+    asserts:
+      - exists:
+          path: spec.template.spec.affinity.nodeAffinity
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[0].maxSkew
+          value: 1
+
+  - it: gateway omits topologySpreadConstraints when unset
+    template: templates/deployment.yaml
+    set:
+      gateway.deployment.topologySpreadConstraints: []
+    asserts:
+      - notExists:
+          path: spec.template.spec.topologySpreadConstraints

@@ -75,6 +75,10 @@ mutatingWebhook:
       - "{{ $.Release.Name }}"
   timeoutSeconds: 10
   matchConditions: []
+  tls:
+    existingSecretName: ""
+    caBundle: ""
+    caBundleAnnotations: {}
 debug: false
 
 gatewayCert:

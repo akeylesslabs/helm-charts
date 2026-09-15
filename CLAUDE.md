@@ -1,3 +1,3 @@
 # CLAUDE.md
 
-Read `AGENTS.md` for repository guidance.
+@AGENTS.md

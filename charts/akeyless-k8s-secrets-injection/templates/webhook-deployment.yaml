@@ -40,7 +40,7 @@ spec:
       - name: serving-cert
         secret:
           defaultMode: 420
-          secretName: {{ template "vault-secrets-webhook.fullname" . }}
+          secretName: {{ include "vault-secrets-webhook.tlsSecretName" . }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -50,7 +50,7 @@ spec:
           - name: TLS_PRIVATE_KEY_FILE
             value: /var/serving-cert/tls.key
           - name: TLS_SECRET_NAME
-            value: {{ include "vault-secrets-webhook.fullname" . }}
+            value: {{ include "vault-secrets-webhook.tlsSecretName" . }}
           - name: TLS_SECRET_NAMESPACE
             value: {{ .Release.Namespace | quote }}
           - name: INTERNAL_PORT

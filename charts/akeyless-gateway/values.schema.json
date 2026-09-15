@@ -1,6 +1,13 @@
 {
     "$schema": "https://json-schema.org/draft-07/schema#",
     "properties": {
+      "clusterDomain": {
+        "type": "string",
+        "default": "cluster.local",
+        "description": "Kubernetes cluster DNS domain suffix for internal service URLs (e.g. cluster.local yields <svc>.<ns>.svc.cluster.local).",
+        "maxLength": 253,
+        "pattern": "^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$|^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$"
+      },
       "globalConfig": {
         "type": "object",
         "properties": {
@@ -20,6 +27,29 @@
                 }
               },
               "required": ["name", "access_id"]
+            }
+          }
+        }
+      },
+      "sra": {
+        "type": "object",
+        "properties": {
+          "sshConfig": {
+            "type": "object",
+            "properties": {
+              "service": {
+                "type": "object",
+                "properties": {
+                  "loadBalancerIP": {
+                    "type": "string",
+                    "description": "akeyless-gateway sra.sshConfig.service: a pre-allocated LoadBalancer address. Only rendered when type is LoadBalancer. Empty is the shipped default and renders nothing, so an existing release is never mutated on upgrade."
+                  },
+                  "externalTrafficPolicy": {
+                    "enum": ["", "Cluster", "Local"],
+                    "description": "akeyless-gateway sra.sshConfig.service: Kubernetes accepts only Cluster or Local, and only on an externally-accessible Service. Empty is the shipped default, renders nothing, and never mutates an existing release on upgrade."
+                  }
+                }
+              }
             }
           }
         }

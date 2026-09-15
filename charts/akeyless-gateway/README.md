@@ -35,6 +35,14 @@ To install the chart run the following:
 helm install gateway akeyless/akeyless-gateway
 ```
 
+## Cluster DNS Domain
+
+Clusters whose DNS search domain is not the default `svc.cluster.local` (for example `svc.custom.local`) must set `clusterDomain` so SRA internal service URLs resolve correctly:
+
+```yaml
+clusterDomain: custom.local
+```
+
 ## Extra Volumes and Volume Mounts
 
 To add custom Kubernetes volumes to the Gateway pod and mount them into the Gateway container, configure `gateway.deployment.extraVolumes` and `gateway.deployment.extraVolumeMounts`:
