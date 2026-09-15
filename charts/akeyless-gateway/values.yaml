@@ -183,7 +183,7 @@ cacheHA:
 
   image:
     repository: public.ecr.aws/docker/library/redis
-    tag: 8.6.3-alpine
+    tag: 8.6.6-alpine
 
   auth: true
   authKey: redis-password
