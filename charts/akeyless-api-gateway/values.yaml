@@ -226,6 +226,66 @@ ingress:
 
   ## existingSecret: name-of-existing-secret
 
+## Configure an OpenShift Route to access the akeyless-api-gateway
+## installation. Only applicable on OpenShift clusters.
+## ref: https://docs.redhat.com/en/documentation/openshift_container_platform/4.11/html/networking/configuring-routes
+##
+route:
+  ## Set to true to enable Route resource generation (OpenShift only)
+  ##
+  enabled: false
+
+  labels: {}
+
+  annotations: {}
+
+  ## One Route is created per rule. Each rule maps a Service port to a hostname.
+  ## Leave `hostname` unset to let OpenShift auto-generate one
+  ## (<name>-<namespace>.<router-default-domain>).
+  ##
+  rules:
+    - servicePort: web
+    - servicePort: hvp
+    - servicePort: legacy-api
+    - servicePort: api
+    - servicePort: configure-app
+
+  # Example for overriding the hostname, target service and path for a specific rule
+  #    - servicePort: web
+  #      hostname: "ui.gateway.example.com"
+  #      serviceName: redirect-to
+  #      path: "/path-to-block"
+
+  ## Path for the default host
+  ##
+  path: /
+
+  tls:
+    ## Set to true to add a `tls` stanza to the generated Route(s)
+    ##
+    enabled: false
+
+    ## TLS termination type. Can be one of: edge, passthrough, reencrypt
+    ##
+    termination: edge
+
+    ## Policy for insecure (non-TLS) requests. Can be one of: Allow, Redirect, None
+    ##
+    insecureEdgeTerminationPolicy: Redirect
+
+    ## PEM-encoded certificate, key and CA data. Only used for edge/reencrypt termination.
+    ## Leave empty to let OpenShift use the router's default certificate.
+    ## IMPORTANT: do not commit real certificate/key material into git.
+    ##
+    certificate: ""
+    key: ""
+    caCertificate: ""
+
+    ## PEM-encoded CA certificate used to validate the destination endpoint's certificate.
+    ## Only used for reencrypt termination.
+    ##
+    destinationCACertificate: ""
+
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
