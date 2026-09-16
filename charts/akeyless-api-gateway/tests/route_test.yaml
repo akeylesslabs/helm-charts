@@ -1,0 +1,54 @@
+suite: akeyless-api-gateway route
+templates:
+  - templates/route.yaml
+tests:
+  - it: renders no Route when disabled (default)
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders distinct Route names for same servicePort with different hosts
+    set:
+      route.enabled: true
+      route.rules:
+        - servicePort: web
+          hostname: ui-a.gateway.local
+        - servicePort: web
+          hostname: ui-b.gateway.local
+    asserts:
+      - hasDocuments:
+          count: 2
+      - documentIndex: 0
+        equal:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-api-gateway-web-ui-a-gateway-local
+      - documentIndex: 1
+        equal:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-api-gateway-web-ui-b-gateway-local
+      - documentIndex: 0
+        notEqual:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-api-gateway-web-ui-b-gateway-local
+
+  - it: renders distinct Route names for same servicePort with different paths
+    set:
+      route.enabled: true
+      route.rules:
+        - servicePort: web
+          hostname: ui.gateway.local
+          path: /a
+        - servicePort: web
+          hostname: ui.gateway.local
+          path: /b
+    asserts:
+      - hasDocuments:
+          count: 2
+      - documentIndex: 0
+        equal:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-api-gateway-web-ui-gateway-local-a
+      - documentIndex: 1
+        equal:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-api-gateway-web-ui-gateway-local-b

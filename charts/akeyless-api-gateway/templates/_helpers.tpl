@@ -84,6 +84,32 @@ Get the Ingress TLS secret.
     {{- end -}}
 {{- end -}}
 
+{{/*
+OpenShift Route metadata.name for a single rule.
+Includes servicePort plus host/path identity so rules that share a port still
+get distinct names. Sanitizes to DNS-1123 and keeps the result within 63 chars.
+Usage: {{ include "akeyless-api-gw.routeName" (dict "root" $ "rule" .) }}
+*/}}
+{{- define "akeyless-api-gw.routeName" -}}
+{{- $root := .root -}}
+{{- $rule := .rule -}}
+{{- $path := $rule.path | default $root.Values.route.path | default "/" -}}
+{{- $identity := printf "%s|%s|%s" $rule.servicePort ($rule.hostname | default "") $path -}}
+{{- $hostRaw := ($rule.hostname | default "default") | lower | replace "." "-" -}}
+{{- $hostSlug := regexReplaceAll "[^a-z0-9-]+" $hostRaw "-" | trimAll "-" -}}
+{{- $pathRaw := $path | trimPrefix "/" | trimSuffix "/" | lower | replace "/" "-" -}}
+{{- $pathSlug := regexReplaceAll "[^a-z0-9-]+" $pathRaw "-" | trimAll "-" -}}
+{{- $base := printf "%s-%s" $rule.servicePort $hostSlug -}}
+{{- if $pathSlug -}}
+{{- $base = printf "%s-%s" $base $pathSlug -}}
+{{- end -}}
+{{- if gt (len $base) 40 -}}
+{{- $base = printf "%s-%s" $rule.servicePort ($identity | sha256sum | trunc 8) -}}
+{{- end -}}
+{{- $suffix := printf "-%s" $base -}}
+{{- printf "%s%s" (include "akeyless-api-gw.fullname" $root | trunc (sub 63 (len $suffix) | int) | trimSuffix "-") $suffix -}}
+{{- end -}}
+
 {{- define "akeyless-api-gw.allowedAccessIDs" -}}
 {{- join "," .Values.akeylessUserAuth.allowedAccessIDs }}
 {{- end -}}

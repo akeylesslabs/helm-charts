@@ -4,8 +4,7 @@
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-{{- $suffix := printf "-%s" .servicePort }}
-  name: {{ printf "%s%s" (include "akeyless-api-gw.fullname" $ | trunc (sub 63 (len $suffix) | int) | trimSuffix "-") $suffix }}
+  name: {{ include "akeyless-api-gw.routeName" (dict "root" $ "rule" .) }}
   namespace: {{ $.Release.Namespace | quote }}
   labels:
 {{- include "akeyless-api-gw.labels" $ | nindent 4 }}
