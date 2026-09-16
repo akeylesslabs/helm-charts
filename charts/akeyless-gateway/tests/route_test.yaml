@@ -21,7 +21,7 @@ tests:
           value: Route
       - equal:
           path: metadata.name
-          value: RELEASE-NAME-akeyless-gateway-gateway-default
+          value: RELEASE-NAME-akeyless-gateway-gateway
       - equal:
           path: spec.to.name
           value: RELEASE-NAME-akeyless-gateway
@@ -32,6 +32,16 @@ tests:
           path: spec.host
       - notExists:
           path: spec.tls
+
+  - it: keeps a clean name when no hostname or custom path is set
+    set:
+      gateway.route.enabled: true
+      gateway.route.rules:
+        - servicePort: gateway
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-gateway-gateway
 
   - it: sets host when hostname is provided
     set:
@@ -71,11 +81,11 @@ tests:
       - documentIndex: 0
         equal:
           path: metadata.name
-          value: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-gateway-default
+          value: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-gateway
       - documentIndex: 1
         equal:
           path: metadata.name
-          value: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-hvp-default
+          value: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-hvp
 
   - it: renders distinct Route names for same servicePort with different hosts
     set:

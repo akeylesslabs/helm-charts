@@ -7,6 +7,18 @@ tests:
       - hasDocuments:
           count: 0
 
+  - it: keeps a clean name when no hostname or custom path is set
+    set:
+      route.enabled: true
+      route.rules:
+        - servicePort: web
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-api-gateway-web
+
   - it: renders distinct Route names for same servicePort with different hosts
     set:
       route.enabled: true

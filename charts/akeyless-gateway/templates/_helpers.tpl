@@ -89,17 +89,22 @@ Usage: {{ include "akeyless-gateway.routeName" (dict "root" $ "rule" .) }}
 {{- $root := .root -}}
 {{- $rule := .rule -}}
 {{- $path := $rule.path | default $root.Values.gateway.route.path | default "/" -}}
+{{- $base := $rule.servicePort -}}
+{{- if or $rule.hostname (ne $path "/") -}}
 {{- $identity := printf "%s|%s|%s" $rule.servicePort ($rule.hostname | default "") $path -}}
-{{- $hostRaw := ($rule.hostname | default "default") | lower | replace "." "-" -}}
+{{- $hostRaw := ($rule.hostname | default "") | lower | replace "." "-" -}}
 {{- $hostSlug := regexReplaceAll "[^a-z0-9-]+" $hostRaw "-" | trimAll "-" -}}
 {{- $pathRaw := $path | trimPrefix "/" | trimSuffix "/" | lower | replace "/" "-" -}}
 {{- $pathSlug := regexReplaceAll "[^a-z0-9-]+" $pathRaw "-" | trimAll "-" -}}
-{{- $base := printf "%s-%s" $rule.servicePort $hostSlug -}}
+{{- if $hostSlug -}}
+{{- $base = printf "%s-%s" $base $hostSlug -}}
+{{- end -}}
 {{- if $pathSlug -}}
 {{- $base = printf "%s-%s" $base $pathSlug -}}
 {{- end -}}
 {{- if gt (len $base) 40 -}}
 {{- $base = printf "%s-%s" $rule.servicePort ($identity | sha256sum | trunc 8) -}}
+{{- end -}}
 {{- end -}}
 {{- $suffix := printf "-%s" $base -}}
 {{- printf "%s%s" (include "akeyless-gateway.fullname" $root | trunc (sub 63 (len $suffix) | int) | trimSuffix "-") $suffix -}}
