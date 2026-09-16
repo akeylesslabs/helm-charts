@@ -1,0 +1,36 @@
+{{- $route := .Values.gateway.route }}
+{{- if $route.enabled }}
+{{- range $route.rules }}
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+{{- $suffix := printf "-%s" .servicePort }}
+  name: {{ printf "%s%s" (include "akeyless-gateway.fullname" $ | trunc (sub 63 (len $suffix) | int) | trimSuffix "-") $suffix }}
+  namespace: {{ $.Release.Namespace | quote }}
+  labels:
+{{- include "akeyless-gateway.labels" $ | nindent 4 }}
+  {{- if $route.labels }}
+    {{- toYaml $route.labels | nindent 4 }}
+  {{- end }}
+  {{- if $route.annotations }}
+  annotations:
+{{ toYaml $route.annotations | indent 4 }}
+  {{- end }}
+spec:
+{{- if .hostname }}
+  host: {{ .hostname }}
+{{- end }}
+  path: {{ .path | default $route.path }}
+  to:
+    kind: Service
+    name: {{ .serviceName | default (include "akeyless-gateway.fullname" $) }}
+    weight: 100
+  port:
+    targetPort: {{ .servicePort }}
+{{- if $route.tls.enabled }}
+  tls:
+    {{- omit $route.tls "enabled" | toYaml | nindent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}
