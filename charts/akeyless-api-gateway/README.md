@@ -66,6 +66,18 @@ The following table lists the configurable parameters of the API Gateway chart a
 | `ingress.path`                            | Path for the default host                                                                                            | `/`                      |
 | `ingress.tls`                             | Enable TLS configuration for the hostname                                                                            | `false`                  |
 | `ingress.certManager`                     | Add annotations for cert-manager                                                                                     | `false`                  |
+| `route.enabled`                           | Enable OpenShift Route resource generation (OpenShift only)                                                          | `false`                  |
+| `route.labels`                            | Route extra labels                                                                                                   | `{}`                     |
+| `route.annotations`                       | Route extra annotations                                                                                              | `{}`                     |
+| `route.rules`                             | Route rules object, one Route is created per rule. `hostname` is optional per rule — if unset, OpenShift auto-generates one. Look at the comments for examples | Check `values.yaml` file |
+| `route.path`                              | Path for the default host                                                                                            | `/`                      |
+| `route.tls.enabled`                       | Add a `tls` stanza to the generated Route(s)                                                                         | `false`                  |
+| `route.tls.termination`                   | TLS termination type. Can be one of: `edge`, `passthrough`, `reencrypt`                                              | `edge`                   |
+| `route.tls.insecureEdgeTerminationPolicy` | Policy for insecure (non-TLS) requests. Can be one of: `Allow`, `Redirect`, `None`                                   | `Redirect`               |
+| `route.tls.certificate`                   | PEM-encoded certificate. Only used for edge/reencrypt termination                                                    | `nil`                    |
+| `route.tls.key`                           | PEM-encoded key. Only used for edge/reencrypt termination                                                            | `nil`                    |
+| `route.tls.caCertificate`                 | PEM-encoded CA certificate. Only used for edge/reencrypt termination                                                 | `nil`                    |
+| `route.tls.destinationCACertificate`      | PEM-encoded CA certificate used to validate the destination endpoint's certificate. Only used for reencrypt termination | `nil`                 |
 
 ### HPA parameters
 

@@ -1,0 +1,34 @@
+{{- if .Values.route.enabled }}
+{{- range .Values.route.rules }}
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: {{ include "akeyless-api-gw.routeName" (dict "root" $ "rule" .) }}
+  namespace: {{ $.Release.Namespace | quote }}
+  labels:
+{{- include "akeyless-api-gw.labels" $ | nindent 4 }}
+  {{- if $.Values.route.labels }}
+    {{- toYaml $.Values.route.labels | nindent 4 }}
+  {{- end }}
+  {{- if $.Values.route.annotations }}
+  annotations:
+{{ toYaml $.Values.route.annotations | indent 4 }}
+  {{- end }}
+spec:
+{{- if .hostname }}
+  host: {{ .hostname }}
+{{- end }}
+  path: {{ .path | default $.Values.route.path }}
+  to:
+    kind: Service
+    name: {{ .serviceName | default (include "akeyless-api-gw.fullname" $) }}
+    weight: 100
+  port:
+    targetPort: {{ .servicePort }}
+{{- if $.Values.route.tls.enabled }}
+  tls:
+    {{- omit $.Values.route.tls "enabled" | toYaml | nindent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}
