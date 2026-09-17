@@ -1,0 +1,78 @@
+{{- /*
+MediaMTX carries the live view and records the session it is carrying.
+
+One instance per node. Workers publish their display to it over WHIP and
+browsers pull that same stream over WHEP, so the media never passes through the
+dispatcher. Because every session already arrives here, this is also where it
+is written to disk, which is why the worker no longer writes a recording at all.
+
+The image has to be the -ffmpeg tag. The standard image is built FROM scratch
+and contains no binaries, so the rename hook below could not run in it.
+MediaMTX does not use a shell for hooks either: it splits the command itself,
+expands the MTX_ variables itself and execs the result, so a hook is one
+command with plain arguments and nothing more.
+*/ -}}
+{{- $shared := "" -}}
+{{- if and .Values.persistence .Values.persistence.shareStorageVolume -}}
+  {{- $shared = .Values.persistence.shareStorageVolume.name | title | lower -}}
+{{- end -}}
+{{- $record := false -}}
+{{- if and .Values.sessionRecording (hasKey .Values.sessionRecording "enabled") -}}
+  {{- $record = .Values.sessionRecording.enabled -}}
+{{- end -}}
+{{- if and $record (not $shared) -}}
+  {{- fail "sessionRecording.enabled requires persistence.shareStorageVolume: the media server has nowhere to write the recording, and the dispatcher's uploader reads that volume" -}}
+{{- end -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ printf "%s-mediamtx" .Release.Name }}
+  labels:
+    app: mediamtx
+data:
+  mediamtx.yml: |
+    logLevel: info
+
+    # Only WebRTC is wanted. Every other protocol is one more way into a live
+    # session for something that has no business being there.
+    rtsp: no
+    rtmp: no
+    hls: no
+    srt: no
+    webrtc: yes
+    webrtcAddress: :{{ .Values.mediamtx.webrtcPort }}
+    webrtcLocalUDPAddress: :{{ .Values.mediamtx.webrtcUDPPort }}
+
+    api: yes
+    apiAddress: 127.0.0.1:9997
+
+    # The playback server hands out recordings over HTTP, and MediaMTX has no
+    # per session authorisation, so knowing a session id would be enough to
+    # download somebody else's session. It stays off.
+    playback: no
+
+    pathDefaults:
+      record: {{ ternary "yes" "no" $record }}
+{{- if $record }}
+
+      # Written under a staging directory the uploader does not scan, so a
+      # recording still being written is never collected half finished.
+      recordPath: /etc/shared/inprogress/rec_%path_%s
+      recordFormat: fmp4
+      recordPartDuration: 1s
+
+      # A session is one file. The publisher going away closes the segment, so
+      # this only has to outlast the longest session anyone will run.
+      recordSegmentDuration: 24h
+
+      # Retention belongs to the bucket. Deleting here would race the upload.
+      recordDeleteAfter: 0s
+
+      # Moving to a directory keeps the basename, which is why the name is
+      # already correct in staging. Both paths are on the same volume, so this
+      # is a rename and the uploader sees the whole file or no file at all.
+      runOnRecordSegmentComplete: mv $MTX_SEGMENT_PATH /etc/shared/
+{{- end }}
+
+    paths:
+      all_others:

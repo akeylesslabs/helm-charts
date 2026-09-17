@@ -1,0 +1,83 @@
+{{- $shared := "" -}}
+{{- if and .Values.persistence .Values.persistence.shareStorageVolume -}}
+  {{- $shared = .Values.persistence.shareStorageVolume.name | title | lower -}}
+{{- end -}}
+{{- $record := false -}}
+{{- if and .Values.sessionRecording (hasKey .Values.sessionRecording "enabled") -}}
+  {{- $record = .Values.sessionRecording.enabled -}}
+{{- end -}}
+{{- if and $record (not $shared) -}}
+  {{- fail "sessionRecording.enabled requires persistence.shareStorageVolume: the media server has nowhere to write the recording, and the dispatcher's uploader reads that volume" -}}
+{{- end -}}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ printf "%s-mediamtx" .Release.Name }}
+  labels:
+    app: mediamtx
+spec:
+  selector:
+    matchLabels:
+      app: mediamtx
+  template:
+    metadata:
+      labels:
+        app: mediamtx
+      annotations:
+        # A config change has to restart the pod, because MediaMTX reads this
+        # file once at start up.
+        checksum/config: {{ include (print $.Template.BasePath "/mediamtx-configmap.yaml") . | sha256sum }}
+    spec:
+      # Workers reach their own node's instance and browsers reach the WebRTC
+      # ports directly, so both need the node's address rather than a service.
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      securityContext:
+        fsGroup: 10000
+        supplementalGroups: [72]
+      containers:
+        - name: mediamtx
+          image: "{{ .Values.mediamtx.image.repository }}:{{ .Values.mediamtx.image.tag }}"
+          imagePullPolicy: {{ .Values.mediamtx.image.pullPolicy }}
+          ports:
+            - name: webrtc
+              containerPort: {{ .Values.mediamtx.webrtcPort }}
+              protocol: TCP
+            - name: webrtc-udp
+              containerPort: {{ .Values.mediamtx.webrtcUDPPort }}
+              protocol: UDP
+          volumeMounts:
+            - name: config
+              mountPath: /mediamtx.yml
+              subPath: mediamtx.yml
+{{- if $shared }}
+            - name: {{ $shared }}
+              mountPath: /etc/shared
+{{- end }}
+          resources:
+{{- toYaml .Values.mediamtx.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+{{- with .Values.mediamtx.nodeSelector }}
+      nodeSelector:
+{{- toYaml . | nindent 8 }}
+{{- end }}
+{{- with .Values.mediamtx.tolerations }}
+      tolerations:
+{{- toYaml . | nindent 8 }}
+{{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ printf "%s-mediamtx" .Release.Name }}
+{{- if $shared }}
+        # The volume the worker and the dispatcher already share. It has to be
+        # ReadWriteMany: a DaemonSet mounts it on every node at once and the
+        # uploader reads it from the dispatcher pod.
+        - name: {{ $shared }}
+          persistentVolumeClaim:
+            claimName: {{ printf "%s-%s" $.Release.Name .Values.persistence.shareStorageVolume.name | title | lower }}
+{{- end }}

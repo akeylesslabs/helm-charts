@@ -47,6 +47,36 @@ ipFamilies: []
 deployment:
   labels: {}
 
+# MediaMTX, the media server that carries the live view.
+#
+# One pod per node. Workers publish their display to their own node's instance
+# over WHIP and browsers pull it over WHEP, so the video never passes through
+# the dispatcher. When sessionRecording.enabled is true this is also what writes
+# the recording, which is why there is no separate switch for it here.
+mediamtx:
+  image:
+    # The -ffmpeg tag is required, not a preference. The standard image is built
+    # FROM scratch and has no binaries, so the hook that publishes a finished
+    # recording to the shared volume cannot run in it.
+    repository: bluenviron/mediamtx
+    tag: "1.21.0-ffmpeg"
+    pullPolicy: IfNotPresent
+
+  # Both ports are on the host network and have to be reachable from the user's
+  # browser, not only from inside the cluster.
+  webrtcPort: 8889
+  webrtcUDPPort: 8189
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 1Gi
+
+  nodeSelector: {}
+  tolerations: []
+
 # Session recording (unified configuration - recommended)
 # Provides a simplified interface for enabling video capture and S3 upload.
 # Advanced users can override specific settings via dispatcher.config.recording.* and webWorker.config.recording.*
