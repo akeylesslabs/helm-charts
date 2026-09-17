@@ -242,13 +242,15 @@ route:
   ## One Route is created per rule. Each rule maps a Service port to a hostname.
   ## Leave `hostname` unset to let OpenShift auto-generate one
   ## (<name>-<namespace>.<router-default-domain>).
+  ## Note: configure-app (8000) is intentionally not routed by default —
+  ## per Akeyless docs it should only be reachable on the internal network.
+  ## https://docs.akeyless.io/docs/gateway-network-connectivity
   ##
   rules:
     - servicePort: web
     - servicePort: hvp
     - servicePort: legacy-api
     - servicePort: api
-    - servicePort: configure-app
 
   # Example for overriding the hostname, target service and path for a specific rule
   #    - servicePort: web
