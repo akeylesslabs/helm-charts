@@ -15,6 +15,12 @@ dispatcher:
       # Test-only placeholder; not a real credential.
       accessKey: dummy-access-key
 
+webProxy:
+  # See dispatcher.replicaCount comment above.
+  replicaCount: 0
+  service:
+    type: ClusterIP
+
 webWorker:
   # See dispatcher.replicaCount comment above.
   replicaCount: 0
