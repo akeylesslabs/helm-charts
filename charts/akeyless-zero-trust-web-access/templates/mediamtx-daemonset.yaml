@@ -1,0 +1,118 @@
+{{- $shared := "" -}}
+{{- if and .Values.persistence .Values.persistence.shareStorageVolume -}}
+  {{- $shared = .Values.persistence.shareStorageVolume.name | title | lower -}}
+{{- end -}}
+{{- $record := false -}}
+{{- if and .Values.sessionRecording (hasKey .Values.sessionRecording "enabled") -}}
+  {{- $record = .Values.sessionRecording.enabled -}}
+{{- end -}}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ printf "%s-mediamtx" .Release.Name }}
+  labels:
+    app: mediamtx
+spec:
+  selector:
+    matchLabels:
+      app: mediamtx
+  template:
+    metadata:
+      labels:
+        app: mediamtx
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/mediamtx-configmap.yaml") . | sha256sum }}
+    spec:
+      containers:
+        - name: mediamtx
+          image: "{{ .Values.mediamtx.image.repository }}:{{ .Values.mediamtx.image.tag }}"
+          imagePullPolicy: {{ .Values.mediamtx.image.pullPolicy }}
+          env:
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: MTX_WEBRTCADDITIONALHOSTS
+              value: "{{ if .Values.mediamtx.additionalHosts }}{{ join "," .Values.mediamtx.additionalHosts }},{{ end }}$(NODE_IP)"
+          ports:
+            - name: whip
+              containerPort: {{ .Values.mediamtx.webrtcPort }}
+              protocol: TCP
+            - name: ice
+              containerPort: {{ .Values.mediamtx.iceUDPPort }}
+              hostPort: {{ .Values.mediamtx.iceUDPPort }}
+              protocol: UDP
+          volumeMounts:
+            - name: config
+              mountPath: /mediamtx.yml
+              subPath: mediamtx.yml
+              readOnly: true
+{{- if and $shared $record }}
+            - name: {{ $shared }}
+              mountPath: /etc/shared
+{{- end }}
+          resources:
+{{- toYaml .Values.mediamtx.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.mediamtx.webrtcPort }}
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.mediamtx.webrtcPort }}
+            initialDelaySeconds: 10
+            periodSeconds: 20
+{{- with .Values.mediamtx.nodeSelector }}
+      nodeSelector:
+{{- toYaml . | nindent 8 }}
+{{- end }}
+{{- with .Values.mediamtx.tolerations }}
+      tolerations:
+{{- toYaml . | nindent 8 }}
+{{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ printf "%s-mediamtx" .Release.Name }}
+{{- if and $shared $record }}
+        - name: {{ $shared }}
+          persistentVolumeClaim:
+            claimName: {{ printf "%s-%s" $.Release.Name .Values.persistence.shareStorageVolume.name | title | lower }}
+{{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ printf "%s-mediamtx" .Release.Name }}
+  labels:
+    app: mediamtx
+spec:
+  selector:
+    app: mediamtx
+  internalTrafficPolicy: Local
+  ports:
+    - name: whip
+      port: {{ .Values.mediamtx.webrtcPort }}
+      targetPort: {{ .Values.mediamtx.webrtcPort }}
+      protocol: TCP
+    - name: ice
+      port: {{ .Values.mediamtx.iceUDPPort }}
+      targetPort: {{ .Values.mediamtx.iceUDPPort }}
+      protocol: UDP
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ printf "%s-mediamtx" .Release.Name }}
+  labels:
+    app: mediamtx
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: mediamtx
