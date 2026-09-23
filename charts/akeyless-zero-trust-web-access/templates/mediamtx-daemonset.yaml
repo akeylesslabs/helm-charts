@@ -6,9 +6,6 @@
 {{- if and .Values.sessionRecording (hasKey .Values.sessionRecording "enabled") -}}
   {{- $record = .Values.sessionRecording.enabled -}}
 {{- end -}}
-{{- if and $record (not $shared) -}}
-  {{- fail "sessionRecording.enabled requires persistence.shareStorageVolume: the media server has nowhere to write the recording, and the dispatcher's uploader reads that volume" -}}
-{{- end -}}
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -24,33 +21,47 @@ spec:
       labels:
         app: mediamtx
       annotations:
-        # A config change has to restart the pod, because MediaMTX reads this
-        # file once at start up.
+        # MediaMTX reads its config once at start up.
         checksum/config: {{ include (print $.Template.BasePath "/mediamtx-configmap.yaml") . | sha256sum }}
     spec:
-      # Workers reach their own node's instance and browsers reach the WebRTC
-      # ports directly, so both need the node's address rather than a service.
-      hostNetwork: true
-      dnsPolicy: ClusterFirstWithHostNet
-      securityContext:
-        fsGroup: 10000
-        supplementalGroups: [72]
+      # Pod network on purpose. On host network the worker's ICE traffic to the
+      # node address is translated on the way in, the DTLS replies never find
+      # the pod, and the handshake times out with everything looking correct.
       containers:
         - name: mediamtx
           image: "{{ .Values.mediamtx.image.repository }}:{{ .Values.mediamtx.image.tag }}"
           imagePullPolicy: {{ .Values.mediamtx.image.pullPolicy }}
+          env:
+            # So the advertised candidate is one a worker pod here can route to.
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            # Counter-intuitive: MediaMTX emits this REVERSED, so the last
+            # entry is offered first. The publisher uses only that one, so the
+            # node address goes last. additionalHosts follow it, which suits a
+            # browser because it does real ICE and tries them all. Reverse the
+            # two and the publish dies on a DTLS timeout.
+            - name: MTX_WEBRTCADDITIONALHOSTS
+              value: "{{ if .Values.mediamtx.additionalHosts }}{{ join "," .Values.mediamtx.additionalHosts }},{{ end }}$(NODE_IP)"
           ports:
-            - name: webrtc
+            # No host port: both callers reach this through the Service.
+            - name: whip
               containerPort: {{ .Values.mediamtx.webrtcPort }}
               protocol: TCP
-            - name: webrtc-udp
-              containerPort: {{ .Values.mediamtx.webrtcUDPPort }}
+            # The media path, which the browser reaches on the node and the
+            # publisher's node candidate names. Without the host port the
+            # publish fails with a refusal that reads like a codec error.
+            - name: ice
+              containerPort: {{ .Values.mediamtx.iceUDPPort }}
+              hostPort: {{ .Values.mediamtx.iceUDPPort }}
               protocol: UDP
           volumeMounts:
             - name: config
               mountPath: /mediamtx.yml
               subPath: mediamtx.yml
-{{- if $shared }}
+              readOnly: true
+{{- if and $shared $record }}
             - name: {{ $shared }}
               mountPath: /etc/shared
 {{- end }}
@@ -58,9 +69,18 @@ spec:
 {{- toYaml .Values.mediamtx.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
             capabilities:
               drop: ["ALL"]
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.mediamtx.webrtcPort }}
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.mediamtx.webrtcPort }}
+            initialDelaySeconds: 10
+            periodSeconds: 20
 {{- with .Values.mediamtx.nodeSelector }}
       nodeSelector:
 {{- toYaml . | nindent 8 }}
@@ -73,11 +93,46 @@ spec:
         - name: config
           configMap:
             name: {{ printf "%s-mediamtx" .Release.Name }}
-{{- if $shared }}
-        # The volume the worker and the dispatcher already share. It has to be
-        # ReadWriteMany: a DaemonSet mounts it on every node at once and the
-        # uploader reads it from the dispatcher pod.
+{{- if and $shared $record }}
+        # Shared with the worker and the dispatcher, so ReadWriteMany: every
+        # node mounts it and the uploader reads it from the dispatcher pod.
         - name: {{ $shared }}
           persistentVolumeClaim:
             claimName: {{ printf "%s-%s" $.Release.Name .Values.persistence.shareStorageVolume.name | title | lower }}
 {{- end }}
+---
+# internalTrafficPolicy Local keeps a worker on its own node's instance, which
+# is the point of running one per node.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ printf "%s-mediamtx" .Release.Name }}
+  labels:
+    app: mediamtx
+spec:
+  selector:
+    app: mediamtx
+  internalTrafficPolicy: Local
+  ports:
+    - name: whip
+      port: {{ .Values.mediamtx.webrtcPort }}
+      targetPort: {{ .Values.mediamtx.webrtcPort }}
+      protocol: TCP
+    - name: ice
+      port: {{ .Values.mediamtx.iceUDPPort }}
+      targetPort: {{ .Values.mediamtx.iceUDPPort }}
+      protocol: UDP
+---
+# Rolling this drops the live view for every session on the node, and now the
+# recording too, since the worker keeps no file of its own.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ printf "%s-mediamtx" .Release.Name }}
+  labels:
+    app: mediamtx
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: mediamtx

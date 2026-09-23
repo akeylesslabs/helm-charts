@@ -47,25 +47,28 @@ ipFamilies: []
 deployment:
   labels: {}
 
-# MediaMTX, the media server that carries the live view.
-#
-# One pod per node. Workers publish their display to their own node's instance
-# over WHIP and browsers pull it over WHEP, so the video never passes through
-# the dispatcher. When sessionRecording.enabled is true this is also what writes
-# the recording, which is why there is no separate switch for it here.
+# The media server carrying the live view, one pod per node. When
+# sessionRecording.enabled is true it also writes the recording, which is why
+# there is no separate switch for it here.
 mediamtx:
   image:
-    # The -ffmpeg tag is required, not a preference. The standard image is built
-    # FROM scratch and has no binaries, so the hook that publishes a finished
-    # recording to the shared volume cannot run in it.
+    # The -ffmpeg tag is required. The standard image is FROM scratch, so the
+    # hook that publishes a finished recording has no mv to exec.
     repository: bluenviron/mediamtx
     tag: "1.21.0-ffmpeg"
     pullPolicy: IfNotPresent
 
-  # Both ports are on the host network and have to be reachable from the user's
-  # browser, not only from inside the cluster.
+  # Signalling. Reached through the Service, so it needs no host port.
   webrtcPort: 8889
-  webrtcUDPPort: 8189
+
+  # The ICE media port, published on the node because the user's browser has to
+  # reach it from outside the cluster.
+  iceUDPPort: 8189
+
+  # Extra ICE candidates, for a browser off the cluster network. The node's own
+  # address is appended last, which makes it the first candidate offered:
+  # MediaMTX reverses this list and the worker's publish uses only the first.
+  additionalHosts: []
 
   resources:
     requests:
