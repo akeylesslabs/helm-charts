@@ -1,6 +1,4 @@
 {{- /*
-One MediaMTX per node. Workers publish over WHIP, browsers read over WHEP, and
-the recording is written from that same stream, so the worker writes no file.
 The image must be the -ffmpeg tag: the standard one is FROM scratch, and the
 rename hook below needs a real mv to exec.
 */ -}}
@@ -25,8 +23,7 @@ data:
   mediamtx.yml: |
     logLevel: info
 
-    # Everything but WebRTC is off so an unexpected listener cannot become a
-    # way in. moq is on by default and opens 8892 and 8893.
+    # Only WebRTC. moq is on by default and opens 8892 and 8893.
     rtsp: no
     rtmp: no
     hls: no

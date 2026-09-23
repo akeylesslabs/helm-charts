@@ -47,9 +47,8 @@ ipFamilies: []
 deployment:
   labels: {}
 
-# The media server carrying the live view, one pod per node. When
-# sessionRecording.enabled is true it also writes the recording, which is why
-# there is no separate switch for it here.
+# The media server behind the live view, one pod per node. It also writes the
+# recording, switched by sessionRecording.enabled.
 mediamtx:
   image:
     # The -ffmpeg tag is required. The standard image is FROM scratch, so the
@@ -58,16 +57,13 @@ mediamtx:
     tag: "1.21.0-ffmpeg"
     pullPolicy: IfNotPresent
 
-  # Signalling. Reached through the Service, so it needs no host port.
   webrtcPort: 8889
 
-  # The ICE media port, published on the node because the user's browser has to
-  # reach it from outside the cluster.
+  # Published on the node, the browser has to reach it from outside the cluster.
   iceUDPPort: 8189
 
   # Extra ICE candidates, for a browser off the cluster network. The node's own
-  # address is appended last, which makes it the first candidate offered:
-  # MediaMTX reverses this list and the worker's publish uses only the first.
+  # address is always appended last, see the DaemonSet.
   additionalHosts: []
 
   resources:

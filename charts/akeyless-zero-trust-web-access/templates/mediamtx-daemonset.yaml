@@ -37,11 +37,9 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
-            # Counter-intuitive: MediaMTX emits this REVERSED, so the last
-            # entry is offered first. The publisher uses only that one, so the
-            # node address goes last. additionalHosts follow it, which suits a
-            # browser because it does real ICE and tries them all. Reverse the
-            # two and the publish dies on a DTLS timeout.
+            # MediaMTX emits this reversed and a publisher uses only the first
+            # candidate, so the node address goes last. The other way round the
+            # publish dies on a DTLS timeout.
             - name: MTX_WEBRTCADDITIONALHOSTS
               value: "{{ if .Values.mediamtx.additionalHosts }}{{ join "," .Values.mediamtx.additionalHosts }},{{ end }}$(NODE_IP)"
           ports:
@@ -49,9 +47,8 @@ spec:
             - name: whip
               containerPort: {{ .Values.mediamtx.webrtcPort }}
               protocol: TCP
-            # The media path, which the browser reaches on the node and the
-            # publisher's node candidate names. Without the host port the
-            # publish fails with a refusal that reads like a codec error.
+            # The browser reaches the media path on the node. Without the host
+            # port the publish fails with a refusal that reads like a codec error.
             - name: ice
               containerPort: {{ .Values.mediamtx.iceUDPPort }}
               hostPort: {{ .Values.mediamtx.iceUDPPort }}
@@ -123,8 +120,8 @@ spec:
       targetPort: {{ .Values.mediamtx.iceUDPPort }}
       protocol: UDP
 ---
-# Rolling this drops the live view for every session on the node, and now the
-# recording too, since the worker keeps no file of its own.
+# Rolling this drops the live view and the recording of every session on the
+# node.
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
