@@ -47,23 +47,22 @@ ipFamilies: []
 deployment:
   labels: {}
 
-# The media server behind the live view, one pod per node. It also writes the
-# recording, switched by sessionRecording.enabled.
+# Media server for the live view, one pod per node. It also records sessions
+# when sessionRecording.enabled is true.
 mediamtx:
   image:
-    # The -ffmpeg tag is required. The standard image is FROM scratch, so the
-    # hook that publishes a finished recording has no mv to exec.
+    # Recording requires an image tag with the -ffmpeg suffix.
     repository: bluenviron/mediamtx
     tag: "1.21.0-ffmpeg"
     pullPolicy: IfNotPresent
 
   webrtcPort: 8889
 
-  # Published on the node, the browser has to reach it from outside the cluster.
+  # UDP port opened on every node. Users' browsers must be able to reach it.
   iceUDPPort: 8189
 
-  # Extra ICE candidates, for a browser off the cluster network. The node's own
-  # address is always appended last, see the DaemonSet.
+  # Additional addresses to offer browsers, for example a public IP when the
+  # nodes are not directly reachable from users' networks.
   additionalHosts: []
 
   resources:
@@ -81,9 +80,7 @@ mediamtx:
 # Advanced users can override specific settings via dispatcher.config.recording.* and webWorker.config.recording.*
 # Requires persistence.shareStorageVolume configured with ReadWriteMany access mode.
 sessionRecording:
-  # Enable video capture on web-worker pods.
-  # Worker writes Matroska (rec_*.mkv) to the shared volume; dispatcher remuxes to standard
-  # rec_*.mp4 with ffmpeg before S3 upload. The customer-facing artifact in S3 stays .mp4.
+  # Record sessions. Recordings are uploaded to S3 as rec_*.mp4.
   enabled: false
 
   # Recording quality: 144p|240p|360p|480p|720p|1080p (affects ffmpeg CRF and framerate)

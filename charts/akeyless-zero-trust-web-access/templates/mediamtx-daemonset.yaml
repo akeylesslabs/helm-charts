@@ -21,34 +21,23 @@ spec:
       labels:
         app: mediamtx
       annotations:
-        # MediaMTX reads its config once at start up.
         checksum/config: {{ include (print $.Template.BasePath "/mediamtx-configmap.yaml") . | sha256sum }}
     spec:
-      # Pod network on purpose. On host network the worker's ICE traffic to the
-      # node address is translated on the way in, the DTLS replies never find
-      # the pod, and the handshake times out with everything looking correct.
       containers:
         - name: mediamtx
           image: "{{ .Values.mediamtx.image.repository }}:{{ .Values.mediamtx.image.tag }}"
           imagePullPolicy: {{ .Values.mediamtx.image.pullPolicy }}
           env:
-            # So the advertised candidate is one a worker pod here can route to.
             - name: NODE_IP
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
-            # MediaMTX emits this reversed and a publisher uses only the first
-            # candidate, so the node address goes last. The other way round the
-            # publish dies on a DTLS timeout.
             - name: MTX_WEBRTCADDITIONALHOSTS
               value: "{{ if .Values.mediamtx.additionalHosts }}{{ join "," .Values.mediamtx.additionalHosts }},{{ end }}$(NODE_IP)"
           ports:
-            # No host port: both callers reach this through the Service.
             - name: whip
               containerPort: {{ .Values.mediamtx.webrtcPort }}
               protocol: TCP
-            # The browser reaches the media path on the node. Without the host
-            # port the publish fails with a refusal that reads like a codec error.
             - name: ice
               containerPort: {{ .Values.mediamtx.iceUDPPort }}
               hostPort: {{ .Values.mediamtx.iceUDPPort }}
@@ -91,15 +80,11 @@ spec:
           configMap:
             name: {{ printf "%s-mediamtx" .Release.Name }}
 {{- if and $shared $record }}
-        # Shared with the worker and the dispatcher, so ReadWriteMany: every
-        # node mounts it and the uploader reads it from the dispatcher pod.
         - name: {{ $shared }}
           persistentVolumeClaim:
             claimName: {{ printf "%s-%s" $.Release.Name .Values.persistence.shareStorageVolume.name | title | lower }}
 {{- end }}
 ---
-# internalTrafficPolicy Local keeps a worker on its own node's instance, which
-# is the point of running one per node.
 apiVersion: v1
 kind: Service
 metadata:
@@ -120,8 +105,6 @@ spec:
       targetPort: {{ .Values.mediamtx.iceUDPPort }}
       protocol: UDP
 ---
-# Rolling this drops the live view and the recording of every session on the
-# node.
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:

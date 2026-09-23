@@ -1,7 +1,3 @@
-{{- /*
-The image must be the -ffmpeg tag: the standard one is FROM scratch, and the
-rename hook below needs a real mv to exec.
-*/ -}}
 {{- $shared := "" -}}
 {{- if and .Values.persistence .Values.persistence.shareStorageVolume -}}
   {{- $shared = .Values.persistence.shareStorageVolume.name | title | lower -}}
@@ -23,7 +19,6 @@ data:
   mediamtx.yml: |
     logLevel: info
 
-    # Only WebRTC. moq is on by default and opens 8892 and 8893.
     rtsp: no
     rtmp: no
     hls: no
@@ -32,8 +27,6 @@ data:
     metrics: no
     api: no
 
-    # Playback serves recordings over HTTP with no per session authorisation,
-    # so a session id alone would fetch somebody else's session.
     playback: no
 
     webrtc: yes
@@ -41,30 +34,20 @@ data:
     webrtcEncryption: no
     webrtcLocalUDPAddress: :{{ .Values.mediamtx.iceUDPPort }}
 
-    # Candidates come from MTX_WEBRTCADDITIONALHOSTS. Enumeration would add
-    # loopback, and the publisher takes the first candidate without trying the
-    # rest, so the worker would dial its own namespace.
     webrtcIPsFromInterfaces: no
 
     pathDefaults:
       record: {{ ternary "yes" "no" $record }}
 {{- if $record }}
 
-      # Staging, which the uploader does not scan, so a recording in progress
-      # is never collected half finished.
       recordPath: /etc/shared/inprogress/rec_%path_%s
       recordFormat: fmp4
       recordPartDuration: 1s
 
-      # A session is one file. The publisher leaving closes the segment, so
-      # this only has to outlast the longest session anyone will run.
       recordSegmentDuration: 24h
 
-      # Retention belongs to the bucket. Deleting here races the upload.
       recordDeleteAfter: 0s
 
-      # Same volume, so this is a rename and the uploader sees a whole file or
-      # none. Moving to a directory keeps the basename staging already set.
       runOnRecordSegmentComplete: mv $MTX_SEGMENT_PATH /etc/shared/
 {{- end }}
 
