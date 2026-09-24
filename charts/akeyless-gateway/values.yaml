@@ -772,8 +772,14 @@ sra:
       enabled: false
       # minAvailable: ""
       # maxUnavailable: ""
-
+      
 gatewayAPI:
+## Expose the Gateway using the Kubernetes Gateway API instead of an Ingress resource.
+## Set gateway.create to true to have this chart create the Gateway resource, or leave it
+## false and use parentRefs to attach the generated HTTPRoutes to an existing Gateway.
+## Mutually exclusive with gateway.ingress.enabled - enable only one of them.
+## ref: https://kubernetes.io/docs/concepts/services-networking/gateway/
+##
   enabled: false
   backend:
     serviceName: ""
