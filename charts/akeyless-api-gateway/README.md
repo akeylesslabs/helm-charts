@@ -36,16 +36,13 @@ helm install RELEASE_NAME akeyless/akeyless-api-gateway
 
 ```yaml
 extraObjects:
-  - apiVersion: networking.k8s.io/v1
-    kind: NetworkPolicy
+  - apiVersion: v1
+    kind: ConfigMap
     metadata:
       name: "{{ .Release.Name }}-extra"
       namespace: "{{ .Release.Namespace }}"
-    spec:
-      podSelector: {}
-      policyTypes:
-        - Ingress
-        - Egress
+    data:
+      chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
 ```
 
 ## Parameters

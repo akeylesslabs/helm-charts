@@ -138,7 +138,40 @@ jobs:
         if: steps.list-changed.outputs.changed == 'true'
         env:
           CHANGED_CHARTS: ${{ steps.list-changed.outputs.changed-charts }}
-        run: bash .github/scripts/verify_extra_objects.sh installed
+        run: |
+          expected=0
+          while IFS= read -r chart; do
+            [[ -n "$chart" ]] || continue
+            if grep -qs '^extraObjects:' "$chart"/ci/*.yaml; then
+              expected=$((expected + 1))
+            fi
+          done <<< "$CHANGED_CHARTS"
+
+          found=0
+          for release in $(helm list -n chart-testing --short); do
+            manifest="$(helm get manifest "$release" -n chart-testing)"
+            grep -q "extra-objects-probe" <<< "$manifest" || continue
+            for kind in configmap secretproviderclass.secrets-store.csi.x-k8s.io; do
+              owner="$(kubectl get "$kind" "${release}-extra" -n chart-testing \
+                -o jsonpath='{.metadata.annotations.meta\.helm\.sh/release-name}')"
+              if [[ "$owner" != "$release" ]]; then
+                echo "::error::$kind ${release}-extra is not owned by release $release (got '$owner')"
+                exit 1
+              fi
+            done
+            value="$(kubectl get configmap "${release}-extra" -n chart-testing -o jsonpath='{.data.release}')"
+            if [[ "$value" != "$release" ]]; then
+              echo "::error::configmap ${release}-extra did not render tpl (got '$value')"
+              exit 1
+            fi
+            echo "release $release: extraObjects installed and owned"
+            found=$((found + 1))
+          done
+
+          if [[ "$found" -lt "$expected" ]]; then
+            echo "::error::expected extraObjects from $expected chart(s), verified $found"
+            exit 1
+          fi
 
       - name: Dump chart-testing diagnostics
         if: failure() && steps.ct-install.outcome == 'failure'
@@ -151,7 +184,7 @@ jobs:
           kubectl get all -n chart-testing -o wide || true
 
           echo "## Helm releases"
-          helm list -n chart-testing --all || true
+          helm list -n chart-testing || true
 
           echo "## Events"
           kubectl get events -n chart-testing --sort-by lastTimestamp -o wide || true
@@ -172,11 +205,17 @@ jobs:
       - name: Clean chart-testing namespace
         if: always() && steps.list-changed.outputs.changed == 'true'
         run: |
-          for release in $(helm list -n chart-testing --all --short); do
+          for release in $(helm list -n chart-testing --short); do
             helm uninstall "$release" -n chart-testing --wait --timeout 120s || true
           done
           kubectl delete all --all -n chart-testing --ignore-not-found=true || true
 
       - name: Verify extraObjects removed on uninstall
         if: steps.extra-objects-installed.outcome == 'success'
-        run: bash .github/scripts/verify_extra_objects.sh removed
+        run: |
+          left="$(kubectl get configmaps,secretproviderclasses.secrets-store.csi.x-k8s.io \
+            -n chart-testing -l extra-objects-probe=true -o name)"
+          if [[ -n "$left" ]]; then
+            echo "::error::extraObjects left after helm uninstall: $left"
+            exit 1
+          fi
