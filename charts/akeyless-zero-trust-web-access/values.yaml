@@ -590,3 +590,5 @@ metrics:
     # Prometheus discovers ServiceMonitors that are labeled with the same release tag as the prometheus-operator release
 #    releaseLabels:
 #      release: prometheus-stack
+
+extraObjects: []

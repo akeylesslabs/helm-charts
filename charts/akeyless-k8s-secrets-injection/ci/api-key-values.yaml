@@ -5,3 +5,25 @@ env:
   AKEYLESS_ACCESS_ID: p-12345678911123
   # Test-only base64-shaped placeholder; not a real credential.
   AKEYLESS_API_KEY: ZHVtbXktYXBpLWtleQ==
+
+extraObjects:
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: "{{ .Release.Name }}-extra"
+      namespace: "{{ .Release.Namespace }}"
+      labels:
+        extra-objects-probe: "true"
+    data:
+      release: "{{ .Release.Name }}"
+  - apiVersion: secrets-store.csi.x-k8s.io/v1
+    kind: SecretProviderClass
+    metadata:
+      name: "{{ .Release.Name }}-extra"
+      namespace: "{{ .Release.Namespace }}"
+      labels:
+        extra-objects-probe: "true"
+    spec:
+      provider: akeyless
+      parameters:
+        release: "{{ .Release.Name }}"

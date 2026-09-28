@@ -30,6 +30,24 @@ To install the chart run:
 helm install RELEASE_NAME akeyless/akeyless-api-gateway
 ``` 
 
+## Extra Objects
+
+`extraObjects` renders additional Kubernetes manifests as part of the release. Each entry is rendered with `tpl`, so it can reference `.Release`, `.Chart` and `.Values`. Custom resources require their CRDs to be installed before the release.
+
+```yaml
+extraObjects:
+  - apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      name: "{{ .Release.Name }}-extra"
+      namespace: "{{ .Release.Namespace }}"
+    spec:
+      podSelector: {}
+      policyTypes:
+        - Ingress
+        - Egress
+```
+
 ## Parameters
 
 The following table lists the configurable parameters of the API Gateway chart and their default values.

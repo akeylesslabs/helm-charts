@@ -60,6 +60,24 @@ gateway:
         readOnly: true
 ```
 
+## Extra Objects
+
+`extraObjects` renders additional Kubernetes manifests as part of the release. Each entry is rendered with `tpl`, so it can reference `.Release`, `.Chart` and `.Values`. Custom resources require their CRDs to be installed before the release.
+
+```yaml
+extraObjects:
+  - apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      name: "{{ .Release.Name }}-extra"
+      namespace: "{{ .Release.Namespace }}"
+    spec:
+      podSelector: {}
+      policyTypes:
+        - Ingress
+        - Egress
+```
+
 ## Strict Security Policy (Kyverno/PSA Compliance)
 
 For environments requiring Kyverno or Pod Security Admission (PSA) `restricted` profile compliance, enable the `strictSecurityPolicy` toggle:

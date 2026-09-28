@@ -44,6 +44,24 @@ helm install RELEASE_NAME akeyless/akeyless-secrets-injection --namespace "${WEB
 helm delete RELEASE_NAME --namespace "${WEBHOOK_NS}"
 ```
 
+## Extra Objects
+
+`extraObjects` renders additional Kubernetes manifests as part of the release. Each entry is rendered with `tpl`, so it can reference `.Release`, `.Chart` and `.Values`. Custom resources require their CRDs to be installed before the release.
+
+```yaml
+extraObjects:
+  - apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      name: "{{ .Release.Name }}-extra"
+      namespace: "{{ .Release.Namespace }}"
+    spec:
+      podSelector: {}
+      policyTypes:
+        - Ingress
+        - Egress
+```
+
 ## Configuration
 
 ### Upgrading to chart 2.0.0

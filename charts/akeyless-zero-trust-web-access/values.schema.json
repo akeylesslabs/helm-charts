@@ -5,6 +5,10 @@
   "type": "object",
   "additionalProperties": true,
   "properties": {
+    "extraObjects": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
     "image": {
       "type": "object",
       "additionalProperties": true,

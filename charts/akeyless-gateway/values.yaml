@@ -803,3 +803,5 @@ gatewayAPI:
   httpRoutePath: /
   httpRoutePathType: PathPrefix
   httpRoutes: []
+
+extraObjects: []

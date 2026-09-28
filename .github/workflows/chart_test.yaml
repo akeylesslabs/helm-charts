@@ -110,6 +110,10 @@ jobs:
         # targets (gateway.networking.k8s.io/v1).
         run: kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.2.1/standard-install.yaml
 
+      - name: Install SecretProviderClass CRD
+        if: steps.list-changed.outputs.changed == 'true'
+        run: kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/v1.6.1/deploy/secrets-store.csi.x-k8s.io_secretproviderclasses.yaml
+
       - name: Prepare test environment
         if: steps.list-changed.outputs.changed == 'true'
         env:
@@ -128,6 +132,13 @@ jobs:
         id: ct-install
         if: steps.list-changed.outputs.changed == 'true'
         run: ct install --config .github/ct.yaml --skip-clean-up
+
+      - name: Verify extraObjects installed
+        id: extra-objects-installed
+        if: steps.list-changed.outputs.changed == 'true'
+        env:
+          CHANGED_CHARTS: ${{ steps.list-changed.outputs.changed-charts }}
+        run: bash .github/scripts/verify_extra_objects.sh installed
 
       - name: Dump chart-testing diagnostics
         if: failure() && steps.ct-install.outcome == 'failure'
@@ -165,3 +176,7 @@ jobs:
             helm uninstall "$release" -n chart-testing --wait --timeout 120s || true
           done
           kubectl delete all --all -n chart-testing --ignore-not-found=true || true
+
+      - name: Verify extraObjects removed on uninstall
+        if: steps.extra-objects-installed.outcome == 'success'
+        run: bash .github/scripts/verify_extra_objects.sh removed
