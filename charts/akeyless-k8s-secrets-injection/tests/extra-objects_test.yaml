@@ -68,7 +68,7 @@ tests:
           value: rel
         documentIndex: 0
       - isKind:
-          of: SecretProviderClass
+          of: NetworkPolicy
         documentIndex: 1
       - isKind:
           of: Service

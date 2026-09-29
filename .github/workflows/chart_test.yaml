@@ -128,10 +128,6 @@ jobs:
         # targets (gateway.networking.k8s.io/v1).
         run: kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.2.1/standard-install.yaml
 
-      - name: Install SecretProviderClass CRD
-        if: steps.list-changed.outputs.changed == 'true'
-        run: kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/v1.6.1/deploy/secrets-store.csi.x-k8s.io_secretproviderclasses.yaml
-
       - name: Prepare test environment
         if: steps.list-changed.outputs.changed == 'true'
         env:

@@ -14,15 +14,17 @@ extraObjects:
       namespace: "{{ .Release.Namespace }}"
     data:
       release: "{{ .Release.Name }}"
-  - apiVersion: secrets-store.csi.x-k8s.io/v1
-    kind: SecretProviderClass
+  - apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
     metadata:
       name: "{{ .Release.Name }}-extra"
       namespace: "{{ .Release.Namespace }}"
     spec:
-      provider: akeyless
-      parameters:
-        release: "{{ .Release.Name }}"
+      podSelector:
+        matchLabels:
+          extra-objects/selects: nothing
+      policyTypes:
+        - Ingress
   - |
     apiVersion: v1
     kind: Service
