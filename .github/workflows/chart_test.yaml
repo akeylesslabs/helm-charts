@@ -111,7 +111,9 @@ jobs:
             base="$(grep -l '^extraObjects:' "${chart}"ci/*.yaml | head -n1)"
             out="$(mktemp -d)"
             helm template golden "$chart" -f "$base" -f "$contract/golden-values.yaml" --output-dir "$out" > /dev/null
-            find "$out" -path '*/templates/extra-objects.yaml' -exec grep -v '^# Source: ' {} \; | diff -u "$contract/golden.yaml" -
+            find "$out" -path '*/templates/extra-objects.yaml' -exec grep -v '^# Source: ' {} \; \
+              | awk 'NF { while (blank-- > 0) print ""; print; blank = 0; next } { blank++ }' \
+              | diff -u "$contract/golden.yaml" -
           done
 
       - name: Create kind cluster
