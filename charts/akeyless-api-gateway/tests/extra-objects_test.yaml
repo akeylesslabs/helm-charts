@@ -69,3 +69,17 @@ tests:
     asserts:
       - failedTemplate:
           errorPattern: "at '/extraObjects': got string, want array"
+
+  - it: renders the extraObjects from the ci install values
+    values:
+      - ../ci/clusterip-values.yaml
+    asserts:
+      - hasDocuments:
+          count: 2
+      - equal:
+          path: data.release
+          value: rel
+        documentIndex: 0
+      - isKind:
+          of: SecretProviderClass
+        documentIndex: 1

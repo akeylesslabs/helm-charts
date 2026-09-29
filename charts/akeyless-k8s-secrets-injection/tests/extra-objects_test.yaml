@@ -62,3 +62,17 @@ tests:
           path: spec.parameters.configuration
           value: custom-value
         documentIndex: 1
+
+  - it: renders the extraObjects from the ci install values
+    values:
+      - ../ci/api-key-values.yaml
+    asserts:
+      - hasDocuments:
+          count: 2
+      - equal:
+          path: data.release
+          value: rel
+        documentIndex: 0
+      - isKind:
+          of: SecretProviderClass
+        documentIndex: 1

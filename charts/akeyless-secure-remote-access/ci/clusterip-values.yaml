@@ -24,8 +24,6 @@ extraObjects:
     metadata:
       name: "{{ .Release.Name }}-extra"
       namespace: "{{ .Release.Namespace }}"
-      labels:
-        extra-objects-probe: "true"
     data:
       release: "{{ .Release.Name }}"
   - apiVersion: secrets-store.csi.x-k8s.io/v1
@@ -33,8 +31,6 @@ extraObjects:
     metadata:
       name: "{{ .Release.Name }}-extra"
       namespace: "{{ .Release.Namespace }}"
-      labels:
-        extra-objects-probe: "true"
     spec:
       provider: akeyless
       parameters:
