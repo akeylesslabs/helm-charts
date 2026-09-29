@@ -7,7 +7,7 @@
   "properties": {
     "extraObjects": {
       "type": "array",
-      "items": { "type": "object" }
+      "items": { "type": ["object", "string"] }
     },
     "image": {
       "type": "object",

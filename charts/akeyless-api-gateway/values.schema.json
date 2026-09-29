@@ -3,7 +3,7 @@
   "properties": {
     "extraObjects": {
       "type": "array",
-      "items": { "type": "object" }
+      "items": { "type": ["object", "string"] }
     },
     "cache" : {
       "properties": {

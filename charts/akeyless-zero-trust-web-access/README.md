@@ -304,6 +304,21 @@ extraObjects:
       chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
 ```
 
+A map entry goes through Helm's values handling before it is rendered. A templated value always renders as a string (`replicas: "{{ .Values.replicaCount }}"` becomes `replicas: '3'`), and numbers are read as 64-bit floats, so `1.0` renders as `1` and integers above 2^53 lose precision. A string entry is rendered exactly as written, apart from the template expressions in it. Write the entry as a string when a field needs a templated number or boolean, or an exact number:
+
+```yaml
+extraMinAvailable: 1
+extraObjects:
+  - |
+    apiVersion: policy/v1
+    kind: PodDisruptionBudget
+    metadata:
+      name: "{{ .Release.Name }}-extra"
+      namespace: "{{ .Release.Namespace }}"
+    spec:
+      minAvailable: {{ .Values.extraMinAvailable }}
+```
+
 ## Parameters
 
 The following table lists the configurable parameters of the Zero Trust Web Access chart and their default values.
