@@ -1,0 +1,18 @@
+extraObjects:
+  - |
+    # kept as written
+    apiVersion: example.com/v1
+    kind: Probe
+    metadata:
+      name: "{{ .Release.Name }}-exact"
+      namespace: "{{ .Release.Namespace }}"
+    spec:
+      zeta: first
+      alpha: second
+      wholeFloat: 1.0
+      bigInt: 9007199254740993
+      nothing: null
+      onString: "on"
+      zeroPadded: "01234"
+      replicas: {{ len .Release.Name }}
+      alert: 'instance {{ "{{" }} $labels.instance {{ "}}" }} is down'

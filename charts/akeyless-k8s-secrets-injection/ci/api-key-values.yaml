@@ -23,3 +23,15 @@ extraObjects:
       provider: akeyless
       parameters:
         release: "{{ .Release.Name }}"
+  - |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: "{{ .Release.Name }}-extra"
+      namespace: "{{ .Release.Namespace }}"
+    spec:
+      type: ClusterIP
+      ports:
+        - name: probe
+          port: {{ add 8000 (len .Release.Name) }}
+          targetPort: 8080

@@ -1,0 +1,17 @@
+---
+# kept as written
+apiVersion: example.com/v1
+kind: Probe
+metadata:
+  name: "golden-exact"
+  namespace: "default"
+spec:
+  zeta: first
+  alpha: second
+  wholeFloat: 1.0
+  bigInt: 9007199254740993
+  nothing: null
+  onString: "on"
+  zeroPadded: "01234"
+  replicas: 6
+  alert: 'instance {{ $labels.instance }} is down'

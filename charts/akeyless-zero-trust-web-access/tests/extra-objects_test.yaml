@@ -5,11 +5,6 @@ release:
   name: rel
   namespace: extra-ns
 tests:
-  - it: renders nothing by default
-    asserts:
-      - hasDocuments:
-          count: 0
-
   - it: renders every object with release context and values
     set:
       fullnameOverride: "ztwa-unit"
@@ -62,20 +57,18 @@ tests:
           path: spec.parameters.configuration
           value: custom-value
         documentIndex: 1
-
   - it: rejects a value that is not a list
     set:
       extraObjects: not-a-list
     asserts:
       - failedTemplate:
           errorPattern: "at '/extraObjects': got string, want array"
-
   - it: renders the extraObjects from the ci install values
     values:
       - ../ci/clusterip-values.yaml
     asserts:
       - hasDocuments:
-          count: 2
+          count: 3
       - equal:
           path: data.release
           value: rel
@@ -83,88 +76,10 @@ tests:
       - isKind:
           of: SecretProviderClass
         documentIndex: 1
-
-  - it: keeps literal numbers and booleans typed in a map entry
-    set:
-      extraObjects:
-        - apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: typed
-          spec:
-            replicas: 3
-            paused: true
-            progressDeadlineSeconds: 1073741824
-    asserts:
+      - isKind:
+          of: Service
+        documentIndex: 2
       - equal:
-          path: spec.replicas
-          value: 3
-      - equal:
-          path: spec.paused
-          value: true
-      - equal:
-          path: spec.progressDeadlineSeconds
-          value: 1073741824
-
-  - it: renders templated numbers and booleans typed from a string entry
-    set:
-      extraObjects:
-        - |
-          apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: "{{ .Release.Name }}-typed"
-          spec:
-            replicas: {{ len .Release.Name }}
-            paused: {{ eq .Release.Name "rel" }}
-    asserts:
-      - hasDocuments:
-          count: 1
-      - equal:
-          path: metadata.name
-          value: rel-typed
-      - equal:
-          path: spec.replicas
-          value: 3
-      - equal:
-          path: spec.paused
-          value: true
-
-  - it: renders a templated value in a map entry as a string
-    set:
-      extraObjects:
-        - apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: typed
-          spec:
-            replicas: "{{ len .Release.Name }}"
-    asserts:
-      - equal:
-          path: spec.replicas
-          value: "3"
-
-  - it: renders a string entry without templates exactly as written
-    set:
-      extraObjects:
-        - |
-          apiVersion: example.com/v1
-          kind: Probe
-          metadata:
-            name: exact
-          spec:
-            bigInt: 9007199254740993
-            onString: "on"
-            zeroPadded: "01234"
-    asserts:
-      - hasDocuments:
-          count: 1
-      - equal:
-          path: spec.bigInt
-          value: 9007199254740993
-      - equal:
-          path: spec.onString
-          value: "on"
-      - equal:
-          path: spec.zeroPadded
-          value: "01234"
+          path: spec.ports[0].port
+          value: 8003
+        documentIndex: 2

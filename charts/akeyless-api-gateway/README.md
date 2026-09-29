@@ -45,7 +45,16 @@ extraObjects:
       chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
 ```
 
-A map entry goes through Helm's values handling before it is rendered. A templated value always renders as a string (`replicas: "{{ .Values.replicaCount }}"` becomes `replicas: '3'`), and numbers are read as 64-bit floats, so `1.0` renders as `1` and integers above 2^53 lose precision. A string entry is rendered exactly as written, apart from the template expressions in it. Write the entry as a string when a field needs a templated number or boolean, or an exact number:
+An entry is either a map or a string (`- |`). What the chart does to each, checked in CI:
+
+| | String entry | Map entry |
+|---|---|---|
+| Values and types | exactly as written | numbers are read as 64-bit floats: `1.0` renders as `1`, integers above 2^53 lose precision |
+| Templated values | keep their type: `{{ .Values.x }}` renders a number | always strings: `"{{ .Values.x }}"` renders `'3'` |
+| Key order, quoting, comments | kept | keys sorted, quoting normalized, comments dropped |
+| `{{ }}` anywhere in the object | evaluated as a template | evaluated as a template |
+
+To pass a literal `{{ }}` through, for example a Prometheus alert using `{{ $labels.instance }}`, escape it as `{{ "{{" }}` and `{{ "}}" }}`. Use a string entry when a field needs an exact value or a templated number or boolean:
 
 ```yaml
 extraMinAvailable: 1
