@@ -1,0 +1,87 @@
+suite: akeyless-gateway SRA web service loadBalancerIP and externalTrafficPolicy
+templates:
+  - templates/akeyless-secure-remote-access/service.yaml
+tests:
+  - it: defaults to ClusterIP with neither field rendered
+    set:
+      sra.enabled: true
+    documentIndex: 2
+    asserts:
+      - equal:
+          path: metadata.name
+          value: web-RELEASE-NAME-akeyless-gateway
+      - equal:
+          path: spec.type
+          value: ClusterIP
+      - notExists:
+          path: spec.loadBalancerIP
+      - notExists:
+          path: spec.externalTrafficPolicy
+
+  - it: omits loadBalancerIP on ClusterIP even when the value is set
+    set:
+      sra.enabled: true
+      sra.webConfig.service.loadBalancerIP: 203.0.113.20
+    documentIndex: 2
+    asserts:
+      - equal:
+          path: metadata.name
+          value: web-RELEASE-NAME-akeyless-gateway
+      - equal:
+          path: spec.type
+          value: ClusterIP
+      - notExists:
+          path: spec.loadBalancerIP
+
+  - it: sets loadBalancerIP on a LoadBalancer service
+    set:
+      sra.enabled: true
+      sra.webConfig.service.type: LoadBalancer
+      sra.webConfig.service.loadBalancerIP: 203.0.113.20
+    documentIndex: 2
+    asserts:
+      - equal:
+          path: metadata.name
+          value: web-RELEASE-NAME-akeyless-gateway
+      - equal:
+          path: spec.type
+          value: LoadBalancer
+      - equal:
+          path: spec.loadBalancerIP
+          value: 203.0.113.20
+
+  - it: sets externalTrafficPolicy on a LoadBalancer service
+    set:
+      sra.enabled: true
+      sra.webConfig.service.type: LoadBalancer
+      sra.webConfig.service.externalTrafficPolicy: Local
+    documentIndex: 2
+    asserts:
+      - equal:
+          path: metadata.name
+          value: web-RELEASE-NAME-akeyless-gateway
+      - equal:
+          path: spec.externalTrafficPolicy
+          value: Local
+
+  - it: sets externalTrafficPolicy on a NodePort service
+    set:
+      sra.enabled: true
+      sra.webConfig.service.type: NodePort
+      sra.webConfig.service.externalTrafficPolicy: Cluster
+    documentIndex: 2
+    asserts:
+      - equal:
+          path: metadata.name
+          value: web-RELEASE-NAME-akeyless-gateway
+      - equal:
+          path: spec.externalTrafficPolicy
+          value: Cluster
+
+  - it: fails when externalTrafficPolicy is set on a ClusterIP service
+    set:
+      sra.enabled: true
+      sra.webConfig.service.externalTrafficPolicy: Local
+    asserts:
+      - failedTemplate:
+          errorMessage: "sra.webConfig.service.externalTrafficPolicy is set to 'Local' but the resolved sra.webConfig.service.type is 'ClusterIP'; externalTrafficPolicy is only valid for LoadBalancer or NodePort"
