@@ -561,3 +561,5 @@ persistence:
   # accessMode: "ReadWriteMany"
   # storageClass: ""
   # size: 100Mi
+
+extraObjects: []

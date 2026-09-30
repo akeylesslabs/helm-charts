@@ -98,6 +98,17 @@ jobs:
             helm unittest "$chart"
           done <<< "$CHANGED_CHARTS"
 
+      - name: Check the extraObjects contract
+        if: steps.list-changed.outputs.changed == 'true'
+        run: |
+          contract=.github/ci/extra-objects
+          for chart in charts/*/; do
+            [[ -f "${chart}templates/extra-objects.yaml" ]] || continue
+            diff -u "$contract/template.yaml" "${chart}templates/extra-objects.yaml"
+            helm dependency build "$chart" > /dev/null
+            helm unittest -f "../../$contract/*_test.yaml" "$chart"
+          done
+
       - name: Create kind cluster
         if: steps.list-changed.outputs.changed == 'true'
         uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # v1
@@ -140,7 +151,7 @@ jobs:
           kubectl get all -n chart-testing -o wide || true
 
           echo "## Helm releases"
-          helm list -n chart-testing --all || true
+          helm list -n chart-testing || true
 
           echo "## Events"
           kubectl get events -n chart-testing --sort-by lastTimestamp -o wide || true
@@ -161,7 +172,7 @@ jobs:
       - name: Clean chart-testing namespace
         if: always() && steps.list-changed.outputs.changed == 'true'
         run: |
-          for release in $(helm list -n chart-testing --all --short); do
+          for release in $(helm list -n chart-testing --short); do
             helm uninstall "$release" -n chart-testing --wait --timeout 120s || true
           done
           kubectl delete all --all -n chart-testing --ignore-not-found=true || true

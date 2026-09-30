@@ -494,3 +494,5 @@ sshConfig:
   allowedBastionUrls: []
     # - "bastion.my.org:2222"
     # - "bastion.other.org:2222"
+
+extraObjects: []
