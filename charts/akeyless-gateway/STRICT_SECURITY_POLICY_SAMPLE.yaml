@@ -53,7 +53,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: test-release-akeyless-gateway-cache
-        image: "public.ecr.aws/docker/library/redis:8.2.5-alpine"
+        image: "akeyless/redis:8.10.2-alpine3.23-akl.1"
         securityContext:
           runAsNonRoot: true
           runAsUser: 1001

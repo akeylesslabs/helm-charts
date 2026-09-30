@@ -53,7 +53,7 @@ strictSecurityPolicy:
 ### Cache (Redis)
 
 - Same hardening as Gateway
-- Image: `public.ecr.aws/docker/library/redis:8.2.5-alpine` (runs as UID 999 by default; we override to 1001)
+- Image: `akeyless/redis:8.10.2-alpine3.23-akl.1` (runs as UID 999 by default, `/data` writable by any uid; we override to 1001)
 
 ### SRA Web Bastion
 
@@ -191,7 +191,7 @@ globalConfig:
 ### Images
 
 - **Gateway:** `akeyless/gateway:*` — already non-root (UID 1001). No rebuild needed.
-- **Cache:** `public.ecr.aws/docker/library/redis:8.2.5-alpine` — works with UID 1001 override.
+- **Cache:** `akeyless/redis:8.10.2-alpine3.23-akl.1` — built for this: non-root by default, works with the UID 1001 override, verified in the image's own CI on this chart.
 - **SRA Web:** `akeyless/zero-trust-bastion:*` — supports UID 1001 (postgres pre-initialized at build time).
 - **SRA SSH:** `akeyless/zero-trust-bastion:*` — Phase A (narrow caps, root UID); Phase B (non-root) TBD.
 
@@ -248,17 +248,9 @@ kubectl exec -it deployment/unified-my-release-akeyless-gateway -- sh -c 'cronta
 
 ### Redis fails to start with "Permission denied"
 
-**Cause:** Alpine Redis image may not honor `runAsUser: 1001` override.
+**Cause:** an older cache image that expected to run as its own uid. The default `akeyless/redis` image runs as uid 999 and keeps `/data` writable by any uid, so the `runAsUser: 1001` override works without a chown or an init container (verified in that image's CI on this chart).
 
-**Fix:** Use Bitnami Redis image which better supports non-root:
-
-```yaml
-globalConfig:
-  clusterCache:
-    image:
-      repository: bitnami/redis
-      tag: 7.0
-```
+**Fix:** use the chart's default `globalConfig.clusterCache.image` (or `cacheHA.image`).
 
 ### SRA Web fails to start postgres
 
