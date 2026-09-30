@@ -149,7 +149,7 @@ globalConfig:
       # size: 10Gi
 
     ## Pod-level security context for the cache pod.
-    ## fsGroup: 1000 is the GID of the redis group in the official Redis Alpine image and is
+    ## fsGroup: 1000 is the GID of the redis group in the akeyless/redis image (same as the official Redis Alpine image) and is
     ## required when persistence.enabled=true so that the mounted /data volume is chown'ed
     ## to that group and writable by Redis.
     ##
@@ -182,8 +182,8 @@ cacheHA:
   encryptionKeyExistingSecret:
 
   image:
-    repository: public.ecr.aws/docker/library/redis
-    tag: 8.6.6-alpine
+    repository: akeyless/redis
+    tag: 8.10.2-alpine3.23-akl.1
 
   auth: true
   authKey: redis-password
