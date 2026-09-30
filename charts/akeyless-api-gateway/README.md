@@ -45,7 +45,7 @@ extraObjects:
       chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
 ```
 
-An entry is either a map or a string (`- |`). What the chart does to each, checked in CI:
+An entry is either a map or a string (`- |`). What the chart does to each:
 
 | | String entry | Map entry |
 |---|---|---|
@@ -53,6 +53,8 @@ An entry is either a map or a string (`- |`). What the chart does to each, check
 | Templated values | keep their type: `{{ .Values.x }}` renders a number | always strings: `"{{ .Values.x }}"` renders `'3'` |
 | Key order, quoting, comments | kept | keys sorted, quoting normalized, comments dropped |
 | `{{ }}` anywhere in the object | evaluated as a template | evaluated as a template |
+
+The chart tests cover values and types, templated values and `{{ }}` handling. Key order, quoting and comments follow Helm and are not tested here.
 
 To pass a literal `{{ }}` through, for example a Prometheus alert using `{{ $labels.instance }}`, escape it as `{{ "{{" }}` and `{{ "}}" }}`. Use a string entry when a field needs an exact value or a templated number or boolean:
 
