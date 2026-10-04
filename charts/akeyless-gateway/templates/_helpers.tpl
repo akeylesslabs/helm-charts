@@ -80,6 +80,37 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
 {{/*
+OpenShift Route metadata.name for a single rule.
+Includes servicePort plus host/path identity so rules that share a port still
+get distinct names. Sanitizes to DNS-1123 and keeps the result within 63 chars.
+Usage: {{ include "akeyless-gateway.routeName" (dict "root" $ "rule" .) }}
+*/}}
+{{- define "akeyless-gateway.routeName" -}}
+{{- $root := .root -}}
+{{- $rule := .rule -}}
+{{- $path := $rule.path | default $root.Values.gateway.route.path | default "/" -}}
+{{- $base := $rule.servicePort -}}
+{{- if or $rule.hostname (ne $path "/") -}}
+{{- $identity := printf "%s|%s|%s" $rule.servicePort ($rule.hostname | default "") $path -}}
+{{- $hostRaw := ($rule.hostname | default "") | lower | replace "." "-" -}}
+{{- $hostSlug := regexReplaceAll "[^a-z0-9-]+" $hostRaw "-" | trimAll "-" -}}
+{{- $pathRaw := $path | trimPrefix "/" | trimSuffix "/" | lower | replace "/" "-" -}}
+{{- $pathSlug := regexReplaceAll "[^a-z0-9-]+" $pathRaw "-" | trimAll "-" -}}
+{{- if $hostSlug -}}
+{{- $base = printf "%s-%s" $base $hostSlug -}}
+{{- end -}}
+{{- if $pathSlug -}}
+{{- $base = printf "%s-%s" $base $pathSlug -}}
+{{- end -}}
+{{- if gt (len $base) 40 -}}
+{{- $base = printf "%s-%s" $rule.servicePort ($identity | sha256sum | trunc 8) -}}
+{{- end -}}
+{{- end -}}
+{{- $suffix := printf "-%s" $base -}}
+{{- printf "%s%s" (include "akeyless-gateway.fullname" $root | trunc (sub 63 (len $suffix) | int) | trimSuffix "-") $suffix -}}
+{{- end -}}
+
+{{/*
 Gateway container image (repository:tag).
 */}}
 {{- define "akeyless-gateway.gatewayImage" -}}
@@ -658,7 +689,7 @@ limits:
 
 {{/*
 SSH Bastion Phase A - Narrow capability set
-For SRA SSH only - minimum caps needed for mount/mknod/adduser operations
+For SRA SSH only - minimum caps needed for mount/mknod/adduser operations and session teardown
 Usage: {{ include "akeyless-gateway.sshBastionPhaseACaps" . }}
 */}}
 {{- define "akeyless-gateway.sshBastionPhaseACaps" -}}
@@ -675,6 +706,7 @@ capabilities:
     - SETUID         # Required by adduser + chroot setup
     - SETGID         # Required by adduser + chroot setup
     - FOWNER         # Required by adduser + chroot setup
+    - KILL           # Required to stop session processes on kickout and disconnect
 {{- end -}}
 
 {{/*
