@@ -156,6 +156,7 @@ kubectl get pods -o json | jq '.items[] | select(.metadata.name | contains("ssh"
 ## Secrets Policy
 
 When `strictSecurityPolicy.enabled`, the chart validates that **no plaintext secrets** are passed via `globalConfig.env` or `sra.env`.
+Two names only look sensitive and are allowed as plain values: `AKEYLESS_URL` and `SRA_RECORDING_CAPTURE_KEYSTROKES`.
 
 If you try:
 

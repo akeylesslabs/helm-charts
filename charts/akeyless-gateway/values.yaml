@@ -574,6 +574,16 @@ sra:
     pullPolicy: IfNotPresent
     #  tag: latest
 
+  ## Session recording on the SSH bastion is set through env, for example:
+  ## - name: SRA_RECORDING_CAPTURE_OUTPUT        # "false" records commands only. Default "true"
+  ##   value: "false"
+  ## - name: SRA_RECORDING_CAPTURE_KEYSTROKES    # "true" adds every key as typed, passwords included. Default "false"
+  ##   value: "true"
+  ## - name: SRA_RECORDING_MASKING               # "false" stops masking known secret formats. Default "true"
+  ##   value: "false"
+  ## - name: SRA_RECORDING_MASK_PATTERNS         # extra masking rules, one RE2 expression per line
+  ##   value: |
+  ##     employee-\d{6}
   env: []
 
   ## The below section is for the Remote Access Web app
