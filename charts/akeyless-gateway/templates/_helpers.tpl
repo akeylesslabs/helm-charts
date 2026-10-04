@@ -689,7 +689,7 @@ limits:
 
 {{/*
 SSH Bastion Phase A - Narrow capability set
-For SRA SSH only - minimum caps needed for mount/mknod/adduser operations
+For SRA SSH only - minimum caps needed for mount/mknod/adduser operations and session teardown
 Usage: {{ include "akeyless-gateway.sshBastionPhaseACaps" . }}
 */}}
 {{- define "akeyless-gateway.sshBastionPhaseACaps" -}}
@@ -706,6 +706,7 @@ capabilities:
     - SETUID         # Required by adduser + chroot setup
     - SETGID         # Required by adduser + chroot setup
     - FOWNER         # Required by adduser + chroot setup
+    - KILL           # Required to stop session processes on kickout and disconnect
 {{- end -}}
 
 {{/*
