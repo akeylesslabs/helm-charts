@@ -140,7 +140,7 @@ jobs:
           kubectl get all -n chart-testing -o wide || true
 
           echo "## Helm releases"
-          helm list -n chart-testing --all || true
+          helm list -n chart-testing || true
 
           echo "## Events"
           kubectl get events -n chart-testing --sort-by lastTimestamp -o wide || true
@@ -161,7 +161,7 @@ jobs:
       - name: Clean chart-testing namespace
         if: always() && steps.list-changed.outputs.changed == 'true'
         run: |
-          for release in $(helm list -n chart-testing --all --short); do
+          for release in $(helm list -n chart-testing --short); do
             helm uninstall "$release" -n chart-testing --wait --timeout 120s || true
           done
           kubectl delete all --all -n chart-testing --ignore-not-found=true || true
