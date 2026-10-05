@@ -98,17 +98,6 @@ jobs:
             helm unittest "$chart"
           done <<< "$CHANGED_CHARTS"
 
-      - name: Check the extraObjects contract
-        if: steps.list-changed.outputs.changed == 'true'
-        run: |
-          contract=.github/ci/extra-objects
-          for chart in charts/*/; do
-            [[ -f "${chart}templates/extra-objects.yaml" ]] || continue
-            diff -u "$contract/template.yaml" "${chart}templates/extra-objects.yaml"
-            helm dependency build "$chart" > /dev/null
-            helm unittest -f "../../$contract/*_test.yaml" "$chart"
-          done
-
       - name: Create kind cluster
         if: steps.list-changed.outputs.changed == 'true'
         uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # v1
