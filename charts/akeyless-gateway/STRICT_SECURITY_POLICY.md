@@ -65,7 +65,7 @@ strictSecurityPolicy:
 **The SSH bastion is partially excluded** from full strict hardening because it requires root for per-session chroot/jail operations. Phase A applies:
 
 - **Drop `privileged: true`** (no longer fully privileged)
-- **Narrow capabilities:** Only `SYS_ADMIN`, `MKNOD`, `DAC_OVERRIDE`, `CHOWN`, `SETUID`, `SETGID`, `FOWNER` (minimum needed for `mount --bind`, `adduser`, `mknod`)
+- **Narrow capabilities:** Only `SYS_CHROOT`, `AUDIT_WRITE`, `SYS_ADMIN`, `MKNOD`, `DAC_OVERRIDE`, `CHOWN`, `SETUID`, `SETGID`, `FOWNER`, `KILL` (minimum needed for sshd privilege separation, `mount --bind`, `adduser`, `mknod`, and stopping session processes on kickout)
 - **SSH listens on port 2222** inside the container (Service port stays 22)
 - **Still runs as root (UID 0)** — documented Kyverno exception required
 
