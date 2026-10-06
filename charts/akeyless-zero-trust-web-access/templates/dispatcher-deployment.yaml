@@ -236,6 +236,14 @@ spec:
   {{- if $r.sseKmsKeyId }}{{- $recSSEKmsKey = $r.sseKmsKeyId }}{{- end }}
   {{- if $r.uploaderStatePath }}{{- $recStatePath = $r.uploaderStatePath }}{{- end }}
 {{- end }}
+{{- $recordOn := false }}
+{{- if and .Values.sessionRecording (hasKey .Values.sessionRecording "enabled") }}
+  {{- $recordOn = .Values.sessionRecording.enabled }}
+{{- end }}
+            - name: MEDIA_SERVER
+              value: {{ printf "%s-mediamtx:%v" .Release.Name .Values.mediamtx.webrtcPort | quote }}
+            - name: ENABLE_RECORDING
+              value: {{ ternary "true" "false" $recordOn | quote }}
             - name: ENABLE_RECORDING_UPLOAD
               value: {{ ternary "true" "false" $recEnabled | quote }}
             - name: RECORDING_S3_BUCKET
