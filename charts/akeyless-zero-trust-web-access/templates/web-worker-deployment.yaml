@@ -170,6 +170,8 @@ spec:
               value: {{ ternary "true" "false" $workerRecEnabled | quote }}
             - name: RECORDING_QUALITY
               value: {{ $workerRecQuality | quote }}
+            - name: WHIP_PUBLISH_URL_BASE
+              value: {{ printf "http://%s-mediamtx:%v" .Release.Name .Values.mediamtx.webrtcPort | quote }}
 {{- /* Lifecycle watchdog tunables. Each is rendered only when the operator
        sets a non-empty string under sessionRecording.watchdog.*; otherwise
        the in-image defaults (config.go: clientConnectTimeoutSeconds=90,
