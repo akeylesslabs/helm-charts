@@ -15,6 +15,7 @@ metadata:
   name: {{ printf "%s-mediamtx" .Release.Name }}
   labels:
     app: mediamtx
+    app.kubernetes.io/instance: {{ .Release.Name }}
 data:
   mediamtx.yml: |
     logLevel: info

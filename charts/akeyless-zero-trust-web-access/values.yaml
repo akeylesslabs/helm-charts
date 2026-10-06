@@ -55,6 +55,7 @@ mediamtx:
     repository: bluenviron/mediamtx
     tag: "1.21.0-ffmpeg"
     pullPolicy: IfNotPresent
+    imagePullSecrets: []
 
   webrtcPort: 8889
 
@@ -80,7 +81,8 @@ mediamtx:
 # Advanced users can override specific settings via dispatcher.config.recording.* and webWorker.config.recording.*
 # Requires persistence.shareStorageVolume configured with ReadWriteMany access mode.
 sessionRecording:
-  # Record sessions. Recordings are uploaded to S3 as rec_*.mp4.
+  # Record sessions on the media server, as rec_*.mp4 on the shared volume.
+  # Sending them to S3 needs upload.enabled below as well.
   enabled: false
 
   # Recording quality: 144p|240p|360p|480p|720p|1080p (affects ffmpeg CRF and framerate)

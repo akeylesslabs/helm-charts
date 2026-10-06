@@ -12,17 +12,21 @@ metadata:
   name: {{ printf "%s-mediamtx" .Release.Name }}
   labels:
     app: mediamtx
+    app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
   selector:
     matchLabels:
       app: mediamtx
+      app.kubernetes.io/instance: {{ .Release.Name }}
   template:
     metadata:
       labels:
         app: mediamtx
+        app.kubernetes.io/instance: {{ .Release.Name }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/mediamtx-configmap.yaml") . | sha256sum }}
     spec:
+{{- with include "akeyless-zero-web-access.imagePullSecrets" (dict "Root" $ "imagePullSecrets" .Values.mediamtx.image.imagePullSecrets) }}{{ . | nindent 6 }}{{ end }}
       containers:
         - name: mediamtx
           image: "{{ .Values.mediamtx.image.repository }}:{{ .Values.mediamtx.image.tag }}"
@@ -91,9 +95,11 @@ metadata:
   name: {{ printf "%s-mediamtx" .Release.Name }}
   labels:
     app: mediamtx
+    app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
   selector:
     app: mediamtx
+    app.kubernetes.io/instance: {{ .Release.Name }}
   internalTrafficPolicy: Local
   ports:
     - name: whip
@@ -111,8 +117,10 @@ metadata:
   name: {{ printf "%s-mediamtx" .Release.Name }}
   labels:
     app: mediamtx
+    app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
   maxUnavailable: 1
   selector:
     matchLabels:
       app: mediamtx
+      app.kubernetes.io/instance: {{ .Release.Name }}
