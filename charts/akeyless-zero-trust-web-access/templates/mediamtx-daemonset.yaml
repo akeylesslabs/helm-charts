@@ -101,6 +101,13 @@ metadata:
     app: mediamtx
     app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
+  {{- with .Values.ipFamilyPolicy }}
+  ipFamilyPolicy: {{ . }}
+  {{- end }}
+  {{- with .Values.ipFamilies }}
+  ipFamilies:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   selector:
     app: mediamtx
     app.kubernetes.io/instance: {{ .Release.Name }}
