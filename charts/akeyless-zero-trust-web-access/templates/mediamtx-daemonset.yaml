@@ -18,6 +18,10 @@ spec:
     matchLabels:
       app: mediamtx
       app.kubernetes.io/instance: {{ .Release.Name }}
+{{- with .Values.mediamtx.updateStrategy }}
+  updateStrategy:
+    {{- toYaml . | nindent 4 }}
+{{- end }}
   template:
     metadata:
       labels:

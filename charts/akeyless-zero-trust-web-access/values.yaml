@@ -76,6 +76,12 @@ mediamtx:
   nodeSelector: {}
   tolerations: []
 
+  # Restarting the media server ends the live view and the recording of every
+  # session on that node, so an upgrade does not restart it. Delete the pod on
+  # a node with no sessions to move it to the new version.
+  updateStrategy:
+    type: OnDelete
+
 # Session recording (unified configuration - recommended)
 # Provides a simplified interface for enabling video capture and S3 upload.
 # Advanced users can override the upload settings via dispatcher.config.recording.*
