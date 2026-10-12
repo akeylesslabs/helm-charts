@@ -174,6 +174,14 @@ The web worker runs a Chromium-based browser (`akeyless/zero-trust-web-worker`).
 
 1. Rewrite any custom `webWorker.config.policies` from Firefox schema to Chrome Enterprise JSON.
 2. Review worker pod spec changes (`/config` emptyDir, policy mount path, `DISPATCHER_DNS`) before rollout.
+3. Open the live view's network path. Browsers now get the video straight from a media server on each node, over UDP `mediamtx.iceUDPPort` (default `8189`), on top of the dispatcher's port. Allow it from users' networks to every node that runs workers, or to the addresses in `mediamtx.additionalHosts`. There is no TCP fallback. The port is a hostPort, so the cluster's CNI must support hostPort, and two releases in one cluster need different ports.
+4. Keep the supported layout: one dispatcher per worker pool, on the same node as its workers.
+5. Recording now comes from the media server, out of the live stream:
+   - The 4 hour cap is gone. A session is recorded for its full length, in files of up to 24 hours.
+   - The live view and the recording fail together.
+   - `sessionRecording.quality`, `sessionRecording.watchdog` and `webWorker.config.recording` are removed and ignored.
+   - A session hour takes about 0.15 to 0.25 GB, up to 0.9 GB with constant full screen motion. Size the shared volume and the S3 bucket for that.
+6. A chart upgrade does not restart the media server, so live sessions survive it. To move a node's media server to the new version, delete its pod while no sessions run on that node.
 
 ### Cloud Identity Override (`dispatcher.config.cloudIdentity.type`)
 
