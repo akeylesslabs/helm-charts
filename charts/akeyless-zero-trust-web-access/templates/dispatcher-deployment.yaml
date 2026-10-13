@@ -12,13 +12,15 @@ spec:
   selector:
     matchLabels:
       app: dispatcher
-  {{- if not .Values.HPA.enabled }}
-  replicas: {{ .Values.dispatcher.replicaCount }}
+  {{- if gt (int .Values.dispatcher.replicaCount) 1 }}
+  {{- fail "dispatcher.replicaCount must be 1: one dispatcher per worker pool is the supported layout" }}
   {{- end }}
+  replicas: {{ .Values.dispatcher.replicaCount }}
   template:
     metadata:
       labels:
         app: dispatcher
+        app.kubernetes.io/instance: {{ .Release.Name }}
   {{- if .Values.metrics.podAnnotation }}
       annotations:
         prometheus.io/scrape: 'true'

@@ -34,7 +34,7 @@ For security reason, please limit the PersistentVolumes mount permissions to `06
 > Session recording requires the dispatcher and web-worker pods to read/write the **same** `/etc/shared` directory because the media server writes `rec_*.mp4` there and the dispatcher uploads it.
 >
 > - **Single-node clusters** (k3s sandboxes, Minikube, kind) often default to a node-scoped provisioner such as `local-path`. This works only as long as every ZTWA pod schedules on the same node; deleting a pod with an in-progress recording also deletes the partial recording (the directory belongs to that pod's local-path).
-> - **Multi-node production clusters** must use a real RWX storage class backed by NFS, AWS EFS, Azure Files, GCP Filestore, Longhorn, etc. Without RWX, dispatcher and worker pods scheduled on different nodes will not see each other's files and recordings will be silently lost.
+> - **Clusters with more than one node** still need a real RWX storage class backed by NFS, AWS EFS, Azure Files, GCP Filestore, Longhorn, etc. The dispatcher and its workers always run on one node, the chart pins the workers to the dispatcher's node, but the media server runs on every node and mounts the shared volume.
 >
 > The chart does not enforce a specific provisioner — pick the one that matches your cluster's topology and pin it via `persistence.shareStorageVolume.storageClassName`.
 
@@ -294,7 +294,7 @@ The following table lists the configurable parameters of the Zero Trust Web Acce
 | `dispatcher.image.tag`                    | Zero Trust Web Access Dispatcher image tag                                                                           | `latest`                                                     |      
 | `dispatcher.image.pullPolicy`             | Zero Trust Web Access Dispatcher image pull policy                                                                   | `Always`                                                     |  
 | `dispatcher.containerName`                | Zero Trust Web Access Dispatcher container name                                                                      | `web-dispatcher`                                             |    
-| `dispatcher.replicaCount`                 | Number of Zero Trust Web Access Dispatcher nodes                                                                     | `1`                                                          |
+| `dispatcher.replicaCount`                 | Number of dispatchers. Must be `1`, one dispatcher per worker pool                                                                     | `1`                                                          |
 | `dispatcher.livenessProbe`                | Liveness probe configuration for Zero Trust Web Access Dispatcher                                                    | Check `values.yaml` file                                     |                   
 | `dispatcher.readinessProbe`               | Readiness probe configuration for Zero Trust Web Access Dispatcher                                                   | Check `values.yaml` file                                     |         
 | `dispatcher.resources.limits`             | The resources limits for Zero Trust Web Access Dispatcher containers (If HPA is enabled these must be set)           | `memory: 512Mi`                                              |
@@ -354,10 +354,6 @@ A **Heavy browsing workload** example for the web worker main `resources` is in 
 | Parameter                                 | Description                                            | Default |
 |-------------------------------------------|--------------------------------------------------------|---------|
 | `HPA.enabled`                             | Enable Zero Trust Web Access Horizontal Pod Autoscaler | `false` |
-| `HPA.dispatcher.minReplicas`              | Dispatcher Minimum desired number of replicas          | `1`     |
-| `HPA.dispatcher.maxReplicas`              | Dispatcher Minimum desired number of replicas          | `14`    |
-| `HPA.dispatcher.cpuAvgUtil`               | Dispatcher CPU average utilization                     | `50`    |
-| `HPA.dispatcher.memAvgUtil`               | Dispatcher Memory average utilization                  | `50`    |
 | `HPA.webWorker.busyWorkersPercentage`     | Busy Workers utilization percentage                    | `50`    |
 
 ### Zero Trust Web Access configuration parameters

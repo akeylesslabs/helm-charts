@@ -20,6 +20,16 @@ spec:
       labels:
         app: web-worker
     spec:
+      # The browser's video request reaches the media server on the
+      # dispatcher's node, so workers must publish there.
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: dispatcher
+                  app.kubernetes.io/instance: {{ .Release.Name }}
+              topologyKey: kubernetes.io/hostname
       securityContext:
         fsGroup: 10000
         supplementalGroups: [72]
