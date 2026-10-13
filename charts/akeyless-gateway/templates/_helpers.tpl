@@ -762,7 +762,7 @@ Usage: {{ include "akeyless-gateway.validateNoPlaintextSecrets" . }}
 {{- define "akeyless-gateway.validateNoPlaintextSecrets" -}}
 {{- if .Values.strictSecurityPolicy.enabled }}
   {{- $sensitivePattern := "(?i)(token|key|password|secret|credential)" -}}
-  {{- $allowPlaintextEnvNames := list "AKEYLESS_URL" -}}
+  {{- $allowPlaintextEnvNames := list "AKEYLESS_URL" "SRA_RECORDING_CAPTURE_KEYSTROKES" -}}
   {{- range .Values.globalConfig.env }}
     {{- if and (regexMatch $sensitivePattern .name) (not .valueFrom) (not (has .name $allowPlaintextEnvNames)) }}
       {{- fail (printf "strictSecurityPolicy.enabled: detected potential secret '%s' in globalConfig.env. Use secretKeyRef or existingSecret instead" .name) }}

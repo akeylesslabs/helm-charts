@@ -5,3 +5,35 @@ env:
   AKEYLESS_ACCESS_ID: p-12345678911123
   # Test-only base64-shaped placeholder; not a real credential.
   AKEYLESS_API_KEY: ZHVtbXktYXBpLWtleQ==
+
+extraObjects:
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: "{{ .Release.Name }}-extra"
+      namespace: "{{ .Release.Namespace }}"
+    data:
+      release: "{{ .Release.Name }}"
+  - apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      name: "{{ .Release.Name }}-extra"
+      namespace: "{{ .Release.Namespace }}"
+    spec:
+      podSelector:
+        matchLabels:
+          extra-objects/selects: nothing
+      policyTypes:
+        - Ingress
+  - |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: "{{ .Release.Name }}-extra"
+      namespace: "{{ .Release.Namespace }}"
+    spec:
+      type: ClusterIP
+      ports:
+        - name: probe
+          port: {{ add 8000 (len .Release.Name) }}
+          targetPort: 8080
