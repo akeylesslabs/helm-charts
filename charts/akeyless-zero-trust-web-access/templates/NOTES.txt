@@ -44,3 +44,14 @@ WARNING: "dispatcher.service.proxyPort" was removed — the value is ignored. Th
 is exposed by its own Service ({{ include "akeyless-zero-web-access.fullname" . }}-proxy);
 configure it via "webProxy.service".
 {{- end }}
+{{- $removedRecording := list }}
+{{- if and .Values.sessionRecording (hasKey .Values.sessionRecording "quality") }}{{- $removedRecording = append $removedRecording "sessionRecording.quality" }}{{- end }}
+{{- if and .Values.sessionRecording (hasKey .Values.sessionRecording "watchdog") }}{{- $removedRecording = append $removedRecording "sessionRecording.watchdog" }}{{- end }}
+{{- if and .Values.webWorker.config .Values.webWorker.config.recording }}{{- $removedRecording = append $removedRecording "webWorker.config.recording" }}{{- end }}
+{{- if $removedRecording }}
+
+WARNING: {{ join ", " $removedRecording }} no longer do anything and are ignored.
+The media server records the full screen at up to 2 Mbit/s. Measured sessions took
+0.15 to 0.25 GB per hour, constant full screen motion up to 0.9 GB per hour. Size the
+shared volume and the S3 bucket for that.
+{{- end }}
