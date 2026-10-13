@@ -1,4 +1,3 @@
-version: "3.9"
 services:
   dispatcher:
     image: "akeyless/zero-trust-web-dispatcher"
@@ -28,6 +27,10 @@ services:
       # | "gcp" when the container cannot reach the cloud metadata endpoint (e.g. EC2
       # with IMDSv2 hop-limit=1). See https://docs.akeyless.io/docs/auth-with-aws#aws-instance-metadata-service
       # - ADMIN_ACCESS_ID_TYPE=aws_iam
+      # The media server the browser's video signalling is proxied to.
+      - MEDIA_SERVER=mediamtx:8889
+      # Shows the "being recorded" badge. Keep it in step with MTX_PATHDEFAULTS_RECORD below.
+      - ENABLE_RECORDING=false
       # Recording upload: when ENABLE_RECORDING_UPLOAD is not "true", the recording_uploader process does not run;
       # all RECORDING_* variables below are ignored for upload. When ENABLE_RECORDING_UPLOAD=true, set bucket, region,
       # and credentials (or rely on LOG_FORWARDING / logand.conf with target_log_type=aws_s3 for fallback).
@@ -57,17 +60,23 @@ services:
         aliases:
           - ztwa_dispatcher
 
-  # Proxy mode is now a dedicated backend. Host :19414 lands here directly (the
-  # dispatcher no longer serves it). Needs zero privileged creds.
+  # Proxy mode is now a dedicated backend (V2 split): host :19414 lands here directly —
+  # the dispatcher no longer serves it. Needs zero privileged creds.
   proxy:
     image: "akeyless/zero-trust-web-proxy"
     ports:
       - "19414:19414"
+    # Custom CA for HTTPS (curl, CLI): mount your PEM and set AKEYLESS_CA_BUNDLE below.
+    # volumes:
+    #   - /path/to/your-ca-bundle.pem:/var/akeyless/certs/ca-bundle.pem:ro
     environment:
       - AKEYLESS_GW_URL=https://rest.akeyless.io
+      # Identities allowed to use the proxy: an incoming token must resolve to an
+      # access-id in this list.
       - ALLOWED_ACCESS_IDS=<MUST_BE_PROVIDED>
       # WEB_PROXY_TYPE selects the engine on :19414 — HTTP (Squid, default) or SOCKS.
       #- WEB_PROXY_TYPE=HTTP
+      # - AKEYLESS_CA_BUNDLE=/var/akeyless/certs/ca-bundle.pem
       #- http_proxy=
       #- https_proxy=
       #- no_proxy=
@@ -78,7 +87,6 @@ services:
   worker:
     image: "akeyless/zero-trust-web-worker"
     ports:
-      - "5800:5800"
       - "9190:9090"
     # Runtime identity: jlesage app user is fixed at UID/GID 1000 (no dynamic passwd rewrite).
     # Kubernetes: set securityContext.runAsUser/runAsGroup to 1000 and fsGroup to 10000.
@@ -88,12 +96,13 @@ services:
       - "10000"
     shm_size: '2gb'
     # Ephemeral /config (tmpfs): jlesage declares VOLUME /config, which otherwise
-    # persists stale Chromium profile data across recreates.
+    # persists Chromium profile + stale extension SW cache across recreates.
     tmpfs:
       - /config:uid=1000,gid=1000,mode=0755
     volumes:
       - $PWD/shared:/etc/shared
-      # Custom CA: same path as dispatcher (policies.json Certificates.Install uses this path).
+      # Custom CA: same path as dispatcher. cont-init 15-chromium-nss-certs.sh imports
+      # into sql:/config/.local/share/pki/nssdb (source PEM is not modified).
       # Uncomment to replace the image default (symlink to system bundle) with your PEM:
       # - /path/to/your-ca-bundle.pem:/var/akeyless/certs/ca-bundle.pem:ro
     environment:
@@ -103,8 +112,9 @@ services:
       - DISPLAY_HEIGHT=1200
       - DLP_CONF=
       - LOG_FORWARDING=
-      - ENABLE_RECORDING=false  # true | false
-      - RECORDING_QUALITY=360p  # 144p | 240p | 360p | 480p | 720p | 1080p
+      # The worker publishes its screen to the media server, which serves the
+      # live view and records. Recording is the media server's setting below.
+      - WHIP_PUBLISH_URL_BASE=http://mediamtx:8889
       # When using the ca-bundle mount above (or any PEM path), align curl/Go with the browser:
       # - SSL_CERT_FILE=/var/akeyless/certs/ca-bundle.pem
       # - CURL_CA_BUNDLE=/var/akeyless/certs/ca-bundle.pem
@@ -124,6 +134,41 @@ services:
     depends_on:
      - dispatcher
 
+  mediamtx:
+    # Takes each worker's screen over WHIP and serves it to the browser over
+    # WebRTC. Video goes from this host straight to the browser over UDP 8189.
+    image: "bluenviron/mediamtx:1.21.0-ffmpeg"
+    ports:
+      - "8189:8189/udp"
+    volumes:
+      - $PWD/shared:/etc/shared
+    environment:
+      - MTX_RTSP=no
+      - MTX_RTMP=no
+      - MTX_HLS=no
+      - MTX_SRT=no
+      - MTX_API=no
+      - MTX_METRICS=no
+      - MTX_PLAYBACK=no
+      - MTX_WEBRTC=yes
+      - MTX_WEBRTCADDRESS=:8889
+      - MTX_WEBRTCENCRYPTION=no
+      - MTX_WEBRTCLOCALUDPADDRESS=:8189
+      - MTX_WEBRTCIPSFROMINTERFACES=no
+      # The address browsers reach this host on, an IP or a hostname.
+      - MTX_WEBRTCADDITIONALHOSTS=<MUST_BE_PROVIDED>
+      # Recording. Set to yes together with ENABLE_RECORDING=true on the dispatcher.
+      - MTX_PATHDEFAULTS_RECORD=no
+      - MTX_PATHDEFAULTS_RECORDPATH=/etc/shared/inprogress/rec_%path_%s
+      - MTX_PATHDEFAULTS_RECORDFORMAT=fmp4
+      - MTX_PATHDEFAULTS_RECORDPARTDURATION=1s
+      - MTX_PATHDEFAULTS_RECORDSEGMENTDURATION=24h
+      - MTX_PATHDEFAULTS_RECORDDELETEAFTER=0s
+      - MTX_PATHDEFAULTS_RUNONRECORDSEGMENTCOMPLETE=mv $$MTX_SEGMENT_PATH /etc/shared/
+    restart: unless-stopped
+    networks:
+      - vpcbr
+
   autoheal:
     restart: unless-stopped
     image: willfarrell/autoheal
@@ -139,3 +184,4 @@ networks:
      config:
        - subnet: 10.5.0.0/24
          gateway: 10.5.0.1
+
