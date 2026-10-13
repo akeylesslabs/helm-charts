@@ -31,7 +31,7 @@ For security reason, please limit the PersistentVolumes mount permissions to `06
 
 > **Important — single-node vs multi-node clusters**
 >
-> Session recording requires the dispatcher and web-worker pods to read/write the **same** `/etc/shared` directory because the media server writes `rec_*.mp4` there and the dispatcher uploads it.
+> Session recording requires the dispatcher and web-worker pods to read/write the **same** `/etc/shared` directory because the media server writes `recordings/rec_*.mp4` there and the dispatcher uploads it.
 >
 > - **Single-node clusters** (k3s sandboxes, Minikube, kind) often default to a node-scoped provisioner such as `local-path`. This works only as long as every ZTWA pod schedules on the same node; deleting a pod with an in-progress recording also deletes the partial recording (the directory belongs to that pod's local-path).
 > - **Clusters with more than one node** still need a real RWX storage class backed by NFS, AWS EFS, Azure Files, GCP Filestore, Longhorn, etc. The dispatcher and its workers always run on one node, the chart pins the workers to the dispatcher's node, but the media server runs on every node and mounts the shared volume.
@@ -134,7 +134,7 @@ dispatcher:
 #### Upload Behavior and Limitations
 
 - **Asynchronous Upload**: Recordings are uploaded 60-90+ seconds after session end (60s poll interval + 30s stability check)
-- **Recording Format**: The media server writes each session as `rec_*.mp4` on the shared volume, and the dispatcher uploads it as is.
+- **Recording Format**: The media server writes each session as `recordings/rec_*.mp4` on the shared volume, and the dispatcher uploads it as is.
 - **Worker Recycle**: Worker liveness probes terminate inactive sessions (default `webWorker.sessionCleanup.staleGraceSeconds: 30`). The media server closes the recording with whatever was captured up to that point.
 - **Storage**: Ensure shared volume has sufficient capacity for concurrent sessions and upload backlog
 - **Retention**: Configure S3 lifecycle policies for long-term retention management

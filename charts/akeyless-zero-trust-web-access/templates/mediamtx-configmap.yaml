@@ -49,7 +49,10 @@ data:
 
       recordDeleteAfter: 0s
 
-      runOnRecordSegmentComplete: mv $MTX_SEGMENT_PATH /etc/shared/
+      # A subfolder, because the v2 uploader deletes rec_*.mp4 at the top of
+      # the volume at startup. Group writable, so the uploader can remove a
+      # file once it is in S3.
+      runOnRecordSegmentComplete: sh -c 'mkdir -p -m 2775 /etc/shared/recordings && mv "$MTX_SEGMENT_PATH" /etc/shared/recordings/'
 {{- end }}
 
     paths:
