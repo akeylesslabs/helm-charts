@@ -1,33 +1,4 @@
-{{- if .Values.HPA.enabled }}
-apiVersion: {{ include "hpa.api.version" $ }}
-kind: HorizontalPodAutoscaler
-metadata:
-  name: {{ $.Release.Name }}-hpa-dispatcher
-  namespace: {{ .Release.Namespace }}
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: web-dispatcher-deployment
-  minReplicas: {{ $.Values.HPA.dispatcher.minReplicas | default 1 }}
-  maxReplicas: {{ $.Values.HPA.dispatcher.maxReplicas | default 14 }}
-  metrics:
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: {{ $.Values.HPA.dispatcher.memAvgUtil }}
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: {{ $.Values.HPA.dispatcher.cpuAvgUtil }}
-
-
-{{- if .Values.metrics.enabled }}
----
+{{- if and .Values.HPA.enabled .Values.metrics.enabled }}
 apiVersion: {{ include "hpa.api.version" $ }}
 kind: HorizontalPodAutoscaler
 metadata:
@@ -52,6 +23,4 @@ spec:
         target:
           type: Value
           value: {{ $.Values.HPA.webWorker.busyWorkersPercentage }}
-
-{{- end }}
 {{- end }}

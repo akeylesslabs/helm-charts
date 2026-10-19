@@ -1,0 +1,59 @@
+{{- $shared := "" -}}
+{{- if and .Values.persistence .Values.persistence.shareStorageVolume -}}
+  {{- $shared = .Values.persistence.shareStorageVolume.name | title | lower -}}
+{{- end -}}
+{{- $record := false -}}
+{{- if and .Values.sessionRecording (hasKey .Values.sessionRecording "enabled") -}}
+  {{- $record = .Values.sessionRecording.enabled -}}
+{{- end -}}
+{{- if and $record (not $shared) -}}
+  {{- fail "sessionRecording.enabled requires persistence.shareStorageVolume: the media server has nowhere to write the recording, and the dispatcher's uploader reads that volume" -}}
+{{- end -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ printf "%s-mediamtx" .Release.Name }}
+  labels:
+    app: mediamtx
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  mediamtx.yml: |
+    logLevel: info
+
+    rtsp: no
+    rtmp: no
+    hls: no
+    srt: no
+    moq: no
+    metrics: no
+    api: no
+
+    playback: no
+
+    webrtc: yes
+    webrtcAddress: :{{ .Values.mediamtx.webrtcPort }}
+    webrtcEncryption: no
+    webrtcLocalUDPAddress: :{{ .Values.mediamtx.iceUDPPort }}
+
+    webrtcIPsFromInterfaces: no
+
+    pathDefaults:
+      record: {{ ternary "yes" "no" $record }}
+{{- if $record }}
+
+      recordPath: /etc/shared/inprogress/rec_%path_%s
+      recordFormat: fmp4
+      recordPartDuration: 1s
+
+      recordSegmentDuration: 24h
+
+      recordDeleteAfter: 0s
+
+      # A subfolder, because the v2 uploader deletes rec_*.mp4 at the top of
+      # the volume at startup. Group writable, so the uploader can remove a
+      # file once it is in S3.
+      runOnRecordSegmentComplete: sh -c 'mkdir -p -m 2775 /etc/shared/recordings && mv "$MTX_SEGMENT_PATH" /etc/shared/recordings/'
+{{- end }}
+
+    paths:
+      all_others:
