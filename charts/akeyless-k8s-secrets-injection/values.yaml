@@ -208,3 +208,5 @@ pdb:
   ## Number of pods that are unavailable after eviction as number or percentage (eg.: 50%).
   ## Has higher precedence over `pdb.minAvailable`
   maxUnavailable: ""
+
+extraObjects: []

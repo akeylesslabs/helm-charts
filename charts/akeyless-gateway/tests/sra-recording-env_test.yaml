@@ -1,0 +1,28 @@
+suite: akeyless-gateway SRA session recording env under the strict security policy
+templates:
+  - templates/akeyless-secure-remote-access/ssh-deployment.yaml
+set:
+  sra.enabled: true
+  sra.sshConfig.CAPublicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC7 test
+  strictSecurityPolicy.enabled: true
+tests:
+  - it: accepts the keystroke capture setting as a plain value
+    set:
+      sra.env:
+        - name: SRA_RECORDING_CAPTURE_KEYSTROKES
+          value: "true"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SRA_RECORDING_CAPTURE_KEYSTROKES
+            value: "true"
+
+  - it: still rejects a name that looks like a secret
+    set:
+      sra.env:
+        - name: MY_TOKEN
+          value: x
+    asserts:
+      - failedTemplate:
+          errorPattern: "detected potential secret 'MY_TOKEN' in sra.env"
