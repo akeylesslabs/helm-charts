@@ -61,7 +61,19 @@ metadata:
   labels:
     {{- include "akeyless-sra-web.labels" . | nindent 4 }}
 spec:
-  type: ClusterIP
+  {{- $webSvcType := .Values.sra.webConfig.service.type | default "ClusterIP" }}
+  type: {{ $webSvcType }}
+  {{- if eq $webSvcType "LoadBalancer" }}
+  {{- with .Values.sra.webConfig.service.loadBalancerIP }}
+  loadBalancerIP: {{ . | quote }}
+  {{- end }}
+  {{- end }}
+  {{- with .Values.sra.webConfig.service.externalTrafficPolicy }}
+  {{- if not (has $webSvcType (list "LoadBalancer" "NodePort")) }}
+  {{- fail (printf "sra.webConfig.service.externalTrafficPolicy is set to '%s' but the resolved sra.webConfig.service.type is '%s'; externalTrafficPolicy is only valid for LoadBalancer or NodePort" . $webSvcType) }}
+  {{- end }}
+  externalTrafficPolicy: {{ . }}
+  {{- end }}
   ports:
     - name: web
       port: 8888

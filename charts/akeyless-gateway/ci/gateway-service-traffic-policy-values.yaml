@@ -1,0 +1,17 @@
+globalConfig:
+  gatewayAuth:
+    gatewayAccessType: access_key
+    gatewayCredentialsExistingSecret: akeyless-auth
+
+gateway:
+  service:
+    type: NodePort
+    externalTrafficPolicy: Local
+sra:
+  enabled: true
+  sshConfig:
+    CAPublicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC7 test
+  webConfig:
+    service:
+      type: NodePort
+      externalTrafficPolicy: Local
