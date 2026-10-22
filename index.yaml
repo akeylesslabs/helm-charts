@@ -2,6 +2,20 @@ apiVersion: v1
 entries:
   akeyless-api-gateway:
   - apiVersion: v2
+    appVersion: 5.5.3
+    created: "2026-10-22T14:45:53.922131366Z"
+    description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
+    digest: 8dbbe417e13fd28dfabef0d80aff128a1b2842f2488cee5b5cc4ff78bbd1b636
+    maintainers:
+    - email: support@akeyless.io
+      name: Akeyless
+      url: https://www.akeyless.io
+    name: akeyless-api-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-api-gateway-1.62.31/akeyless-api-gateway-1.62.31.tgz
+    version: 1.62.31
+  - apiVersion: v2
     appVersion: 5.5.2
     created: "2026-10-15T10:37:59.19895047Z"
     description: A Helm chart for Kubernetes that deploys akeyless-api-gateway
@@ -3810,6 +3824,33 @@ entries:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-csi-provider-1.0.0/akeyless-csi-provider-1.0.0.tgz
     version: 1.0.0
   akeyless-gateway:
+  - annotations:
+      gatewayVersion: 5.5.3
+      sraVersion: 3.6.2
+    apiVersion: v2
+    appVersion: 5.5.3_3.6.2
+    created: "2026-10-22T14:45:54.141225865Z"
+    dependencies:
+    - alias: cacheHA
+      condition: cacheHA.enabled
+      name: redis-ha
+      repository: https://dandydeveloper.github.io/charts/
+      version: 4.35.10
+    description: A Helm chart for Kubernetes that deploys akeyless-gateway
+    digest: 04753b70a56855e0c37f570d872db684ee61704e6c5701f6b3adca0a7320c130
+    icon: https://akeyless-908832575.imgix.net/wp-content/uploads/2024/03/akeyless-2024.png?auto=format%2Ccompress&fm=webp&ixlib=php-3.3.0
+    keywords:
+    - akeyless-gateway
+    - sra
+    maintainers:
+    - email: support@akeyless.io
+      name: Akeyless
+      url: https://www.akeyless.io
+    name: akeyless-gateway
+    type: application
+    urls:
+    - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-gateway-3.8.5/akeyless-gateway-3.8.5.tgz
+    version: 3.8.5
   - annotations:
       gatewayVersion: 5.5.2
       sraVersion: 3.6.2
@@ -15414,4 +15455,4 @@ entries:
     urls:
     - https://github.com/akeylesslabs/helm-charts/releases/download/akeyless-zero-trust-web-access-1.0.0/akeyless-zero-trust-web-access-1.0.0.tgz
     version: 1.0.0
-generated: "2026-10-21T20:01:14.03866186Z"
+generated: "2026-10-22T14:45:54.142082815Z"
