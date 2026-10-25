@@ -8,8 +8,6 @@ dispatcher:
   service:
     type: ClusterIP
   config:
-    listOnlyCredentials:
-      samlAccessID: p-12345678911123
     privilegedAccess:
       accessID: p-12345678911123
       # Test-only placeholder; not a real credential.

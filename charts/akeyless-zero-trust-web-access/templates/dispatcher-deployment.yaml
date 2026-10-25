@@ -99,7 +99,6 @@ spec:
               set -ex
 {{- if (eq (include "secret-exist" (dict "Root" $.Values.dispatcher.config.privilegedAccess.existingSecretNames "Name" "access")) "true") }}
               echo "{{ required "API Gateway URL is required" .Values.dispatcher.config.apiGatewayURL }}" > /etc/akeyless/akeyless_config_file
-              echo "cmd=auth&access-id={{ .Values.dispatcher.config.listOnlyCredentials.samlAccessID }}" >> /etc/akeyless/akeyless_config_file
               echo "cmd=auth&access-id=$accessID&access-key=$accessKey" >> /etc/akeyless/akeyless_config_file
 {{- end }}
               [ "$(ls /configmap_akeyless)" ] && cp /configmap_akeyless/* /etc/akeyless
@@ -155,8 +154,6 @@ spec:
           ports:
             - containerPort: 9000
               name: web
-            - containerPort: 12411
-              name: akl
             - containerPort: 2000
               name: metrics
           env:

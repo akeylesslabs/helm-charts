@@ -267,11 +267,6 @@ dispatcher:
     # the purpose of this cluster, for example, "sra-staging" or "us-west-prod"
     clusterName: defaultCluster
 
-    # For the Zero-Trust Web Access, it's recommended to grant minimal permissions ("List" only) to the Zero-Trust client,
-    # while the privilegedAccess will have "Read" and "List" permissions.
-    listOnlyCredentials:
-      samlAccessID: ""
-
     # List of URLs that will be considered valid for redirection from the Portal back to the bastion
     allowedBastionUrls: []
       # - "https://bastion.my.org:8888"

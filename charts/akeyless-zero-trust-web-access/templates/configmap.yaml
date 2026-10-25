@@ -11,7 +11,6 @@ data:
   {{- if (ne (include "secret-exist" (dict "Root" $.Values.dispatcher.config.privilegedAccess.existingSecretNames "Name" "access")) "true") }}
   akeyless_config_file: |
     {{ required "API Gateway URL is required" .apiGatewayURL }}
-    cmd=auth&access-id={{ .listOnlyCredentials.samlAccessID }}
     cmd=auth&access-id={{ required "Privileged credentials are required" .privilegedAccess.accessID }}&access-key={{ .privilegedAccess.accessKey }}
     {{- end }}
 {{- end}}
