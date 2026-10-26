@@ -54,3 +54,29 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: "jwtProjectedToken.audience is required when jwtProjectedToken.enabled is true"
+
+  - it: "skips duplicate JWT env keys from Values.env when projected token is enabled"
+    template: templates/webhook-deployment.yaml
+    set:
+      jwtProjectedToken.enabled: true
+      jwtProjectedToken.audience: akeyless.io
+      env.AKEYLESS_ACCESS_TYPE: jwt
+      env.AKEYLESS_JWT_FILE: /wrong/path
+      env.AKEYLESS_JWT_AUDIENCE: wrong-aud
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[?(@.name=="AKEYLESS_JWT_FILE")].value
+          value: /var/run/secrets/akeyless/jwt/token
+      - equal:
+          path: spec.template.spec.containers[0].env[?(@.name=="AKEYLESS_JWT_AUDIENCE")].value
+          value: akeyless.io
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: AKEYLESS_JWT_FILE
+            value: /wrong/path
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: AKEYLESS_JWT_AUDIENCE
+            value: wrong-aud

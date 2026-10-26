@@ -101,8 +101,11 @@ spec:
             value: {{ .Values.jwtProjectedToken.audience | quote }}
 {{- end }}
           {{- range $key, $value := .Values.env }}
+          {{- if and $.Values.jwtProjectedToken.enabled (or (eq $key "AKEYLESS_JWT_FILE") (eq $key "AKEYLESS_JWT_AUDIENCE")) }}
+          {{- else }}
           - name: {{ $key }}
             value: {{ $value }}
+          {{- end }}
           {{- end }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
