@@ -1,0 +1,56 @@
+suite: akeyless-secrets-injection jwt projected token
+release:
+  name: injector
+  namespace: akeyless
+tests:
+  - it: "does not mount a projected JWT volume by default"
+    template: templates/webhook-deployment.yaml
+    asserts:
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: akeyless-jwt
+
+  - it: "mounts a projected SA token with audience when enabled"
+    template: templates/webhook-deployment.yaml
+    set:
+      jwtProjectedToken.enabled: true
+      jwtProjectedToken.audience: akeyless.io
+      env.AKEYLESS_ACCESS_TYPE: jwt
+      env.AKEYLESS_ACCESS_ID: p-jwt
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: akeyless-jwt
+            projected:
+              sources:
+                - serviceAccountToken:
+                    path: token
+                    expirationSeconds: 3600
+                    audience: akeyless.io
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: akeyless-jwt
+            mountPath: /var/run/secrets/akeyless/jwt
+            readOnly: true
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: AKEYLESS_JWT_FILE
+            value: /var/run/secrets/akeyless/jwt/token
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: AKEYLESS_JWT_AUDIENCE
+            value: akeyless.io
+
+  - it: "fails when enabled without audience"
+    template: templates/webhook-deployment.yaml
+    set:
+      jwtProjectedToken.enabled: true
+      jwtProjectedToken.audience: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: "jwtProjectedToken.audience is required when jwtProjectedToken.enabled is true"

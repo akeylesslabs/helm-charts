@@ -41,6 +41,18 @@ spec:
         secret:
           defaultMode: 420
           secretName: {{ include "vault-secrets-webhook.tlsSecretName" . }}
+{{- if .Values.jwtProjectedToken.enabled }}
+{{- if not .Values.jwtProjectedToken.audience }}
+{{- fail "jwtProjectedToken.audience is required when jwtProjectedToken.enabled is true" }}
+{{- end }}
+      - name: {{ .Values.jwtProjectedToken.volumeName | default "akeyless-jwt" }}
+        projected:
+          sources:
+          - serviceAccountToken:
+              path: token
+              expirationSeconds: {{ .Values.jwtProjectedToken.expirationSeconds | default 3600 }}
+              audience: {{ .Values.jwtProjectedToken.audience | quote }}
+{{- end }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -82,6 +94,12 @@ spec:
 {{- end }}
           - name: AKEYLESS_AGENT_IMAGE
             value: "{{ .Values.image.agentImage }}:{{ .Values.image.tag | default .Chart.AppVersion  }}"
+{{- if .Values.jwtProjectedToken.enabled }}
+          - name: AKEYLESS_JWT_FILE
+            value: {{ printf "%s/token" (.Values.jwtProjectedToken.mountPath | default "/var/run/secrets/akeyless/jwt") | quote }}
+          - name: AKEYLESS_JWT_AUDIENCE
+            value: {{ .Values.jwtProjectedToken.audience | quote }}
+{{- end }}
           {{- range $key, $value := .Values.env }}
           - name: {{ $key }}
             value: {{ $value }}
@@ -108,6 +126,11 @@ spec:
           volumeMounts:
           - mountPath: /var/serving-cert
             name: serving-cert
+{{- if .Values.jwtProjectedToken.enabled }}
+          - name: {{ .Values.jwtProjectedToken.volumeName | default "akeyless-jwt" }}
+            mountPath: {{ .Values.jwtProjectedToken.mountPath | default "/var/run/secrets/akeyless/jwt" }}
+            readOnly: true
+{{- end }}
 {{- if not .Values.openshiftEnabled }}
           securityContext: #//only for k8s - not openshift compatible
             runAsUser: 65534

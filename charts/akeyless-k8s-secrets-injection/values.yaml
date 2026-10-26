@@ -139,7 +139,7 @@ service:
 
 env:
   AKEYLESS_URL: "https://vault.akeyless.io"
-  AKEYLESS_ACCESS_TYPE: ""  # azure_ad/aws_iam/api_key/k8s
+  AKEYLESS_ACCESS_TYPE: ""  # azure_ad/aws_iam/api_key/k8s/jwt (alias oauth2)
   AKEYLESS_ACCESS_ID: ""
 
  # AKEYLESS_API_GW_URL: "https://api-gw-url"
@@ -159,6 +159,16 @@ env:
   AKEYLESS_AGENT_LIMITS_MEM: "128Mi"
   AKEYLESS_AGENT_REQUESTS_MEM: "64Mi"
 
+# Projected ServiceAccount token for AKEYLESS_ACCESS_TYPE jwt/oauth2.
+# Kubelet rotates the token; do NOT put a static JWT in env.
+# audience is required when enabled and must match the Akeyless oauth2/jwt auth method.
+# When enabled, the chart also sets AKEYLESS_JWT_FILE and AKEYLESS_JWT_AUDIENCE.
+jwtProjectedToken:
+  enabled: false
+  audience: ""
+  expirationSeconds: 3600
+  volumeName: akeyless-jwt
+  mountPath: /var/run/secrets/akeyless/jwt
 
 resources:
   limits:

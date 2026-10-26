@@ -87,6 +87,27 @@ extraObjects:
 
 ## Configuration
 
+### OAuth2 / JWT authentication
+
+For `AKEYLESS_ACCESS_TYPE: jwt` (alias `oauth2`), enable a kubelet-rotated projected
+ServiceAccount token. Do not put a static JWT in `env`. The audience is required and
+must match the Akeyless oauth2/jwt auth method (same pattern as the CSI provider):
+
+```yaml
+env:
+  AKEYLESS_ACCESS_TYPE: jwt
+  AKEYLESS_ACCESS_ID: "<oauth2/jwt auth-method access id>"
+  AKEYLESS_API_GW_URL: "https://api.akeyless.io"
+
+jwtProjectedToken:
+  enabled: true
+  audience: akeyless.io
+```
+
+The chart mounts the projected token and sets `AKEYLESS_JWT_FILE` /
+`AKEYLESS_JWT_AUDIENCE` on the webhook Deployment. Workload pods receive their own
+projected token from the injector so init and sidecar refresh use the same identity.
+
 ### Upgrading to chart 2.0.0
 
 The top-level `webhookFailurePolicy` value was removed. Move it under `mutatingWebhook.failurePolicy`:
