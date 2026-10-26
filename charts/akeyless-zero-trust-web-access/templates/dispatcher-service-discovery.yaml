@@ -21,9 +21,5 @@ spec:
       port: {{ .Values.dispatcher.service.port }}
       targetPort: web
       protocol: TCP
-    - name: http-akl
-      port: 12411
-      targetPort: akl
-      protocol: TCP
   selector:
     app: dispatcher
