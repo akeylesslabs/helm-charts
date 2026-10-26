@@ -1,0 +1,18 @@
+# ct install fixture: exercises gateway.deployment.readOnlyRootFilesystem end-to-end.
+# Without this, the flag defaults to false and ct install never renders the
+# read-only rootfs securityContext, env, or emptyDir volume mounts.
+globalConfig:
+  gatewayAuth:
+    gatewayAccessType: access_key
+    gatewayCredentialsExistingSecret: akeyless-auth
+
+gateway:
+  service:
+    type: ClusterIP
+  deployment:
+    readOnlyRootFilesystem: true
+
+sra:
+  sshConfig:
+    service:
+      type: ClusterIP
