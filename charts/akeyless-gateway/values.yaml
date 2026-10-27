@@ -352,6 +352,9 @@ gateway:
     labels: {}
     type: LoadBalancer
 
+    loadBalancerIP: ""
+    externalTrafficPolicy: ""
+
     ## Gateway service port
     ##
     port: 8000
