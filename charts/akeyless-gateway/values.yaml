@@ -603,10 +603,6 @@ sra:
   ## The below section is for the Remote Access Web app
   ##
   webConfig:
-    service:
-      type: ClusterIP
-      loadBalancerIP: ""
-      externalTrafficPolicy: ""
     deployment:
       annotations: {}
       labels: {}
