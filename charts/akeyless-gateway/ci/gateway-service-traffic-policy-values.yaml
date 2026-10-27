@@ -5,13 +5,6 @@ globalConfig:
 
 gateway:
   service:
-    type: NodePort
+    type: LoadBalancer
+    loadBalancerIP: 203.0.113.10
     externalTrafficPolicy: Local
-sra:
-  enabled: true
-  sshConfig:
-    CAPublicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC7 test
-  webConfig:
-    service:
-      type: NodePort
-      externalTrafficPolicy: Local
