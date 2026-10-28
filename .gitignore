@@ -21,3 +21,6 @@ values.yaml.tmp
 .claude/settings.local.json
 .codex/config.toml
 .cursor/settings.json
+
+# Local cluster pull secret. Never commit.
+docker-akeyless-staging-secret.yaml
