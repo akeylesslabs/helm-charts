@@ -170,6 +170,15 @@ jwtProjectedToken:
   volumeName: akeyless-jwt
   mountPath: /var/run/secrets/akeyless/jwt
 
+# Opt-in admission caller auth for self-managed control planes (ASM-21292).
+# Managed clouds (EKS/GKE/AKS) typically cannot set API-server kubeConfigFile.
+# Use quoted string values when setting via --set (e.g. --set-string).
+admissionAuth:
+  enabled: false
+  require: false
+  existingSecret: ""
+  key: token
+
 resources:
   limits:
     cpu: 0.5

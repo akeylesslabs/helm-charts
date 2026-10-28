@@ -89,6 +89,9 @@ extraObjects:
 
 ### OAuth2 / JWT authentication
 
+Requires injector image that supports `AKEYLESS_ACCESS_TYPE=jwt` (merge and release
+the injector before publishing this chart).
+
 For `AKEYLESS_ACCESS_TYPE: jwt` (alias `oauth2`), enable a kubelet-rotated projected
 ServiceAccount token. Do not put a static JWT in `env`. The audience is required and
 must match the Akeyless oauth2/jwt auth method (same pattern as the CSI provider):
@@ -107,6 +110,22 @@ jwtProjectedToken:
 The chart mounts the projected token and sets `AKEYLESS_JWT_FILE` /
 `AKEYLESS_JWT_AUDIENCE` on the webhook Deployment. Workload pods receive their own
 projected token from the injector so init and sidecar refresh use the same identity.
+
+Scope access with `--force-sub-claims` and role associations
+`sub=system:serviceaccount:<ns>:<sa>` (not a shared claim).
+
+### Registry credential secrets (BREAKING)
+
+Image entrypoint lookup requires each registry-cred secret JSON to include
+`"registry": "<image host>"` (use `docker.io` for Docker Hub; include non-default ports).
+Optional: `AKEYLESS_REGISTRY_CREDS_PATH_TEMPLATE=/registry/{namespace}/` to scope
+`akeyless/registry_creds` annotations, or `AKEYLESS_DISABLE_REGISTRY_CREDS_ANNOTATION=enable`.
+
+### Admission auth (opt-in, self-managed only)
+
+`admissionAuth` mounts a dedicated Secret and sets `WEBHOOK_ADMISSION_TOKEN_FILE`.
+Default remains off (SEC-001 / ASM-21292). Managed clouds cannot usually configure
+API-server admission client credentials.
 
 ### Upgrading to chart 2.0.0
 
