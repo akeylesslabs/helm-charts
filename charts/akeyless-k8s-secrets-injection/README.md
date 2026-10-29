@@ -87,6 +87,82 @@ extraObjects:
 
 ## Configuration
 
+### OAuth2 / JWT authentication
+
+Requires injector image that supports `AKEYLESS_ACCESS_TYPE=jwt` (merge and release
+the injector before publishing this chart).
+
+For `AKEYLESS_ACCESS_TYPE: jwt` (alias `oauth2`), enable a kubelet-rotated projected
+ServiceAccount token. Do not put a static JWT in `env`. The audience is required and
+must match the Akeyless oauth2/jwt auth method (same pattern as the CSI provider):
+
+```yaml
+env:
+  AKEYLESS_ACCESS_TYPE: jwt
+  AKEYLESS_ACCESS_ID: "<oauth2/jwt auth-method access id>"
+  AKEYLESS_API_GW_URL: "https://api.akeyless.io"
+
+jwtProjectedToken:
+  enabled: true
+  audience: akeyless.io
+```
+
+The chart mounts the projected token and sets `AKEYLESS_JWT_FILE` /
+`AKEYLESS_JWT_AUDIENCE` on the webhook Deployment. Workload pods receive their own
+projected token from the injector so init and sidecar refresh use the same identity.
+
+Scope access with `--force-sub-claims` and role associations
+`sub=system:serviceaccount:<ns>:<sa>` (not a shared claim).
+
+### Registry credential secrets (BREAKING)
+
+Image entrypoint lookup requires each registry-cred secret JSON to include
+`"registry": "<image host>"` (use `docker.io` for Docker Hub; include non-default ports).
+Optional: `AKEYLESS_REGISTRY_CREDS_PATH_TEMPLATE=/registry/{namespace}/` to scope
+`akeyless/registry_creds` annotations, or `AKEYLESS_DISABLE_REGISTRY_CREDS_ANNOTATION=enable`.
+
+### Admission auth (SEC-001)
+
+The webhook authenticates API-server callers with a shared bearer token
+(`WEBHOOK_ADMISSION_TOKEN_FILE`). Without it, any Pod that can reach the webhook
+Service can forge an AdmissionReview and receive Akeyless credentials in the patch.
+
+**Self-managed clusters**
+
+1. Enable chart auth (creates a Secret unless `existingSecret` is set):
+
+```yaml
+admissionAuth:
+  enabled: true
+  require: true
+```
+
+2. Configure the API server `kubeConfigFile` to send that Secret's token as a
+   bearer credential for this webhook **before** pods rely on `require: true`
+   ([Authenticate API servers](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#authenticate-apiservers)).
+
+When setting via `--set`, use plain booleans (for example `--set admissionAuth.require=true`).
+The chart already quotes env values; do not wrap `true`/`false` in extra quotes.
+
+**Managed clouds (EKS/GKE/AKS)**
+
+These usually cannot set API-server kubeConfigFile. Leave `admissionAuth.enabled=false`
+(the chart then sets `WEBHOOK_ALLOW_UNAUTHENTICATED_ADMISSION=true` for BC) and
+restrict callers with `networkPolicy`:
+
+```yaml
+networkPolicy:
+  enabled: true
+  # Deny in-cluster Pod sources; allow control-plane / non-pod CIDRs.
+  denyPodCIDRs:
+    - 10.0.0.0/8
+    - 172.16.0.0/12
+    - 192.168.0.0/16
+```
+
+Tune CIDRs to your cluster's Pod network. Validate that the API server can still
+reach the webhook after applying the policy.
+
 ### Upgrading to chart 2.0.0
 
 The top-level `webhookFailurePolicy` value was removed. Move it under `mutatingWebhook.failurePolicy`:

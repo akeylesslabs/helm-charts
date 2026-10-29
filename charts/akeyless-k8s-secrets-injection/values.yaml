@@ -139,7 +139,7 @@ service:
 
 env:
   AKEYLESS_URL: "https://vault.akeyless.io"
-  AKEYLESS_ACCESS_TYPE: ""  # azure_ad/aws_iam/api_key/k8s
+  AKEYLESS_ACCESS_TYPE: ""  # azure_ad/aws_iam/api_key/k8s/jwt (alias oauth2)
   AKEYLESS_ACCESS_ID: ""
 
  # AKEYLESS_API_GW_URL: "https://api-gw-url"
@@ -159,6 +159,39 @@ env:
   AKEYLESS_AGENT_LIMITS_MEM: "128Mi"
   AKEYLESS_AGENT_REQUESTS_MEM: "64Mi"
 
+# Projected ServiceAccount token for AKEYLESS_ACCESS_TYPE jwt/oauth2.
+# Kubelet rotates the token; do NOT put a static JWT in env.
+# audience is required when enabled and must match the Akeyless oauth2/jwt auth method.
+# When enabled, the chart also sets AKEYLESS_JWT_FILE and AKEYLESS_JWT_AUDIENCE.
+jwtProjectedToken:
+  enabled: false
+  audience: ""
+  expirationSeconds: 3600
+  volumeName: akeyless-jwt
+  mountPath: /var/run/secrets/akeyless/jwt
+
+# Admission caller auth (SEC-001). The webhook image requires
+# WEBHOOK_ADMISSION_TOKEN_FILE unless WEBHOOK_ALLOW_UNAUTHENTICATED_ADMISSION=true.
+# Self-managed: enable this, then configure the API server kubeConfigFile to send
+# the bearer token BEFORE relying on require=true
+# (https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#authenticate-apiservers).
+# Managed clouds (EKS/GKE/AKS) usually cannot set kubeConfigFile — leave disabled
+# (chart sets the allow flag) and use networkPolicy below as the boundary.
+admissionAuth:
+  enabled: false
+  # When enabled, default require=true. Set false only while rolling the API server config.
+  require: true
+  # If empty, the chart creates <release>-admission-auth with a random token.
+  existingSecret: ""
+  key: token
+
+# Optional NetworkPolicy for SEC-001 on managed clouds (control-plane boundary).
+# Prefer denyPodCIDRs (allow non-pod sources, deny listed pod ranges) or allowedCIDRs.
+networkPolicy:
+  enabled: false
+  allowedCIDRs: []
+  # Example: ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+  denyPodCIDRs: []
 
 resources:
   limits:
