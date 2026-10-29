@@ -1,0 +1,16 @@
+# Dependabot version updates: checked weekly for every package ecosystem found in
+# this repo, one PR per available bump, up to 100 open PRs per ecosystem (Dependabot
+# pauses opening more until some are closed). GitHub's default 3-day cooldown on
+# newly published versions applies. Managed org-wide by AppSec.
+#
+# Only GitHub Actions is covered on purpose: chart versions, chart dependencies and
+# image tags in charts/ are owned by the release automation, and chart-testing
+# enforces check-version-increment, so Dependabot helm/docker-compose updates would
+# only open PRs that cannot pass CI. The compose images are intentionally untagged.
+version: 2
+updates:
+- package-ecosystem: github-actions
+  directory: /
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 100
