@@ -53,13 +53,11 @@ spec:
               expirationSeconds: {{ ((.Values.jwtProjectedToken | default dict).expirationSeconds) | default 3600 }}
               audience: {{ ((.Values.jwtProjectedToken | default dict).audience) | quote }}
 {{- end }}
-{{- if (.Values.admissionAuth | default dict).enabled }}
-{{- if not ((.Values.admissionAuth | default dict).existingSecret) }}
-{{- fail "admissionAuth.existingSecret is required when admissionAuth.enabled is true" }}
-{{- end }}
+{{- $aa := .Values.admissionAuth | default dict }}
+{{- if $aa.enabled }}
       - name: admission-auth
         secret:
-          secretName: {{ ((.Values.admissionAuth | default dict).existingSecret) | quote }}
+          secretName: {{ $aa.existingSecret | default (printf "%s-admission-auth" (include "vault-secrets-webhook.fullname" .)) | quote }}
 {{- end }}
       containers:
         - name: {{ .Chart.Name }}
@@ -108,15 +106,22 @@ spec:
           - name: AKEYLESS_JWT_AUDIENCE
             value: {{ ((.Values.jwtProjectedToken | default dict).audience) | quote }}
 {{- end }}
-{{- if (.Values.admissionAuth | default dict).enabled }}
+{{- $aa := .Values.admissionAuth | default dict }}
+{{- if $aa.enabled }}
           - name: WEBHOOK_ADMISSION_TOKEN_FILE
-            value: {{ printf "/var/run/secrets/akeyless/admission-auth/%s" (((.Values.admissionAuth | default dict).key) | default "token") | quote }}
+            value: {{ printf "/var/run/secrets/akeyless/admission-auth/%s" ($aa.key | default "token") | quote }}
           - name: WEBHOOK_REQUIRE_ADMISSION_AUTH
-            value: {{ ((.Values.admissionAuth | default dict).require) | default false | quote }}
+            value: {{ ($aa.require | default true) | quote }}
+{{- else }}
+          # SEC-001: image defaults to fail-closed. Chart keeps BC for managed
+          # clouds that cannot set API-server kubeConfigFile; enable
+          # admissionAuth (self-managed) or networkPolicy as the boundary.
+          - name: WEBHOOK_ALLOW_UNAUTHENTICATED_ADMISSION
+            value: "true"
 {{- end }}
           {{- range $key, $value := .Values.env }}
           {{- if and ($.Values.jwtProjectedToken | default dict).enabled (or (eq $key "AKEYLESS_JWT_FILE") (eq $key "AKEYLESS_JWT_AUDIENCE")) }}
-          {{- else if and ($.Values.admissionAuth | default dict).enabled (or (eq $key "WEBHOOK_ADMISSION_TOKEN_FILE") (eq $key "WEBHOOK_REQUIRE_ADMISSION_AUTH")) }}
+          {{- else if or (eq $key "WEBHOOK_ADMISSION_TOKEN_FILE") (eq $key "WEBHOOK_REQUIRE_ADMISSION_AUTH") (eq $key "WEBHOOK_ALLOW_UNAUTHENTICATED_ADMISSION") }}
           {{- else }}
           - name: {{ $key }}
             value: {{ $value | quote }}
