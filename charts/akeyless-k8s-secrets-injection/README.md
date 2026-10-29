@@ -127,6 +127,10 @@ Optional: `AKEYLESS_REGISTRY_CREDS_PATH_TEMPLATE=/registry/{namespace}/` to scop
 Default remains off (SEC-001 / ASM-21292). Managed clouds cannot usually configure
 API-server admission client credentials.
 
+When setting via `--set`, use plain booleans (for example `--set admissionAuth.require=true`).
+The chart already quotes env values; do not wrap `true`/`false` in extra quotes
+(that renders `"\"true\""` and stops webhook startup).
+
 ### Upgrading to chart 2.0.0
 
 The top-level `webhookFailurePolicy` value was removed. Move it under `mutatingWebhook.failurePolicy`:

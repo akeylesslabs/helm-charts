@@ -114,8 +114,6 @@ spec:
           - name: WEBHOOK_REQUIRE_ADMISSION_AUTH
             value: {{ ((.Values.admissionAuth | default dict).require) | default false | quote }}
 {{- end }}
-          - name: GOMEMLIMIT
-            value: {{ .Values.resources.limits.memory | default "192Mi" | replace "Mi" "MiB" | replace "Gi" "GiB" | quote }}
           {{- range $key, $value := .Values.env }}
           {{- if and ($.Values.jwtProjectedToken | default dict).enabled (or (eq $key "AKEYLESS_JWT_FILE") (eq $key "AKEYLESS_JWT_AUDIENCE")) }}
           {{- else if and ($.Values.admissionAuth | default dict).enabled (or (eq $key "WEBHOOK_ADMISSION_TOKEN_FILE") (eq $key "WEBHOOK_REQUIRE_ADMISSION_AUTH")) }}
