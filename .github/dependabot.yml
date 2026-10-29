@@ -1,0 +1,26 @@
+# Dependabot version updates: one PR per available dependency bump, checked weekly,
+# for every package ecosystem found in this repo. GitHub's default 3-day cooldown
+# on newly published versions applies. Managed org-wide by AppSec.
+version: 2
+updates:
+- package-ecosystem: github-actions
+  directory: /
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 100
+- package-ecosystem: docker-compose
+  directory: /docker-compose/akeyless-zero-trust-web-access
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 100
+- package-ecosystem: helm
+  directories:
+  - /charts/akeyless-api-gateway
+  - /charts/akeyless-csi-provider
+  - /charts/akeyless-gateway
+  - /charts/akeyless-k8s-secrets-injection
+  - /charts/akeyless-secure-remote-access
+  - /charts/akeyless-zero-trust-web-access
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 100
