@@ -3,19 +3,30 @@ release:
   name: injector
   namespace: akeyless
 tests:
-  - it: "does not mount a projected JWT volume by default"
+  - it: "does not mount a projected JWT volume or JWT env by default"
     template: templates/webhook-deployment.yaml
+    set:
+      admissionAuth.allowUnauthenticated: true
     asserts:
       - notContains:
           path: spec.template.spec.volumes
           content:
             name: akeyless-jwt
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: AKEYLESS_JWT_FILE
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: AKEYLESS_JWT_AUDIENCE
 
   - it: "mounts a projected SA token with audience when enabled"
     template: templates/webhook-deployment.yaml
     set:
+      admissionAuth.allowUnauthenticated: true
       jwtProjectedToken.enabled: true
-      jwtProjectedToken.audience: akeyless.io
+      jwtProjectedToken.audience: "12345"
       env.AKEYLESS_ACCESS_TYPE: jwt
       env.AKEYLESS_ACCESS_ID: p-jwt
     asserts:
@@ -28,7 +39,7 @@ tests:
                 - serviceAccountToken:
                     path: token
                     expirationSeconds: 3600
-                    audience: akeyless.io
+                    audience: "12345"
       - contains:
           path: spec.template.spec.containers[0].volumeMounts
           content:
@@ -44,20 +55,75 @@ tests:
           path: spec.template.spec.containers[0].env
           content:
             name: AKEYLESS_JWT_AUDIENCE
-            value: akeyless.io
+            value: "12345"
+
+  - it: "honours custom volumeName, mountPath and expirationSeconds"
+    template: templates/webhook-deployment.yaml
+    set:
+      admissionAuth.allowUnauthenticated: true
+      jwtProjectedToken.enabled: true
+      jwtProjectedToken.audience: "12345"
+      jwtProjectedToken.volumeName: custom-jwt
+      jwtProjectedToken.mountPath: /var/run/secrets/custom/jwt
+      jwtProjectedToken.expirationSeconds: 7200
+      env.AKEYLESS_ACCESS_TYPE: jwt
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: custom-jwt
+            projected:
+              sources:
+                - serviceAccountToken:
+                    path: token
+                    expirationSeconds: 7200
+                    audience: "12345"
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: custom-jwt
+            mountPath: /var/run/secrets/custom/jwt
+            readOnly: true
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: AKEYLESS_JWT_FILE
+            value: /var/run/secrets/custom/jwt/token
 
   - it: "fails when enabled without audience"
     template: templates/webhook-deployment.yaml
     set:
+      admissionAuth.allowUnauthenticated: true
       jwtProjectedToken.enabled: true
       jwtProjectedToken.audience: ""
     asserts:
       - failedTemplate:
           errorMessage: "jwtProjectedToken.audience is required when jwtProjectedToken.enabled is true"
 
+  - it: "fails when jwt access type without projected token"
+    template: templates/webhook-deployment.yaml
+    set:
+      admissionAuth.allowUnauthenticated: true
+      env.AKEYLESS_ACCESS_TYPE: jwt
+      jwtProjectedToken.enabled: false
+    asserts:
+      - failedTemplate:
+          errorMessage: "jwtProjectedToken.enabled must be true when env.AKEYLESS_ACCESS_TYPE is jwt or oauth2"
+
+  - it: "fails SEC-001 without auth, network policy, or explicit escape"
+    template: templates/webhook-deployment.yaml
+    set:
+      admissionAuth.enabled: false
+      admissionAuth.allowUnauthenticated: false
+      networkPolicy.enabled: false
+    asserts:
+      - failedTemplate:
+          errorPattern: "SEC-001"
+
   - it: "skips duplicate JWT env keys from Values.env when projected token is enabled"
     template: templates/webhook-deployment.yaml
     set:
+      admissionAuth.allowUnauthenticated: true
       jwtProjectedToken.enabled: true
       jwtProjectedToken.audience: akeyless.io
       env.AKEYLESS_ACCESS_TYPE: jwt
@@ -80,3 +146,17 @@ tests:
           content:
             name: AKEYLESS_JWT_AUDIENCE
             value: wrong-aud
+
+  - it: "keeps a manual env.AKEYLESS_JWT_FILE when the projected token is disabled"
+    template: templates/webhook-deployment.yaml
+    set:
+      admissionAuth.allowUnauthenticated: true
+      jwtProjectedToken.enabled: false
+      env.AKEYLESS_ACCESS_TYPE: api_key
+      env.AKEYLESS_JWT_FILE: /manual/token
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: AKEYLESS_JWT_FILE
+            value: /manual/token

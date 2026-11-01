@@ -89,30 +89,40 @@ extraObjects:
 
 ### OAuth2 / JWT authentication
 
-Requires injector image that supports `AKEYLESS_ACCESS_TYPE=jwt` (merge and release
-the injector before publishing this chart).
+Requires injector **≥ the JWT release** (image supporting `AKEYLESS_ACCESS_TYPE=jwt`).
+0.39.0 exits on `jwt`.
 
-For `AKEYLESS_ACCESS_TYPE: jwt` (alias `oauth2`), enable a kubelet-rotated projected
-ServiceAccount token. Do not put a static JWT in `env`. The audience is required and
-must match the Akeyless oauth2/jwt auth method (same pattern as the CSI provider):
+For `AKEYLESS_ACCESS_TYPE: jwt` (alias `oauth2`), `jwtProjectedToken.enabled` is
+**required**. Do not put a static JWT in `env`, and do not point
+`AKEYLESS_JWT_FILE` at the automounted kube API token.
 
 ```yaml
 env:
   AKEYLESS_ACCESS_TYPE: jwt
   AKEYLESS_ACCESS_ID: "<oauth2/jwt auth-method access id>"
-  AKEYLESS_API_GW_URL: "https://api.akeyless.io"
+  # Optional: set only to force Gateway routing.
+  # AKEYLESS_API_GW_URL: "https://your-gateway.example"
 
 jwtProjectedToken:
   enabled: true
-  audience: akeyless.io
+  audience: akeyless.io   # must match the auth method --audience
 ```
 
-The chart mounts the projected token and sets `AKEYLESS_JWT_FILE` /
-`AKEYLESS_JWT_AUDIENCE` on the webhook Deployment. Workload pods receive their own
-projected token from the injector so init and sidecar refresh use the same identity.
+**Auth method / authorization scoping**
 
-Scope access with `--force-sub-claims` and role associations
-`sub=system:serviceaccount:<ns>:<sa>` (not a shared claim).
+1. Sync cluster JWKS / issuer into an oauth2 auth method (`--jwks-json-file` /
+   `--jwks-uri`, `--issuer`, `--unique-identifier sub`, `--audience`, prefer
+   `--force-sub-claims`).
+2. Associate roles with **sub-claims**, not a shared claim, e.g.
+   `akeyless assoc-role-am --role-name <role> --am-name <am> \
+     --sub-claims sub=system:serviceaccount:<ns>:<sa>`
+   Namespace-wide: `sub=system:serviceaccount:<ns>:*`.
+3. Without `--force-sub-claims` / sub-claims, every ServiceAccount that can mint
+   a projected token for this audience inherits the role.
+4. The webhook ServiceAccount also authenticates (registry creds, restart
+   rollout, cert events) and needs its own association, limited to those paths.
+5. `jwtProjectedToken.expirationSeconds` applies only to the webhook Deployment
+   (min 600). Workload projected tokens use 3600s.
 
 ### Registry credential secrets (BREAKING)
 
@@ -123,45 +133,52 @@ Optional: `AKEYLESS_REGISTRY_CREDS_PATH_TEMPLATE=/registry/{namespace}/` to scop
 
 ### Admission auth (SEC-001)
 
-The webhook authenticates API-server callers with a shared bearer token
-(`WEBHOOK_ADMISSION_TOKEN_FILE`). Without it, any Pod that can reach the webhook
-Service can forge an AdmissionReview and receive Akeyless credentials in the patch.
+Chart render **fails** unless one of these is set (the injector binary also
+fail-closes without `WEBHOOK_ADMISSION_TOKEN_FILE` or an explicit allow):
+
+1. `admissionAuth.enabled=true`, or
+2. `networkPolicy.enabled=true` with nonempty `allowedCIDRs`, or
+3. `admissionAuth.allowUnauthenticated=true` (explicit insecure escape).
+
+`env` values are quoted by the chart. Use plain booleans via `--set`
+(`--set admissionAuth.require=true`); remove any extra quotes from older workarounds.
 
 **Self-managed clusters**
-
-1. Enable chart auth (creates a Secret unless `existingSecret` is set):
 
 ```yaml
 admissionAuth:
   enabled: true
-  require: true
+  require: false          # stage 1: mount Secret, do not enforce yet
+  existingSecret: ""      # prefer a pre-created Secret for GitOps stability
 ```
 
-2. Configure the API server `kubeConfigFile` to send that Secret's token as a
-   bearer credential for this webhook **before** pods rely on `require: true`
+1. Install/upgrade with `require: false` so the Secret is mounted while you
+   configure the API server.
+2. Point API-server `kubeConfigFile` at that bearer token
    ([Authenticate API servers](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#authenticate-apiservers)).
-
-When setting via `--set`, use plain booleans (for example `--set admissionAuth.require=true`).
-The chart already quotes env values; do not wrap `true`/`false` in extra quotes.
+3. Flip `require: true` to enforce. Prefer `existingSecret` so upgrades do not
+   rotate the token out from under the API server.
 
 **Managed clouds (EKS/GKE/AKS)**
 
-These usually cannot set API-server kubeConfigFile. Leave `admissionAuth.enabled=false`
-(the chart then sets `WEBHOOK_ALLOW_UNAUTHENTICATED_ADMISSION=true` for BC) and
-restrict callers with `networkPolicy`:
+These usually cannot set kubeConfigFile. Use an explicit control-plane allowlist.
+The cluster CNI must enforce NetworkPolicy ingress (Calico/Cilium/Azure NPM/etc.);
+a policy alone is not a guarantee on every CNI:
 
 ```yaml
 networkPolicy:
   enabled: true
-  # Deny in-cluster Pod sources; allow control-plane / non-pod CIDRs.
-  denyPodCIDRs:
-    - 10.0.0.0/8
-    - 172.16.0.0/12
-    - 192.168.0.0/16
+  allowedCIDRs:
+    - 10.0.0.0/16   # replace with your API-server / control-plane source CIDRs
 ```
 
-Tune CIDRs to your cluster's Pod network. Validate that the API server can still
-reach the webhook after applying the policy.
+Validate that legitimate admissions succeed and that a tenant Pod cannot reach
+`/pods` on the webhook Service.
+
+**Upgrade note (2.6.0)**
+
+Existing releases must set one of the three SEC-001 options above on upgrade,
+or Helm fails with a clear SEC-001 message. Env values are now always quoted.
 
 ### Upgrading to chart 2.0.0
 

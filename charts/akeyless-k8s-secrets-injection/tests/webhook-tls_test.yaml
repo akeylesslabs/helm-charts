@@ -2,6 +2,9 @@ suite: akeyless-secrets-injection webhook TLS
 release:
   name: injector
   namespace: akeyless
+set:
+  # SEC-001: suite renders webhook-deployment; CI cannot configure kubeConfigFile.
+  admissionAuth.allowUnauthenticated: true
 tests:
   - it: "default path generates the Secret and a caBundle"
     template: templates/apiservice-webhook.yaml
@@ -29,6 +32,8 @@ tests:
 
   - it: "default path mounts the chart's own Secret"
     template: templates/webhook-deployment.yaml
+    set:
+      admissionAuth.allowUnauthenticated: true
     asserts:
       - contains:
           path: spec.template.spec.volumes
@@ -94,6 +99,7 @@ tests:
   - it: "existingSecretName mounts the user Secret and points the watch at it"
     template: templates/webhook-deployment.yaml
     set:
+      admissionAuth.allowUnauthenticated: true
       mutatingWebhook.tls.existingSecretName: akeyless-injector-tls
       mutatingWebhook.tls.caBundle: TESTCA
     asserts:
