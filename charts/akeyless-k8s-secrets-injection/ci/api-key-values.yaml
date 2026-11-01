@@ -1,9 +1,5 @@
 replicaCount: 1
 
-# CI/kind cannot configure API-server kubeConfigFile; explicit insecure escape.
-admissionAuth:
-  allowUnauthenticated: true
-
 env:
   AKEYLESS_ACCESS_TYPE: api_key
   AKEYLESS_ACCESS_ID: p-12345678911123

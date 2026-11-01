@@ -1,29 +1,3 @@
-{{- $jwt := .Values.jwtProjectedToken | default dict }}
-{{- $aa := .Values.admissionAuth | default dict }}
-{{- $np := .Values.networkPolicy | default dict }}
-{{- $env := .Values.env | default dict }}
-{{- $accType := $env.AKEYLESS_ACCESS_TYPE | default "" | toString | trim | lower }}
-{{- /* SEC-001: require caller auth, an explicit control-plane NetworkPolicy allowlist, or an explicit insecure escape. */}}
-{{- if $aa.enabled }}
-{{- else if and $np.enabled (not (empty $np.allowedCIDRs)) }}
-{{- else if $aa.allowUnauthenticated }}
-{{- else }}
-{{- fail "SEC-001: set admissionAuth.enabled=true, or networkPolicy.enabled=true with allowedCIDRs, or admissionAuth.allowUnauthenticated=true (insecure escape)" }}
-{{- end }}
-{{- if and (has $accType (list "jwt" "oauth2")) (not $jwt.enabled) }}
-{{- fail "jwtProjectedToken.enabled must be true when env.AKEYLESS_ACCESS_TYPE is jwt or oauth2" }}
-{{- end }}
-{{- if $jwt.enabled }}
-{{- if or (not $jwt.audience) (eq (trim (toString $jwt.audience)) "") }}
-{{- fail "jwtProjectedToken.audience is required when jwtProjectedToken.enabled is true" }}
-{{- end }}
-{{- if lt (int ($jwt.expirationSeconds | default 3600)) 600 }}
-{{- fail "jwtProjectedToken.expirationSeconds must be at least 600" }}
-{{- end }}
-{{- if eq (trimSuffix "/" ($jwt.mountPath | default "/var/run/secrets/akeyless/jwt")) "/var/run/secrets/kubernetes.io/serviceaccount" }}
-{{- fail "jwtProjectedToken.mountPath must not be the ServiceAccount token path" }}
-{{- end }}
-{{- end }}
 apiVersion: apps/v1
 kind: {{ include "deployment.type" $ }}
 metadata:
@@ -67,19 +41,25 @@ spec:
         secret:
           defaultMode: 420
           secretName: {{ include "vault-secrets-webhook.tlsSecretName" . }}
-{{- if $jwt.enabled }}
-      - name: {{ $jwt.volumeName | default "akeyless-jwt" }}
+{{- if (.Values.jwtProjectedToken | default dict).enabled }}
+{{- if not ((.Values.jwtProjectedToken | default dict).audience) }}
+{{- fail "jwtProjectedToken.audience is required when jwtProjectedToken.enabled is true" }}
+{{- end }}
+      - name: {{ ((.Values.jwtProjectedToken | default dict).volumeName) | default "akeyless-jwt" }}
         projected:
           sources:
           - serviceAccountToken:
               path: token
-              expirationSeconds: {{ $jwt.expirationSeconds | default 3600 }}
-              audience: {{ $jwt.audience | quote }}
+              expirationSeconds: {{ ((.Values.jwtProjectedToken | default dict).expirationSeconds) | default 3600 }}
+              audience: {{ ((.Values.jwtProjectedToken | default dict).audience) | quote }}
 {{- end }}
-{{- if $aa.enabled }}
+{{- if (.Values.admissionAuth | default dict).enabled }}
+{{- if not ((.Values.admissionAuth | default dict).existingSecret) }}
+{{- fail "admissionAuth.existingSecret is required when admissionAuth.enabled is true" }}
+{{- end }}
       - name: admission-auth
         secret:
-          secretName: {{ $aa.existingSecret | default (printf "%s-admission-auth" (include "vault-secrets-webhook.fullname" .)) | quote }}
+          secretName: {{ ((.Values.admissionAuth | default dict).existingSecret) | quote }}
 {{- end }}
       containers:
         - name: {{ .Chart.Name }}
@@ -122,34 +102,21 @@ spec:
 {{- end }}
           - name: AKEYLESS_AGENT_IMAGE
             value: "{{ .Values.image.agentImage }}:{{ .Values.image.tag | default .Chart.AppVersion  }}"
-{{- if $jwt.enabled }}
+{{- if (.Values.jwtProjectedToken | default dict).enabled }}
           - name: AKEYLESS_JWT_FILE
-            value: {{ printf "%s/token" ($jwt.mountPath | default "/var/run/secrets/akeyless/jwt") | quote }}
+            value: {{ printf "%s/token" (((.Values.jwtProjectedToken | default dict).mountPath) | default "/var/run/secrets/akeyless/jwt") | quote }}
           - name: AKEYLESS_JWT_AUDIENCE
-            value: {{ $jwt.audience | quote }}
+            value: {{ ((.Values.jwtProjectedToken | default dict).audience) | quote }}
 {{- end }}
-{{- if $aa.enabled }}
+{{- if (.Values.admissionAuth | default dict).enabled }}
           - name: WEBHOOK_ADMISSION_TOKEN_FILE
-            value: {{ printf "/var/run/secrets/akeyless/admission-auth/%s" ($aa.key | default "token") | quote }}
-{{- /* Helm treats false as empty for `default`, so compare as string. */}}
-{{- if eq ($aa.require | toString) "false" }}
-          # Staging: Secret is mounted while API-server kubeConfigFile is prepared.
-          - name: WEBHOOK_ALLOW_UNAUTHENTICATED_ADMISSION
-            value: "true"
-{{- else }}
+            value: {{ printf "/var/run/secrets/akeyless/admission-auth/%s" (((.Values.admissionAuth | default dict).key) | default "token") | quote }}
           - name: WEBHOOK_REQUIRE_ADMISSION_AUTH
-            value: "true"
-{{- end }}
-{{- else if and $np.enabled (not (empty $np.allowedCIDRs)) }}
-          - name: WEBHOOK_ALLOW_UNAUTHENTICATED_ADMISSION
-            value: "true"
-{{- else if $aa.allowUnauthenticated }}
-          - name: WEBHOOK_ALLOW_UNAUTHENTICATED_ADMISSION
-            value: "true"
+            value: {{ ((.Values.admissionAuth | default dict).require) | default false | quote }}
 {{- end }}
           {{- range $key, $value := .Values.env }}
-          {{- if and $jwt.enabled (or (eq $key "AKEYLESS_JWT_FILE") (eq $key "AKEYLESS_JWT_AUDIENCE")) }}
-          {{- else if or (eq $key "WEBHOOK_ADMISSION_TOKEN_FILE") (eq $key "WEBHOOK_REQUIRE_ADMISSION_AUTH") (eq $key "WEBHOOK_ALLOW_UNAUTHENTICATED_ADMISSION") }}
+          {{- if and ($.Values.jwtProjectedToken | default dict).enabled (or (eq $key "AKEYLESS_JWT_FILE") (eq $key "AKEYLESS_JWT_AUDIENCE")) }}
+          {{- else if and ($.Values.admissionAuth | default dict).enabled (or (eq $key "WEBHOOK_ADMISSION_TOKEN_FILE") (eq $key "WEBHOOK_REQUIRE_ADMISSION_AUTH")) }}
           {{- else }}
           - name: {{ $key }}
             value: {{ $value | quote }}
@@ -177,12 +144,12 @@ spec:
           volumeMounts:
           - mountPath: /var/serving-cert
             name: serving-cert
-{{- if $jwt.enabled }}
-          - name: {{ $jwt.volumeName | default "akeyless-jwt" }}
-            mountPath: {{ $jwt.mountPath | default "/var/run/secrets/akeyless/jwt" }}
+{{- if (.Values.jwtProjectedToken | default dict).enabled }}
+          - name: {{ ((.Values.jwtProjectedToken | default dict).volumeName) | default "akeyless-jwt" }}
+            mountPath: {{ ((.Values.jwtProjectedToken | default dict).mountPath) | default "/var/run/secrets/akeyless/jwt" }}
             readOnly: true
 {{- end }}
-{{- if $aa.enabled }}
+{{- if (.Values.admissionAuth | default dict).enabled }}
           - name: admission-auth
             mountPath: /var/run/secrets/akeyless/admission-auth
             readOnly: true

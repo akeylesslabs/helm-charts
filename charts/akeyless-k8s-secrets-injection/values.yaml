@@ -139,13 +139,10 @@ service:
 
 env:
   AKEYLESS_URL: "https://vault.akeyless.io"
-  # azure_ad/aws_iam/gcp/api_key/k8s/universal_identity/jwt (alias oauth2)
-  AKEYLESS_ACCESS_TYPE: ""
+  AKEYLESS_ACCESS_TYPE: ""  # azure_ad/aws_iam/api_key/k8s/jwt (alias oauth2)
   AKEYLESS_ACCESS_ID: ""
 
- # Set only to route logins through your Gateway (otherwise the injector looks up
- # the account API URL). Copied into workload pods when set.
- # AKEYLESS_API_GW_URL: "https://your-gateway.example"
+ # AKEYLESS_API_GW_URL: "https://api-gw-url"
  # AKEYLESS_POD_ACCESS_PATH: "<location-to-access-secrets-per-pod-name>"
  # AKEYLESS_NAMESPACE_ACCESS_PATH: "<location-to-access-secrets-per-namespace>"
  # AKEYLESS_SECRET_DIR_NAME: "<path>"
@@ -163,8 +160,9 @@ env:
   AKEYLESS_AGENT_REQUESTS_MEM: "64Mi"
 
 # Projected ServiceAccount token for AKEYLESS_ACCESS_TYPE jwt/oauth2.
-# Required when access type is jwt/oauth2. Kubelet rotates the token; do NOT put
-# a static JWT in env. audience must match the Akeyless oauth2/jwt auth method.
+# Kubelet rotates the token; do NOT put a static JWT in env.
+# audience is required when enabled and must match the Akeyless oauth2/jwt auth method.
+# When enabled, the chart also sets AKEYLESS_JWT_FILE and AKEYLESS_JWT_AUDIENCE.
 jwtProjectedToken:
   enabled: false
   audience: ""
@@ -172,29 +170,14 @@ jwtProjectedToken:
   volumeName: akeyless-jwt
   mountPath: /var/run/secrets/akeyless/jwt
 
-# Admission caller auth (SEC-001). Chart render fails unless one of:
-#   - admissionAuth.enabled=true (self-managed + API-server kubeConfigFile), or
-#   - networkPolicy.enabled=true with allowedCIDRs (managed-cloud boundary), or
-#   - admissionAuth.allowUnauthenticated=true (explicit insecure escape).
-# https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#authenticate-apiservers
+# Opt-in admission caller auth for self-managed control planes (ASM-21292).
+# Managed clouds (EKS/GKE/AKS) typically cannot set API-server kubeConfigFile.
+# Use quoted string values when setting via --set (e.g. --set-string).
 admissionAuth:
   enabled: false
-  # When enabled: require=true enforces the bearer; require=false stages the Secret
-  # mount while kubeConfigFile is prepared (sets ALLOW until require is flipped).
-  require: true
-  # Explicit insecure escape when neither admissionAuth nor networkPolicy is used.
-  allowUnauthenticated: false
-  # Prefer an externally managed Secret for GitOps. If empty, the chart creates
-  # <release>-admission-auth and reuses the token across upgrades via lookup.
+  require: false
   existingSecret: ""
   key: token
-
-# Control-plane NetworkPolicy boundary for SEC-001 on managed clouds.
-# allowedCIDRs is required when enabled (no open / denyPodCIDRs-only fallback).
-networkPolicy:
-  enabled: false
-  # Example control-plane / API-server source CIDRs for your cluster/CNI.
-  allowedCIDRs: []
 
 resources:
   limits:
