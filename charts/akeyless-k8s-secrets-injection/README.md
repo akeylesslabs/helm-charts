@@ -89,8 +89,8 @@ extraObjects:
 
 ### OAuth2 / JWT authentication
 
-Requires injector image that supports `AKEYLESS_ACCESS_TYPE=jwt` (merge and release
-the injector before publishing this chart).
+Requires injector image **0.41.0+** (`AKEYLESS_ACCESS_TYPE=jwt`). The 0.40.0
+image is CVE/cert-events only and does not include OAuth2/JWT.
 
 For `AKEYLESS_ACCESS_TYPE: jwt` (alias `oauth2`), enable a kubelet-rotated projected
 ServiceAccount token. Do not put a static JWT in `env`. The audience is required and
