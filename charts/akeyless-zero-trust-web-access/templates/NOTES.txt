@@ -45,8 +45,6 @@ is exposed by its own Service ({{ include "akeyless-zero-web-access.fullname" . 
 configure it via "webProxy.service".
 {{- end }}
 {{- $removedRecording := list }}
-{{- if and .Values.sessionRecording (hasKey .Values.sessionRecording "quality") }}{{- $removedRecording = append $removedRecording "sessionRecording.quality" }}{{- end }}
-{{- if and .Values.sessionRecording (hasKey .Values.sessionRecording "watchdog") }}{{- $removedRecording = append $removedRecording "sessionRecording.watchdog" }}{{- end }}
 {{- if and .Values.webWorker.config .Values.webWorker.config.recording }}{{- $removedRecording = append $removedRecording "webWorker.config.recording" }}{{- end }}
 {{- if $removedRecording }}
 

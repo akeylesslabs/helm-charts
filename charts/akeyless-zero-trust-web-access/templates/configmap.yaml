@@ -1,3 +1,4 @@
+{{- include "akeyless-zero-web-access.validateValues" . }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -7,11 +8,11 @@ metadata:
     app: {{ $.Values.dispatcher.containerName }}
     chart: {{ $.Chart.Name }}
 data:
-{{ with .Values.dispatcher.config }}
-  {{- if (ne (include "secret-exist" (dict "Root" $.Values.dispatcher.config.privilegedAccess.existingSecretNames "Name" "access")) "true") }}
+{{ with .Values.config }}
+  {{- if (ne (include "secret-exist" (dict "Root" $.Values.config.privilegedAccess.existingSecretNames "Name" "access")) "true") }}
   akeyless_config_file: |
     {{ required "API Gateway URL is required" .apiGatewayURL }}
-    cmd=auth&access-id={{ required "Privileged credentials are required" .privilegedAccess.accessID }}&access-key={{ .privilegedAccess.accessKey }}
+    cmd=auth&access-id={{ required "Privileged credentials are required" .privilegedAccess.accessID }}&access-key=
     {{- end }}
 {{- end}}
 
@@ -29,7 +30,7 @@ data:
 {{ required "A valid .Values.webWorker.config.policies entry required!" .Values.webWorker.config.policies | indent 4 }}
 
 
-{{- if .Values.dlp.enabled }}
+{{- if .Values.webWorker.dlp.enabled }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -40,31 +41,15 @@ metadata:
     chart: {{ $.Chart.Name }}
 data:
   dlp.conf: |
-    host={{ .Values.dlp.config.hostAddress | quote }}
-    path_prefix={{ .Values.dlp.config.pathPrefix | quote }}
-    mode={{ .Values.dlp.config.mode | quote }}
-    log_level={{ .Values.dlp.config.logLevel | quote }}
+    host={{ .Values.webWorker.dlp.config.hostAddress | quote }}
+    path_prefix={{ .Values.webWorker.dlp.config.pathPrefix | quote }}
+    mode={{ .Values.webWorker.dlp.config.mode | quote }}
+    log_level={{ .Values.webWorker.dlp.config.logLevel | quote }}
 
-{{- if not .Values.dlp.existingLogForwardSecretName }}
-    {{ if .Values.dlp.audit }}
+{{- if not .Values.webWorker.dlp.existingLogForwardSecretName }}
+    {{ if .Values.webWorker.dlp.audit }}
   logand.conf: |
-{{ .Values.dlp.audit | indent 4 }}
+{{ .Values.webWorker.dlp.audit | indent 4 }}
 {{- end }}
-{{- end }}
-{{- end }}
-
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ $.Release.Name }}-cm-akeyless-config
-  namespace: {{ .Release.Namespace }}
-  labels:
-    chart: {{ $.Chart.Name }}
-data:
-{{- if not .Values.dispatcher.config.existingLogForwardSecretName  }}
-{{ if .Values.dispatcher.config.logForward }}
-  logand.conf: |
-{{ .Values.dispatcher.config.logForward | indent 4 }}
 {{- end }}
 {{- end }}

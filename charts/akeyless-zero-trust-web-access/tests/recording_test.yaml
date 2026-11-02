@@ -1,0 +1,131 @@
+suite: session recording
+release:
+  name: ztwa
+  namespace: sra
+set:
+  config.privilegedAccess.accessID: p-priv
+  config.privilegedAccess.authorizedAccessIDs: [p-1]
+tests:
+  - it: "recording and upload are off by default"
+    template: templates/dispatcher-deployment.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: ENABLE_RECORDING
+            value: "false"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: ENABLE_RECORDING_UPLOAD
+            value: "false"
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: RECORDING_S3_ACCESS_KEY_ID
+          any: true
+
+  - it: "recording.s3 maps to the uploader env"
+    template: templates/dispatcher-deployment.yaml
+    set:
+      persistence.shareStorageVolume: {name: share-storage, accessModes: [ReadWriteMany], size: 1Gi}
+      recording:
+        enabled: true
+        s3:
+          enabled: true
+          bucket: rec-bucket
+          region: us-east-2
+          prefix: ztwa
+          endpoint: https://minio.local
+          existingSecretName: s3-creds
+          accessKeyIdKey: id
+          secretAccessKeyKey: secret
+          compress: true
+          sse: {type: sse-kms, kmsKeyId: kms-key}
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: ENABLE_RECORDING, value: "true"}
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: ENABLE_RECORDING_UPLOAD, value: "true"}
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: RECORDING_S3_BUCKET, value: rec-bucket}
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: RECORDING_S3_REGION, value: us-east-2}
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: RECORDING_S3_PREFIX, value: ztwa}
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: RECORDING_S3_ENDPOINT, value: https://minio.local}
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: RECORDING_COMPRESS, value: "true"}
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: RECORDING_SSE_TYPE, value: sse-kms}
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: RECORDING_SSE_KMS_KEY_ID, value: kms-key}
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: RECORDING_S3_ACCESS_KEY_ID
+            valueFrom: {secretKeyRef: {name: s3-creds, key: id}}
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: RECORDING_S3_ACCESS_KEY_SECRET
+            valueFrom: {secretKeyRef: {name: s3-creds, key: secret}}
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: RECORDING_UPLOADER_STATE_PATH
+          any: true
+
+  - it: "the S3 Secret keys default to access-key-id and secret-access-key"
+    template: templates/dispatcher-deployment.yaml
+    set:
+      recording.s3: {enabled: true, bucket: rec-bucket, existingSecretName: s3-creds}
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: RECORDING_S3_ACCESS_KEY_ID
+            valueFrom: {secretKeyRef: {name: s3-creds, key: access-key-id}}
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: RECORDING_S3_ACCESS_KEY_SECRET
+            valueFrom: {secretKeyRef: {name: s3-creds, key: secret-access-key}}
+
+  - it: "recording.s3.enabled without a bucket fails"
+    template: templates/configmap.yaml
+    set:
+      recording.s3.enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: "recording.s3.bucket is required"
+
+  # The DaemonSet includes the media server ConfigMap for its checksum, so the error
+  # surfaces there first.
+  - it: "recording.enabled without a shared volume fails"
+    template: templates/mediamtx-daemonset.yaml
+    set:
+      recording.enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: "recording.enabled requires persistence.shareStorageVolume"
+
+  - it: "recording.enabled turns on media server recording"
+    template: templates/mediamtx-configmap.yaml
+    set:
+      persistence.shareStorageVolume: {name: share-storage, accessModes: [ReadWriteMany], size: 1Gi}
+      recording.enabled: true
+    asserts:
+      - matchRegex:
+          path: data["mediamtx.yml"]
+          pattern: "record: yes"

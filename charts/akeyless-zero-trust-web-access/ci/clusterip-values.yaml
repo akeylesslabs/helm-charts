@@ -1,5 +1,13 @@
 fullnameOverride: ztwa-ci
 
+config:
+  privilegedAccess:
+    # Test-only placeholders, not real access IDs. No key, so the dispatcher takes the
+    # cloud identity path, which these smoke values never run.
+    accessID: p-12345678911123
+    authorizedAccessIDs:
+      - p-12345678911124
+
 # Test-only install smoke values. The dispatcher and worker images require
 # registry pull credentials and are amd64-only, so keep workloads scaled to zero
 # for public chart-testing and arm64 kind compatibility.
@@ -7,11 +15,6 @@ dispatcher:
   replicaCount: 0
   service:
     type: ClusterIP
-  config:
-    privilegedAccess:
-      accessID: p-12345678911123
-      # Test-only placeholder; not a real credential.
-      accessKey: dummy-access-key
 
 webProxy:
   # See dispatcher.replicaCount comment above.

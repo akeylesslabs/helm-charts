@@ -38,10 +38,10 @@ spec:
           emptyDir: {}
         - name: akeyless-policy-conf
           emptyDir: {}
-{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+{{- if .Values.config.apiGatewayCert.tlsCertsSecretName }}
         - name: gw-signed-ca
           secret:
-            secretName: {{ .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+            secretName: {{ .Values.config.apiGatewayCert.tlsCertsSecretName }}
             items:
               - key: tls.crt
                 path: gw-cert.pem
@@ -49,11 +49,11 @@ spec:
         - name: configmap-policies
           configMap:
             name: {{ $.Release.Name }}-cm-web-policies
-{{- if .Values.dlp.enabled }}
+{{- if .Values.webWorker.dlp.enabled }}
         - name: configmap-conf
-          {{- if $.Values.dlp.existingLogForwardSecretName }}
+          {{- if $.Values.webWorker.dlp.existingLogForwardSecretName }}
           secret:
-            secretName: "{{ $.Values.dlp.existingLogForwardSecretName }}"
+            secretName: "{{ $.Values.webWorker.dlp.existingLogForwardSecretName }}"
           {{- else }}
           configMap:
             name: {{ $.Release.Name }}-cm-dlp-conf
@@ -83,7 +83,7 @@ spec:
             - "-c"
             - |
               set -ex
-{{- if .Values.dlp.enabled }}
+{{- if .Values.webWorker.dlp.enabled }}
               [ "$(ls /configmap_conf)" ] && cp /configmap_conf/* /var/akeyless/conf
 {{- end }}
               [ "$(ls /configmap_policy_conf)" ] && cp /configmap_policy_conf/* /var/akeyless/policy_conf/
@@ -96,7 +96,7 @@ spec:
             runAsNonRoot: true
             allowPrivilegeEscalation: false
           volumeMounts:
-{{- if .Values.dlp.enabled }}
+{{- if .Values.webWorker.dlp.enabled }}
             - name: configmap-conf
               mountPath: /configmap_conf
 {{- end }}
@@ -106,13 +106,13 @@ spec:
               mountPath: /var/akeyless/policy_conf
             - name: configmap-policies
               mountPath: /configmap_policy_conf
-{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+{{- if .Values.config.apiGatewayCert.tlsCertsSecretName }}
             - name: gw-signed-ca
               mountPath: "/etc/ssl/certs/gw-cert.pem"
               subPath: gw-cert.pem
 {{- end }}
 {{- with include "akeyless-zero-web-access.imagePullSecrets" (dict "Root" $ "initPullSecrets" .Values.webWorker.initContainer.imagePullSecrets "imagePullSecrets" .Values.webWorker.image.imagePullSecrets) }}{{ . | nindent 6 }}{{ end }}
-      terminationGracePeriodSeconds: {{ .Values.HPA.webWorker.sessionTerminationGracePeriodSeconds | default 3600 }}
+      terminationGracePeriodSeconds: {{ ternary .Values.webWorker.terminationGracePeriodSeconds 3600 (hasKey .Values.webWorker "terminationGracePeriodSeconds") }}
       containers:
         - name: {{ .Values.webWorker.containerName }}
           image: "{{ .Values.webWorker.image.repository }}:{{ .Values.webWorker.image.tag  | default .Chart.AppVersion }}"
@@ -186,7 +186,7 @@ spec:
           - name: {{ .Values.persistence.shareStorageVolume.name | title | lower }}
             mountPath: /etc/shared
           {{ end }}
-{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+{{- if .Values.config.apiGatewayCert.tlsCertsSecretName }}
           - name: gw-signed-ca
             mountPath: "/etc/ssl/certs/gw-cert.pem"
             subPath: gw-cert.pem
