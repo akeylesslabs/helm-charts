@@ -40,6 +40,6 @@ For more information:
       globalConfig.serviceAccount.create is false. Add the annotations to the
       existing ServiceAccount yourself, then restart the Gateway pods:
 {{- range $key, $value := .Values.globalConfig.serviceAccount.annotations }}
-        kubectl -n {{ $.Release.Namespace }} annotate serviceaccount {{ include "akeyless-gateway.getServiceAccountName" $ }} {{ $key }}={{ $value }}
+        kubectl -n {{ $.Release.Namespace }} annotate --overwrite serviceaccount {{ include "akeyless-gateway.getServiceAccountName" $ }} {{ $key }}={{ $value }}
 {{- end }}
 {{- end }}

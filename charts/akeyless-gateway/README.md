@@ -74,11 +74,12 @@ On Alibaba Cloud ACK, the Gateway can use a RAM role through [RRSA](https://www.
    ```
    With an existing service account, set `create: false` and `serviceAccountName: <service-account>`, and annotate that service account before installing. The chart does not apply `annotations` to a service account it does not create:
    ```bash
-   kubectl -n <namespace> annotate serviceaccount <service-account> pod-identity.alibabacloud.com/role-name=<ram-role-name>
+   kubectl -n <namespace> annotate --overwrite serviceaccount <service-account> pod-identity.alibabacloud.com/role-name=<ram-role-name>
    ```
 
 Notes:
-- `gatewayAccessType: alicloud` sets `ADMIN_ACCESS_ID_TYPE=alicloud` on the Gateway, so it does not rely on cloud provider autodetection. No `gatewayCredentialsExistingSecret` is needed.
+- `gatewayAccessType: alicloud` sets `ADMIN_ACCESS_ID_TYPE=alicloud` on the Gateway (unless `globalConfig.env` already sets it), so it does not rely on cloud provider autodetection. No `gatewayCredentialsExistingSecret` is needed.
+- Bind the Akeyless auth method to the RAM role name (or role ARN), not only to the account ID. Without the RRSA annotation, the Alibaba credential chain falls back to the node's ECS role, and a role-bound auth method rejects it.
 - The webhook injects credentials when a pod starts. After adding or changing the annotation or the namespace label, restart the Gateway pods.
 - Changing `serviceAccount.create` from `true` to `false` on an existing release deletes the service account the chart created.
 - To check the injection: `kubectl -n <namespace> exec deploy/<deployment> -- env | grep ALIBABA_CLOUD` should list `ALIBABA_CLOUD_ROLE_ARN`, `ALIBABA_CLOUD_OIDC_PROVIDER_ARN` and `ALIBABA_CLOUD_OIDC_TOKEN_FILE`.

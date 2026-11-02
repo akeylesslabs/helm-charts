@@ -23,6 +23,23 @@ tests:
             name: GATEWAY_ACCESS_KEY
           any: true
 
+  - it: alicloud keeps a user-set ADMIN_ACCESS_ID_TYPE without a duplicate
+    template: templates/deployment.yaml
+    set:
+      globalConfig.gatewayAuth.gatewayAccessType: alicloud
+      globalConfig.env:
+        - name: ADMIN_ACCESS_ID_TYPE
+          value: alicloud
+        - name: OTHER_ENV
+          value: x
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: ADMIN_ACCESS_ID_TYPE
+            value: alicloud
+          count: 1
+
   - it: access_key does not set ADMIN_ACCESS_ID_TYPE
     template: templates/deployment.yaml
     set:
@@ -80,7 +97,7 @@ tests:
       - matchRegexRaw:
           pattern: "annotations is ignored"
       - matchRegexRaw:
-          pattern: "kubectl -n akeyless annotate serviceaccount existing-sa pod-identity.alibabacloud.com/role-name=gw-role"
+          pattern: "kubectl -n akeyless annotate --overwrite serviceaccount existing-sa pod-identity.alibabacloud.com/role-name=gw-role"
 
   - it: notes do not warn when the chart creates the service account
     template: templates/NOTES.txt

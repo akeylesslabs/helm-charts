@@ -429,8 +429,16 @@ check gateway auth config
         key: gateway-access-key
   {{- end }}
   {{- if eq .Values.globalConfig.gatewayAuth.gatewayAccessType "alicloud" }}
+  {{- $userSet := false }}
+  {{- range .Values.globalConfig.env }}
+  {{- if eq (toString .name) "ADMIN_ACCESS_ID_TYPE" }}
+  {{- $userSet = true }}
+  {{- end }}
+  {{- end }}
+  {{- if not $userSet }}
   - name: ADMIN_ACCESS_ID_TYPE
     value: alicloud
+  {{- end }}
   {{- end }}
 {{- end -}}
 
