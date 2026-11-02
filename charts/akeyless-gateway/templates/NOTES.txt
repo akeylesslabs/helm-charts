@@ -34,3 +34,12 @@ For more information:
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 {{- end }}
+{{- if and (not .Values.globalConfig.serviceAccount.create) .Values.globalConfig.serviceAccount.annotations }}
+
+  ⚠️  globalConfig.serviceAccount.annotations is ignored because
+      globalConfig.serviceAccount.create is false. Add the annotations to the
+      existing ServiceAccount yourself, then restart the Gateway pods:
+{{- range $key, $value := .Values.globalConfig.serviceAccount.annotations }}
+        kubectl -n {{ $.Release.Namespace }} annotate serviceaccount {{ include "akeyless-gateway.getServiceAccountName" $ }} {{ $key }}={{ $value }}
+{{- end }}
+{{- end }}

@@ -428,6 +428,10 @@ check gateway auth config
         name: {{ .Values.globalConfig.gatewayAuth.gatewayCredentialsExistingSecret }}
         key: gateway-access-key
   {{- end }}
+  {{- if eq .Values.globalConfig.gatewayAuth.gatewayAccessType "alicloud" }}
+  - name: ADMIN_ACCESS_ID_TYPE
+    value: alicloud
+  {{- end }}
 {{- end -}}
 
 {{- define "akeyless-gateway.ClusterName" -}}
