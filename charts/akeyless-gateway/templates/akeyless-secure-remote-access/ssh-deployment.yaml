@@ -65,7 +65,7 @@ spec:
         secret:
           secretName: {{ .Values.globalConfig.TLSConf.tlsExistingSecret }}
           items:
-            - key: tlsCertificate
+            - key: {{ (.Values.globalConfig.TLSConf).tlsCertificateSecretKeyName | default "tlsCertificate" }}
               path: gw-cert.pem
       {{- end }}
       {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
