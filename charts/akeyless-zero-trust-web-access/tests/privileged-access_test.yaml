@@ -54,14 +54,14 @@ tests:
                 key: accessKey
         template: templates/dispatcher-deployment.yaml
 
-  - it: "the init container turns xtrace off while it writes the access key"
+  - it: "the init container turns xtrace off and strips line ends while it writes the access key"
     template: templates/dispatcher-deployment.yaml
     set:
       config.privilegedAccess.existingSecretNames.access: priv-secret
     asserts:
       - matchRegex:
           path: spec.template.spec.initContainers[0].args[1]
-          pattern: "set \\+x\\necho \"cmd=auth&access-id=\\$accessID&access-key=\\$accessKey\" >> /etc/akeyless/akeyless_config_file\\nset -x\\n"
+          pattern: "set \\+x\\nprintf 'cmd=auth&access-id=%s&access-key=%s\\\\n' \"\\$\\(printf '%s' \"\\$accessID\" \\| tr -d '\\\\r\\\\n'\\)\" \"\\$\\(printf '%s' \"\\$accessKey\" \\| tr -d '\\\\r\\\\n'\\)\" >> /etc/akeyless/akeyless_config_file\\nset -x\\n"
 
   - it: "access_key without an access Secret fails"
     template: templates/configmap.yaml

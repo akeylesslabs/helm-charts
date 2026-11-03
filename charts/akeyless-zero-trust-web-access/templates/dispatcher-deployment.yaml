@@ -91,9 +91,11 @@ spec:
               set -ex
 {{- if (eq (include "secret-exist" (dict "Root" $.Values.config.privilegedAccess.existingSecretNames "Name" "access")) "true") }}
               echo "{{ required "API Gateway URL is required" .Values.config.apiGatewayURL }}" > /etc/akeyless/akeyless_config_file
-{{- /* xtrace would print the access key to the init container log. */}}
+{{- /* xtrace would print the access key to the init container log. Line ends are
+stripped because a key file often ends in a newline, and the dispatcher reads its auth
+from the last line of the file. */}}
               set +x
-              echo "cmd=auth&access-id=$accessID&access-key=$accessKey" >> /etc/akeyless/akeyless_config_file
+              printf 'cmd=auth&access-id=%s&access-key=%s\n' "$(printf '%s' "$accessID" | tr -d '\r\n')" "$(printf '%s' "$accessKey" | tr -d '\r\n')" >> /etc/akeyless/akeyless_config_file
               set -x
 {{- end }}
               [ "$(ls /configmap_akeyless)" ] && cp /configmap_akeyless/* /etc/akeyless
