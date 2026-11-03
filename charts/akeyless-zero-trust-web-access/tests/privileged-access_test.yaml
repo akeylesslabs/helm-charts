@@ -71,6 +71,15 @@ tests:
       - failedTemplate:
           errorPattern: "accessType access_key needs config.privilegedAccess.existingSecretNames.access"
 
+  - it: "a cloud accessType with an access Secret fails"
+    template: templates/configmap.yaml
+    set:
+      config.privilegedAccess.accessType: gcp
+      config.privilegedAccess.existingSecretNames.access: priv-secret
+    asserts:
+      - failedTemplate:
+          errorPattern: "accessType gcp uses config.privilegedAccess.accessID. Remove config.privilegedAccess.existingSecretNames.access"
+
   - it: "access_key with an access Secret renders no ADMIN_ACCESS_ID_TYPE"
     template: templates/dispatcher-deployment.yaml
     set:

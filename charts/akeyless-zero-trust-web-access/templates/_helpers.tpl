@@ -165,6 +165,9 @@ without.
 {{- if and (eq (toString $pa.accessType) "access_key") (not $hasAccessSecret) -}}
   {{- fail "config.privilegedAccess.accessType access_key needs config.privilegedAccess.existingSecretNames.access, a Secret with the keys accessID and accessKey" -}}
 {{- end -}}
+{{- if and (has (toString $pa.accessType) (list "aws_iam" "azure_ad" "gcp")) $hasAccessSecret -}}
+  {{- fail (printf "config.privilegedAccess.accessType %s uses config.privilegedAccess.accessID. Remove config.privilegedAccess.existingSecretNames.access, an API key in that Secret would be used in place of the cloud identity" (toString $pa.accessType)) -}}
+{{- end -}}
 {{- if and (not $hasIDsSecret) (not $pa.authorizedAccessIDs) -}}
   {{- fail "config.privilegedAccess.authorizedAccessIDs is empty, and the dispatcher and the web proxy accept no user without it. Set it, or config.privilegedAccess.existingSecretNames.authorizedAccessIDs" -}}
 {{- end -}}

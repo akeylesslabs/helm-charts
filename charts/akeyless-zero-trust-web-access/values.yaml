@@ -32,8 +32,8 @@ config:
     accessType: ""
 
     existingSecretNames:
-      # Existing Secret with the keys accessID and accessKey. Required for access_key. For a
-      # cloud identity, set accessKey to an empty value.
+      # Existing Secret with the keys accessID and accessKey. Required for access_key. Not
+      # allowed with a cloud accessType, which uses accessID.
       #   kubectl create secret generic ztwa-privileged-access \
       #     --from-literal=accessID=<access-id> --from-file=accessKey=./access-key
       access:

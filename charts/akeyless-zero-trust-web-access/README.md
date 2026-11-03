@@ -182,6 +182,7 @@ The render also fails when:
 
 - `config.privilegedAccess.authorizedAccessIDs` and `config.privilegedAccess.existingSecretNames.authorizedAccessIDs` are both empty. The dispatcher and the web proxy accept no user without them.
 - `config.privilegedAccess.accessType` is `access_key` and `config.privilegedAccess.existingSecretNames.access` is not set.
+- `config.privilegedAccess.accessType` is `aws_iam`, `azure_ad` or `gcp` and `config.privilegedAccess.existingSecretNames.access` is set.
 
 ### Privileged Access Type (`config.privilegedAccess.accessType`)
 
@@ -189,7 +190,7 @@ The dispatcher reads the secrets of the web targets with the privileged access I
 
 - `""` (default): auto detect, from `existingSecretNames.access` or from the instance metadata service (IMDS).
 - `access_key`: [API key](https://docs.akeyless.io/docs/auth-with-api-key). Needs `existingSecretNames.access`, a Secret with the keys `accessID` and `accessKey`.
-- `aws_iam`, `azure_ad`, `gcp`: cloud identity ([AWS IAM](https://docs.akeyless.io/docs/auth-with-aws), [Azure AD](https://docs.akeyless.io/docs/auth-with-azure), [GCP](https://docs.akeyless.io/docs/auth-with-gcp)).
+- `aws_iam`, `azure_ad`, `gcp`: cloud identity ([AWS IAM](https://docs.akeyless.io/docs/auth-with-aws), [Azure AD](https://docs.akeyless.io/docs/auth-with-azure), [GCP](https://docs.akeyless.io/docs/auth-with-gcp)). Set `accessID`, not `existingSecretNames.access`.
 
 Set a cloud type when the dispatcher cannot reach IMDS at `169.254.169.254`. Without it, sessions exit with `unknown-cloud-provider`. Common causes:
 
@@ -375,7 +376,7 @@ A **Heavy browsing workload** example for the web worker main `resources` is in 
 | `config.clusterName`                                                   | ZTWA cluster name. A change to it, or to the privileged access ID, registers a new bastion                          | `defaultCluster`          |
 | `config.privilegedAccess.accessID`                                     | Access ID with "Read" and "List" permissions on the target secrets. Ignored when `existingSecretNames.access` is set | `""`                      |
 | `config.privilegedAccess.accessType`                                   | `""` (auto detect), `access_key`, `aws_iam`, `azure_ad` or `gcp`                                                    | `""`                      |
-| `config.privilegedAccess.existingSecretNames.access`                   | Existing Secret with the keys `accessID` and `accessKey`. Required when `accessType` is `access_key`                | `nil`                     |
+| `config.privilegedAccess.existingSecretNames.access`                   | Existing Secret with the keys `accessID` and `accessKey`. Required for `access_key`, not allowed with a cloud type  | `nil`                     |
 | `config.privilegedAccess.existingSecretNames.authorizedAccessIDs`      | Existing Secret with the key `allowedAccessIDs`, a comma separated list. Replaces `authorizedAccessIDs`              | `nil`                     |
 | `config.privilegedAccess.authorizedAccessIDs`                          | Access IDs of the users that can open ZTWA sessions. Required when the Secret above is not set                      | `[]`                      |
 | `config.allowedBastionUrls`                                            | External URLs of the dispatcher (port 9000 or the ingress host). The Portal redirects users back only to these URLs | `[]`                      |
