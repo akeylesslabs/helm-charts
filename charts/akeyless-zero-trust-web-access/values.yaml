@@ -499,3 +499,5 @@ metrics:
     # ServiceMonitor.
 #    releaseLabels:
 #      release: prometheus-stack
+
+extraObjects: []
