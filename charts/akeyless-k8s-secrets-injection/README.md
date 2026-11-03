@@ -121,15 +121,11 @@ Image entrypoint lookup requires each registry-cred secret JSON to include
 Optional: `AKEYLESS_REGISTRY_CREDS_PATH_TEMPLATE=/registry/{namespace}/` to scope
 `akeyless/registry_creds` annotations, or `AKEYLESS_DISABLE_REGISTRY_CREDS_ANNOTATION=enable`.
 
-### Admission auth (opt-in, self-managed only)
+### Webhook network access
 
-`admissionAuth` mounts a dedicated Secret and sets `WEBHOOK_ADMISSION_TOKEN_FILE`.
-Default remains off (SEC-001 / ASM-21292). Managed clouds cannot usually configure
-API-server admission client credentials.
-
-When setting via `--set`, use plain booleans (for example `--set admissionAuth.require=true`).
-The chart already quotes env values; do not wrap `true`/`false` in extra quotes
-(that renders `"\"true\""` and stops webhook startup).
+`/pods` has no caller authentication in this release (ASM-21292). Prefer a
+NetworkPolicy (or equivalent) so only the control plane can reach the webhook
+Service.
 
 ### Upgrading to chart 2.0.0
 
