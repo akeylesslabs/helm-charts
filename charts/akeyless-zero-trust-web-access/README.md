@@ -29,14 +29,14 @@ For security reason, please limit the PersistentVolumes mount permissions to `06
    - file_mode=0650
 ```
 
-> **Important — single-node vs multi-node clusters**
+> **Single-node and multi-node clusters**
 >
-> Session recording requires the dispatcher and web-worker pods to read/write the **same** `/etc/shared` directory because the media server writes `recordings/rec_*.mp4` there and the dispatcher uploads it.
+> Session recording needs the same `/etc/shared` volume on the dispatcher, the web workers and the media server.
 >
-> - **Single-node clusters** (k3s sandboxes, Minikube, kind) often default to a node-scoped provisioner such as `local-path`. This works only as long as every ZTWA pod schedules on the same node; deleting a pod with an in-progress recording also deletes the partial recording (the directory belongs to that pod's local-path).
-> - **Clusters with more than one node** still need a real RWX storage class backed by NFS, AWS EFS, Azure Files, GCP Filestore, Longhorn, etc. The dispatcher and its workers always run on one node, the chart pins the workers to the dispatcher's node, but the media server runs on every node and mounts the shared volume.
+> - **Single-node clusters** (k3s, Minikube, kind) can use a node-scoped provisioner such as `local-path`.
+> - **Clusters with more than one node** need a ReadWriteMany storage class, for example NFS, AWS EFS, Azure Files, GCP Filestore or Longhorn. The media server runs on every node and mounts the shared volume.
 >
-> The chart does not enforce a specific provisioner — pick the one that matches your cluster's topology and pin it via `persistence.shareStorageVolume.storageClassName`.
+> Set the storage class in `persistence.shareStorageVolume.storageClassName`.
 
 ### Session Recording (Optional)
 
@@ -45,7 +45,7 @@ ZTWA records browser sessions to video files (`.mp4`) and can upload them to S3 
 #### Prerequisites
 
 1. **Shared Volume**: Configure `persistence.shareStorageVolume` with a `ReadWriteMany` PersistentVolumeClaim (for example NFS, Azure Files, EFS) so `/etc/shared` is mounted on the dispatcher, the web workers and the media server.
-2. **Security Context**: The chart automatically sets `securityContext.fsGroup: 10000` on dispatcher and worker pods to allow the non-root `nobody` user (supplementary group `shared` GID 10000) to write recordings and state files. Omitting `fsGroup` commonly yields permission denied errors.
+2. **Security Context**: The chart sets `securityContext.fsGroup: 10000` on the dispatcher and worker pods, so they can write to the shared volume. Without it, writes fail with permission denied.
 3. **S3 Credentials** (for upload): the chart never accepts plain credentials in `values.yaml`. Choose one of:
    - **IAM roles** (AWS IRSA, GKE Workload Identity), recommended for production. Leave `recording.s3.existingSecretName` empty so the dispatcher picks up the AWS default credential chain.
    - **Kubernetes Secret**: create the Secret out-of-band and reference it in `recording.s3.existingSecretName`. See "Kubernetes Secret" below.
@@ -103,28 +103,19 @@ recording:
     # secretAccessKeyKey: secret-access-key
 ```
 
-**Credentials, IAM roles (no Secret)**: leave `recording.s3.existingSecretName` unset. The dispatcher's `recording_uploader` falls through to the AWS default credential chain (IRSA, instance profile, or `AWS_*` env vars that `dispatcher.env` reads from a Secret with `valueFrom.secretKeyRef`). A plain `value:` in `dispatcher.env` puts the key in the Deployment spec.
+**Credentials, IAM roles (no Secret)**: leave `recording.s3.existingSecretName` unset. The dispatcher uses the AWS default credential chain, for example IRSA, an instance profile, or `AWS_*` env vars that `dispatcher.env` reads from a Secret with `valueFrom.secretKeyRef`. A plain `value:` in `dispatcher.env` puts the key in the Deployment spec. Use IAM roles in production, and the Secret when IAM is not available (on-prem, MinIO).
 
 #### Upload Behavior and Limitations
 
-- **Asynchronous Upload**: Recordings are uploaded 60-90+ seconds after session end (60s poll interval + 30s stability check)
+- **Upload time**: a recording is uploaded about 1 to 2 minutes after its session ends.
 - **Recording Format**: The media server writes each session as `recordings/rec_*.mp4` on the shared volume, and the dispatcher uploads it as is.
-- **Worker Recycle**: Worker liveness probes terminate inactive sessions (default `webWorker.sessionCleanup.staleGraceSeconds: 30`). The media server closes the recording with whatever was captured up to that point.
+- **Worker Recycle**: When the liveness probe restarts a worker, the media server closes the recording with what it captured up to that point.
 - **Storage**: Ensure shared volume has sufficient capacity for concurrent sessions and upload backlog
 - **Retention**: Configure S3 lifecycle policies for long-term retention management
 
-#### Credential Mechanisms (Priority Order)
-
-The dispatcher upload service tries credentials in this order:
-
-1. **Kubernetes Secret**: when `recording.s3.existingSecretName` is set, the chart wires the Secret's keys into `RECORDING_S3_ACCESS_KEY_ID` and `RECORDING_S3_ACCESS_KEY_SECRET` via `secretKeyRef`.
-2. **AWS Default Credential Chain**: Environment variables, IAM instance profile, IRSA, shared credentials file. Used when `recording.s3.existingSecretName` is empty.
-
-**Best Practice**: Use option #2 (IAM roles) for production deployments. Option #1 is the right choice when IAM is unavailable (on-prem, MinIO, etc.).
-
 #### Troubleshooting
 
-- **Permission Denied on State File**: Ensure `fsGroup: 10000` is set on dispatcher pod (chart default). The state file is `/etc/shared/recording_uploader_state.json` (group-writable).
+- **Permission Denied**: check that the dispatcher pod has `fsGroup: 10000` (the chart default).
 - **No Recordings Created**: Check `recording.enabled`, and that the MediaMTX pod mounts the shared volume. Its log shows a "recording" line per session (`kubectl logs <mediamtx-pod>`).
 - **Upload Failures**: Check dispatcher logs for S3 errors. Verify bucket/region/credentials. Test with `aws s3 ls s3://<bucket>` using the same credentials.
 - **Truncated Sessions**: When a worker is recycled mid-session, the media server closes the recording with what was captured, and the dispatcher uploads it as a valid, shorter `.mp4`.
@@ -133,16 +124,14 @@ The dispatcher upload service tries credentials in this order:
 
 The web worker runs a Chromium-based browser (`akeyless/zero-trust-web-worker`). Key defaults:
 
-- **Managed policies**: flat Chrome Enterprise JSON in `webWorker.config.policies`, mounted at `/etc/chromium/policies/managed/policies.json`. Operators overriding policies must use the Chrome schema (`URLAllowlist` / `URLBlocklist`, etc.), not the legacy Firefox `policies.json` wrapper. The sideloaded extension has been removed. Navigation and credential injection are driven by the worker agent over CDP, so the policy no longer allowlists an extension ID.
-- **Ephemeral `/config`**: an in-memory `emptyDir` prevents stale Chromium profile data across pod restarts.
-- **`/dev/shm`**: `2Gi` memory-backed `emptyDir` (matches compose `shm_size: 2g`).
-- **`DISPATCHER_DNS`**: set to `<fullname>-dispatcher.<namespace>.svc` (dispatcher Service cluster DNS). Dispatcher pods alias `dispatcher.dispatcherDNS` (default `rbi.dispatcher`, nginx `server_name`) to `127.0.0.1`.
-- **`CHROMIUM_APP_URL`**: set in the worker image Dockerfile. Override via `webWorker.env` only if needed.
+- **Managed policies**: Chrome Enterprise JSON in `webWorker.config.policies`. Use the Chrome schema (`URLAllowlist`, `URLBlocklist` and so on), not the Firefox `policies.json` format.
+- **Ephemeral `/config`**: an in-memory `emptyDir`, so no Chromium profile data stays after a pod restart.
+- **`/dev/shm`**: a `2Gi` memory-backed `emptyDir`.
 
 #### Upgrading from chart 3.x
 
 1. Rewrite any custom `webWorker.config.policies` from Firefox schema to Chrome Enterprise JSON.
-2. Review worker pod spec changes (`/config` emptyDir, policy mount path, `DISPATCHER_DNS`) before rollout.
+2. Review the worker pod spec changes (`/config` emptyDir, policy mount path) before rollout.
 3. Open the live view's network path. Browsers now get the video straight from a media server on each node, over UDP `mediamtx.iceUDPPort` (default `8189`), on top of the dispatcher's port. Allow it from users' networks to every node that runs workers, or to the addresses in `mediamtx.additionalHosts`. There is no TCP fallback. The port is a hostPort, so the cluster's CNI must support hostPort, and two releases in one cluster need different ports. Namespaces under Pod Security `baseline` or `restricted`, and OpenShift's `restricted` SCC, refuse a hostPort, and there the media server does not start. Install into a namespace that allows it.
 4. Keep the supported layout: one dispatcher per worker pool, on the same node as its workers.
 5. Recording now comes from the media server, out of the live stream:
@@ -171,7 +160,7 @@ Upgrade with your values file (`-f <values file>`) or `--reset-then-reuse-values
 | `dispatcher.config.privilegedAccess.existingSecretNames.access` | `config.privilegedAccess.existingSecretNames.access` |
 | `dispatcher.config.privilegedAccess.existingSecretNames.allowedIDs` | `config.privilegedAccess.existingSecretNames.authorizedAccessIDs`. The key inside the Secret stays `allowedAccessIDs` |
 | `dispatcher.config.cloudIdentity.type` | `config.privilegedAccess.accessType` |
-| `dispatcher.config.logForward`, `dispatcher.config.existingLogForwardSecretName` | Removed. They forwarded no dispatcher logs, they only gave the recording uploader an S3 fallback. Use `recording.s3` |
+| `dispatcher.config.logForward`, `dispatcher.config.existingLogForwardSecretName` | Removed. Set the recording upload in `recording.s3` |
 | `dispatcher.config.recording` (`enabled`, `s3Bucket`, `s3Region`, `s3Prefix`, `s3Endpoint`, `compress`, `sseType`, `sseKmsKeyId`) | `recording.s3` (`enabled`, `bucket`, `region`, `prefix`, `endpoint`, `compress`, `sse.type`, `sse.kmsKeyId`) |
 | `dispatcher.config.listOnlyCredentials` | Removed |
 | `sessionRecording.enabled` | `recording.enabled` |
@@ -181,7 +170,7 @@ Upgrade with your values file (`-f <values file>`) or `--reset-then-reuse-values
 | `sessionRecording.upload.existingSecretNames.s3` | `recording.s3.existingSecretName` |
 | `sessionRecording.upload.existingSecretNames.s3AccessKeyIdKey`, `s3SecretAccessKeyKey` | `recording.s3.accessKeyIdKey`, `secretAccessKeyKey` |
 | `sessionRecording.upload.compress`, `sse.type`, `sse.kmsKeyId` | `recording.s3.compress`, `sse.type`, `sse.kmsKeyId` |
-| `sessionRecording.upload.uploaderStatePath`, `dispatcher.config.recording.uploaderStatePath` | Removed. The uploader always uses `/etc/shared/recording_uploader_state.json` |
+| `sessionRecording.upload.uploaderStatePath`, `dispatcher.config.recording.uploaderStatePath` | Removed |
 | `dlp` | `webWorker.dlp` |
 | `webWorker.config.dispatcherDNS` | `dispatcher.dispatcherDNS` |
 | `HPA.webWorker.sessionTerminationGracePeriodSeconds` | `webWorker.terminationGracePeriodSeconds` |
@@ -196,17 +185,16 @@ The render also fails when:
 
 ### Privileged Access Type (`config.privilegedAccess.accessType`)
 
-The dispatcher reads the secrets of the web targets with the privileged access ID. `accessType` sets the type of its auth method, like `gatewayAccessType` in the akeyless-gateway chart:
+The dispatcher reads the secrets of the web targets with the privileged access ID. `accessType` sets the type of its auth method:
 
-- `""` (default): auto detect. An access key in `existingSecretNames.access` selects `access_key`. Else the dispatcher finds its cloud identity from the instance metadata service (IMDS).
+- `""` (default): auto detect, from `existingSecretNames.access` or from the instance metadata service (IMDS).
 - `access_key`: [API key](https://docs.akeyless.io/docs/auth-with-api-key). Needs `existingSecretNames.access`, a Secret with the keys `accessID` and `accessKey`.
-- `aws_iam`, `azure_ad`, `gcp`: cloud identity ([AWS IAM](https://docs.akeyless.io/docs/auth-with-aws), [Azure AD](https://docs.akeyless.io/docs/auth-with-azure), [GCP](https://docs.akeyless.io/docs/auth-with-gcp)). When the IMDS probe cannot find the cloud, the dispatcher uses this type.
+- `aws_iam`, `azure_ad`, `gcp`: cloud identity ([AWS IAM](https://docs.akeyless.io/docs/auth-with-aws), [Azure AD](https://docs.akeyless.io/docs/auth-with-azure), [GCP](https://docs.akeyless.io/docs/auth-with-gcp)).
 
 Set a cloud type when the dispatcher cannot reach IMDS at `169.254.169.254`. Without it, sessions exit with `unknown-cloud-provider`. Common causes:
 
-- **EKS with IMDSv2 `httpPutResponseHopLimit=1`** (the AWS default: pods
-  cannot reach IMDS unless the limit is raised to `2` on the worker node).
-- Restrictive egress `NetworkPolicy` denying the link-local subnet.
+- EKS with the IMDSv2 hop limit `1`, the AWS default. See the [AWS IAM guide](https://docs.akeyless.io/docs/auth-with-aws#aws-instance-metadata-service).
+- An egress `NetworkPolicy` that denies the link-local subnet.
 - Non-cloud Kubernetes (on-prem k3s, kind, bare metal).
 
 ```yaml
@@ -235,12 +223,6 @@ config:
     authorizedAccessIDs:
       - "<USER_ACCESS_ID>"
 ```
-
-A cloud type renders the `ADMIN_ACCESS_ID_TYPE` env var on the dispatcher. `""` and `access_key` render none.
-
-For background on the IMDSv2 hop-limit issue and alternative mitigations
-(e.g. raising the hop limit at the EC2 level), see the
-[Akeyless AWS IAM guide](https://docs.akeyless.io/docs/auth-with-aws#aws-instance-metadata-service).
 
 ### Prerequisites
 
@@ -308,12 +290,12 @@ The following table lists the configurable parameters of the Zero Trust Web Acce
 | Parameter                                 | Description                                                                                                          | Default                                                      |
 |-------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
 | `image.imagePullSecrets`                  | List of `{ name: <secret> }` merged into `spec.imagePullSecrets` for every pod (with per-workload lists, deduplicated) | `[]`                                                         |
-| `image.dockerRepositoryCreds`             | **Deprecated** — base64 dockerconfig; when set, creates the pre-install secret `akeyless-docker-hub-web-access`, merged with `image.imagePullSecrets`. Prefer pre-created `kubernetes.io/dockerconfigjson` secrets; will be removed in a future version | `nil`                                                        |
+| `image.dockerRepositoryCreds`             | **Deprecated**, use `image.imagePullSecrets`. Base64 dockerconfig for the Akeyless registry                           | `nil`                                                        |
 | `dispatcher.initContainer.imagePullSecrets` | Extra pull secret refs for the dispatcher init container; merged at the pod (with global and main)                  | `[]`                                                         |
-| `dispatcher.initContainer.resources`     | Init container resource requests/limits; defaults match the dispatcher main container                                 | `requests: cpu: 100m, memory: 128Mi; limits: memory: 512Mi` |
+| `dispatcher.initContainer.resources`     | Init container resource requests/limits; defaults match the dispatcher main container                                 | `requests: cpu: 100m, memory: 128Mi, limits: memory: 512Mi` |
 | `dispatcher.image.imagePullSecrets`       | Extra pull secret refs for the dispatcher main container; merged at the pod                                         | `[]`                                                         |
 | `webWorker.initContainer.imagePullSecrets` | Extra pull secret refs for the web worker init; merged at the pod                                                     | `[]`                                                         |
-| `webWorker.initContainer.resources`      | Init resource requests/limits; same dispatcher-style defaults as the web dispatcher (bootstrap is short-lived)        | `requests: cpu: 100m, memory: 128Mi; limits: memory: 512Mi`  |
+| `webWorker.initContainer.resources`      | Init container resource requests/limits                                                                               | `requests: cpu: 100m, memory: 128Mi, limits: memory: 512Mi`  |
 | `webWorker.image.imagePullSecrets`        | Extra pull secret refs for the web worker main; merged at the pod                                                     | `[]`                                                         |
 | `validator.image.imagePullSecrets`         | Extra pull secret refs for the post-install validator Pod; merged with `image.imagePullSecrets`                    | `[]`                                                         |
 | `dispatcher.image.repository`             | Zero Trust Web Access Dispatcher image name                                                                          | `akeyless/zero-trust-web-dispatcher`                         |
@@ -339,7 +321,7 @@ The following table lists the configurable parameters of the Zero Trust Web Acce
 | `webProxy.image.pullPolicy`               | Zero Trust Web Access Proxy image pull policy                                                                       | `Always`                                                     |
 | `webProxy.image.imagePullSecrets`         | Extra pull secret refs for the web proxy main container; merged at the pod                                         | `[]`                                                         |
 | `webProxy.initContainer.imagePullSecrets` | Extra pull secret refs for the web proxy init container; merged at the pod                                         | `[]`                                                         |
-| `webProxy.initContainer.resources`        | Init container resource requests/limits                                                                            | `requests: cpu: 100m, memory: 128Mi; limits: memory: 512Mi` |
+| `webProxy.initContainer.resources`        | Init container resource requests/limits                                                                            | `requests: cpu: 100m, memory: 128Mi, limits: memory: 512Mi` |
 | `webProxy.containerName`                  | Zero Trust Web Access Proxy container name                                                                          | `web-proxy`                                                  |
 | `webProxy.replicaCount`                   | Number of Zero Trust Web Access Proxy nodes (unset → inherits `dispatcher.replicaCount`)                            | `nil`                                                        |
 | `webProxy.env`                            | Extra env for the proxy container (e.g. `WEB_PROXY_TYPE: SOCKS`)                                                    | `[]`                                                         |
@@ -400,10 +382,10 @@ A **Heavy browsing workload** example for the web worker main `resources` is in 
 | `config.allowedProxyUrls`                                              | External URLs of the web proxy Service (port 19414). The Portal redirects users back only to these URLs             | `[]`                      |
 | `config.allowedInternalAuth`                                           | When `false`, the dispatcher accepts only requests with preemptive JWT auth                                         | `"false"`                 |
 | `config.disableSecureCookie`                                           | When `false`, the browser sends the dispatcher session cookie only over HTTPS                                       | `"true"`                  |
-| `dispatcher.dispatcherDNS`                                             | Dispatcher nginx `server_name`, mapped to `127.0.0.1` in the dispatcher pod. Must match the dispatcher image         | `rbi.dispatcher`          |
+| `dispatcher.dispatcherDNS`                                             | Host name the dispatcher serves inside its pod. Keep the default                                                    | `rbi.dispatcher`          |
 | `webWorker.config.displayWidth`                                        | Web worker display Width (in pixels) of the application's window.                                                   | `2560`                    |
 | `webWorker.config.displayHeight`                                       | Web worker display Height (in pixels) of the application's window.                                                  | `1200`                    |
-| `webWorker.config.policies`                                            | Chromium managed policies, flat Chrome Enterprise JSON. Checked with jq by the validator and the worker init        | Check `values.yaml` file  |
+| `webWorker.config.policies`                                            | Chromium managed policies, as Chrome Enterprise JSON                                                                | Check `values.yaml` file  |
 | `webWorker.terminationGracePeriodSeconds`                              | Time a worker pod gets to finish its live session before Kubernetes stops it                                        | `3600`                    |
 
 ### Data leak protection parameters
