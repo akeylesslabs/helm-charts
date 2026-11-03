@@ -1,5 +1,10 @@
 replicaCount: 1
 
+# ct install pulls a published image; 0.41.0 is not released yet (Chart.appVersion
+# targets JWT). Pin the last published tag so install CI can go green.
+image:
+  tag: "0.40.0"
+
 env:
   AKEYLESS_ACCESS_TYPE: api_key
   AKEYLESS_ACCESS_ID: p-12345678911123
