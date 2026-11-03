@@ -168,8 +168,23 @@ without.
 {{- if and (has (toString $pa.accessType) (list "aws_iam" "azure_ad" "gcp")) $hasAccessSecret -}}
   {{- fail (printf "config.privilegedAccess.accessType %s uses config.privilegedAccess.accessID. Remove config.privilegedAccess.existingSecretNames.access, an API key in that Secret would be used in place of the cloud identity" (toString $pa.accessType)) -}}
 {{- end -}}
+{{- /* Both images copy ALLOWED_ACCESS_IDS from their env over the list the init container writes. */}}
+{{- $envIDs := dict -}}
+{{- range $svc := list "dispatcher" "webProxy" -}}
+  {{- range ((index $v $svc) | default dict).env | default list -}}
+    {{- if eq (toString .name) "ALLOWED_ACCESS_IDS" -}}{{- $_ := set $envIDs $svc true -}}{{- end -}}
+  {{- end -}}
+{{- end -}}
 {{- if and (not $hasIDsSecret) (not $pa.authorizedAccessIDs) -}}
-  {{- fail "config.privilegedAccess.authorizedAccessIDs is empty, and the dispatcher and the web proxy accept no user without it. Set it, or config.privilegedAccess.existingSecretNames.authorizedAccessIDs" -}}
+  {{- $inDispatcher := hasKey $envIDs "dispatcher" -}}
+  {{- $inProxy := hasKey $envIDs "webProxy" -}}
+  {{- if and $inDispatcher (not $inProxy) -}}
+    {{- fail "ALLOWED_ACCESS_IDS is set in dispatcher.env but not in webProxy.env, so the web proxy accepts no user. Set it in both, or set config.privilegedAccess.authorizedAccessIDs" -}}
+  {{- else if and $inProxy (not $inDispatcher) -}}
+    {{- fail "ALLOWED_ACCESS_IDS is set in webProxy.env but not in dispatcher.env, so the dispatcher accepts no user. Set it in both, or set config.privilegedAccess.authorizedAccessIDs" -}}
+  {{- else if not $inDispatcher -}}
+    {{- fail "config.privilegedAccess.authorizedAccessIDs is empty, and the dispatcher and the web proxy accept no user without it. Set it, or config.privilegedAccess.existingSecretNames.authorizedAccessIDs" -}}
+  {{- end -}}
 {{- end -}}
 {{- $s3 := ($v.recording | default dict).s3 | default dict -}}
 {{- if and $s3.enabled (not $s3.bucket) -}}

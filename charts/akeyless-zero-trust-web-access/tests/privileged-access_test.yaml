@@ -157,6 +157,39 @@ tests:
       - failedTemplate:
           errorPattern: "authorizedAccessIDs is empty"
 
+  - it: "ALLOWED_ACCESS_IDS in both env lists replaces authorizedAccessIDs"
+    templates:
+      - templates/dispatcher-deployment.yaml
+      - templates/proxy-deployment.yaml
+    set:
+      config.privilegedAccess.authorizedAccessIDs: []
+      dispatcher.env: [{name: ALLOWED_ACCESS_IDS, value: "p-1"}]
+      webProxy.env: [{name: ALLOWED_ACCESS_IDS, value: "p-1"}]
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: ALLOWED_ACCESS_IDS, value: "p-1"}
+
+  - it: "ALLOWED_ACCESS_IDS from a Secret in both env lists replaces authorizedAccessIDs"
+    template: templates/proxy-deployment.yaml
+    set:
+      config.privilegedAccess.authorizedAccessIDs: []
+      dispatcher.env: [{name: ALLOWED_ACCESS_IDS, valueFrom: {secretKeyRef: {name: ids, key: ids}}}]
+      webProxy.env: [{name: ALLOWED_ACCESS_IDS, valueFrom: {secretKeyRef: {name: ids, key: ids}}}]
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: ALLOWED_ACCESS_IDS, valueFrom: {secretKeyRef: {name: ids, key: ids}}}
+
+  - it: "ALLOWED_ACCESS_IDS in one env list only fails and names the other"
+    template: templates/configmap.yaml
+    set:
+      config.privilegedAccess.authorizedAccessIDs: []
+      dispatcher.env: [{name: ALLOWED_ACCESS_IDS, value: "p-1"}]
+    asserts:
+      - failedTemplate:
+          errorPattern: "ALLOWED_ACCESS_IDS is set in dispatcher.env but not in webProxy.env"
+
   - it: "the schema rejects an empty authorized access ID"
     template: templates/dispatcher-deployment.yaml
     set:

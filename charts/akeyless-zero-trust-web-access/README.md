@@ -180,7 +180,7 @@ When a field was set in both `sessionRecording.upload` and `dispatcher.config.re
 
 The render also fails when:
 
-- `config.privilegedAccess.authorizedAccessIDs` and `config.privilegedAccess.existingSecretNames.authorizedAccessIDs` are both empty. The dispatcher and the web proxy accept no user without them.
+- `config.privilegedAccess.authorizedAccessIDs` and `config.privilegedAccess.existingSecretNames.authorizedAccessIDs` are both empty, and `ALLOWED_ACCESS_IDS` is not set in both `dispatcher.env` and `webProxy.env`. The dispatcher and the web proxy accept no user without them.
 - `config.privilegedAccess.accessType` is `access_key` and `config.privilegedAccess.existingSecretNames.access` is not set.
 - `config.privilegedAccess.accessType` is `aws_iam`, `azure_ad` or `gcp` and `config.privilegedAccess.existingSecretNames.access` is set.
 
