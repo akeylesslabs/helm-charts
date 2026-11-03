@@ -15,6 +15,42 @@ function die() {
   exit 1
 }
 
+# Maps a released service ($1) to the charts to bump, into the selected_charts global.
+# The legacy akeyless-secure-remote-access chart is included only when $2 is exactly
+# "true": it lacks the unified chart's securityContext contract, so auto-bumping
+# hardened non-root images breaks it. Opt in via the RELEASE_LEGACY_SRA repo variable.
+function select_charts_for_service() {
+  local service="$1"
+  local release_legacy_sra="$2"
+  selected_charts=()
+
+  case "${service}" in
+    gateway)
+      selected_charts+=("akeyless-api-gateway" "akeyless-gateway")
+      ;;
+    zero-trust-bastion)
+      selected_charts+=("akeyless-gateway")
+      if [[ "${release_legacy_sra}" == "true" ]]; then
+        selected_charts+=("akeyless-secure-remote-access")
+      fi
+      ;;
+    zt-portal)
+      if [[ "${release_legacy_sra}" == "true" ]]; then
+        selected_charts+=("akeyless-secure-remote-access")
+      fi
+      ;;
+    zero-trust-web-access)
+      selected_charts+=("akeyless-zero-trust-web-access")
+      ;;
+    k8s-webhook)
+      selected_charts+=("akeyless-k8s-secrets-injection")
+      ;;
+    *)
+      die "Bad service name"
+      ;;
+  esac
+}
+
 function bump_version() {
   current_version=$1
   bump_target=$2

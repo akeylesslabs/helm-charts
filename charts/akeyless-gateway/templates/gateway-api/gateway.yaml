@@ -1,0 +1,54 @@
+{{- $ga := .Values.gatewayAPI | default dict -}}
+{{- if and $ga.enabled (($ga.gateway | default dict).create) -}}
+{{- $gw := $ga.gateway -}}
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ include "gatewayApi.gatewayName" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "gatewayApi.labels" . | nindent 4 }}
+  {{- with $gw.labels }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $gw.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  gatewayClassName: {{ required "akeyless-gateway gatewayAPI: gateway.gatewayClassName is required when gateway.create=true (e.g. cilium, nginx, istio, kong, envoy, aws-alb)." $gw.gatewayClassName }}
+  {{- with $gw.infrastructure }}
+  infrastructure:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $gw.addresses }}
+  addresses:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  listeners:
+  {{- if $gw.listeners }}
+    {{- toYaml $gw.listeners | nindent 4 }}
+  {{- else }}
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: {{ include "gatewayApi.allowedRoutesFrom" . }}
+    {{- $tls := $gw.tls | default dict }}
+    {{- if $tls.enabled }}
+    - name: https
+      protocol: HTTPS
+      port: 443
+      tls:
+        mode: Terminate
+        {{- with $tls.certificateRefs }}
+        certificateRefs:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      allowedRoutes:
+        namespaces:
+          from: {{ include "gatewayApi.allowedRoutesFrom" . }}
+    {{- end }}
+  {{- end }}
+{{- end -}}

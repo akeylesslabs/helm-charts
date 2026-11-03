@@ -80,6 +80,37 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
 {{/*
+OpenShift Route metadata.name for a single rule.
+Includes servicePort plus host/path identity so rules that share a port still
+get distinct names. Sanitizes to DNS-1123 and keeps the result within 63 chars.
+Usage: {{ include "akeyless-gateway.routeName" (dict "root" $ "rule" .) }}
+*/}}
+{{- define "akeyless-gateway.routeName" -}}
+{{- $root := .root -}}
+{{- $rule := .rule -}}
+{{- $path := $rule.path | default $root.Values.gateway.route.path | default "/" -}}
+{{- $base := $rule.servicePort -}}
+{{- if or $rule.hostname (ne $path "/") -}}
+{{- $identity := printf "%s|%s|%s" $rule.servicePort ($rule.hostname | default "") $path -}}
+{{- $hostRaw := ($rule.hostname | default "") | lower | replace "." "-" -}}
+{{- $hostSlug := regexReplaceAll "[^a-z0-9-]+" $hostRaw "-" | trimAll "-" -}}
+{{- $pathRaw := $path | trimPrefix "/" | trimSuffix "/" | lower | replace "/" "-" -}}
+{{- $pathSlug := regexReplaceAll "[^a-z0-9-]+" $pathRaw "-" | trimAll "-" -}}
+{{- if $hostSlug -}}
+{{- $base = printf "%s-%s" $base $hostSlug -}}
+{{- end -}}
+{{- if $pathSlug -}}
+{{- $base = printf "%s-%s" $base $pathSlug -}}
+{{- end -}}
+{{- if gt (len $base) 40 -}}
+{{- $base = printf "%s-%s" $rule.servicePort ($identity | sha256sum | trunc 8) -}}
+{{- end -}}
+{{- end -}}
+{{- $suffix := printf "-%s" $base -}}
+{{- printf "%s%s" (include "akeyless-gateway.fullname" $root | trunc (sub 63 (len $suffix) | int) | trimSuffix "-") $suffix -}}
+{{- end -}}
+
+{{/*
 Gateway container image (repository:tag).
 */}}
 {{- define "akeyless-gateway.gatewayImage" -}}
@@ -129,7 +160,7 @@ Generate chart secret name
   {{- printf "image: %s:%s\n" (required "A valid .Values.globalConfig.clusterCache.image.repository entry required!" .Values.globalConfig.clusterCache.image.repository) (required "A valid .Values.globalConfig.clusterCache.image.tag entry required!" .Values.globalConfig.clusterCache.image.tag | toString)  -}}
   {{- printf "imagePullPolicy: %s" (.Values.globalConfig.clusterCache.image.imagePullPolicy | default "IfNotPresent"  | quote ) -}}
   {{- else -}}
-  {{- printf "image: %s\n" ("public.ecr.aws/docker/library/redis:8.6.3-alpine" | quote) -}}
+  {{- printf "image: %s\n" ("public.ecr.aws/docker/library/redis:8.6.6-alpine" | quote) -}}
   {{- printf "imagePullPolicy: %s\n" ("IfNotPresent" | quote) -}}
   {{- end -}}
 {{- end -}}
@@ -543,29 +574,33 @@ app.kubernetes.io/instance: {{ .Release.Name }}
     value: "true"
 {{- end -}}
 
+{{- define "akeyless-gateway.clusterSvcDomain" -}}
+svc.{{ default "cluster.local" .Values.clusterDomain }}
+{{- end -}}
+
 {{- define "akeyless-gateway.unifiedGatewayConfig" }}
   {{ include "akeyless-gateway.unifiedGatewayFlag" . }}
   - name: GATEWAY_URL
-    value: "http://{{ include "akeyless-gateway.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:8000"
+    value: "http://{{ include "akeyless-gateway.fullname" . }}.{{ .Release.Namespace }}.{{ include "akeyless-gateway.clusterSvcDomain" . }}:8000"
   - name: INTERNAL_GATEWAY_API
-    value: "http://{{ include "akeyless-gateway.fullname" . }}-internal.{{ .Release.Namespace }}.svc.cluster.local:8080"
+    value: "http://{{ include "akeyless-gateway.fullname" . }}-internal.{{ .Release.Namespace }}.{{ include "akeyless-gateway.clusterSvcDomain" . }}:8080"
 {{- end -}}
 
 {{- define "akeyless-gateway.SraWebServiceConfig" }}
   - name: REMOTE_ACCESS_WEB_SERVICE_INTERNAL_URL
-    value: "http://web-{{ include "akeyless-gateway.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:8888"
+    value: "http://web-{{ include "akeyless-gateway.fullname" . }}.{{ .Release.Namespace }}.{{ include "akeyless-gateway.clusterSvcDomain" . }}:8888"
 {{- end -}}
 
 {{- define "akeyless-gateway.SraSshServiceConfig" }}
   - name: REMOTE_ACCESS_SSH_SERVICE_INTERNAL_URL
-    value: "http://ssh-{{ include "akeyless-gateway.fullname" . }}-internal.{{ .Release.Namespace }}.svc.cluster.local:9900"
+    value: "http://ssh-{{ include "akeyless-gateway.fullname" . }}-internal.{{ .Release.Namespace }}.{{ include "akeyless-gateway.clusterSvcDomain" . }}:9900"
 {{- end -}}
 
 {{- define "akeyless-gateway.unifiedGatewaySraWebConfig" }}
   {{ include "akeyless-gateway.unifiedGatewayConfig" . }}
   {{ include "akeyless-gateway.SraSshServiceConfig" . }}
   - name: REMOTE_ACCESS_SSH_ENDPOINT
-    value: "ssh-{{ include "akeyless-gateway.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.sra.sshConfig.service.port }}"
+    value: "ssh-{{ include "akeyless-gateway.fullname" . }}.{{ .Release.Namespace }}.{{ include "akeyless-gateway.clusterSvcDomain" . }}:{{ .Values.sra.sshConfig.service.port }}"
 {{- end -}}
 
 {{- define "akeyless-gateway.unifiedGatewaySraGatewayConfig" }}
@@ -654,7 +689,7 @@ limits:
 
 {{/*
 SSH Bastion Phase A - Narrow capability set
-For SRA SSH only - minimum caps needed for mount/mknod/adduser operations
+For SRA SSH only - minimum caps needed for mount/mknod/adduser operations and session teardown
 Usage: {{ include "akeyless-gateway.sshBastionPhaseACaps" . }}
 */}}
 {{- define "akeyless-gateway.sshBastionPhaseACaps" -}}
@@ -671,6 +706,7 @@ capabilities:
     - SETUID         # Required by adduser + chroot setup
     - SETGID         # Required by adduser + chroot setup
     - FOWNER         # Required by adduser + chroot setup
+    - KILL           # Required to stop session processes on kickout and disconnect
 {{- end -}}
 
 {{/*
@@ -726,7 +762,7 @@ Usage: {{ include "akeyless-gateway.validateNoPlaintextSecrets" . }}
 {{- define "akeyless-gateway.validateNoPlaintextSecrets" -}}
 {{- if .Values.strictSecurityPolicy.enabled }}
   {{- $sensitivePattern := "(?i)(token|key|password|secret|credential)" -}}
-  {{- $allowPlaintextEnvNames := list "AKEYLESS_URL" -}}
+  {{- $allowPlaintextEnvNames := list "AKEYLESS_URL" "SRA_RECORDING_CAPTURE_KEYSTROKES" -}}
   {{- range .Values.globalConfig.env }}
     {{- if and (regexMatch $sensitivePattern .name) (not .valueFrom) (not (has .name $allowPlaintextEnvNames)) }}
       {{- fail (printf "strictSecurityPolicy.enabled: detected potential secret '%s' in globalConfig.env. Use secretKeyRef or existingSecret instead" .name) }}

@@ -44,6 +44,47 @@ helm install RELEASE_NAME akeyless/akeyless-secrets-injection --namespace "${WEB
 helm delete RELEASE_NAME --namespace "${WEBHOOK_NS}"
 ```
 
+## Extra Objects
+
+`extraObjects` renders additional Kubernetes manifests as part of the release. Each entry is rendered with `tpl`, so it can reference `.Release`, `.Chart` and `.Values`. Custom resources require their CRDs to be installed before the release.
+
+```yaml
+extraObjects:
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: "{{ .Release.Name }}-extra"
+      namespace: "{{ .Release.Namespace }}"
+    data:
+      chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+```
+
+An entry is either a map or a string (`- |`). What the chart does to each:
+
+| | String entry | Map entry |
+|---|---|---|
+| Values and types | exactly as written | numbers are read as 64-bit floats: `1.0` renders as `1`, integers above 2^53 lose precision |
+| Templated values | keep their type: `{{ .Values.x }}` renders a number | always strings: `"{{ .Values.x }}"` renders `'3'` |
+| Key order, quoting, comments | kept | keys sorted, quoting normalized, comments dropped |
+| `{{ }}` anywhere in the object | evaluated as a template | evaluated as a template |
+
+The chart tests cover values and types, templated values and `{{ }}` handling. Key order, quoting and comments follow Helm and are not tested here.
+
+To pass a literal `{{ }}` through, for example a Prometheus alert using `{{ $labels.instance }}`, escape it as `{{ "{{" }}` and `{{ "}}" }}`. Use a string entry when a field needs an exact value or a templated number or boolean:
+
+```yaml
+extraMinAvailable: 1
+extraObjects:
+  - |
+    apiVersion: policy/v1
+    kind: PodDisruptionBudget
+    metadata:
+      name: "{{ .Release.Name }}-extra"
+      namespace: "{{ .Release.Namespace }}"
+    spec:
+      minAvailable: {{ .Values.extraMinAvailable }}
+```
+
 ## Configuration
 
 ### Upgrading to chart 2.0.0
@@ -58,6 +99,115 @@ webhookFailurePolicy: Fail
 mutatingWebhook:
   failurePolicy: Fail
 ```
+
+### Webhook serving certificate (GitOps / cert-manager)
+
+By default the chart generates a self-signed CA and serving certificate while rendering. That
+generation is non-deterministic, so every `helm template` or `helm upgrade` produces a different
+keypair. GitOps controllers such as ArgoCD render the chart on every sync cycle, so with auto-sync
+and self-heal enabled they continuously detect drift and push a new certificate. This produces
+`tls: bad certificate` handshake errors and rolls the webhook pods on every sync.
+
+Set `mutatingWebhook.tls.existingSecretName` to a Secret you manage yourself to turn certificate generation
+off. The chart then stops emitting the Secret, and the rendered output becomes byte-for-byte stable
+across renders. The webhook server watches the Secret and reloads the certificate in place when it
+is rotated, so renewal does not require a pod restart.
+
+Because the chart no longer owns a CA in this mode, you must also tell the API server which CA to
+trust, using either `mutatingWebhook.tls.caBundle` or `mutatingWebhook.tls.caBundleAnnotations`. Rendering fails if
+neither is set. Both belong to this mode only: rendering also fails if `caBundleAnnotations` is set
+without `existingSecretName`, since the chart writes its own generated CA into `caBundle` there and
+an injector would overwrite it with an unrelated one.
+
+With cert-manager issuing the certificate and injecting the CA bundle:
+
+```yaml
+mutatingWebhook:
+  tls:
+    existingSecretName: akeyless-injector-tls
+    caBundleAnnotations:
+      cert-manager.io/inject-ca-from: "akeyless/akeyless-injector-tls"
+```
+
+```yaml
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: akeyless-injector-tls
+  namespace: akeyless
+spec:
+  secretName: akeyless-injector-tls
+  dnsNames:
+    - RELEASE_NAME-akeyless-secrets-injection.akeyless.svc
+  issuerRef:
+    name: my-issuer
+    kind: Issuer
+```
+
+`caBundleAnnotations` leaves `caBundle` out of the rendered `MutatingWebhookConfiguration` and lets
+ca-injector write it into the live object. A GitOps controller renders the chart without that field,
+reads the live value as drift, and with self-heal enabled strips it on the next sync, leaving the API
+server unable to validate the webhook. Exclude the field from drift detection. ArgoCD:
+
+```yaml
+syncPolicy:
+  syncOptions:
+    - RespectIgnoreDifferences=true
+ignoreDifferences:
+  - group: admissionregistration.k8s.io
+    kind: MutatingWebhookConfiguration
+    name: RELEASE_NAME-akeyless-secrets-injection
+    jsonPointers:
+      - /webhooks/0/clientConfig/caBundle
+```
+
+`ignoreDifferences` alone only affects how ArgoCD calculates the diff. Without
+`RespectIgnoreDifferences=true` the sync still applies the manifest without `caBundle` and
+removes the injected value.
+
+Flux, on the HelmRelease:
+
+```yaml
+driftDetection:
+  mode: enabled
+  ignore:
+    - paths: ["/webhooks/0/clientConfig/caBundle"]
+      target:
+        kind: MutatingWebhookConfiguration
+```
+
+With a CA you manage outside the cluster, supply the PEM directly instead. The chart
+base64-encodes it:
+
+```yaml
+mutatingWebhook:
+  tls:
+    existingSecretName: akeyless-injector-tls
+    caBundle: |
+      -----BEGIN CERTIFICATE-----
+      ...
+      -----END CERTIFICATE-----
+```
+
+The Secret must not be named after the chart's own generated full name, which is
+`RELEASE_NAME-akeyless-secrets-injection` by default and whatever you set in `fullnameOverride`
+otherwise. The chart stops emitting a Secret at that name in this mode, so `helm upgrade` on an
+existing release would delete the Secret the pods mount. The chart rejects that name at render time,
+including the `fullnameOverride` case.
+
+The Secret must contain `tls.crt` and `tls.key`, and must exist before the webhook pods start. The
+three failure modes differ, and so does what you will see:
+
+- **Secret absent.** The kubelet cannot mount the volume, so the pod never starts and stays in
+  `ContainerCreating` with a `FailedMount` event. There is no crash-loop, because no container runs.
+- **Secret present but missing `tls.crt` or `tls.key`.** The volume has no `items` list, so whatever
+  keys exist are mounted and the container starts. The webhook then finds no certificate at
+  `/var/serving-cert` and exits, so the pod crash-loops.
+- **Secret present with invalid TLS data.** The container starts and the webhook fails at handshake
+  time, which surfaces as `tls: bad certificate` on the API server rather than as a pod failure.
+
+The first two resolve on their own once the issuer populates the Secret; neither needs manual
+intervention.
 
 The following tables lists configurable parameters of the vault-secrets-webhook chart and their default values.
 
@@ -74,6 +224,9 @@ The following tables lists configurable parameters of the vault-secrets-webhook 
 | `mutatingWebhook.objectSelector`  | Object selector for the mutating webhook. Rendered with `tpl`, so values can reference release context. | Excludes the release name |
 | `mutatingWebhook.timeoutSeconds`  | Webhook request timeout in seconds | `10` |
 | `mutatingWebhook.matchConditions` | CEL match conditions for the mutating webhook. Rendered with `tpl`, so values can reference release context. | `[]` |
+| `mutatingWebhook.tls.existingSecretName`  | Existing Secret with `tls.crt`/`tls.key` for the webhook server. When set, the chart does not generate or manage a certificate. | `""` |
+| `mutatingWebhook.tls.caBundle`            | PEM CA certificate written to the `MutatingWebhookConfiguration` `caBundle`. Only used with `existingSecretName`. | `""` |
+| `mutatingWebhook.tls.caBundleAnnotations` | Annotations on the `MutatingWebhookConfiguration`, for controllers that inject `caBundle` themselves (for example cert-manager's ca-injector). Only used with `existingSecretName`. | `{}` |
 | `deployment.nodeSelector`         | Node selector for webhook pods | `null` |
 | `deployment.tolerations`          | Tolerations configuration for webhook pods | `{ enabled: false, data: [] }` |
 | `deployment.affinity`             | Affinity configuration for webhook pods | `{ enabled: false }` |

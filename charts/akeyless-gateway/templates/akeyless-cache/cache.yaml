@@ -43,10 +43,10 @@ spec:
       {{- if .Values.gateway.deployment.affinity.enabled }}
       affinity:
         {{- toYaml .Values.gateway.deployment.affinity.data | nindent 8 }}
+      {{- end }}
       {{- if .Values.gateway.deployment.topologySpreadConstraints }}
       topologySpreadConstraints:
         {{- toYaml .Values.gateway.deployment.topologySpreadConstraints | nindent 8 }}
-      {{- end }}
       {{- end }}
       {{- if .Values.strictSecurityPolicy.enabled }}
       securityContext:
@@ -207,9 +207,9 @@ spec:
           emptyDir: {}
           {{- end }}
         {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
-        {{- include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 6 }}
+        {{- include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 8 }}
         {{- end }}
         {{- with .Values.globalConfig.clusterCache.extraVolumes }}
-        {{- toYaml . | nindent 6 }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
 {{- end }}

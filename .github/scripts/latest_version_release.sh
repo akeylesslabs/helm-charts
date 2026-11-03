@@ -24,20 +24,23 @@ if [[ -z "${app_version}" ]]; then
   die "Required environment variable 'app_version' is not set"
 fi
 
-charts=()
-if [[ "${service}" == "gateway" ]]; then
-  charts+=("akeyless-api-gateway" "akeyless-gateway")
-elif [[ "${service}" == "zero-trust-bastion" ]]; then
-  charts+=("akeyless-secure-remote-access" "akeyless-gateway")
-elif [[ "${service}" == "zt-portal" ]]; then
- charts+=("akeyless-secure-remote-access")
-elif [[ "${service}" == "zero-trust-web-access" ]]; then
-  charts+=("akeyless-zero-trust-web-access")
-elif [[ "${service}" == "k8s-webhook" ]]; then
-  charts+=("akeyless-k8s-secrets-injection")
-else
-  die "Bad service name"
+# Release gate for the legacy standalone SRA chart. Read from the deployment payload
+# (release_legacy_sra), set by the triggering release workflow (e.g. the zero-trust-bastion
+# "Release Legacy SRA" input). Missing/empty -> "false", so the bot never auto-releases
+# akeyless-secure-remote-access unless the trigger explicitly opts in.
+release_legacy_sra=$(echo "$GITHUB_CONTEXT" | jq -r '.payload.release_legacy_sra | select (.!=null)')
+release_legacy_sra=$(echo "${release_legacy_sra:-false}" | tr '[:upper:]' '[:lower:]')
+
+select_charts_for_service "${service}" "${release_legacy_sra}"
+charts=("${selected_charts[@]}")
+
+if [[ ${#charts[@]} -eq 0 ]]; then
+  echo "No charts to release for service '${service}' (RELEASE_LEGACY_SRA=${release_legacy_sra}), the legacy SRA chart is gated off by default, skipping auto-release."
+  echo "released=false" >> "${GITHUB_OUTPUT}"
+  exit 0
 fi
+
+echo "Charts to release for service '${service}' (RELEASE_LEGACY_SRA=${release_legacy_sra}): ${charts[*]}"
 
 updated_charts_summary=()
 for chart in "${charts[@]}"; do
@@ -106,6 +109,7 @@ for chart in "${charts[@]}"; do
   popd
 done
 
+echo "released=true" >> "${GITHUB_OUTPUT}"
 echo "new_chart_version=$new_chart_version" >> "${GITHUB_ENV}"
 echo "new_chart_version=$new_chart_version" >> "${GITHUB_OUTPUT}"
 echo "charts=${charts[*]}" >> "${GITHUB_ENV}"

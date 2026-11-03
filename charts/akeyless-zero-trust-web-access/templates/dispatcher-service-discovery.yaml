@@ -8,6 +8,13 @@ metadata:
   annotations:
 {{- toYaml .Values.dispatcher.service.annotations | nindent 4 }}
 spec:
+  {{- with .Values.ipFamilyPolicy }}
+  ipFamilyPolicy: {{ . }}
+  {{- end }}
+  {{- with .Values.ipFamilies }}
+  ipFamilies:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   clusterIP: None
   ports:
     - name: http

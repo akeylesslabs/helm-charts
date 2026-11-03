@@ -1,0 +1,23 @@
+# Regression test for ASM-19002.
+# Standalone cluster cache with TLS enabled *and* persistence enabled renders
+# two items in the Deployment volumes list. Before the fix the tlsVolume helper
+# was injected with `nindent 6` while the cache-data item sat at 8 spaces,
+# producing mismatched indentation and a "did not find expected key" YAML error.
+globalConfig:
+  gatewayAuth:
+    gatewayAccessType: access_key
+    gatewayCredentialsExistingSecret: akeyless-auth
+  clusterCache:
+    enabled: true
+    enableTls: true
+    persistence:
+      enabled: true
+
+gateway:
+  service:
+    type: ClusterIP
+
+sra:
+  sshConfig:
+    service:
+      type: ClusterIP

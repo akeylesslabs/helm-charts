@@ -12,6 +12,13 @@ metadata:
   annotations:
 {{- toYaml .Values.webWorker.service.annotations | nindent 4 }}
 spec:
+  {{- with .Values.ipFamilyPolicy }}
+  ipFamilyPolicy: {{ . }}
+  {{- end }}
+  {{- with .Values.ipFamilies }}
+  ipFamilies:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   clusterIP: None
   ports:
     - port: {{ .Values.webWorker.service.port }}

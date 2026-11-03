@@ -1,5 +1,9 @@
 # Akeyless Secure Remote Access
 
+# ⚠️ DEPRECATION NOTICE
+
+> **The akeyless-secure-remote-access chart is scheduled for deprecation on December 31, 2026.**
+
 Combines both Zero Trust Bastion and SSH-Bastion capabilities.
 In addition, There is [Zero Trust Portal](https://docs.akeyless.io/docs/access-resources-remotely#connect-from-the-secure-remote-access-portal) capability.
 
@@ -64,6 +68,47 @@ To install the chart run:
 
 ```bash
 helm install RELEASE_NAME akeyless/akeyless-sra -f values.yaml
+```
+
+## Extra Objects
+
+`extraObjects` renders additional Kubernetes manifests as part of the release. Each entry is rendered with `tpl`, so it can reference `.Release`, `.Chart` and `.Values`. Custom resources require their CRDs to be installed before the release.
+
+```yaml
+extraObjects:
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: "{{ .Release.Name }}-extra"
+      namespace: "{{ .Release.Namespace }}"
+    data:
+      chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+```
+
+An entry is either a map or a string (`- |`). What the chart does to each:
+
+| | String entry | Map entry |
+|---|---|---|
+| Values and types | exactly as written | numbers are read as 64-bit floats: `1.0` renders as `1`, integers above 2^53 lose precision |
+| Templated values | keep their type: `{{ .Values.x }}` renders a number | always strings: `"{{ .Values.x }}"` renders `'3'` |
+| Key order, quoting, comments | kept | keys sorted, quoting normalized, comments dropped |
+| `{{ }}` anywhere in the object | evaluated as a template | evaluated as a template |
+
+The chart tests cover values and types, templated values and `{{ }}` handling. Key order, quoting and comments follow Helm and are not tested here.
+
+To pass a literal `{{ }}` through, for example a Prometheus alert using `{{ $labels.instance }}`, escape it as `{{ "{{" }}` and `{{ "}}" }}`. Use a string entry when a field needs an exact value or a templated number or boolean:
+
+```yaml
+extraMinAvailable: 1
+extraObjects:
+  - |
+    apiVersion: policy/v1
+    kind: PodDisruptionBudget
+    metadata:
+      name: "{{ .Release.Name }}-extra"
+      namespace: "{{ .Release.Namespace }}"
+    spec:
+      minAvailable: {{ .Values.extraMinAvailable }}
 ```
 
 ## Global Parameters
@@ -158,7 +203,7 @@ The following table lists the configurable parameters of the SSH Bastion chart a
 |--------------------------------|------------------------------------------------------------------------------------------------|--------------------------|
 | `ssgConfig.enabled`            | Enable SSH Bastion                                                                             | `true`                   |
 | `sshConfig.image.repository`   | SSH Bastion image name                                                                         | `akeyless/ssh-bastion`   |
-| `sshConfig.image.tag`          | SSH Bastion image tag                                                                          | `latest`                 |      
+| `sshConfig.image.tag`          | SSH Bastion image tag. Must be `3.1.0` or newer, older images ignore `SSH_PROXY_PORT` and cannot bind port 22 under the chart's security settings | `latest`                 |      
 | `sshConfig.image.pullPolicy`   | SSH Bastion image pull policy                                                                  | `Always`                 |
 | `sshConfig.updateStrategy`     | Updating statefulset strategy                                                                  | `RollingUpdate`          |  
 | `sshConfig.containerName`      | SSH Bastion container name                                                                     | `ssh-proxy`              |  
@@ -188,6 +233,20 @@ The following table lists the configurable parameters of the SSH Bastion chart a
 | `sshConfig.config.logForwarding.enabled`            | Enable [log forwarding](https://docs.akeyless.io/docs/ssh-log-forwarding) | `false` |
 | `sshConfig.config.logForwarding.settings`           | Log forwarding configuration                                              | `nil`   |
 | `sshConfig.config.logForwarding.existingSecretName` | Existing secret that will old log forwarding configuration                | `nil`   |
+
+### SSH keepalive parameters
+
+A leg is dropped once `interval x count max` seconds pass with no probe reply. The image ships
+`120` and `2`, so the default window is 240 seconds on each leg. Leave a key unset to keep the
+image default. Set an interval to `0` to send no probes on that leg. Changes take effect on pod
+restart, and an `sshConfig.image.tag` older than `3.3.0` ignores these variables.
+
+| Parameter                                | Description                                                                 | Default |
+|------------------------------------------|-----------------------------------------------------------------------------|---------|
+| `sshConfig.keepalive.clientAliveInterval` | Seconds between bastion probes to the connected client                      | `120`   |
+| `sshConfig.keepalive.clientAliveCountMax` | Unanswered client probes before the bastion disconnects the session         | `2`     |
+| `sshConfig.keepalive.serverAliveInterval` | Seconds between bastion probes to the target host                           | `120`   |
+| `sshConfig.keepalive.serverAliveCountMax` | Unanswered target probes before the bastion gives up on the target          | `2`     |
 
 ### Persistence parameters
 
