@@ -84,7 +84,7 @@ persistence:
     size: 10Gi
 ```
 
-The render fails when `recording.s3.enabled` is true and `recording.s3.bucket` is empty, and when `recording.enabled` is true without `persistence.shareStorageVolume`.
+The render fails when `recording.s3.enabled` is true and `recording.s3.bucket` is empty, and when `recording.enabled` or `recording.s3.enabled` is true without `persistence.shareStorageVolume`.
 
 **Credentials, Kubernetes Secret**: create the Secret out-of-band and reference it from `values.yaml`. The chart wires the dispatcher's `RECORDING_S3_ACCESS_KEY_ID` and `RECORDING_S3_ACCESS_KEY_SECRET` env vars to the Secret via `secretKeyRef`.
 

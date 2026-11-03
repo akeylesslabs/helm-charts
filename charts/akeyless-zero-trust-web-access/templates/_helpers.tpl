@@ -190,6 +190,9 @@ without.
 {{- if and $s3.enabled (not $s3.bucket) -}}
   {{- fail "recording.s3.bucket is required when recording.s3.enabled is true" -}}
 {{- end -}}
+{{- if and $s3.enabled (not (and $v.persistence $v.persistence.shareStorageVolume)) -}}
+  {{- fail "recording.s3.enabled requires persistence.shareStorageVolume: the dispatcher uploads the recordings from that volume" -}}
+{{- end -}}
 {{- end -}}
 
 {{/*

@@ -89,6 +89,7 @@ tests:
   - it: "the S3 Secret keys default to access-key-id and secret-access-key"
     template: templates/dispatcher-deployment.yaml
     set:
+      persistence.shareStorageVolume: {name: share-storage, accessModes: [ReadWriteMany], size: 1Gi}
       recording.s3: {enabled: true, bucket: rec-bucket, existingSecretName: s3-creds}
     asserts:
       - contains:
@@ -109,6 +110,14 @@ tests:
     asserts:
       - failedTemplate:
           errorPattern: "recording.s3.bucket is required"
+
+  - it: "recording.s3.enabled without a shared volume fails"
+    template: templates/configmap.yaml
+    set:
+      recording.s3: {enabled: true, bucket: rec-bucket}
+    asserts:
+      - failedTemplate:
+          errorPattern: "recording.s3.enabled requires persistence.shareStorageVolume"
 
   # The DaemonSet includes the media server ConfigMap for its checksum, so the error
   # surfaces there first.
