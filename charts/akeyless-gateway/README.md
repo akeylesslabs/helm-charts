@@ -35,55 +35,6 @@ To install the chart run the following:
 helm install gateway akeyless/akeyless-gateway
 ```
 
-## Cloud Identity on Alibaba Cloud ACK (RRSA)
-
-On Alibaba Cloud ACK, the Gateway can use a RAM role through [RRSA](https://www.alibabacloud.com/help/en/ack/ack-managed-and-ack-dedicated/user-guide/use-rrsa-to-authorize-pods-to-access-different-cloud-services) instead of static keys. The same identity is used to authenticate the Gateway to Akeyless (`gatewayAccessType: alicloud`) and by AliCloud targets set to use the Gateway's cloud identity. Requires Gateway 5.6.0 or later.
-
-1. Enable RRSA on the cluster and install the `ack-pod-identity-webhook` add-on.
-2. Create a RAM role with a trust policy for the cluster's OIDC provider. `oidc:sub` must match the Gateway's namespace and service account exactly:
-   ```json
-   {
-     "Version": "1",
-     "Statement": [{
-       "Effect": "Allow",
-       "Action": "sts:AssumeRole",
-       "Principal": { "Federated": ["acs:ram::<account-id>:oidc-provider/ack-rrsa-<cluster-id>"] },
-       "Condition": { "StringEquals": {
-         "oidc:aud": "sts.aliyuncs.com",
-         "oidc:iss": "<cluster OIDC issuer URL>",
-         "oidc:sub": "system:serviceaccount:<namespace>:<service-account>"
-       }}
-     }]
-   }
-   ```
-3. Label the namespace so the webhook injects the RRSA credentials:
-   ```bash
-   kubectl label namespace <namespace> pod-identity.alibabacloud.com/injection=on
-   ```
-4. In Akeyless, create an Alibaba Cloud auth method bound to your account ID and the RAM role name, and use its Access ID.
-5. Install the chart. With a service account created by the chart (named `<release>-akeyless-gateway` unless `serviceAccountName` is set):
-   ```yaml
-   globalConfig:
-     gatewayAuth:
-       gatewayAccessId: <access-id>
-       gatewayAccessType: alicloud
-     serviceAccount:
-       create: true
-       annotations:
-         pod-identity.alibabacloud.com/role-name: <ram-role-name>
-   ```
-   With an existing service account, set `create: false` and `serviceAccountName: <service-account>`, and annotate that service account before installing. The chart does not apply `annotations` to a service account it does not create:
-   ```bash
-   kubectl -n <namespace> annotate --overwrite serviceaccount <service-account> pod-identity.alibabacloud.com/role-name=<ram-role-name>
-   ```
-
-Notes:
-- `gatewayAccessType: alicloud` sets `ADMIN_ACCESS_ID_TYPE=alicloud` on the Gateway (unless `globalConfig.env` already sets it), so it does not rely on cloud provider autodetection. No `gatewayCredentialsExistingSecret` is needed.
-- Bind the Akeyless auth method to the RAM role name (or role ARN), not only to the account ID. Without the RRSA annotation, the Alibaba credential chain falls back to the node's ECS role, and a role-bound auth method rejects it.
-- The webhook injects credentials when a pod starts. After adding or changing the annotation or the namespace label, restart the Gateway pods.
-- Changing `serviceAccount.create` from `true` to `false` on an existing release deletes the service account the chart created.
-- To check the injection: `kubectl -n <namespace> exec deploy/<deployment> -- env | grep ALIBABA_CLOUD` should list `ALIBABA_CLOUD_ROLE_ARN`, `ALIBABA_CLOUD_OIDC_PROVIDER_ARN` and `ALIBABA_CLOUD_OIDC_TOKEN_FILE`.
-
 ## Cluster DNS Domain
 
 Clusters whose DNS search domain is not the default `svc.cluster.local` (for example `svc.custom.local`) must set `clusterDomain` so SRA internal service URLs resolve correctly:
