@@ -49,16 +49,6 @@ spec:
         - name: configmap-policies
           configMap:
             name: {{ $.Release.Name }}-cm-web-policies
-{{- if .Values.webWorker.dlp.enabled }}
-        - name: configmap-conf
-          {{- if $.Values.webWorker.dlp.existingLogForwardSecretName }}
-          secret:
-            secretName: "{{ $.Values.webWorker.dlp.existingLogForwardSecretName }}"
-          {{- else }}
-          configMap:
-            name: {{ $.Release.Name }}-cm-dlp-conf
-          {{- end }}
-{{- end }}
         - name: dshm
           emptyDir:
             medium: Memory
@@ -83,9 +73,6 @@ spec:
             - "-c"
             - |
               set -ex
-{{- if .Values.webWorker.dlp.enabled }}
-              [ "$(ls /configmap_conf)" ] && cp /configmap_conf/* /var/akeyless/conf
-{{- end }}
               [ "$(ls /configmap_policy_conf)" ] && cp /configmap_policy_conf/* /var/akeyless/policy_conf/
               jq -e . /var/akeyless/policy_conf/policies.json || (echo "Chrome policies JSON validation failed! please correct the policies JSON structure in values.yaml" && exit 1)
           resources:
@@ -96,10 +83,6 @@ spec:
             runAsNonRoot: true
             allowPrivilegeEscalation: false
           volumeMounts:
-{{- if .Values.webWorker.dlp.enabled }}
-            - name: configmap-conf
-              mountPath: /configmap_conf
-{{- end }}
             - name: akeyless-conf
               mountPath: /var/akeyless/conf
             - name: akeyless-policy-conf

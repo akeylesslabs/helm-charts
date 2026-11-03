@@ -28,28 +28,3 @@ metadata:
 data:
   policies.json: |
 {{ required "A valid .Values.webWorker.config.policies entry required!" .Values.webWorker.config.policies | indent 4 }}
-
-
-{{- if .Values.webWorker.dlp.enabled }}
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ $.Release.Name }}-cm-dlp-conf
-  namespace: {{ .Release.Namespace }}
-  labels:
-    chart: {{ $.Chart.Name }}
-data:
-  dlp.conf: |
-    host={{ .Values.webWorker.dlp.config.hostAddress | quote }}
-    path_prefix={{ .Values.webWorker.dlp.config.pathPrefix | quote }}
-    mode={{ .Values.webWorker.dlp.config.mode | quote }}
-    log_level={{ .Values.webWorker.dlp.config.logLevel | quote }}
-
-{{- if not .Values.webWorker.dlp.existingLogForwardSecretName }}
-    {{ if .Values.webWorker.dlp.audit }}
-  logand.conf: |
-{{ .Values.webWorker.dlp.audit | indent 4 }}
-{{- end }}
-{{- end }}
-{{- end }}

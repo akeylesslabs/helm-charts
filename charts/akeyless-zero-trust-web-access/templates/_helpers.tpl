@@ -126,7 +126,7 @@ without.
   {{- $moved = append $moved "recording.upload moved to recording.s3 with new field names" -}}
 {{- end -}}
 {{- if hasKey $v "dlp" -}}
-  {{- $moved = append $moved "dlp moved to webWorker.dlp" -}}
+  {{- $moved = append $moved "dlp was removed" -}}
 {{- end -}}
 {{- if and $v.webWorker $v.webWorker.config (hasKey $v.webWorker.config "dispatcherDNS") -}}
   {{- $moved = append $moved "webWorker.config.dispatcherDNS moved to dispatcher.dispatcherDNS" -}}

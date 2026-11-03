@@ -171,7 +171,7 @@ Upgrade with your values file (`-f <values file>`) or `--reset-then-reuse-values
 | `sessionRecording.upload.existingSecretNames.s3AccessKeyIdKey`, `s3SecretAccessKeyKey` | `recording.s3.accessKeyIdKey`, `secretAccessKeyKey` |
 | `sessionRecording.upload.compress`, `sse.type`, `sse.kmsKeyId` | `recording.s3.compress`, `sse.type`, `sse.kmsKeyId` |
 | `sessionRecording.upload.uploaderStatePath`, `dispatcher.config.recording.uploaderStatePath` | Removed |
-| `dlp` | `webWorker.dlp` |
+| `dlp` | Removed |
 | `webWorker.config.dispatcherDNS` | `dispatcher.dispatcherDNS` |
 | `HPA.webWorker.sessionTerminationGracePeriodSeconds` | `webWorker.terminationGracePeriodSeconds` |
 | `HPA.dispatcher` | Removed. The chart runs one dispatcher per worker pool |
@@ -387,18 +387,6 @@ A **Heavy browsing workload** example for the web worker main `resources` is in 
 | `webWorker.config.displayHeight`                                       | Web worker display Height (in pixels) of the application's window.                                                  | `1200`                    |
 | `webWorker.config.policies`                                            | Chromium managed policies, as Chrome Enterprise JSON                                                                | Check `values.yaml` file  |
 | `webWorker.terminationGracePeriodSeconds`                              | Time a worker pod gets to finish its live session before Kubernetes stops it                                        | `3600`                    |
-
-### Data leak protection parameters
-
-| Parameter                                    | Description                                                                              | Default |
-|----------------------------------------------|------------------------------------------------------------------------------------------|---------|
-| `webWorker.dlp.enabled`                      | Enable data leak protection for the browser sessions                                     | `false` |
-| `webWorker.dlp.config.hostAddress`           | DLP server host                                                                          | `""`    |
-| `webWorker.dlp.config.pathPrefix`            | Path prefix on the DLP server                                                            | `""`    |
-| `webWorker.dlp.config.mode`                  | `FORCING` or `LEARNING`                                                                  | `""`    |
-| `webWorker.dlp.config.logLevel`              | DLP log level                                                                            | `INFO`  |
-| `webWorker.dlp.existingLogForwardSecretName` | Existing Secret with the DLP audit log forwarding config in the key `logand.conf`        | `nil`   |
-| `webWorker.dlp.audit`                        | The DLP audit log forwarding config inline. See [Log Forwarding](https://docs.akeyless.io/docs/gateway-log-forwarding) | `nil`   |
 
 ### Session recording parameters
 

@@ -30,13 +30,13 @@ tests:
       - failedTemplate:
           errorPattern: "recording.upload moved to recording.s3"
 
-  - it: "top level dlp fails and names webWorker.dlp"
+  - it: "top level dlp fails as removed"
     template: templates/configmap.yaml
     set:
       dlp.enabled: true
     asserts:
       - failedTemplate:
-          errorPattern: "dlp moved to webWorker.dlp"
+          errorPattern: "dlp was removed"
 
   - it: "webWorker.config.dispatcherDNS fails and names dispatcher.dispatcherDNS"
     template: templates/configmap.yaml
@@ -150,7 +150,7 @@ tests:
       dlp.enabled: true
     asserts:
       - failedTemplate:
-          errorPattern: "(?s)sessionRecording moved to recording.*dlp moved to webWorker.dlp"
+          errorPattern: "(?s)sessionRecording moved to recording.*dlp was removed"
 
   - it: "configmap.yaml renders no dispatcher log forwarding ConfigMap"
     template: templates/configmap.yaml
@@ -273,52 +273,17 @@ tests:
       - matchRegexRaw:
           pattern: "webWorker.config.recording no longer do anything"
 
-  - it: "webWorker.dlp renders the DLP config and mounts it on the worker"
-    templates:
-      - templates/configmap.yaml
-      - templates/web-worker-deployment.yaml
-    set:
-      webWorker.dlp:
-        enabled: true
-        config: {hostAddress: dlp.local, pathPrefix: scan, mode: FORCING, logLevel: DEBUG}
-        audit: |
-          target_log_type="splunk"
-    asserts:
-      - equal:
-          path: metadata.name
-          value: ztwa-cm-dlp-conf
-        template: templates/configmap.yaml
-        documentIndex: 2
-      - matchRegex:
-          path: data["dlp.conf"]
-          pattern: "mode=\"FORCING\""
-        template: templates/configmap.yaml
-        documentIndex: 2
-      - matchRegex:
-          path: data["logand.conf"]
-          pattern: "target_log_type=\"splunk\""
-        template: templates/configmap.yaml
-        documentIndex: 2
-      - contains:
-          path: spec.template.spec.volumes
-          content:
-            name: configmap-conf
-            configMap:
-              name: ztwa-cm-dlp-conf
-        template: templates/web-worker-deployment.yaml
-
-  - it: "webWorker.dlp.existingLogForwardSecretName mounts the Secret on the worker"
+  - it: "the worker mounts and copies no DLP config"
     template: templates/web-worker-deployment.yaml
-    set:
-      webWorker.dlp.enabled: true
-      webWorker.dlp.existingLogForwardSecretName: dlp-logand
     asserts:
-      - contains:
+      - notContains:
           path: spec.template.spec.volumes
           content:
             name: configmap-conf
-            secret:
-              secretName: dlp-logand
+          any: true
+      - notMatchRegex:
+          path: spec.template.spec.initContainers[0].args[1]
+          pattern: "configmap_conf"
 
   - it: "HPA min and max replicas default to 3 and 14"
     template: templates/horizontalPodAutoscaler.yaml

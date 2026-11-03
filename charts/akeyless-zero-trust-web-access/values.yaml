@@ -311,30 +311,6 @@ webWorker:
           ]
         }
 
-  # Data leak protection (DLP) for the browser sessions.
-  # Docs: https://docs.akeyless.io/docs/sra-web-access-on-k8s-adv-config#dlp
-  dlp:
-    enabled: false
-    config:
-      hostAddress: ""
-      # host/{pathPrefix}
-      pathPrefix: ""
-      # FORCING or LEARNING
-      mode: ""
-      logLevel: "INFO"
-
-    # DLP audit log forwarding. Set one of the two. The inline form is stored in a
-    # ConfigMap, so use the Secret when the config holds a token.
-    # Docs: https://docs.akeyless.io/docs/gateway-log-forwarding
-    #
-    # Existing Secret with the config in the key logand.conf.
-    existingLogForwardSecretName:
-    # The config inline, for example:
-    #   audit: |
-    #     target_log_type="splunk"
-    #     target_splunk_url=""
-    audit:
-
 # Web proxy for proxy mode sessions, with its own Service.
 # Docs: https://docs.akeyless.io/docs/sra-web-access-browsing-proxy
 webProxy:
