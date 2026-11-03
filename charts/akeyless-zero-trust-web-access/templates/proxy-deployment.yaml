@@ -34,10 +34,10 @@ spec:
         # dispatcher's privileged-access secret and -cm-akeyless configmap are NOT mounted.
         - name: ng-config
           emptyDir: {}
-{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+{{- if .Values.config.apiGatewayCert.tlsCertsSecretName }}
         - name: gw-signed-ca
           secret:
-            secretName: {{ .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+            secretName: {{ .Values.config.apiGatewayCert.tlsCertsSecretName }}
             items:
               - key: tls.crt
                 path: gw-cert.pem
@@ -46,12 +46,12 @@ spec:
         - name: bootstrap
           image: "{{ .Values.webProxy.initContainer.image.repository }}:{{ .Values.webProxy.initContainer.image.tag }}"
           imagePullPolicy: {{ .Values.webProxy.initContainer.image.pullPolicy }}
-{{- if (eq (include "secret-exist" (dict "Root" $.Values.dispatcher.config.privilegedAccess.existingSecretNames "Name" "allowedIDs")) "true") }}
+{{- if (eq (include "secret-exist" (dict "Root" $.Values.config.privilegedAccess.existingSecretNames "Name" "authorizedAccessIDs")) "true") }}
           env:
             - name: allowedAccessIDs
               valueFrom:
                 secretKeyRef:
-                  name: {{ $.Values.dispatcher.config.privilegedAccess.existingSecretNames.allowedIDs }}
+                  name: {{ $.Values.config.privilegedAccess.existingSecretNames.authorizedAccessIDs }}
                   key: allowedAccessIDs
 {{- end }}
           command: ['sh']
@@ -59,11 +59,11 @@ spec:
             - "-c"
             - |
               set -ex
-              echo "{{ required "API Gateway URL is required" .Values.dispatcher.config.apiGatewayURL }}" > /etc/akeyless/akeyless_config_file
-{{- if (eq (include "secret-exist" (dict "Root" $.Values.dispatcher.config.privilegedAccess.existingSecretNames "Name" "allowedIDs")) "true") }}
+              echo "{{ required "API Gateway URL is required" .Values.config.apiGatewayURL }}" > /etc/akeyless/akeyless_config_file
+{{- if (eq (include "secret-exist" (dict "Root" $.Values.config.privilegedAccess.existingSecretNames "Name" "authorizedAccessIDs")) "true") }}
               echo "$allowedAccessIDs" > /etc/akeyless/allowed_access_ids
-{{- else if .Values.dispatcher.config.privilegedAccess.allowedAccessIDs }}
-              echo {{ range $index, $element := .Values.dispatcher.config.privilegedAccess.allowedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_access_ids
+{{- else if .Values.config.privilegedAccess.authorizedAccessIDs }}
+              echo {{ range $index, $element := .Values.config.privilegedAccess.authorizedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_access_ids
 {{- end }}
           resources:
 {{- toYaml .Values.webProxy.initContainer.resources | nindent 12 }}
@@ -75,7 +75,7 @@ spec:
           volumeMounts:
             - name: ng-config
               mountPath: /etc/akeyless
-{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+{{- if .Values.config.apiGatewayCert.tlsCertsSecretName }}
             - name: gw-signed-ca
               mountPath: "/etc/ssl/certs/gw-cert.pem"
               subPath: gw-cert.pem
@@ -112,7 +112,7 @@ spec:
             - name: no_proxy
               value: {{ .Values.httpProxySettings.no_proxy }}
 {{- end }}
-{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+{{- if .Values.config.apiGatewayCert.tlsCertsSecretName }}
             - name: AKEYLESS_CA_BUNDLE
               value: "/etc/ssl/certs/gw-cert.pem"
 {{- end }}
@@ -122,7 +122,7 @@ spec:
           volumeMounts:
             - name: ng-config
               mountPath: /etc/akeyless
-{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+{{- if .Values.config.apiGatewayCert.tlsCertsSecretName }}
             - name: gw-signed-ca
               mountPath: "/etc/ssl/certs/gw-cert.pem"
               subPath: gw-cert.pem

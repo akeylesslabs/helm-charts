@@ -1,165 +1,114 @@
 # Default values for akeyless-zero-trust-web-access.
+# Docs: https://docs.akeyless.io/docs/sra-web-access-on-k8s
+#       https://docs.akeyless.io/docs/sra-web-access-on-k8s-adv-config
 
-# Optional, completely replaces the generated name of the chart in the Chart.yaml file, and chart release name.
+config:
+  # Akeyless API URL that the dispatcher and the web proxy use. Keep the default for the
+  # Akeyless SaaS, or set the API URL of your Akeyless Gateway.
+  apiGatewayURL: https://api.akeyless.io
+  apiGatewayCert:
+    # Existing Secret with the Gateway CA certificate in the key tls.crt.
+    tlsCertsSecretName:
+
+  # Name of this ZTWA cluster. A change to it, or to the privileged access ID, registers a
+  # new bastion.
+  # Docs: https://docs.akeyless.io/docs/sra-web-access-on-k8s-adv-config#cluster-name
+  clusterName: defaultCluster
+
+  # Auth method that reads the secrets of the web targets. It needs "Read" and "List" on them.
+  privilegedAccess:
+    # Ignored when existingSecretNames.access is set.
+    accessID: ""
+
+    # Auth method type:
+    #   ""                       Auto detect.
+    #   access_key               API key from existingSecretNames.access.
+    #   aws_iam, azure_ad, gcp   Cloud identity. Set it when the pod cannot reach the
+    #                            instance metadata service (IMDS).
+    # Docs: https://docs.akeyless.io/docs/auth-with-api-key
+    #       https://docs.akeyless.io/docs/auth-with-aws
+    #       https://docs.akeyless.io/docs/auth-with-azure
+    #       https://docs.akeyless.io/docs/auth-with-gcp
+    accessType: ""
+
+    existingSecretNames:
+      # Existing Secret with the keys accessID and accessKey. Required for access_key. Not
+      # allowed with a cloud accessType, which uses accessID.
+      #   kubectl create secret generic ztwa-privileged-access \
+      #     --from-literal=accessID=<access-id> --from-file=accessKey=./access-key
+      access:
+      # Existing Secret with a comma separated list of access IDs, in place of
+      # privilegedAccess.authorizedAccessIDs. The key name stays allowedAccessIDs, so Secrets
+      # from chart 3.x keep working.
+      #   kubectl create secret generic ztwa-authorized-ids \
+      #     --from-literal=allowedAccessIDs=<access-id>,<access-id>
+      authorizedAccessIDs:
+
+    # Required. Access IDs of the users that can open sessions, for example your SAML auth
+    # method. The users also need "List" on the secrets of the web targets.
+    authorizedAccessIDs: []
+    # - p-1234
+
+  # External URLs of the dispatcher: its Service on port 9000, or its ingress host. The
+  # Portal redirects users only to these URLs. With a LoadBalancer, set it after the first
+  # install and upgrade.
+  # Docs: https://docs.akeyless.io/docs/sra-web-access-on-k8s-adv-config#redirect-to-bastion-urls
+  allowedBastionUrls: []
+  # - "https://ztwa.my.org:9000"
+
+  # External URLs of the web proxy Service on port 19414, for proxy mode sessions. This is
+  # not httpProxySettings, the outbound proxy of the pods.
+  # Docs: https://docs.akeyless.io/docs/sra-web-access-browsing-proxy
+  allowedProxyUrls: []
+  # - "https://ztwa.my.org:19414"
+
+  # When false, the dispatcher accepts only requests with preemptive JWT auth.
+  allowedInternalAuth: "false"
+  # When false, the browser sends the dispatcher session cookie only over HTTPS.
+  disableSecureCookie: "true"
+
+# Kubernetes settings shared by all workloads.
+
+# Optional, replaces the generated name of the chart resources.
 fullnameOverride:
 
 image:
-  # References to pre-existing image pull secrets, merged into spec.imagePullSecrets for every
-  # pod in this chart. Each entry is a LocalObjectReference: { name: "your-secret" }.
-  # Kubernetes applies pull credentials at the pod level; this list is merged with
-  # per-workload imagePullSecrets and, when set, the secret from dockerRepositoryCreds
-  # (all deduplicated by name).
+  # Image pull secrets for every pod, for example [{ name: my-registry }].
   imagePullSecrets: []
-  # (Deprecated) Base64 dockerconfig for the Akeyless registry, used only to create the
-  # pre-install secret "akeyless-docker-hub-web-access" when this value is non-empty.
-  # Obsolete: prefer a kubernetes.io/dockerconfigjson secret you create yourself and
-  # reference it in image.imagePullSecrets; this value will be removed in a future chart
-  # version. When both imagePullSecrets and this field are set, the generated secret is
-  # added alongside your listed secrets. Omitting this field is fully supported and is
-  # the recommended approach.
+  # Deprecated, use imagePullSecrets. Base64 dockerconfig for the Akeyless registry.
   dockerRepositoryCreds:
 
+deployment:
+  labels: {}
 
-# Linux system HTTP Proxy
+# Outbound HTTP proxy of the pods.
+# Docs: https://docs.akeyless.io/docs/sra-web-access-on-k8s-adv-config#proxy
 httpProxySettings:
   http_proxy: ""
   https_proxy: ""
   no_proxy: ""
 
-# IPv6 / dual-stack.
-# ZTWA runs on IPv4, dual-stack, and IPv6-only clusters (e.g. EKS in IPv6 mode). The
-# images bind dual-stack listeners and resolve workers/dispatcher family-agnostically,
-# so no value is required for IPv6-only clusters.
-#
-# ipFamilyPolicy / ipFamilies are applied to the ZTWA Services only when set. Leave
-# unset to inherit the cluster default (single-stack of the cluster's primary family).
-# On dual-stack clusters, set PreferDualStack to expose Services on both families:
-#   ipFamilyPolicy: PreferDualStack
-#   ipFamilies: [IPv6, IPv4]
-#
-# IPv6-only prerequisite: pods reaching IPv4-only endpoints (Akeyless Gateway, S3 for
-# recording upload, IPv4-only target sites) require NAT64/DNS64 in the cluster (standard
-# on EKS IPv6). The dispatcher Squid egress guard denies cloud metadata over IPv6 and
-# the NAT64 well-known prefix.
+# IP families of the Services. Leave empty for the cluster default. For dual-stack, set
+# ipFamilyPolicy: PreferDualStack and ipFamilies: [IPv6, IPv4]. An IPv6-only cluster needs
+# NAT64/DNS64 to reach IPv4-only endpoints.
+# Docs: https://kubernetes.io/docs/concepts/services-networking/dual-stack/
 ipFamilyPolicy: ""
 ipFamilies: []
 
-deployment:
-  labels: {}
-
-# Media server for the live view, one pod per node. It also records sessions
-# when sessionRecording.enabled is true.
-mediamtx:
-  image:
-    # Recording requires an image tag with the -ffmpeg suffix.
-    repository: bluenviron/mediamtx
-    tag: "1.21.0-ffmpeg"
-    pullPolicy: IfNotPresent
-    imagePullSecrets: []
-
-  webrtcPort: 8889
-
-  # UDP port opened on every node. Users' browsers must be able to reach it.
-  iceUDPPort: 8189
-
-  # Additional addresses to offer browsers, for example a public IP when the
-  # nodes are not directly reachable from users' networks.
-  additionalHosts: []
-
-  resources:
-    requests:
-      cpu: 100m
-      memory: 128Mi
-    limits:
-      memory: 1Gi
-
-  nodeSelector: {}
-  tolerations: []
-
-  # Restarting the media server ends the live view and the recording of every
-  # session on that node, so an upgrade does not restart it. Delete the pod on
-  # a node with no sessions to move it to the new version.
-  updateStrategy:
-    type: OnDelete
-
-# Session recording (unified configuration - recommended)
-# Provides a simplified interface for enabling video capture and S3 upload.
-# Advanced users can override the upload settings via dispatcher.config.recording.*
-# Requires persistence.shareStorageVolume configured with ReadWriteMany access mode.
-sessionRecording:
-  # Record sessions on the media server, as rec_*.mp4 on the shared volume.
-  # Sending them to S3 needs upload.enabled below as well.
-  enabled: false
-
-  # S3 upload configuration (dispatcher-side)
-  upload:
-    # Enable upload to S3-compatible storage (requires valid credentials and bucket config)
-    enabled: false
-
-    # S3 bucket and region (required when upload.enabled is true)
-    s3Bucket: ""
-    s3Region: ""
-
-    # Optional S3 prefix for organizing recordings (e.g., "recordings" or "ztwa/sessions")
-    s3Prefix: ""
-
-    # Optional custom endpoint for S3-compatible services (MinIO, Wasabi, NetApp StorageGRID, etc.)
-    # Leave empty for AWS S3
-    s3Endpoint: ""
-
-    # S3 credentials are sourced from a Kubernetes Secret you create out-of-band
-    # (or from the AWS default credential chain if existingSecretNames.s3 is empty:
-    # IRSA, instance profile, AWS_* env vars from dispatcher.env, etc.).
-    #
-    # Example:
-    #   kubectl create secret generic ztwa-s3-credentials \
-    #     --from-literal=access-key-id=AKIA... \
-    #     --from-literal=secret-access-key=...
-    existingSecretNames:
-      # Name of the Secret holding the S3 credential pair.
-      # When empty, the chart falls back to the AWS default credential chain.
-      s3: ""
-      # Keys inside that Secret. Defaults align with the kubectl example above.
-      s3AccessKeyIdKey: "access-key-id"
-      s3SecretAccessKeyKey: "secret-access-key"
-
-    # Enable gzip compression before upload (reduces storage/bandwidth costs)
-    compress: false
-
-    # Server-side encryption configuration
-    sse:
-      # Encryption type: "" (none), "sse-s3" (AES-256), or "sse-kms"
-      type: ""
-      # KMS key ID/ARN (required for sse-kms, optional to use default CMK)
-      kmsKeyId: ""
-
-    # Optional: Custom path for upload state file (absolute or relative to /etc/shared)
-    # Default: upload/recording_uploader_state.json (under /etc/shared)
-    uploaderStatePath: ""
-
-validator:
-  # Validator is enabled by default, and will run on helm chart installation.
-  # If Validator set to false, policies validation will still run on the web-worker deployment, with the validator as init-container.
-  enabled: true
-  image:
-    repository: apteno/alpine-jq
-    pullPolicy: IfNotPresent
-    tag: 2021-04-04
-    # Extra image pull secret refs for the validator hook Pod only, merged with
-    # image.imagePullSecrets (and the legacy docker creds secret when used) on the pod.
-    imagePullSecrets: []
-  annotations: {}
-  # Remove the {} and add any needed annotations regarding your pod sidecar implementation
-  # For Example when using istio sidecar to avoid issues with validator job completion please add the following annotation:
-  #  annotations:
-  #    sidecar.istio.io/inject: "false"
-  resources:
-    requests:
-      cpu: 100m
-      memory: 128Mi
-    limits:
-      memory: 512Mi
-
+# Shared ReadWriteMany volume, mounted at /etc/shared. File downloads and session recording
+# need it. Limit the mount permissions to 0650 (dir_mode and file_mode). Example:
+# persistence:
+#   shareStorageVolume:
+#     name: share-storage
+#     storageClassName: ""
+#     accessModes:
+#       - ReadWriteMany
+#     annotations:
+#       volume.beta.kubernetes.io/storage-class: ""
+#     size: 2Gi
+#     matchLabels:
+#       usage: fileshare-pv
+persistence: {}
 
 dispatcher:
   replicaCount: 1
@@ -168,8 +117,6 @@ dispatcher:
       repository: busybox
       tag: 1.30.1
       pullPolicy: IfNotPresent
-    # Pull secret refs for the init container; merged on the pod with global and main
-    # image.imagePullSecrets, plus the legacy secret when dockerRepositoryCreds is set.
     imagePullSecrets: []
     resources:
       requests:
@@ -181,57 +128,40 @@ dispatcher:
     repository: akeyless/zero-trust-web-dispatcher
     pullPolicy: Always
 #    tag: latest
-    # Pull secret refs for the main dispatcher container; all lists are merged at pod
-    # spec.imagePullSecrets and deduplicated.
     imagePullSecrets: []
 
   containerName: "web-dispatcher"
 
-  ## Configure the ingress resource that allows you to access the
-  ## akeyless-zero-trust-web-access installation. Set up the URL
-  ## ref: http://kubernetes.io/docs/user-guide/ingress/
-  ##
+  # Host name the dispatcher serves inside its pod. Keep the default.
+  dispatcherDNS: rbi.dispatcher
+
+  # Docs: https://kubernetes.io/docs/concepts/services-networking/ingress/
   ingress:
-    ## Set to true to enable ingress record generation
-    ##
     enabled: false
-
     annotations: {}
+    # Example for NGINX ingress:
+    #   kubernetes.io/ingress.class: nginx
+    #   kubernetes.io/proxy-connect-timeout: "4000"
+    #   nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
+    #   nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
     labels: {}
-# Example for Nginx ingress
-#    annotations:
-#      kubernetes.io/ingress.class: nginx
-#      kubernetes.io/proxy-connect-timeout: "4000"
-#      nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
-#      nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
-
     hostname: aztwa.local
-    ## Path for the default host
-    ##
     path: /
-
-    ## Enable TLS configuration for the hostname defined at ingress.hostname parameter
-    ## TLS certificates will be retrieved from a TLS secret with name: {{- printf "%s-tls" .Values.ingress.hostname }}
-    ## or a custom one if you use the tls.existingSecret parameter
-    ##
+    # TLS with the Secret <hostname>-tls, or with existingSecret.
     tls: false
-
-    ## Set this to true in order to add the corresponding annotations for cert-manager
-    ##
+    # Adds the cert-manager annotations.
     certManager: false
-
-    ## existingSecret: name-of-existing-secret
+    # existingSecret: name-of-existing-secret
 
   service:
-    # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
     annotations: {}
     labels: {}
+    # LoadBalancer, NodePort or ClusterIP. With ingress.enabled the chart uses NodePort.
+    # Docs: https://kubernetes.io/docs/concepts/services-networking/service/
     type: LoadBalancer
     port: 9000
-    # Proxy mode is now a dedicated backend. Its exposure moved to the webProxy block
-    # below (proxyPort was removed — the dispatcher no longer serves :19414).
 
-  # Overridable defaults. Set resources: {} in your values file to clear.
+  # Set resources: {} to clear the defaults.
   resources:
     requests:
       cpu: 1000m
@@ -255,187 +185,6 @@ dispatcher:
 
   env: []
 
-  config:
-    # a full URL of Akeyless API Gateway
-    apiGatewayURL: https://api.akeyless.io
-    apiGatewayCert:
-  #  Specifies an existing secret for gateway tls certificate must include:
-  # - tls.crt
-      tlsCertsSecretName:
-
-    # Secure remote access cluster name. Use a name that will help you understand
-    # the purpose of this cluster, for example, "sra-staging" or "us-west-prod"
-    clusterName: defaultCluster
-
-    # List of URLs that will be considered valid for redirection from the Portal back to the bastion
-    allowedBastionUrls: []
-      # - "https://bastion.my.org:8888"
-      # - "https://bastion.other.org:8888"
-
-    # List of URLs that will be considered valid for redirection from the Portal back to the web proxy service
-    allowedProxyUrls: []
-    # - "https://bastion.my.org:19414"
-    # - "https://bastion.other.org:19414"
-
-    # The privilegedAccess should have "Read" and "List" permissions to the relevant secrets.
-    # If accessKey field is left empty, the accessID will be used as a Cloud Provider IAM Auth Method (e.g. AWS-IAM, AzureAD, GCP-GCE)
-    privilegedAccess:
-
-
-      existingSecretNames:
-        ## access secret content should look like this:
-        # accessID: p-1234
-        # accessKey: mySecretKey
-        # * accessKey can be left empty, but the key must exist
-        access:
-        ## allowedIDs secret content should like this
-        # allowedAccessIDs: p-1234,11245,p-1256
-        allowedIDs:
-
-      accessID: ""
-      accessKey: ""
-
-      # Restrict Zero-Trust Web Access to the following list of clients Access-IDs (saml)
-      # if left empty, any Access-ID will be accepted (still required to have "List" permission on the relevant secret names)
-      allowedAccessIDs: []
-      # - p-1234
-      # - p-5678
-      # - p-5678
-
-   # When false, only requests with preemptive JWT auth will be accepted
-    allowedInternalAuth: "false"
-   # When false, dispatcher session cookie can be send only on top off encrypted requests (HTTPS)
-    disableSecureCookie: "true"
-
-    # Cloud identity override. Forces the dispatcher to authenticate via the
-    # configured cloud identity instead of probing IMDS. Use this on clusters
-    # where the dispatcher pod cannot reach 169.254.169.254 (e.g. EKS with
-    # IMDSv2 httpPutResponseHopLimit=1, strict egress policies).
-    # Allowed values: "" (auto-detect via IMDS, default) | "aws_iam" | "azure_ad" | "gcp".
-    # https://docs.akeyless.io/docs/auth-with-aws#aws-instance-metadata-service
-    cloudIdentity:
-      type: ""
-
-    # existingLogForwardSecretName will hold the configuration for dispatcher log forward
-    # The data structure in secret should be like so:
-    ## logand.conf: | ## make sure to keep logand.conf as the key!
-    #    target_log_type="splunk"
-    #    target_splunk_sourcetype=""
-    #    target_splunk_source=""
-    #    target_splunk_index=""
-    #    target_splunk_token=""
-    #    target_splunk_url=""
-    existingLogForwardSecretName:
-    logForward:
-#    # audit configuration for log forwarding, currently support several technologies: https://docs.akeyless.io/docs/ssh-log-forwarding
-#    #splunk example
-#    logForward: |
-#      target_log_type="splunk"
-#      target_splunk_sourcetype=""
-#      target_splunk_source=""
-#      target_splunk_index=""
-#      target_splunk_token=""
-#      target_splunk_url=""
-
-    # Service-specific override for session recording upload. Empty by default;
-    # any field set here takes precedence over the equivalent sessionRecording.upload.<field>
-    # for the dispatcher only. Recognised fields: enabled, s3Bucket, s3Prefix, s3Region,
-    # s3Endpoint, compress, sseType, sseKmsKeyId, uploaderStatePath. Credentials
-    # come exclusively from sessionRecording.upload.existingSecretNames.s3 — there
-    # is no per-dispatcher override for the credential pair, mount a different
-    # Secret if you need that.
-    # Example:
-    #   recording:
-    #     s3Bucket: high-priority-bucket
-    #     s3Region: eu-west-1
-    recording: {}
-
-# Proxy mode runs as its own Deployment + externally-exposed Service (split out of the
-# dispatcher). It needs zero privileged credentials — only the API Gateway URL and the
-# allowed access-IDs, both reused from dispatcher.config. Clients connect to the
-# <release>-proxy Service, NOT the dispatcher.
-webProxy:
-  # Number of proxy replicas. Commented out on purpose: when unset, it inherits
-  # dispatcher.replicaCount so a default install scales the proxy with the dispatcher.
-  # Set explicitly (including 0) to override.
-  # With HPA.enabled=true this MUST be set explicitly (template fails otherwise):
-  # the HPA owns the dispatcher's replicas, so the fallback would silently pin the
-  # proxy to the inert dispatcher.replicaCount value. The proxy has no HPA of its own.
-  # replicaCount: 1
-  initContainer:
-    image:
-      repository: busybox
-      tag: 1.30.1
-      pullPolicy: IfNotPresent
-    # Pull secret refs for the init container; merged on the pod with global and main
-    # image.imagePullSecrets, plus the legacy secret when dockerRepositoryCreds is set.
-    imagePullSecrets: []
-    resources:
-      requests:
-        cpu: 100m
-        memory: 128Mi
-      limits:
-        memory: 512Mi
-  image:
-    repository: akeyless/zero-trust-web-proxy
-    pullPolicy: Always
-#    tag: latest
-    # Pull secret refs for the main proxy container; all lists are merged at pod
-    # spec.imagePullSecrets and deduplicated.
-    imagePullSecrets: []
-
-  containerName: "web-proxy"
-
-  service:
-    # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
-    annotations: {}
-    labels: {}
-    # LoadBalancer is the portable default external exposure (no ingress controller
-    # assumed). Override to NodePort/ClusterIP as needed.
-    type: LoadBalancer
-    port: 19414
-
-  # Optional L4 exposure via the Gateway API. The proxy speaks HTTP CONNECT / SOCKS,
-  # which a standard HTTP Ingress cannot carry — so this is a TCPRoute, not an Ingress.
-  # Off by default; requires a Gateway API controller and a pre-existing Gateway.
-  ingress:
-    enabled: false
-    # Name of the pre-existing Gateway (with a TCP listener) to attach the TCPRoute to.
-    parentGateway: ""
-    # Listener name on that Gateway. Required by most controllers when the Gateway
-    # has more than one listener; leave empty for a single-listener Gateway.
-    sectionName: ""
-
-  # Overridable defaults. Set resources: {} in your values file to clear.
-  resources:
-    requests:
-      cpu: 500m
-      memory: 512Mi
-    limits:
-      memory: 1Gi
-
-  livenessProbe:
-    initialDelaySeconds: 30
-    timeoutSeconds: 5
-    periodSeconds: 10
-    failureThreshold: 6
-    successThreshold: 1
-
-  readinessProbe:
-    initialDelaySeconds: 5
-    timeoutSeconds: 3
-    periodSeconds: 5
-    failureThreshold: 3
-    successThreshold: 1
-
-  # WEB_PROXY_TYPE selects the proxy engine on :19414 — Squid (HTTP, default) or a
-  # SOCKS5 server. The two are mutually exclusive. This knob moved here from
-  # dispatcher.env; set it via env passthrough:
-  # env:
-  #   - name: WEB_PROXY_TYPE
-  #     value: "SOCKS"
-  env: []
-
 webWorker:
   replicaCount: 5
   initContainer:
@@ -443,10 +192,7 @@ webWorker:
       repository: apteno/alpine-jq
       tag: 2021-04-04
       pullPolicy: IfNotPresent
-    # Merged with global and main imagePullSecrets on the web-worker pod; pull secrets
-    # apply to all containers in the pod.
     imagePullSecrets: []
-    # Dispatcher-style defaults; override if bootstrap needs more.
     resources:
       requests:
         cpu: 100m
@@ -457,25 +203,21 @@ webWorker:
     repository: akeyless/zero-trust-web-worker
     pullPolicy: Always
 #    tag: latest
-    # Merged with image.imagePullSecrets, initContainer imagePullSecrets, and legacy; deduplicated.
     imagePullSecrets: []
 
   containerName: "web-worker"
 
   service:
-    # Remove the {} and add any needed annotations regarding your LoadBalancer implementation
     annotations: {}
     labels: {}
 
-  # Standard profile for the web worker main container. A Heavy browsing workload
-  # profile is commented below; use it by replacing the resources: map with that block.
   resources:
     requests:
       cpu: 1000m
       memory: 1Gi
     limits:
       memory: 2Gi
-  # Heavy browsing workload profile (replace the standard resources: block above with this):
+  # Heavy browsing profile:
   # resources:
   #   requests:
   #     cpu: 2000m
@@ -483,28 +225,11 @@ webWorker:
   #   limits:
   #     memory: 4Gi
 
-  # Two layers of session-cleanup defence on the worker:
-  #
-  # 1. The web_worker_agent itself removes /tmp/occupied as soon as `/healthy`
-  #    detects that the viewer's input socket closed (clearSessionMarkers()
-  #    in handlers/register_handlers/server.go). This is the fast path — no
-  #    pod recycle is needed and the worker re-enters the dispatcher pool on
-  #    the next /healthy poll (~30s after the user closes the tab).
-  # 2. The liveness probe below is the *safety net* for the case where the
-  #    agent process itself dies. Once `/tmp/occupied` is older than
-  #    sessionCleanup.staleGraceSeconds AND no viewer is connected, the probe
-  #    wipes the markers and signals kubelet to recycle the pod.
   sessionCleanup:
-    # How long to wait after `/tmp/occupied` is created before the probe is
-    # allowed to declare the worker stranded. Must cover the worst-case
-    # browser-mount latency (token exchange + Chromium startup). 30s is enough
-    # for a healthy network; raise if your sessions need >30s warm-up.
+    # Seconds a session may take to start before the liveness probe can restart a worker
+    # with no viewer. Raise it if your sessions need more than 30 seconds to start.
     staleGraceSeconds: 30
 
-  # Tighter defaults than the chart used to ship with: failureThreshold * periodSeconds
-  # is the upper bound on how long a dead-agent pod stays stranded. With these values,
-  # recycle happens within ~30 seconds of the third consecutive failure, vs. the older
-  # 60 * 30s = 30-minute window that hid the ASM-17214 lifecycle regression.
   livenessProbe:
     initialDelaySeconds: 60
     periodSeconds: 10
@@ -519,15 +244,18 @@ webWorker:
     timeoutSeconds: 3
     successThreshold: 1
 
+  # Time a worker pod gets to finish its live session before Kubernetes stops it, for
+  # example on an HPA scale down or an upgrade.
+  terminationGracePeriodSeconds: 3600
+
   env: []
 
   config:
-    # Internal DNS name for dispatcher nginx server_name; used by dispatcher hostAliases (workers use the dispatcher Service DNS).
-    dispatcherDNS: rbi.dispatcher
     displayWidth: 2560
     displayHeight: 1200
 
-    # Chromium managed policy format (flat Chrome Enterprise JSON). Override with valid JSON.
+    # Chromium managed policies, as Chrome Enterprise JSON.
+    # Docs: https://chromeenterprise.google/policies/
     policies: |
         {
           "DeveloperToolsAvailability": 1,
@@ -584,91 +312,190 @@ webWorker:
           ]
         }
 
-dlp:
+# Web proxy for proxy mode sessions, with its own Service.
+# Docs: https://docs.akeyless.io/docs/sra-web-access-browsing-proxy
+webProxy:
+  # When unset, uses dispatcher.replicaCount. Required when HPA.enabled is true.
+  # replicaCount: 1
+  initContainer:
+    image:
+      repository: busybox
+      tag: 1.30.1
+      pullPolicy: IfNotPresent
+    imagePullSecrets: []
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        memory: 512Mi
+  image:
+    repository: akeyless/zero-trust-web-proxy
+    pullPolicy: Always
+#    tag: latest
+    imagePullSecrets: []
+
+  containerName: "web-proxy"
+
+  service:
+    annotations: {}
+    labels: {}
+    # LoadBalancer, NodePort or ClusterIP.
+    # Docs: https://kubernetes.io/docs/concepts/services-networking/service/
+    type: LoadBalancer
+    port: 19414
+
+  # Optional Gateway API TCPRoute for the proxy. Needs a Gateway API controller and an
+  # existing Gateway with a TCP listener.
+  ingress:
+    enabled: false
+    # Name of the existing Gateway.
+    parentGateway: ""
+    # Listener name, needed when the Gateway has more than one listener.
+    sectionName: ""
+
+  # Set resources: {} to clear the defaults.
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+
+  livenessProbe:
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+    periodSeconds: 10
+    failureThreshold: 6
+    successThreshold: 1
+
+  readinessProbe:
+    initialDelaySeconds: 5
+    timeoutSeconds: 3
+    periodSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+
+  # HTTP proxy by default. For a SOCKS5 proxy:
+  # env:
+  #   - name: WEB_PROXY_TYPE
+  #     value: "SOCKS"
+  env: []
+
+# Media server for the live view, one pod per node. It also records sessions
+# when recording.enabled is true.
+mediamtx:
+  image:
+    # Recording needs an image tag with the -ffmpeg suffix.
+    repository: bluenviron/mediamtx
+    tag: "1.21.0-ffmpeg"
+    pullPolicy: IfNotPresent
+    imagePullSecrets: []
+
+  webrtcPort: 8889
+
+  # UDP port opened on every node. Users' browsers must be able to reach it.
+  iceUDPPort: 8189
+
+  # More addresses to offer browsers, for example a public IP when the nodes are not
+  # reachable from users' networks.
+  additionalHosts: []
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 1Gi
+
+  nodeSelector: {}
+  tolerations: []
+
+  # A media server restart ends the live view and the recording of every session on its
+  # node, so an upgrade does not restart it. Delete the pod on a node with no sessions to
+  # move it to the new version.
+  updateStrategy:
+    type: OnDelete
+
+validator:
+  # Checks the Chromium policies JSON with jq after install.
+  enabled: true
+  image:
+    repository: apteno/alpine-jq
+    pullPolicy: IfNotPresent
+    tag: 2021-04-04
+    imagePullSecrets: []
+  # For example, with Istio set sidecar.istio.io/inject: "false" so the job can complete.
+  annotations: {}
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
+
+# Session recording. The media server records each session to the shared volume
+# (persistence.shareStorageVolume), and the dispatcher uploads it to S3.
+# Docs: https://docs.akeyless.io/docs/sra-web-access-session-recording
+recording:
+  # Record sessions. Upload to S3 needs s3.enabled as well.
   enabled: false
-  config:
-    hostAddress: ""
-    # host/{pathPrefix}
-    pathPrefix: ""
-    # FORCING or LEARNING
-    mode: ""
-    logLevel: "INFO"
 
-# existingLogForwardSecretName will hold the configuration for dlp log forward
-# The data structure in secret should be like so:
-#  logand.conf: | ## make sure to keep logand.conf as the key!
-#    target_log_type="splunk"
-#    target_splunk_sourcetype=""
-#    target_splunk_source=""
-#    target_splunk_index=""
-#    target_splunk_token=""
-#    target_splunk_url=""
+  # Upload to S3 or an S3 compatible storage.
+  s3:
+    enabled: false
 
-  existingLogForwardSecretName:
-  audit:
-# audit configuration for log forwarding, currently support several technologies: https://docs.akeyless.io/docs/ssh-log-forwarding
-# splunk example
-#  audit: |
-#    target_log_type="splunk"
-#    target_splunk_sourcetype=""
-#    target_splunk_source=""
-#    target_splunk_index=""
-#    target_splunk_token=""
-#    target_splunk_url=""
+    # Required when s3.enabled is true.
+    bucket: ""
+    region: ""
 
+    # Optional prefix for the uploaded objects, for example "recordings".
+    prefix: ""
 
-# To be able to download files to your local machine, the helm chart requires a storage class with ReadWriteMany access modes.
-# Since a storage class is more environment specific, you will need to provide one before proceeding.
-# For security reason, please limit the PersistentVolumes mount permissions to `0650`, example:
-#  ```mountOptions:
-#       - dir_mode=0650
-#       - file_mode=0650
-#  ```
-# Azure example:
-# persistence:
-  #  shareStorageVolume:
-  #    name: share-storage
-  #    storageClassName: ""
-  #    accessModes:
-  #      - ReadWriteMany
-  #    annotations:
-  #      volume.beta.kubernetes.io/storage-class: ""
-  #    size: 2Gi
-  #    matchLabels:
-  #      usage: fileshare-pv
-#
-persistence: {}
-#  shareStorageVolume:
-#    name: share-storage
-#    storageClassName:
-#    accessModes:
-#      - ReadWriteMany
-#    annotations: {}
-#    size: 2Gi
-#    matchLabels:
+    # Endpoint of an S3 compatible service, for example MinIO. Leave empty for AWS S3.
+    endpoint: ""
 
+    # Existing Secret with the S3 credentials. When empty, the dispatcher uses the AWS
+    # default credential chain, for example IRSA, an instance profile, or AWS_* env vars
+    # from a Secret.
+    #   kubectl create secret generic ztwa-s3-credentials \
+    #     --from-literal=access-key-id=<access-key-id> \
+    #     --from-literal=secret-access-key=<secret-access-key>
+    existingSecretName: ""
+    # Keys inside that Secret.
+    accessKeyIdKey: "access-key-id"
+    secretAccessKeyKey: "secret-access-key"
+
+    # Gzip the recordings before upload.
+    compress: false
+
+    # Server side encryption of the uploaded objects.
+    # Docs: https://docs.aws.amazon.com/AmazonS3/latest/userguide/serv-side-encryption.html
+    sse:
+      # "" (none), "sse-s3" or "sse-kms"
+      type: ""
+      # KMS key ID or ARN for sse-kms. Empty uses the default KMS key.
+      kmsKeyId: ""
 
 HPA:
-  # Set the below to false in case you do not want to add Horizontal Pod AutoScaling (not recommended)
+  # Scales the web workers. Needs metrics.enabled.
   enabled: false
-  # Scales the workers only. There is one dispatcher per worker pool.
-  # Will only work with metrics enabled
   webWorker:
     busyWorkersPercentage: 50
-  # HPA can potentially terminate (scale down) a pod with a live session. This value is the time period to postpone the termination
-    sessionTerminationGracePeriodSeconds: 3600
+    minReplicas: 3
+    maxReplicas: 14
 
 metrics:
   enabled: false
   podAnnotation: false
   serviceMonitor:
-  # When service monitor is off, we assume that the installed prometheus support pod annotation-based discovery of services
+    # When false, Prometheus must discover the pods by annotation.
     enabled: false
 #    namespace: monitoring
     interval: "15s"
 #    scrapeTimeout:
 
-    # MANDATORY!
-    # Prometheus discovers ServiceMonitors that are labeled with the same release tag as the prometheus-operator release
+    # Required with the prometheus-operator: its release label, so Prometheus finds the
+    # ServiceMonitor.
 #    releaseLabels:
 #      release: prometheus-stack

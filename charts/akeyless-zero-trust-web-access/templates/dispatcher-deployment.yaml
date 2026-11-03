@@ -33,16 +33,16 @@ spec:
       hostAliases:
         - ip: "127.0.0.1"
           hostnames:
-            - {{ .Values.webWorker.config.dispatcherDNS | default "rbi.dispatcher" | quote }}
+            - {{ .Values.dispatcher.dispatcherDNS | default "rbi.dispatcher" | quote }}
       volumes:
         - name: akeyless-config
           emptyDir: {}
         - name: ng-config
           emptyDir: {}
-{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+{{- if .Values.config.apiGatewayCert.tlsCertsSecretName }}
         - name: gw-signed-ca
           secret:
-            secretName: {{ .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+            secretName: {{ .Values.config.apiGatewayCert.tlsCertsSecretName }}
             items:
               - key: tls.crt
                 path: gw-cert.pem           
@@ -50,14 +50,6 @@ spec:
         - name: configmap-akeyless
           configMap:
             name: {{ $.Release.Name }}-cm-akeyless
-        - name: configmap-akeyless-config
-        {{- if $.Values.dispatcher.config.existingLogForwardSecretName }}
-          secret:
-            secretName: {{ $.Values.dispatcher.config.existingLogForwardSecretName }}
-        {{- else }}
-          configMap:
-            name: {{ $.Release.Name }}-cm-akeyless-config
-        {{- end }}
         {{ if and .Values.persistence .Values.persistence.shareStorageVolume }}
         - name: {{ .Values.persistence.shareStorageVolume.name | title | lower }}
           persistentVolumeClaim:
@@ -70,25 +62,25 @@ spec:
         - name: bootstrap
           image: "{{ .Values.dispatcher.initContainer.image.repository }}:{{ .Values.dispatcher.initContainer.image.tag }}"
           imagePullPolicy: {{ .Values.dispatcher.initContainer.image.pullPolicy }}
-          {{- if (or (eq (include "secret-exist" (dict "Root" $.Values.dispatcher.config.privilegedAccess.existingSecretNames "Name" "allowedIDs")) "true") (eq (include "secret-exist" (dict "Root" $.Values.dispatcher.config.privilegedAccess.existingSecretNames "Name" "access")) "true")) }}
+          {{- if (or (eq (include "secret-exist" (dict "Root" $.Values.config.privilegedAccess.existingSecretNames "Name" "authorizedAccessIDs")) "true") (eq (include "secret-exist" (dict "Root" $.Values.config.privilegedAccess.existingSecretNames "Name" "access")) "true")) }}
           env:
-          {{- if (eq (include "secret-exist" (dict "Root" $.Values.dispatcher.config.privilegedAccess.existingSecretNames "Name" "allowedIDs")) "true") }}
+          {{- if (eq (include "secret-exist" (dict "Root" $.Values.config.privilegedAccess.existingSecretNames "Name" "authorizedAccessIDs")) "true") }}
             - name: allowedAccessIDs
               valueFrom:
                 secretKeyRef:
-                  name: {{ $.Values.dispatcher.config.privilegedAccess.existingSecretNames.allowedIDs }}
+                  name: {{ $.Values.config.privilegedAccess.existingSecretNames.authorizedAccessIDs }}
                   key: allowedAccessIDs
           {{- end }}
-          {{- if (eq (include "secret-exist" (dict "Root" $.Values.dispatcher.config.privilegedAccess.existingSecretNames "Name" "access")) "true") }}
+          {{- if (eq (include "secret-exist" (dict "Root" $.Values.config.privilegedAccess.existingSecretNames "Name" "access")) "true") }}
             - name: accessID
               valueFrom:
                 secretKeyRef:
-                  name: {{ $.Values.dispatcher.config.privilegedAccess.existingSecretNames.access }}
+                  name: {{ $.Values.config.privilegedAccess.existingSecretNames.access }}
                   key: accessID
             - name: accessKey
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.dispatcher.config.privilegedAccess.existingSecretNames.access }}
+                  name: {{ .Values.config.privilegedAccess.existingSecretNames.access }}
                   key: accessKey
           {{- end }}
           {{- end }}
@@ -97,28 +89,32 @@ spec:
             - "-c"
             - |
               set -ex
-{{- if (eq (include "secret-exist" (dict "Root" $.Values.dispatcher.config.privilegedAccess.existingSecretNames "Name" "access")) "true") }}
-              echo "{{ required "API Gateway URL is required" .Values.dispatcher.config.apiGatewayURL }}" > /etc/akeyless/akeyless_config_file
-              echo "cmd=auth&access-id=$accessID&access-key=$accessKey" >> /etc/akeyless/akeyless_config_file
+{{- if (eq (include "secret-exist" (dict "Root" $.Values.config.privilegedAccess.existingSecretNames "Name" "access")) "true") }}
+              echo "{{ required "API Gateway URL is required" .Values.config.apiGatewayURL }}" > /etc/akeyless/akeyless_config_file
+{{- /* xtrace would print the access key to the init container log. Line ends are
+stripped because a key file often ends in a newline, and the dispatcher reads its auth
+from the last line of the file. */}}
+              set +x
+              printf 'cmd=auth&access-id=%s&access-key=%s\n' "$(printf '%s' "$accessID" | tr -d '\r\n')" "$(printf '%s' "$accessKey" | tr -d '\r\n')" >> /etc/akeyless/akeyless_config_file
+              set -x
 {{- end }}
               [ "$(ls /configmap_akeyless)" ] && cp /configmap_akeyless/* /etc/akeyless
-              [ "$(ls /configmap_akeyless_config)" ] && cp /configmap_akeyless_config/* /var/akeyless/conf
               echo {{ include "akeyless-zero-web-access.fullname" . }}-discovery > /etc/akeyless/service-dns
               export WEB_WORKER_SERVICE_DNS=$(cat /etc/akeyless/service-dns)
-              echo {{ .Values.dispatcher.config.allowedInternalAuth }} > /etc/akeyless/allowed_internal_auth
-              echo {{ .Values.dispatcher.config.disableSecureCookie }} > /etc/akeyless/disable_secure_cookie
-{{- if (eq (include "secret-exist" (dict "Root" $.Values.dispatcher.config.privilegedAccess.existingSecretNames "Name" "allowedIDs")) "true") }}
+              echo {{ .Values.config.allowedInternalAuth }} > /etc/akeyless/allowed_internal_auth
+              echo {{ .Values.config.disableSecureCookie }} > /etc/akeyless/disable_secure_cookie
+{{- if (eq (include "secret-exist" (dict "Root" $.Values.config.privilegedAccess.existingSecretNames "Name" "authorizedAccessIDs")) "true") }}
               echo $allowedAccessIDs > /etc/akeyless/allowed_access_ids
 {{- else }}
-{{- if .Values.dispatcher.config.privilegedAccess.allowedAccessIDs }}
-              echo {{ range $index, $element := .Values.dispatcher.config.privilegedAccess.allowedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_access_ids
+{{- if .Values.config.privilegedAccess.authorizedAccessIDs }}
+              echo {{ range $index, $element := .Values.config.privilegedAccess.authorizedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_access_ids
 {{- end }}
 {{- end }}
-{{- if .Values.dispatcher.config.allowedBastionUrls }}
-              echo {{ range $index, $element := .Values.dispatcher.config.allowedBastionUrls -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_bastion_urls
+{{- if .Values.config.allowedBastionUrls }}
+              echo {{ range $index, $element := .Values.config.allowedBastionUrls -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_bastion_urls
 {{- end }}
-{{- if .Values.dispatcher.config.allowedProxyUrls }}
-              echo {{ range $index, $element := .Values.dispatcher.config.allowedProxyUrls -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_proxy_urls
+{{- if .Values.config.allowedProxyUrls }}
+              echo {{ range $index, $element := .Values.config.allowedProxyUrls -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_proxy_urls
 {{- end }}
           resources:
 {{- toYaml .Values.dispatcher.initContainer.resources | nindent 12 }}
@@ -130,13 +126,9 @@ spec:
           volumeMounts:
             - name: configmap-akeyless
               mountPath: /configmap_akeyless
-            - name: configmap-akeyless-config
-              mountPath: /configmap_akeyless_config
             - name: ng-config
               mountPath: /etc/akeyless
-            - name: akeyless-config
-              mountPath: /var/akeyless/conf
-{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+{{- if .Values.config.apiGatewayCert.tlsCertsSecretName }}
             - name: gw-signed-ca
               mountPath: "/etc/ssl/certs/gw-cert.pem"
               subPath: gw-cert.pem
@@ -161,13 +153,13 @@ spec:
               value: {{ include "akeyless-zero-web-access.fullname" . }}-discovery
             - name: VERSION
               value: {{ .Chart.AppVersion }}
-{{- if .Values.dispatcher.config.clusterName }}
+{{- if .Values.config.clusterName }}
             - name: CLUSTER_NAME
-              value: {{ .Values.dispatcher.config.clusterName }}
+              value: {{ .Values.config.clusterName }}
 {{- end }}
-{{- if and .Values.dispatcher.config.cloudIdentity .Values.dispatcher.config.cloudIdentity.type }}
+{{- if has (toString .Values.config.privilegedAccess.accessType) (list "aws_iam" "azure_ad" "gcp") }}
             - name: ADMIN_ACCESS_ID_TYPE
-              value: {{ .Values.dispatcher.config.cloudIdentity.type | quote }}
+              value: {{ .Values.config.privilegedAccess.accessType | quote }}
 {{- end }}
 {{- if .Values.httpProxySettings.http_proxy }}
             - name: HTTP_PROXY
@@ -187,101 +179,48 @@ spec:
             - name: no_proxy
               value: {{ .Values.httpProxySettings.no_proxy }}
 {{- end }}
-{{- /* Recording env: precedence is per-field — dispatcher.config.recording.<field>
-     (service override) > sessionRecording.upload.<field> (unified) > built-in default.
-     Mirrors the per-field pattern used by web-worker-deployment so a stub
-     `dispatcher.config.recording: {}` block in values.yaml does NOT swallow the
-     unified sessionRecording.upload.* values. */}}
-{{- $recEnabled := false }}
-{{- $recBucket := "" }}
-{{- $recPrefix := "" }}
-{{- $recRegion := "" }}
-{{- $recEndpoint := "" }}
-{{- $recCompress := false }}
-{{- $recSSEType := "" }}
-{{- $recSSEKmsKey := "" }}
-{{- $recStatePath := "" }}
-{{- $recSecretName := "" }}
-{{- $recSecretAccessKeyIdKey := "access-key-id" }}
-{{- $recSecretAccessKeySecretKey := "secret-access-key" }}
-{{- if and .Values.sessionRecording .Values.sessionRecording.upload }}
-  {{- $u := .Values.sessionRecording.upload }}
-  {{- if hasKey $u "enabled" }}{{- $recEnabled = $u.enabled }}{{- end }}
-  {{- if $u.s3Bucket }}{{- $recBucket = $u.s3Bucket }}{{- end }}
-  {{- if $u.s3Prefix }}{{- $recPrefix = $u.s3Prefix }}{{- end }}
-  {{- if $u.s3Region }}{{- $recRegion = $u.s3Region }}{{- end }}
-  {{- if $u.s3Endpoint }}{{- $recEndpoint = $u.s3Endpoint }}{{- end }}
-  {{- if hasKey $u "compress" }}{{- $recCompress = $u.compress }}{{- end }}
-  {{- if $u.sse }}
-    {{- if $u.sse.type }}{{- $recSSEType = $u.sse.type }}{{- end }}
-    {{- if $u.sse.kmsKeyId }}{{- $recSSEKmsKey = $u.sse.kmsKeyId }}{{- end }}
-  {{- end }}
-  {{- if $u.uploaderStatePath }}{{- $recStatePath = $u.uploaderStatePath }}{{- end }}
-  {{- if $u.existingSecretNames }}
-    {{- if $u.existingSecretNames.s3 }}{{- $recSecretName = $u.existingSecretNames.s3 }}{{- end }}
-    {{- if $u.existingSecretNames.s3AccessKeyIdKey }}{{- $recSecretAccessKeyIdKey = $u.existingSecretNames.s3AccessKeyIdKey }}{{- end }}
-    {{- if $u.existingSecretNames.s3SecretAccessKeyKey }}{{- $recSecretAccessKeySecretKey = $u.existingSecretNames.s3SecretAccessKeyKey }}{{- end }}
-  {{- end }}
-{{- end }}
-{{- if .Values.dispatcher.config.recording }}
-  {{- $r := .Values.dispatcher.config.recording }}
-  {{- if hasKey $r "enabled" }}{{- $recEnabled = $r.enabled }}{{- end }}
-  {{- if $r.s3Bucket }}{{- $recBucket = $r.s3Bucket }}{{- end }}
-  {{- if $r.s3Prefix }}{{- $recPrefix = $r.s3Prefix }}{{- end }}
-  {{- if $r.s3Region }}{{- $recRegion = $r.s3Region }}{{- end }}
-  {{- if $r.s3Endpoint }}{{- $recEndpoint = $r.s3Endpoint }}{{- end }}
-  {{- if hasKey $r "compress" }}{{- $recCompress = $r.compress }}{{- end }}
-  {{- if $r.sseType }}{{- $recSSEType = $r.sseType }}{{- end }}
-  {{- if $r.sseKmsKeyId }}{{- $recSSEKmsKey = $r.sseKmsKeyId }}{{- end }}
-  {{- if $r.uploaderStatePath }}{{- $recStatePath = $r.uploaderStatePath }}{{- end }}
-{{- end }}
-{{- $recordOn := false }}
-{{- if and .Values.sessionRecording (hasKey .Values.sessionRecording "enabled") }}
-  {{- $recordOn = .Values.sessionRecording.enabled }}
-{{- end }}
+{{- $rec := .Values.recording | default dict }}
+{{- $s3 := $rec.s3 | default dict }}
+{{- $sse := $s3.sse | default dict }}
             - name: MEDIA_SERVER
               value: {{ printf "%s-mediamtx:%v" .Release.Name .Values.mediamtx.webrtcPort | quote }}
             - name: ENABLE_RECORDING
-              value: {{ ternary "true" "false" $recordOn | quote }}
+              value: {{ ternary "true" "false" ($rec.enabled | default false) | quote }}
             - name: ENABLE_RECORDING_UPLOAD
-              value: {{ ternary "true" "false" $recEnabled | quote }}
+              value: {{ ternary "true" "false" ($s3.enabled | default false) | quote }}
             - name: RECORDING_S3_BUCKET
-              value: {{ $recBucket | quote }}
+              value: {{ $s3.bucket | default "" | quote }}
             - name: RECORDING_S3_PREFIX
-              value: {{ $recPrefix | quote }}
+              value: {{ $s3.prefix | default "" | quote }}
             - name: RECORDING_S3_REGION
-              value: {{ $recRegion | quote }}
-{{- if $recSecretName }}
+              value: {{ $s3.region | default "" | quote }}
+{{- if $s3.existingSecretName }}
             - name: RECORDING_S3_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
-                  name: {{ $recSecretName | quote }}
-                  key: {{ $recSecretAccessKeyIdKey | quote }}
+                  name: {{ $s3.existingSecretName | quote }}
+                  key: {{ $s3.accessKeyIdKey | default "access-key-id" | quote }}
             - name: RECORDING_S3_ACCESS_KEY_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: {{ $recSecretName | quote }}
-                  key: {{ $recSecretAccessKeySecretKey | quote }}
+                  name: {{ $s3.existingSecretName | quote }}
+                  key: {{ $s3.secretAccessKeyKey | default "secret-access-key" | quote }}
 {{- end }}
-            {{- if $recEndpoint }}
+            {{- if $s3.endpoint }}
             - name: RECORDING_S3_ENDPOINT
-              value: {{ $recEndpoint | quote }}
+              value: {{ $s3.endpoint | quote }}
             {{- end }}
             - name: RECORDING_COMPRESS
-              value: {{ ternary "true" "false" $recCompress | quote }}
-            {{- if $recSSEType }}
+              value: {{ ternary "true" "false" ($s3.compress | default false) | quote }}
+            {{- if $sse.type }}
             - name: RECORDING_SSE_TYPE
-              value: {{ $recSSEType | quote }}
+              value: {{ $sse.type | quote }}
             {{- end }}
-            {{- if $recSSEKmsKey }}
+            {{- if $sse.kmsKeyId }}
             - name: RECORDING_SSE_KMS_KEY_ID
-              value: {{ $recSSEKmsKey | quote }}
+              value: {{ $sse.kmsKeyId | quote }}
             {{- end }}
-            {{- if $recStatePath }}
-            - name: RECORDING_UPLOADER_STATE_PATH
-              value: {{ $recStatePath | quote }}
-            {{- end }}
-{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+{{- if .Values.config.apiGatewayCert.tlsCertsSecretName }}
             - name: AKEYLESS_CA_BUNDLE
               value: "/etc/ssl/certs/gw-cert.pem"
 {{- end }}
@@ -299,7 +238,7 @@ spec:
             - name: {{ .Values.persistence.shareStorageVolume.name | title | lower }}
               mountPath: /etc/shared
             {{ end }}
-{{- if .Values.dispatcher.config.apiGatewayCert.tlsCertsSecretName }}
+{{- if .Values.config.apiGatewayCert.tlsCertsSecretName }}
             - name: gw-signed-ca
               mountPath: "/etc/ssl/certs/gw-cert.pem"
               subPath: gw-cert.pem

@@ -3,11 +3,11 @@
   {{- $shared = .Values.persistence.shareStorageVolume.name | title | lower -}}
 {{- end -}}
 {{- $record := false -}}
-{{- if and .Values.sessionRecording (hasKey .Values.sessionRecording "enabled") -}}
-  {{- $record = .Values.sessionRecording.enabled -}}
+{{- if and .Values.recording (hasKey .Values.recording "enabled") -}}
+  {{- $record = .Values.recording.enabled -}}
 {{- end -}}
 {{- if and $record (not $shared) -}}
-  {{- fail "sessionRecording.enabled requires persistence.shareStorageVolume: the media server has nowhere to write the recording, and the dispatcher's uploader reads that volume" -}}
+  {{- fail "recording.enabled requires persistence.shareStorageVolume: the media server has nowhere to write the recording, and the dispatcher's uploader reads that volume" -}}
 {{- end -}}
 apiVersion: v1
 kind: ConfigMap

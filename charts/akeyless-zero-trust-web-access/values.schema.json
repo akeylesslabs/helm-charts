@@ -5,6 +5,28 @@
   "type": "object",
   "additionalProperties": true,
   "properties": {
+    "config": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "privilegedAccess": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "accessType": {
+              "type": "string",
+              "enum": ["", "access_key", "aws_iam", "azure_ad", "gcp"],
+              "description": "Auth method type of the privileged access ID. Empty string (default) auto detects: access_key when the access Secret holds a key, else the cloud identity found from IMDS. The dispatcher uses a cloud type when its IMDS probe cannot find the cloud, for clusters where the pod cannot reach 169.254.169.254."
+            },
+            "authorizedAccessIDs": {
+              "type": "array",
+              "items": { "type": ["string", "integer"], "minLength": 1 },
+              "description": "Access IDs of the users that can open ZTWA sessions."
+            }
+          }
+        }
+      }
+    },
     "image": {
       "type": "object",
       "additionalProperties": true,
@@ -60,24 +82,6 @@
                 "additionalProperties": true,
                 "properties": { "name": { "type": "string" } },
                 "required": ["name"]
-              }
-            }
-          }
-        },
-        "config": {
-          "type": "object",
-          "additionalProperties": true,
-          "properties": {
-            "cloudIdentity": {
-              "type": "object",
-              "additionalProperties": true,
-              "description": "Cloud identity override. Forces the dispatcher to authenticate via the configured cloud identity instead of probing IMDS. Use this on clusters where the dispatcher pod cannot reach 169.254.169.254 (e.g. EKS with IMDSv2 hop-limit=1).",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "enum": ["", "aws_iam", "azure_ad", "gcp"],
-                  "description": "Set to short-circuit IMDS classification and authenticate via the configured cloud identity. Empty string (default) preserves IMDS auto-detection."
-                }
               }
             }
           }

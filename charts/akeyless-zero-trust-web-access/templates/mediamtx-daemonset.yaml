@@ -3,8 +3,8 @@
   {{- $shared = .Values.persistence.shareStorageVolume.name | title | lower -}}
 {{- end -}}
 {{- $record := false -}}
-{{- if and .Values.sessionRecording (hasKey .Values.sessionRecording "enabled") -}}
-  {{- $record = .Values.sessionRecording.enabled -}}
+{{- if and .Values.recording (hasKey .Values.recording "enabled") -}}
+  {{- $record = .Values.recording.enabled -}}
 {{- end -}}
 apiVersion: apps/v1
 kind: DaemonSet

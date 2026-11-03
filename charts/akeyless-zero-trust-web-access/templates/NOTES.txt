@@ -1,57 +1,37 @@
 {{- if .Values.image.dockerRepositoryCreds -}}
-Akeyless Zero Trust Web Access — legacy registry credentials
+Akeyless Zero Trust Web Access, legacy registry credentials
 ===========================================================
 
-You are using "image.dockerRepositoryCreds" to let this chart create the pre-install
-pull secret "akeyless-docker-hub-web-access". This option is deprecated and will be
-removed in a future chart version.
-
-Preferred approach:
-
-- Create a Secret of type kubernetes.io/dockerconfigjson (or the equivalent) in the
-  release namespace yourself.
-- Set image.imagePullSecrets to reference it (e.g. [ { name: your-secret } ]), and
-  any per-workload imagePullSecrets fields as needed. Lists are merged and deduplicated
-  on each pod.
-
-Omitting "image.dockerRepositoryCreds" is fully supported; no action is required if
-you are already using only image pull secrets.
+"image.dockerRepositoryCreds" is deprecated and will be removed in a future chart version.
+Create a kubernetes.io/dockerconfigjson Secret in the release namespace, and set
+image.imagePullSecrets to it, for example [ { name: your-secret } ].
 {{- end }}
 
-Akeyless Zero Trust Web Access — IPv6 / dual-stack
-==================================================
+Akeyless Zero Trust Web Access, IPv6 and dual-stack
+===================================================
 
-This release supports IPv4, dual-stack, and IPv6-only clusters (e.g. EKS in IPv6 mode).
-
-- IPv6-only clusters require NAT64/DNS64 for pods to reach IPv4-only endpoints
-  (Akeyless Gateway, S3 recording upload, IPv4-only target sites).
-- On dual-stack clusters, set `ipFamilyPolicy: PreferDualStack` (and optionally
-  `ipFamilies`) to expose the Services on both families.
-- Rollback warning: on IPv6-only / IPv6-primary clusters, do NOT roll back to an
-  older ZTWA version — earlier images bind IPv4-only and fail readiness on the IPv6
-  pod IP with no workaround.
+- IPv6-only clusters need NAT64/DNS64 for pods to reach IPv4-only endpoints.
+- On dual-stack clusters, set `ipFamilyPolicy: PreferDualStack` to expose the Services
+  on both families.
+- On IPv6-only or IPv6-primary clusters, do not roll back to an older ZTWA version.
+  Older images listen on IPv4 only and fail readiness.
 
 {{- $wptInDispatcherEnv := false }}
 {{- range .Values.dispatcher.env }}{{- if eq (get . "name") "WEB_PROXY_TYPE" }}{{- $wptInDispatcherEnv = true }}{{- end }}{{- end }}
 {{- if $wptInDispatcherEnv }}
 
-WARNING: WEB_PROXY_TYPE is set under "dispatcher.env" but the dispatcher no longer
-runs the proxy — the value is ignored there. Move it to "webProxy.env".
+WARNING: WEB_PROXY_TYPE is set under "dispatcher.env", where it is ignored. Move it to
+"webProxy.env".
 {{- end }}
 {{- if .Values.dispatcher.service.proxyPort }}
 
-WARNING: "dispatcher.service.proxyPort" was removed — the value is ignored. The proxy
-is exposed by its own Service ({{ include "akeyless-zero-web-access.fullname" . }}-proxy);
-configure it via "webProxy.service".
+WARNING: "dispatcher.service.proxyPort" was removed and is ignored. The proxy has its
+own Service ({{ include "akeyless-zero-web-access.fullname" . }}-proxy), set it in
+"webProxy.service".
 {{- end }}
-{{- $removedRecording := list }}
-{{- if and .Values.sessionRecording (hasKey .Values.sessionRecording "quality") }}{{- $removedRecording = append $removedRecording "sessionRecording.quality" }}{{- end }}
-{{- if and .Values.sessionRecording (hasKey .Values.sessionRecording "watchdog") }}{{- $removedRecording = append $removedRecording "sessionRecording.watchdog" }}{{- end }}
-{{- if and .Values.webWorker.config .Values.webWorker.config.recording }}{{- $removedRecording = append $removedRecording "webWorker.config.recording" }}{{- end }}
-{{- if $removedRecording }}
+{{- if and .Values.webWorker.config .Values.webWorker.config.recording }}
 
-WARNING: {{ join ", " $removedRecording }} no longer do anything and are ignored.
-The media server records the full screen at up to 2 Mbit/s. Measured sessions took
-0.15 to 0.25 GB per hour, constant full screen motion up to 0.9 GB per hour. Size the
-shared volume and the S3 bucket for that.
+WARNING: webWorker.config.recording was removed and is ignored.
+A session hour takes about 0.15 to 0.25 GB, up to 0.9 GB with constant full-screen
+motion. Size the shared volume and the S3 bucket for that.
 {{- end }}
