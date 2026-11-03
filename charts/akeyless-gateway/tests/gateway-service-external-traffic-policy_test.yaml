@@ -1,0 +1,125 @@
+suite: akeyless-gateway main gateway service loadBalancerIP and externalTrafficPolicy
+templates:
+  - templates/svc.yaml
+tests:
+  - it: omits both when unset, so an existing release is not mutated on upgrade
+    asserts:
+      - notExists:
+          path: spec.loadBalancerIP
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-gateway
+      - notExists:
+          path: spec.externalTrafficPolicy
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-gateway
+
+  - it: sets loadBalancerIP on a LoadBalancer service
+    set:
+      gateway.service.type: LoadBalancer
+      gateway.service.loadBalancerIP: 203.0.113.10
+    asserts:
+      - equal:
+          path: spec.loadBalancerIP
+          value: 203.0.113.10
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-gateway
+
+  - it: omits loadBalancerIP on a NodePort service even when the value is set
+    set:
+      gateway.service.type: NodePort
+      gateway.service.loadBalancerIP: 203.0.113.10
+    asserts:
+      - notExists:
+          path: spec.loadBalancerIP
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-gateway
+
+  - it: sets externalTrafficPolicy on a LoadBalancer service
+    set:
+      gateway.service.type: LoadBalancer
+      gateway.service.externalTrafficPolicy: Local
+    asserts:
+      - equal:
+          path: spec.externalTrafficPolicy
+          value: Local
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-gateway
+
+  - it: sets externalTrafficPolicy on a NodePort service
+    set:
+      gateway.service.type: NodePort
+      gateway.service.externalTrafficPolicy: Cluster
+    asserts:
+      - equal:
+          path: spec.externalTrafficPolicy
+          value: Cluster
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-gateway
+
+  - it: refuses to render externalTrafficPolicy on a ClusterIP service
+    set:
+      gateway.service.type: ClusterIP
+      gateway.service.externalTrafficPolicy: Local
+    asserts:
+      - failedTemplate:
+          errorMessage: >-
+            gateway.service.externalTrafficPolicy is set to 'Local' but the resolved gateway
+            Service type is 'ClusterIP'; externalTrafficPolicy is only valid for LoadBalancer or NodePort
+
+  - it: the guard reads the resolved type, not the raw value, when ingress is enabled
+    set:
+      gateway.ingress.enabled: true
+      gateway.service.type: ""
+      gateway.service.externalTrafficPolicy: Local
+    asserts:
+      - equal:
+          path: spec.type
+          value: NodePort
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-gateway
+      - equal:
+          path: spec.externalTrafficPolicy
+          value: Local
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-gateway
+
+  - it: still requires a type when ingress is disabled
+    set:
+      gateway.ingress.enabled: false
+      gateway.service.type: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: A valid .Values.gateway.service.type entry required!
+
+  - it: leaves the internal ClusterIP service untouched
+    set:
+      sra.enabled: true
+      sra.sshConfig.CAPublicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC7 test
+      gateway.service.type: LoadBalancer
+      gateway.service.loadBalancerIP: 203.0.113.10
+      gateway.service.externalTrafficPolicy: Local
+    asserts:
+      - equal:
+          path: spec.type
+          value: ClusterIP
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-gateway-internal
+      - notExists:
+          path: spec.loadBalancerIP
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-gateway-internal
+      - notExists:
+          path: spec.externalTrafficPolicy
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-akeyless-gateway-internal

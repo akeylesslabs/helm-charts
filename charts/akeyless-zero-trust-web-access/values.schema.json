@@ -27,6 +27,10 @@
         }
       }
     },
+    "extraObjects": {
+      "type": "array",
+      "items": { "type": ["object", "string"] }
+    },
     "image": {
       "type": "object",
       "additionalProperties": true,

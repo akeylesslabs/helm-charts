@@ -182,7 +182,7 @@ Get the Ingress TLS secret.
     image: "{{ .Values.redisStorage.image.repository }}:{{ .Values.redisStorage.image.tag }}"
     imagePullPolicy: {{ .Values.redisStorage.image.pullPolicy }}
   {{- else }}
-    image: "public.ecr.aws/docker/library/redis:8.6.3-alpine"
+    image: "public.ecr.aws/docker/library/redis:8.6.6-alpine"
     imagePullPolicy: "IfNotPresent"
   {{- end -}}
 {{- end -}}
