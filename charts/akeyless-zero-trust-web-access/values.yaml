@@ -37,8 +37,9 @@ config:
       #   kubectl create secret generic ztwa-privileged-access \
       #     --from-literal=accessID=<access-id> --from-file=accessKey=./access-key
       access:
-      # Existing Secret with the key allowedAccessIDs, a comma separated list of access IDs.
-      # Replaces privilegedAccess.authorizedAccessIDs.
+      # Existing Secret with a comma separated list of access IDs, in place of
+      # privilegedAccess.authorizedAccessIDs. The key name stays allowedAccessIDs, so Secrets
+      # from chart 3.x keep working.
       #   kubectl create secret generic ztwa-authorized-ids \
       #     --from-literal=allowedAccessIDs=<access-id>,<access-id>
       authorizedAccessIDs:
