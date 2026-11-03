@@ -29,11 +29,9 @@ WARNING: "dispatcher.service.proxyPort" was removed and is ignored. The proxy ha
 own Service ({{ include "akeyless-zero-web-access.fullname" . }}-proxy), set it in
 "webProxy.service".
 {{- end }}
-{{- $removedRecording := list }}
-{{- if and .Values.webWorker.config .Values.webWorker.config.recording }}{{- $removedRecording = append $removedRecording "webWorker.config.recording" }}{{- end }}
-{{- if $removedRecording }}
+{{- if and .Values.webWorker.config .Values.webWorker.config.recording }}
 
-WARNING: {{ join ", " $removedRecording }} no longer do anything and are ignored.
-A session hour takes about 0.15 to 0.25 GB, up to 0.9 GB with constant full screen
+WARNING: webWorker.config.recording was removed and is ignored.
+A session hour takes about 0.15 to 0.25 GB, up to 0.9 GB with constant full-screen
 motion. Size the shared volume and the S3 bucket for that.
 {{- end }}

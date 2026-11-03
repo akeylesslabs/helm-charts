@@ -271,7 +271,7 @@ tests:
       webWorker.config.recording: {fps: 10}
     asserts:
       - matchRegexRaw:
-          pattern: "webWorker.config.recording no longer do anything"
+          pattern: "webWorker.config.recording was removed and is ignored"
 
   - it: "the worker mounts and copies no DLP config"
     template: templates/web-worker-deployment.yaml
