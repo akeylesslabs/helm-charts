@@ -370,7 +370,7 @@ A **Heavy browsing workload** example for the web worker main `resources` is in 
 
 | Parameter                                                              | Description                                                                                                         | Default                   |
 |------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|---------------------------|
-| `config.apiGatewayURL`                                                 | Base URL of the Akeyless Gateway API. ZTWA calls `<apiGatewayURL>/status` on it                                     | `https://api.akeyless.io` |
+| `config.apiGatewayURL`                                                 | Akeyless API URL. Keep the default for the Akeyless SaaS, or set the API URL of your Akeyless Gateway               | `https://api.akeyless.io` |
 | `config.apiGatewayCert.tlsCertsSecretName`                             | Existing Secret with the Gateway TLS certificate in the key `tls.crt`                                               | `nil`                     |
 | `config.clusterName`                                                   | ZTWA cluster name. A change to it, or to the privileged access ID, registers a new bastion                          | `defaultCluster`          |
 | `config.privilegedAccess.accessID`                                     | Access ID with "Read" and "List" permissions on the target secrets. Ignored when `existingSecretNames.access` is set | `""`                      |

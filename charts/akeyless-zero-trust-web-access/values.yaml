@@ -3,8 +3,8 @@
 #       https://docs.akeyless.io/docs/sra-web-access-on-k8s-adv-config
 
 config:
-  # Akeyless Gateway API URL. Keep the default for the Akeyless SaaS. For your own Gateway,
-  # use the URL where <apiGatewayURL>/status answers.
+  # Akeyless API URL that the dispatcher and the web proxy use. Keep the default for the
+  # Akeyless SaaS, or set the API URL of your Akeyless Gateway.
   apiGatewayURL: https://api.akeyless.io
   apiGatewayCert:
     # Existing Secret with the Gateway CA certificate in the key tls.crt.
