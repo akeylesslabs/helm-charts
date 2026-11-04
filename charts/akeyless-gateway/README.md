@@ -81,7 +81,7 @@ The option is **opt-in and default-off**. When false, the deployments are unchan
 
 **Notes:**
 
-- The file replaces the image's trust file, so the bundle must hold every root the SRA components need, the public ones included.
+- The file replaces the image's bundle file. Put in it every CA that signs the traffic the SRA components must trust, including the proxy's CA.
 - `sra.customCA` and `gateway.customCA` are independent. Set both when both components sit behind the proxy.
 - The bundle is read at pod start, and a file mounted with `subPath` is not refreshed in a running pod. Restart the SRA pods after changing the bundle.
 
