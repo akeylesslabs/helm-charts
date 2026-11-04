@@ -9,10 +9,10 @@ metadata:
     chart: {{ $.Chart.Name }}
 data:
 {{ with .Values.config }}
-  {{- if (ne (include "secret-exist" (dict "Root" $.Values.config.privilegedAccess.existingSecretNames "Name" "access")) "true") }}
+  {{- if not .ztwaAuth.ztwaExistingSecret }}
   akeyless_config_file: |
-    {{ required "API Gateway URL is required" .apiGatewayURL }}
-    cmd=auth&access-id={{ required "Privileged credentials are required" .privilegedAccess.accessID }}&access-key=
+    {{ required "config.gatewayURL is required" .gatewayURL }}
+    cmd=auth&access-id={{ required "config.ztwaAuth.ztwaAccessID is required" .ztwaAuth.ztwaAccessID }}&access-key=
     {{- end }}
 {{- end}}
 

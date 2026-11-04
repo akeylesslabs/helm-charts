@@ -1,10 +1,10 @@
 fullnameOverride: ztwa-ci
 
 config:
-  privilegedAccess:
+  ztwaAuth:
     # Test-only placeholders, not real access IDs. No key, so the dispatcher takes the
     # cloud identity path, which these smoke values never run.
-    accessID: p-12345678911123
+    ztwaAccessID: p-12345678911123
     authorizedAccessIDs:
       - p-12345678911124
 

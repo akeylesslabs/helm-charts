@@ -3,8 +3,8 @@ release:
   name: ztwa
   namespace: sra
 set:
-  config.privilegedAccess.accessID: p-priv
-  config.privilegedAccess.authorizedAccessIDs: [p-1]
+  config.ztwaAuth.ztwaAccessID: p-priv
+  config.ztwaAuth.authorizedAccessIDs: [p-1]
 tests:
   - it: "recording and upload are off by default"
     template: templates/dispatcher-deployment.yaml

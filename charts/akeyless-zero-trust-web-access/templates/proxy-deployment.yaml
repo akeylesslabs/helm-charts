@@ -34,10 +34,10 @@ spec:
         # dispatcher's privileged-access secret and -cm-akeyless configmap are NOT mounted.
         - name: ng-config
           emptyDir: {}
-{{- if .Values.config.apiGatewayCert.tlsCertsSecretName }}
+{{- if .Values.config.gatewayCert.tlsExistingSecret }}
         - name: gw-signed-ca
           secret:
-            secretName: {{ .Values.config.apiGatewayCert.tlsCertsSecretName }}
+            secretName: {{ .Values.config.gatewayCert.tlsExistingSecret }}
             items:
               - key: tls.crt
                 path: gw-cert.pem
@@ -46,24 +46,14 @@ spec:
         - name: bootstrap
           image: "{{ .Values.webProxy.initContainer.image.repository }}:{{ .Values.webProxy.initContainer.image.tag }}"
           imagePullPolicy: {{ .Values.webProxy.initContainer.image.pullPolicy }}
-{{- if (eq (include "secret-exist" (dict "Root" $.Values.config.privilegedAccess.existingSecretNames "Name" "authorizedAccessIDs")) "true") }}
-          env:
-            - name: allowedAccessIDs
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $.Values.config.privilegedAccess.existingSecretNames.authorizedAccessIDs }}
-                  key: allowedAccessIDs
-{{- end }}
           command: ['sh']
           args:
             - "-c"
             - |
               set -ex
-              echo "{{ required "API Gateway URL is required" .Values.config.apiGatewayURL }}" > /etc/akeyless/akeyless_config_file
-{{- if (eq (include "secret-exist" (dict "Root" $.Values.config.privilegedAccess.existingSecretNames "Name" "authorizedAccessIDs")) "true") }}
-              echo "$allowedAccessIDs" > /etc/akeyless/allowed_access_ids
-{{- else if .Values.config.privilegedAccess.authorizedAccessIDs }}
-              echo {{ range $index, $element := .Values.config.privilegedAccess.authorizedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_access_ids
+              echo "{{ required "config.gatewayURL is required" .Values.config.gatewayURL }}" > /etc/akeyless/akeyless_config_file
+{{- if .Values.config.ztwaAuth.authorizedAccessIDs }}
+              echo {{ range $index, $element := .Values.config.ztwaAuth.authorizedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_access_ids
 {{- end }}
           resources:
 {{- toYaml .Values.webProxy.initContainer.resources | nindent 12 }}
@@ -75,7 +65,7 @@ spec:
           volumeMounts:
             - name: ng-config
               mountPath: /etc/akeyless
-{{- if .Values.config.apiGatewayCert.tlsCertsSecretName }}
+{{- if .Values.config.gatewayCert.tlsExistingSecret }}
             - name: gw-signed-ca
               mountPath: "/etc/ssl/certs/gw-cert.pem"
               subPath: gw-cert.pem
@@ -112,7 +102,7 @@ spec:
             - name: no_proxy
               value: {{ .Values.httpProxySettings.no_proxy }}
 {{- end }}
-{{- if .Values.config.apiGatewayCert.tlsCertsSecretName }}
+{{- if .Values.config.gatewayCert.tlsExistingSecret }}
             - name: AKEYLESS_CA_BUNDLE
               value: "/etc/ssl/certs/gw-cert.pem"
 {{- end }}
@@ -122,7 +112,7 @@ spec:
           volumeMounts:
             - name: ng-config
               mountPath: /etc/akeyless
-{{- if .Values.config.apiGatewayCert.tlsCertsSecretName }}
+{{- if .Values.config.gatewayCert.tlsExistingSecret }}
             - name: gw-signed-ca
               mountPath: "/etc/ssl/certs/gw-cert.pem"
               subPath: gw-cert.pem

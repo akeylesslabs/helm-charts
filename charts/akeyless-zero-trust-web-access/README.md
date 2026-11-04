@@ -153,13 +153,15 @@ Upgrade with your values file (`-f <values file>`) or `--reset-then-reuse-values
 
 | Old key | New key |
 |---------|---------|
-| `dispatcher.config.apiGatewayURL`, `apiGatewayCert`, `clusterName`, `allowedBastionUrls`, `allowedProxyUrls`, `allowedInternalAuth`, `disableSecureCookie` | The same names under `config` |
-| `dispatcher.config.privilegedAccess.accessID` | `config.privilegedAccess.accessID` |
-| `dispatcher.config.privilegedAccess.accessKey` | Removed. Put the key in the Secret named in `config.privilegedAccess.existingSecretNames.access`, with the keys `accessID` and `accessKey` |
-| `dispatcher.config.privilegedAccess.allowedAccessIDs` | `config.privilegedAccess.authorizedAccessIDs`, now required |
-| `dispatcher.config.privilegedAccess.existingSecretNames.access` | `config.privilegedAccess.existingSecretNames.access` |
-| `dispatcher.config.privilegedAccess.existingSecretNames.allowedIDs` | `config.privilegedAccess.existingSecretNames.authorizedAccessIDs`. The key inside the Secret stays `allowedAccessIDs` |
-| `dispatcher.config.cloudIdentity.type` | `config.privilegedAccess.accessType` |
+| `dispatcher.config.apiGatewayURL` | `config.gatewayURL` |
+| `dispatcher.config.apiGatewayCert.tlsCertsSecretName` | `config.gatewayCert.tlsExistingSecret` |
+| `dispatcher.config.clusterName`, `allowedBastionUrls`, `allowedProxyUrls`, `allowedInternalAuth`, `disableSecureCookie` | The same names under `config` |
+| `dispatcher.config.privilegedAccess.accessID` | `config.ztwaAuth.ztwaAccessID` |
+| `dispatcher.config.privilegedAccess.accessKey` | Removed. Put the key in the Secret named in `config.ztwaAuth.ztwaExistingSecret`, under the key `ztwa-access-key` |
+| `dispatcher.config.privilegedAccess.allowedAccessIDs` | `config.ztwaAuth.authorizedAccessIDs`, now required |
+| `dispatcher.config.privilegedAccess.existingSecretNames.access` | `config.ztwaAuth.ztwaExistingSecret`. The Secret now needs the key `ztwa-access-key`, and the access ID goes to `config.ztwaAuth.ztwaAccessID` |
+| `dispatcher.config.privilegedAccess.existingSecretNames.allowedIDs` | Removed. Put the IDs in `config.ztwaAuth.authorizedAccessIDs` |
+| `dispatcher.config.cloudIdentity.type` | `config.ztwaAuth.ztwaAccessType` |
 | `dispatcher.config.logForward`, `dispatcher.config.existingLogForwardSecretName` | Removed. Set the recording upload in `recording.s3` |
 | `dispatcher.config.recording` (`enabled`, `s3Bucket`, `s3Region`, `s3Prefix`, `s3Endpoint`, `compress`, `sseType`, `sseKmsKeyId`) | `recording.s3` (`enabled`, `bucket`, `region`, `prefix`, `endpoint`, `compress`, `sse.type`, `sse.kmsKeyId`) |
 | `dispatcher.config.listOnlyCredentials` | Removed |
@@ -180,17 +182,18 @@ When a field was set in both `sessionRecording.upload` and `dispatcher.config.re
 
 The render also fails when:
 
-- `config.privilegedAccess.authorizedAccessIDs` and `config.privilegedAccess.existingSecretNames.authorizedAccessIDs` are both empty, and `ALLOWED_ACCESS_IDS` is not set in both `dispatcher.env` and `webProxy.env`. The dispatcher and the web proxy accept no user without them.
-- `config.privilegedAccess.accessType` is `access_key` and `config.privilegedAccess.existingSecretNames.access` is not set.
-- `config.privilegedAccess.accessType` is `aws_iam`, `azure_ad` or `gcp` and `config.privilegedAccess.existingSecretNames.access` is set.
+- `config.ztwaAuth.ztwaAccessID` is empty.
+- `config.ztwaAuth.authorizedAccessIDs` is empty, and `ALLOWED_ACCESS_IDS` is not set in both `dispatcher.env` and `webProxy.env`. The dispatcher and the web proxy accept no user without them.
+- `config.ztwaAuth.ztwaAccessType` is `access_key` and `config.ztwaAuth.ztwaExistingSecret` is not set.
+- `config.ztwaAuth.ztwaAccessType` is `aws_iam`, `azure_ad` or `gcp` and `config.ztwaAuth.ztwaExistingSecret` is set.
 
-### Privileged Access Type (`config.privilegedAccess.accessType`)
+### ZTWA Access Type (`config.ztwaAuth.ztwaAccessType`)
 
-The dispatcher reads the secrets of the web targets with the privileged access ID. `accessType` sets the type of its auth method:
+The dispatcher reads the secrets of the web targets with `ztwaAccessID`. `ztwaAccessType` sets the type of its auth method:
 
-- `""` (default): auto detect, from `existingSecretNames.access` or from the instance metadata service (IMDS).
-- `access_key`: [API key](https://docs.akeyless.io/docs/auth-with-api-key). Needs `existingSecretNames.access`, a Secret with the keys `accessID` and `accessKey`.
-- `aws_iam`, `azure_ad`, `gcp`: cloud identity ([AWS IAM](https://docs.akeyless.io/docs/auth-with-aws), [Azure AD](https://docs.akeyless.io/docs/auth-with-azure), [GCP](https://docs.akeyless.io/docs/auth-with-gcp)). Set `accessID`, not `existingSecretNames.access`.
+- `""` (default): auto detect, from `ztwaExistingSecret` or from the instance metadata service (IMDS).
+- `access_key`: [API key](https://docs.akeyless.io/docs/auth-with-api-key). Needs `ztwaExistingSecret`, a Secret with the key `ztwa-access-key`.
+- `aws_iam`, `azure_ad`, `gcp`: cloud identity ([AWS IAM](https://docs.akeyless.io/docs/auth-with-aws), [Azure AD](https://docs.akeyless.io/docs/auth-with-azure), [GCP](https://docs.akeyless.io/docs/auth-with-gcp)). Set `ztwaAccessID`, not `ztwaExistingSecret`.
 
 Set a cloud type when the dispatcher cannot reach IMDS at `169.254.169.254`. Without it, sessions exit with `unknown-cloud-provider`. Common causes:
 
@@ -200,9 +203,9 @@ Set a cloud type when the dispatcher cannot reach IMDS at `169.254.169.254`. Wit
 
 ```yaml
 config:
-  privilegedAccess:
-    accessID: "<AWS_IAM_ACCESS_ID>"
-    accessType: "aws_iam"   # or "azure_ad" / "gcp"
+  ztwaAuth:
+    ztwaAccessID: "<AWS_IAM_ACCESS_ID>"
+    ztwaAccessType: "aws_iam"   # or "azure_ad" / "gcp"
     authorizedAccessIDs:
       - "<USER_ACCESS_ID>"
 ```
@@ -211,16 +214,15 @@ API key:
 
 ```bash
 kubectl create secret generic ztwa-privileged-access \
-  --from-literal=accessID=<ACCESS_ID> \
-  --from-file=accessKey=./access-key
+  --from-file=ztwa-access-key=./access-key
 ```
 
 ```yaml
 config:
-  privilegedAccess:
-    accessType: "access_key"
-    existingSecretNames:
-      access: ztwa-privileged-access
+  ztwaAuth:
+    ztwaAccessID: "<ACCESS_ID>"
+    ztwaAccessType: "access_key"
+    ztwaExistingSecret: ztwa-privileged-access
     authorizedAccessIDs:
       - "<USER_ACCESS_ID>"
 ```
@@ -412,14 +414,13 @@ A **Heavy browsing workload** example for the web worker main `resources` is in 
 
 | Parameter                                                              | Description                                                                                                         | Default                   |
 |------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|---------------------------|
-| `config.apiGatewayURL`                                                 | Akeyless API URL. Keep the default for the Akeyless SaaS, or set the API URL of your Akeyless Gateway               | `https://api.akeyless.io` |
-| `config.apiGatewayCert.tlsCertsSecretName`                             | Existing Secret with the Gateway TLS certificate in the key `tls.crt`                                               | `nil`                     |
+| `config.gatewayURL`                                                    | Akeyless API URL. Keep the default for the Akeyless SaaS, or set the API URL of your Akeyless Gateway               | `https://api.akeyless.io` |
+| `config.gatewayCert.tlsExistingSecret`                                 | Existing Secret with the Gateway TLS certificate in the key `tls.crt`                                               | `nil`                     |
 | `config.clusterName`                                                   | ZTWA cluster name. A change to it, or to the privileged access ID, registers a new bastion                          | `defaultCluster`          |
-| `config.privilegedAccess.accessID`                                     | Access ID with "Read" and "List" permissions on the target secrets. Ignored when `existingSecretNames.access` is set | `""`                      |
-| `config.privilegedAccess.accessType`                                   | `""` (auto detect), `access_key`, `aws_iam`, `azure_ad` or `gcp`                                                    | `""`                      |
-| `config.privilegedAccess.existingSecretNames.access`                   | Existing Secret with the keys `accessID` and `accessKey`. Required for `access_key`, not allowed with a cloud type  | `nil`                     |
-| `config.privilegedAccess.existingSecretNames.authorizedAccessIDs`      | Existing Secret with the key `allowedAccessIDs`, a comma separated list. Replaces `authorizedAccessIDs`              | `nil`                     |
-| `config.privilegedAccess.authorizedAccessIDs`                          | Access IDs of the users that can open ZTWA sessions. Required when the Secret above is not set                      | `[]`                      |
+| `config.ztwaAuth.ztwaAccessID`                                         | Required. Access ID with "Read" and "List" permissions on the target secrets                                        | `""`                      |
+| `config.ztwaAuth.ztwaAccessType`                                       | `""` (auto detect), `access_key`, `aws_iam`, `azure_ad` or `gcp`                                                    | `""`                      |
+| `config.ztwaAuth.ztwaExistingSecret`                                   | Existing Secret with the key `ztwa-access-key`. Required for `access_key`, not allowed with a cloud type            | `nil`                     |
+| `config.ztwaAuth.authorizedAccessIDs`                                  | Required. Access IDs of the users that can open ZTWA sessions                                                       | `[]`                      |
 | `config.allowedBastionUrls`                                            | External URLs of the dispatcher (port 9000 or the ingress host). The Portal redirects users back only to these URLs | `[]`                      |
 | `config.allowedProxyUrls`                                              | External URLs of the web proxy Service (port 19414). The Portal redirects users back only to these URLs             | `[]`                      |
 | `config.allowedInternalAuth`                                           | When `false`, the dispatcher accepts only requests with preemptive JWT auth                                         | `"false"`                 |

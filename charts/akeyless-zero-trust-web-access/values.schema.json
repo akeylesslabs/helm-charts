@@ -9,14 +9,14 @@
       "type": "object",
       "additionalProperties": true,
       "properties": {
-        "privilegedAccess": {
+        "ztwaAuth": {
           "type": "object",
           "additionalProperties": true,
           "properties": {
-            "accessType": {
+            "ztwaAccessType": {
               "type": "string",
               "enum": ["", "access_key", "aws_iam", "azure_ad", "gcp"],
-              "description": "Auth method type of the privileged access ID. Empty string (default) auto detects: access_key when the access Secret holds a key, else the cloud identity found from IMDS. The dispatcher uses a cloud type when its IMDS probe cannot find the cloud, for clusters where the pod cannot reach 169.254.169.254."
+              "description": "Auth method type of ztwaAccessID. Empty string (default) auto detects: access_key when ztwaExistingSecret is set, else the cloud identity found from IMDS. The dispatcher uses a cloud type when its IMDS probe cannot find the cloud, for clusters where the pod cannot reach 169.254.169.254."
             },
             "authorizedAccessIDs": {
               "type": "array",
