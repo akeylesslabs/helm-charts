@@ -1,0 +1,150 @@
+suite: akeyless-gateway SRA custom CA
+templates:
+  - templates/akeyless-secure-remote-access/deployment.yaml
+  - templates/akeyless-secure-remote-access/ssh-deployment.yaml
+set:
+  sra.enabled: true
+  sra.sshConfig.CAPublicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC7 test
+tests:
+  - it: mounts nothing when sra.customCA is off, even with a source set
+    set:
+      globalConfig.TLSConf.tlsExistingSecret: gw-tls
+      sra.customCA.volumeSourceName: corp-ca
+    asserts:
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: ca-certificates
+            configMap:
+              name: corp-ca
+      - notContains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: ca-certificates
+            mountPath: /etc/ssl/certs/ca-certificates.crt
+            subPath: ca-certificates.crt
+
+  - it: mounts a configMap bundle over the system trust file
+    set:
+      sra.customCA.enabled: true
+      sra.customCA.volumeSourceName: corp-ca
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: ca-certificates
+            configMap:
+              name: corp-ca
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: ca-certificates
+            mountPath: /etc/ssl/certs/ca-certificates.crt
+            subPath: ca-certificates.crt
+
+  - it: mounts a secret bundle when the volume type is secret
+    set:
+      sra.customCA.enabled: true
+      sra.customCA.volumeType: secret
+      sra.customCA.volumeSourceName: corp-ca
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: ca-certificates
+            secret:
+              secretName: corp-ca
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: ca-certificates
+            mountPath: /etc/ssl/certs/ca-certificates.crt
+            subPath: ca-certificates.crt
+
+  - it: reads the volume type case-insensitively
+    set:
+      sra.customCA.enabled: true
+      sra.customCA.volumeType: Secret
+      sra.customCA.volumeSourceName: corp-ca
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: ca-certificates
+            secret:
+              secretName: corp-ca
+
+  - it: uses the configured volume name for the volume and the mount
+    set:
+      sra.customCA.enabled: true
+      sra.customCA.volumeName: corp-trust
+      sra.customCA.volumeSourceName: corp-ca
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: corp-trust
+            configMap:
+              name: corp-ca
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: corp-trust
+            mountPath: /etc/ssl/certs/ca-certificates.crt
+            subPath: ca-certificates.crt
+
+  - it: renders names that look like booleans as strings
+    set:
+      sra.customCA.enabled: true
+      sra.customCA.volumeName: "true"
+      sra.customCA.volumeSourceName: "true"
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: "true"
+            configMap:
+              name: "true"
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: "true"
+            mountPath: /etc/ssl/certs/ca-certificates.crt
+            subPath: ca-certificates.crt
+
+  - it: fails when enabled without a source name
+    set:
+      sra.customCA.enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: sra.customCA.volumeSourceName is required when sra.customCA.enabled is true
+        template: templates/akeyless-secure-remote-access/ssh-deployment.yaml
+
+  - it: fails on an unknown volume type
+    set:
+      sra.customCA.enabled: true
+      sra.customCA.volumeType: bogus
+      sra.customCA.volumeSourceName: corp-ca
+    asserts:
+      - failedTemplate:
+          errorMessage: sra.customCA.volumeType must be either 'configmap' or 'secret', got bogus
+        template: templates/akeyless-secure-remote-access/ssh-deployment.yaml
+
+  - it: leaves SRA alone when only gateway.customCA is on
+    set:
+      globalConfig.TLSConf.tlsExistingSecret: gw-tls
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: gw-ca
+    asserts:
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: ca-certificates
+            configMap:
+              name: gw-ca
+      - notContains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: ca-certificates
+            mountPath: /etc/ssl/certs/ca-certificates.crt
+            subPath: ca-certificates.crt

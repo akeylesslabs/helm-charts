@@ -582,6 +582,12 @@ sra:
   ## Or setup SRA on K8s <https://docs.akeyless.io/docs/remote-access-setup-k8s>
   enabled: false
 
+  customCA:
+    enabled: false
+    volumeName: "ca-certificates"
+    volumeType: "configMap"
+    volumeSourceName: ""
+
   image:
     ##  Default image repository is: akeyless/zero-trust-bastion
     ##

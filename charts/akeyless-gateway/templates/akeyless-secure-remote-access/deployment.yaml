@@ -72,6 +72,9 @@ spec:
         {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
         {{ include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 8}}
         {{- end }}
+        {{- if .Values.sra.customCA.enabled }}
+        {{- include "akeyless-sra.customCA.volume" . | nindent 8 }}
+        {{- end }}
       {{- include "akeyless-sra.imagePullSecrets" . | indent 2 }}
       containers:
         - name: gateway-sra-web
@@ -162,5 +165,8 @@ spec:
             {{- end }}
             {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
             {{ include "akeyless-gateway.clusterCache.tlsVolumeMounts" . | nindent 12 }}
+            {{- end }}
+            {{- if .Values.sra.customCA.enabled }}
+            {{- include "akeyless-sra.customCA.volumeMount" . | nindent 12 }}
             {{- end }}
 {{- end }}
