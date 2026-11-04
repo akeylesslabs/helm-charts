@@ -12,8 +12,17 @@ sra:
   customCA:
     enabled: true
     volumeSourceName: sra-custom-ca
+  webConfig:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
   sshConfig:
     CAPublicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC7 test
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
     service:
       type: ClusterIP
 
