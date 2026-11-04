@@ -93,6 +93,25 @@ tests:
             mountPath: /etc/ssl/certs/ca-certificates.crt
             subPath: ca-certificates.crt
 
+  - it: renders names that look like booleans as strings
+    set:
+      sra.customCA.enabled: true
+      sra.customCA.volumeName: "true"
+      sra.customCA.volumeSourceName: "true"
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: "true"
+            configMap:
+              name: "true"
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: "true"
+            mountPath: /etc/ssl/certs/ca-certificates.crt
+            subPath: ca-certificates.crt
+
   - it: fails when enabled without a source name
     set:
       sra.customCA.enabled: true
