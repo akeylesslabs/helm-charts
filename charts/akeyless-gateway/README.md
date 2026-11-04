@@ -60,6 +60,31 @@ gateway:
         readOnly: true
 ```
 
+## Custom CA for SRA
+
+Environments that re-sign outbound TLS with an internal CA (a TLS-intercepting proxy) must trust that CA in the SRA components from their first outbound connection. The Gateway has `gateway.customCA`. The SRA web and SSH deployments have their own, `sra.customCA`:
+
+```yaml
+sra:
+  enabled: true
+  customCA:
+    enabled: true
+    volumeName: "ca-certificates"
+    volumeType: "configMap"   # or "secret"
+    volumeSourceName: "<configmap-or-secret-name>"  # key must be ca-certificates.crt
+```
+
+The option is **opt-in and default-off**. When false, the deployments are unchanged. When true, the chart:
+
+- Mounts the key `ca-certificates.crt` of the named ConfigMap or Secret at `/etc/ssl/certs/ca-certificates.crt` in the SRA web and SSH containers.
+- Fails the render when `volumeSourceName` is empty or `volumeType` is neither `configMap` nor `secret`.
+
+**Notes:**
+
+- The file replaces the image's trust file, so the bundle must hold every root the SRA components need, the public ones included.
+- `sra.customCA` and `gateway.customCA` are independent. Set both when both components sit behind the proxy.
+- The bundle is read at pod start, and a file mounted with `subPath` is not refreshed in a running pod. Restart the SRA pods after changing the bundle.
+
 ## Extra Objects
 
 `extraObjects` renders additional Kubernetes manifests as part of the release. Each entry is rendered with `tpl`, so it can reference `.Release`, `.Chart` and `.Values`. Custom resources require their CRDs to be installed before the release.
