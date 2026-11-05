@@ -359,6 +359,9 @@ gateway:
     labels: {}
     type: LoadBalancer
 
+    loadBalancerIP: ""
+    externalTrafficPolicy: ""
+
     ## Gateway service port
     ##
     port: 8000
@@ -585,6 +588,12 @@ sra:
   ## For more information on a Quick Start guide for Remote Access <https://docs.akeyless.io/docs/remote-access-quick-start-guide>
   ## Or setup SRA on K8s <https://docs.akeyless.io/docs/remote-access-setup-k8s>
   enabled: false
+
+  customCA:
+    enabled: false
+    volumeName: "ca-certificates"
+    volumeType: "configMap"
+    volumeSourceName: ""
 
   image:
     ##  Default image repository is: akeyless/zero-trust-bastion

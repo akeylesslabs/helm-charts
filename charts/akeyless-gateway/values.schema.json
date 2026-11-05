@@ -35,6 +35,24 @@
           }
         }
       },
+      "gateway": {
+        "type": "object",
+        "properties": {
+          "service": {
+            "type": "object",
+            "properties": {
+              "loadBalancerIP": {
+                "type": "string",
+                "description": "Pre-allocated LoadBalancer address. Rendered only when the resolved Service type is LoadBalancer."
+              },
+              "externalTrafficPolicy": {
+                "enum": ["", "Cluster", "Local"],
+                "description": "External traffic policy. Rendered only when the resolved Service type is LoadBalancer or NodePort."
+              }
+            }
+          }
+        }
+      },
       "sra": {
         "type": "object",
         "properties": {
