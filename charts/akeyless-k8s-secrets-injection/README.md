@@ -87,6 +87,46 @@ extraObjects:
 
 ## Configuration
 
+### OAuth2 / JWT authentication
+
+Requires injector image **0.41.0+** (`AKEYLESS_ACCESS_TYPE=jwt`). The 0.40.0
+image is CVE/cert-events only and does not include OAuth2/JWT.
+
+For `AKEYLESS_ACCESS_TYPE: jwt` (alias `oauth2`), enable a kubelet-rotated projected
+ServiceAccount token. Do not put a static JWT in `env`. The audience is required and
+must match the Akeyless oauth2/jwt auth method (same pattern as the CSI provider):
+
+```yaml
+env:
+  AKEYLESS_ACCESS_TYPE: jwt
+  AKEYLESS_ACCESS_ID: "<oauth2/jwt auth-method access id>"
+  AKEYLESS_API_GW_URL: "https://api.akeyless.io"
+
+jwtProjectedToken:
+  enabled: true
+  audience: akeyless.io
+```
+
+The chart mounts the projected token and sets `AKEYLESS_JWT_FILE` /
+`AKEYLESS_JWT_AUDIENCE` on the webhook Deployment. Workload pods receive their own
+projected token from the injector so init and sidecar refresh use the same identity.
+
+Scope access with `--force-sub-claims` and role associations
+`sub=system:serviceaccount:<ns>:<sa>` (not a shared claim).
+
+### Registry credential secrets (BREAKING)
+
+Image entrypoint lookup requires each registry-cred secret JSON to include
+`"registry": "<image host>"` (use `docker.io` for Docker Hub; include non-default ports).
+Optional: `AKEYLESS_REGISTRY_CREDS_PATH_TEMPLATE=/registry/{namespace}/` to scope
+`akeyless/registry_creds` annotations, or `AKEYLESS_DISABLE_REGISTRY_CREDS_ANNOTATION=enable`.
+
+### Webhook network access
+
+`/pods` has no caller authentication in this release (ASM-21292). Prefer a
+NetworkPolicy (or equivalent) so only the control plane can reach the webhook
+Service.
+
 ### Upgrading to chart 2.0.0
 
 The top-level `webhookFailurePolicy` value was removed. Move it under `mutatingWebhook.failurePolicy`:
