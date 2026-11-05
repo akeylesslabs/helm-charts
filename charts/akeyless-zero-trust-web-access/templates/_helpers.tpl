@@ -114,7 +114,7 @@ without.
 {{- $v := .Values -}}
 {{- $moved := list -}}
 {{- if and $v.dispatcher (hasKey $v.dispatcher "config") -}}
-  {{- $moved = append $moved "dispatcher.config moved to config. Its recording block moved to recording.s3, cloudIdentity.type to config.privilegedAccess.accessType, privilegedAccess.allowedAccessIDs and existingSecretNames.allowedIDs to authorizedAccessIDs, and privilegedAccess.accessKey, listOnlyCredentials, logForward and existingLogForwardSecretName were removed" -}}
+  {{- $moved = append $moved "dispatcher.config moved to config. apiGatewayURL moved to gatewayURL, apiGatewayCert.tlsCertsSecretName to gatewayCert.tlsExistingSecret, privilegedAccess to ztwaAuth (accessID to ztwaAccessID, existingSecretNames.access to ztwaExistingSecret, a Secret with only the key ztwa-access-key, allowedAccessIDs to authorizedAccessIDs, and existingSecretNames.allowedIDs was removed, put the IDs in authorizedAccessIDs), cloudIdentity.type to config.ztwaAuth.ztwaAccessType, and the recording block to recording.s3 with new field names. privilegedAccess.accessKey, listOnlyCredentials, logForward and existingLogForwardSecretName were removed" -}}
 {{- end -}}
 {{- if hasKey $v "sessionRecording" -}}
   {{- $moved = append $moved "sessionRecording moved to recording, and sessionRecording.upload to recording.s3 with new field names. sessionRecording.quality and sessionRecording.watchdog were removed" -}}
@@ -135,8 +135,17 @@ without.
   {{- $moved = append $moved "HPA.webWorker.sessionTerminationGracePeriodSeconds moved to webWorker.terminationGracePeriodSeconds" -}}
 {{- end -}}
 {{- $c := $v.config | default dict -}}
+{{- if hasKey $c "apiGatewayURL" -}}
+  {{- $moved = append $moved "config.apiGatewayURL moved to config.gatewayURL" -}}
+{{- end -}}
+{{- if hasKey $c "apiGatewayCert" -}}
+  {{- $moved = append $moved "config.apiGatewayCert.tlsCertsSecretName moved to config.gatewayCert.tlsExistingSecret" -}}
+{{- end -}}
+{{- if hasKey $c "privilegedAccess" -}}
+  {{- $moved = append $moved "config.privilegedAccess moved to config.ztwaAuth: accessID to ztwaAccessID, accessType to ztwaAccessType, existingSecretNames.access to ztwaExistingSecret, a Secret with only the key ztwa-access-key, authorizedAccessIDs keeps its name, existingSecretNames.authorizedAccessIDs was removed. accessKey was removed, put the key in the Secret named in config.ztwaAuth.ztwaExistingSecret" -}}
+{{- end -}}
 {{- if hasKey $c "cloudIdentity" -}}
-  {{- $moved = append $moved "config.cloudIdentity.type moved to config.privilegedAccess.accessType" -}}
+  {{- $moved = append $moved "config.cloudIdentity.type moved to config.ztwaAuth.ztwaAccessType" -}}
 {{- end -}}
 {{- if hasKey $c "recording" -}}
   {{- $moved = append $moved "config.recording moved to recording.s3 with new field names" -}}
@@ -147,26 +156,28 @@ without.
 {{- if or (hasKey $c "logForward") (hasKey $c "existingLogForwardSecretName") -}}
   {{- $moved = append $moved "config.logForward and config.existingLogForwardSecretName were removed, set the recording upload in recording.s3" -}}
 {{- end -}}
-{{- $pa := $c.privilegedAccess | default dict -}}
-{{- if hasKey $pa "accessKey" -}}
-  {{- $moved = append $moved "config.privilegedAccess.accessKey was removed, put the key in the Secret named in config.privilegedAccess.existingSecretNames.access" -}}
+{{- $za := $c.ztwaAuth | default dict -}}
+{{- if hasKey $za "accessKey" -}}
+  {{- $moved = append $moved "config.ztwaAuth.accessKey is not a setting, put the key in the Secret named in config.ztwaAuth.ztwaExistingSecret" -}}
 {{- end -}}
-{{- if hasKey $pa "allowedAccessIDs" -}}
-  {{- $moved = append $moved "config.privilegedAccess.allowedAccessIDs moved to config.privilegedAccess.authorizedAccessIDs" -}}
+{{- if hasKey $za "allowedAccessIDs" -}}
+  {{- $moved = append $moved "config.ztwaAuth.allowedAccessIDs moved to config.ztwaAuth.authorizedAccessIDs" -}}
 {{- end -}}
-{{- if and $pa.existingSecretNames (hasKey $pa.existingSecretNames "allowedIDs") -}}
-  {{- $moved = append $moved "config.privilegedAccess.existingSecretNames.allowedIDs moved to config.privilegedAccess.existingSecretNames.authorizedAccessIDs" -}}
+{{- if kindIs "map" $za.ztwaExistingSecret -}}
+  {{- $moved = append $moved "config.ztwaAuth.ztwaExistingSecret is one Secret name, with only the key ztwa-access-key. Its access entry moved to ztwaExistingSecret itself, and its authorizedAccessIDs entry was removed, put the IDs in config.ztwaAuth.authorizedAccessIDs" -}}
 {{- end -}}
 {{- if $moved -}}
   {{- fail (printf "values from an older chart layout found. Update them and run again, the README section \"Upgrading to the 4.0.0 values layout\" has the full map:\n- %s" (join "\n- " $moved)) -}}
 {{- end -}}
-{{- $hasAccessSecret := eq (include "secret-exist" (dict "Root" $pa.existingSecretNames "Name" "access")) "true" -}}
-{{- $hasIDsSecret := eq (include "secret-exist" (dict "Root" $pa.existingSecretNames "Name" "authorizedAccessIDs")) "true" -}}
-{{- if and (eq (toString $pa.accessType) "access_key") (not $hasAccessSecret) -}}
-  {{- fail "config.privilegedAccess.accessType access_key needs config.privilegedAccess.existingSecretNames.access, a Secret with the keys accessID and accessKey" -}}
+{{- if not $za.ztwaAccessID -}}
+  {{- fail "config.ztwaAuth.ztwaAccessID is required" -}}
 {{- end -}}
-{{- if and (has (toString $pa.accessType) (list "aws_iam" "azure_ad" "gcp")) $hasAccessSecret -}}
-  {{- fail (printf "config.privilegedAccess.accessType %s uses config.privilegedAccess.accessID. Remove config.privilegedAccess.existingSecretNames.access, an API key in that Secret would be used in place of the cloud identity" (toString $pa.accessType)) -}}
+{{- $hasAccessSecret := not (empty $za.ztwaExistingSecret) -}}
+{{- if and (eq (toString $za.ztwaAccessType) "access_key") (not $hasAccessSecret) -}}
+  {{- fail "config.ztwaAuth.ztwaAccessType access_key needs config.ztwaAuth.ztwaExistingSecret, a Secret with the key ztwa-access-key" -}}
+{{- end -}}
+{{- if and (has (toString $za.ztwaAccessType) (list "aws_iam" "azure_ad" "gcp")) $hasAccessSecret -}}
+  {{- fail (printf "config.ztwaAuth.ztwaAccessType %s uses config.ztwaAuth.ztwaAccessID. Remove config.ztwaAuth.ztwaExistingSecret, an API key in that Secret would be used in place of the cloud identity" (toString $za.ztwaAccessType)) -}}
 {{- end -}}
 {{- /* Both images copy ALLOWED_ACCESS_IDS from their env over the list the init container writes. */}}
 {{- $envIDs := dict -}}
@@ -175,15 +186,15 @@ without.
     {{- if eq (toString .name) "ALLOWED_ACCESS_IDS" -}}{{- $_ := set $envIDs $svc true -}}{{- end -}}
   {{- end -}}
 {{- end -}}
-{{- if and (not $hasIDsSecret) (not $pa.authorizedAccessIDs) -}}
+{{- if not $za.authorizedAccessIDs -}}
   {{- $inDispatcher := hasKey $envIDs "dispatcher" -}}
   {{- $inProxy := hasKey $envIDs "webProxy" -}}
   {{- if and $inDispatcher (not $inProxy) -}}
-    {{- fail "ALLOWED_ACCESS_IDS is set in dispatcher.env but not in webProxy.env, so the web proxy accepts no user. Set it in both, or set config.privilegedAccess.authorizedAccessIDs" -}}
+    {{- fail "ALLOWED_ACCESS_IDS is set in dispatcher.env but not in webProxy.env, so the web proxy accepts no user. Set it in both, or set config.ztwaAuth.authorizedAccessIDs" -}}
   {{- else if and $inProxy (not $inDispatcher) -}}
-    {{- fail "ALLOWED_ACCESS_IDS is set in webProxy.env but not in dispatcher.env, so the dispatcher accepts no user. Set it in both, or set config.privilegedAccess.authorizedAccessIDs" -}}
+    {{- fail "ALLOWED_ACCESS_IDS is set in webProxy.env but not in dispatcher.env, so the dispatcher accepts no user. Set it in both, or set config.ztwaAuth.authorizedAccessIDs" -}}
   {{- else if not $inDispatcher -}}
-    {{- fail "config.privilegedAccess.authorizedAccessIDs is empty, and the dispatcher and the web proxy accept no user without it. Set it, or config.privilegedAccess.existingSecretNames.authorizedAccessIDs" -}}
+    {{- fail "config.ztwaAuth.authorizedAccessIDs is empty, and the dispatcher and the web proxy accept no user without it" -}}
   {{- end -}}
 {{- end -}}
 {{- $s3 := ($v.recording | default dict).s3 | default dict -}}

@@ -39,10 +39,10 @@ spec:
           emptyDir: {}
         - name: ng-config
           emptyDir: {}
-{{- if .Values.config.apiGatewayCert.tlsCertsSecretName }}
+{{- if .Values.config.gatewayCert.tlsExistingSecret }}
         - name: gw-signed-ca
           secret:
-            secretName: {{ .Values.config.apiGatewayCert.tlsCertsSecretName }}
+            secretName: {{ .Values.config.gatewayCert.tlsExistingSecret }}
             items:
               - key: tls.crt
                 path: gw-cert.pem           
@@ -62,35 +62,23 @@ spec:
         - name: bootstrap
           image: "{{ .Values.dispatcher.initContainer.image.repository }}:{{ .Values.dispatcher.initContainer.image.tag }}"
           imagePullPolicy: {{ .Values.dispatcher.initContainer.image.pullPolicy }}
-          {{- if (or (eq (include "secret-exist" (dict "Root" $.Values.config.privilegedAccess.existingSecretNames "Name" "authorizedAccessIDs")) "true") (eq (include "secret-exist" (dict "Root" $.Values.config.privilegedAccess.existingSecretNames "Name" "access")) "true")) }}
+          {{- if .Values.config.ztwaAuth.ztwaExistingSecret }}
           env:
-          {{- if (eq (include "secret-exist" (dict "Root" $.Values.config.privilegedAccess.existingSecretNames "Name" "authorizedAccessIDs")) "true") }}
-            - name: allowedAccessIDs
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $.Values.config.privilegedAccess.existingSecretNames.authorizedAccessIDs }}
-                  key: allowedAccessIDs
-          {{- end }}
-          {{- if (eq (include "secret-exist" (dict "Root" $.Values.config.privilegedAccess.existingSecretNames "Name" "access")) "true") }}
             - name: accessID
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $.Values.config.privilegedAccess.existingSecretNames.access }}
-                  key: accessID
+              value: {{ .Values.config.ztwaAuth.ztwaAccessID | quote }}
             - name: accessKey
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.config.privilegedAccess.existingSecretNames.access }}
-                  key: accessKey
-          {{- end }}
+                  name: {{ .Values.config.ztwaAuth.ztwaExistingSecret }}
+                  key: ztwa-access-key
           {{- end }}
           command: ['sh']
           args:
             - "-c"
             - |
               set -ex
-{{- if (eq (include "secret-exist" (dict "Root" $.Values.config.privilegedAccess.existingSecretNames "Name" "access")) "true") }}
-              echo "{{ required "API Gateway URL is required" .Values.config.apiGatewayURL }}" > /etc/akeyless/akeyless_config_file
+{{- if .Values.config.ztwaAuth.ztwaExistingSecret }}
+              echo "{{ required "config.gatewayURL is required" .Values.config.gatewayURL }}" > /etc/akeyless/akeyless_config_file
 {{- /* xtrace would print the access key to the init container log. Line ends are
 stripped because a key file often ends in a newline, and the dispatcher reads its auth
 from the last line of the file. */}}
@@ -103,12 +91,8 @@ from the last line of the file. */}}
               export WEB_WORKER_SERVICE_DNS=$(cat /etc/akeyless/service-dns)
               echo {{ .Values.config.allowedInternalAuth }} > /etc/akeyless/allowed_internal_auth
               echo {{ .Values.config.disableSecureCookie }} > /etc/akeyless/disable_secure_cookie
-{{- if (eq (include "secret-exist" (dict "Root" $.Values.config.privilegedAccess.existingSecretNames "Name" "authorizedAccessIDs")) "true") }}
-              echo $allowedAccessIDs > /etc/akeyless/allowed_access_ids
-{{- else }}
-{{- if .Values.config.privilegedAccess.authorizedAccessIDs }}
-              echo {{ range $index, $element := .Values.config.privilegedAccess.authorizedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_access_ids
-{{- end }}
+{{- if .Values.config.ztwaAuth.authorizedAccessIDs }}
+              echo {{ range $index, $element := .Values.config.ztwaAuth.authorizedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_access_ids
 {{- end }}
 {{- if .Values.config.allowedBastionUrls }}
               echo {{ range $index, $element := .Values.config.allowedBastionUrls -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_bastion_urls
@@ -128,7 +112,7 @@ from the last line of the file. */}}
               mountPath: /configmap_akeyless
             - name: ng-config
               mountPath: /etc/akeyless
-{{- if .Values.config.apiGatewayCert.tlsCertsSecretName }}
+{{- if .Values.config.gatewayCert.tlsExistingSecret }}
             - name: gw-signed-ca
               mountPath: "/etc/ssl/certs/gw-cert.pem"
               subPath: gw-cert.pem
@@ -157,9 +141,9 @@ from the last line of the file. */}}
             - name: CLUSTER_NAME
               value: {{ .Values.config.clusterName }}
 {{- end }}
-{{- if has (toString .Values.config.privilegedAccess.accessType) (list "aws_iam" "azure_ad" "gcp") }}
+{{- if has (toString .Values.config.ztwaAuth.ztwaAccessType) (list "aws_iam" "azure_ad" "gcp") }}
             - name: ADMIN_ACCESS_ID_TYPE
-              value: {{ .Values.config.privilegedAccess.accessType | quote }}
+              value: {{ .Values.config.ztwaAuth.ztwaAccessType | quote }}
 {{- end }}
 {{- if .Values.httpProxySettings.http_proxy }}
             - name: HTTP_PROXY
@@ -220,7 +204,7 @@ from the last line of the file. */}}
             - name: RECORDING_SSE_KMS_KEY_ID
               value: {{ $sse.kmsKeyId | quote }}
             {{- end }}
-{{- if .Values.config.apiGatewayCert.tlsCertsSecretName }}
+{{- if .Values.config.gatewayCert.tlsExistingSecret }}
             - name: AKEYLESS_CA_BUNDLE
               value: "/etc/ssl/certs/gw-cert.pem"
 {{- end }}
@@ -238,7 +222,7 @@ from the last line of the file. */}}
             - name: {{ .Values.persistence.shareStorageVolume.name | title | lower }}
               mountPath: /etc/shared
             {{ end }}
-{{- if .Values.config.apiGatewayCert.tlsCertsSecretName }}
+{{- if .Values.config.gatewayCert.tlsExistingSecret }}
             - name: gw-signed-ca
               mountPath: "/etc/ssl/certs/gw-cert.pem"
               subPath: gw-cert.pem

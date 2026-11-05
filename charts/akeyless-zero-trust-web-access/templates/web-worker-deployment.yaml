@@ -38,10 +38,10 @@ spec:
           emptyDir: {}
         - name: akeyless-policy-conf
           emptyDir: {}
-{{- if .Values.config.apiGatewayCert.tlsCertsSecretName }}
+{{- if .Values.config.gatewayCert.tlsExistingSecret }}
         - name: gw-signed-ca
           secret:
-            secretName: {{ .Values.config.apiGatewayCert.tlsCertsSecretName }}
+            secretName: {{ .Values.config.gatewayCert.tlsExistingSecret }}
             items:
               - key: tls.crt
                 path: gw-cert.pem
@@ -89,7 +89,7 @@ spec:
               mountPath: /var/akeyless/policy_conf
             - name: configmap-policies
               mountPath: /configmap_policy_conf
-{{- if .Values.config.apiGatewayCert.tlsCertsSecretName }}
+{{- if .Values.config.gatewayCert.tlsExistingSecret }}
             - name: gw-signed-ca
               mountPath: "/etc/ssl/certs/gw-cert.pem"
               subPath: gw-cert.pem
@@ -169,7 +169,7 @@ spec:
           - name: {{ .Values.persistence.shareStorageVolume.name | title | lower }}
             mountPath: /etc/shared
           {{ end }}
-{{- if .Values.config.apiGatewayCert.tlsCertsSecretName }}
+{{- if .Values.config.gatewayCert.tlsExistingSecret }}
           - name: gw-signed-ca
             mountPath: "/etc/ssl/certs/gw-cert.pem"
             subPath: gw-cert.pem

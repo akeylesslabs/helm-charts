@@ -3,8 +3,8 @@ release:
   name: ztwa
   namespace: sra
 set:
-  config.privilegedAccess.accessID: p-priv
-  config.privilegedAccess.authorizedAccessIDs: [p-1]
+  config.ztwaAuth.ztwaAccessID: p-priv
+  config.ztwaAuth.authorizedAccessIDs: [p-1]
 tests:
   - it: "dispatcher.config from the old layout fails and names config"
     template: templates/configmap.yaml
@@ -57,26 +57,44 @@ tests:
   - it: "a plain accessKey fails and points to the access Secret"
     template: templates/configmap.yaml
     set:
-      config.privilegedAccess.accessKey: plain
+      config.ztwaAuth.accessKey: plain
     asserts:
       - failedTemplate:
-          errorPattern: "config.privilegedAccess.accessKey was removed"
+          errorPattern: "config.ztwaAuth.accessKey is not a setting, put the key in the Secret named in config.ztwaAuth.ztwaExistingSecret"
 
   - it: "allowedAccessIDs fails and names authorizedAccessIDs"
     template: templates/configmap.yaml
     set:
-      config.privilegedAccess.allowedAccessIDs: [p-1]
+      config.ztwaAuth.allowedAccessIDs: [p-1]
     asserts:
       - failedTemplate:
-          errorPattern: "allowedAccessIDs moved to config.privilegedAccess.authorizedAccessIDs"
+          errorPattern: "config.ztwaAuth.allowedAccessIDs moved to config.ztwaAuth.authorizedAccessIDs"
 
-  - it: "existingSecretNames.allowedIDs fails and names authorizedAccessIDs"
+  - it: "a ztwaExistingSecret map fails and names the flat Secret and authorizedAccessIDs"
     template: templates/configmap.yaml
     set:
-      config.privilegedAccess.existingSecretNames.allowedIDs: ids-secret
+      config.ztwaAuth.ztwaExistingSecret.access: priv-secret
+      config.ztwaAuth.ztwaExistingSecret.authorizedAccessIDs: ids-secret
     asserts:
       - failedTemplate:
-          errorPattern: "existingSecretNames.allowedIDs moved to config.privilegedAccess.existingSecretNames.authorizedAccessIDs"
+          errorPattern: "config.ztwaAuth.ztwaExistingSecret is one Secret name, with only the key ztwa-access-key"
+
+  - it: "config.privilegedAccess fails and names config.ztwaAuth"
+    template: templates/configmap.yaml
+    set:
+      config.privilegedAccess.accessID: p-old
+    asserts:
+      - failedTemplate:
+          errorPattern: "config.privilegedAccess moved to config.ztwaAuth: accessID to ztwaAccessID, accessType to ztwaAccessType, existingSecretNames.access to ztwaExistingSecret"
+
+  - it: "config.apiGatewayURL and apiGatewayCert fail and name the new keys"
+    template: templates/configmap.yaml
+    set:
+      config.apiGatewayURL: https://gw.example
+      config.apiGatewayCert.tlsCertsSecretName: gw-ca
+    asserts:
+      - failedTemplate:
+          errorPattern: "(?s)config.apiGatewayURL moved to config.gatewayURL.*config.apiGatewayCert.tlsCertsSecretName moved to config.gatewayCert.tlsExistingSecret"
 
   - it: "config.cloudIdentity fails and names accessType"
     template: templates/configmap.yaml
@@ -84,7 +102,7 @@ tests:
       config.cloudIdentity.type: aws_iam
     asserts:
       - failedTemplate:
-          errorPattern: "config.cloudIdentity.type moved to config.privilegedAccess.accessType"
+          errorPattern: "config.cloudIdentity.type moved to config.ztwaAuth.ztwaAccessType"
 
   - it: "config.logForward fails as removed"
     template: templates/configmap.yaml
@@ -97,7 +115,7 @@ tests:
   - it: "an old values file gets the layout message before the authorized IDs check"
     template: templates/configmap.yaml
     set:
-      config.privilegedAccess.authorizedAccessIDs: null
+      config.ztwaAuth.authorizedAccessIDs: null
       dispatcher.config.clusterName: old
     asserts:
       - failedTemplate:
@@ -195,11 +213,11 @@ tests:
           path: spec.template.spec.initContainers[0].args[1]
           pattern: "echo https://ztwa.my.org:19414 > /etc/akeyless/allowed_proxy_urls"
 
-  - it: "config.apiGatewayURL and apiGatewayCert reach the web proxy"
+  - it: "config.gatewayURL and gatewayCert reach the web proxy"
     template: templates/proxy-deployment.yaml
     set:
-      config.apiGatewayURL: https://gw.my.org
-      config.apiGatewayCert.tlsCertsSecretName: gw-ca
+      config.gatewayURL: https://gw.my.org
+      config.gatewayCert.tlsExistingSecret: gw-ca
     asserts:
       - matchRegex:
           path: spec.template.spec.initContainers[0].args[1]
@@ -214,12 +232,12 @@ tests:
                 - key: tls.crt
                   path: gw-cert.pem
 
-  - it: "config.apiGatewayCert reaches the dispatcher and the worker"
+  - it: "config.gatewayCert reaches the dispatcher and the worker"
     templates:
       - templates/dispatcher-deployment.yaml
       - templates/web-worker-deployment.yaml
     set:
-      config.apiGatewayCert.tlsCertsSecretName: gw-ca
+      config.gatewayCert.tlsExistingSecret: gw-ca
     asserts:
       - contains:
           path: spec.template.spec.volumes
