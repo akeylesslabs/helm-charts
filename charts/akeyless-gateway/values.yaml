@@ -27,7 +27,6 @@ strictSecurityPolicy:
 globalConfig:
   gatewayAuth:
     ## Supported types: access_key, certificate, universal identity, cloud identity (aws_iam/azure_ad/gcp/alicloud)
-    ## alicloud: on Alibaba Cloud ACK, use RRSA (see README "Cloud Identity on Alibaba Cloud ACK (RRSA)")
     ## If using access_key, certificate or universal identity, you must also add gatewayCredentialsExistingSecret which includes the key/certificate/token
     ## https://docs.akeyless.io/docs/gateway-chart#authentication
     ##
