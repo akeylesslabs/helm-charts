@@ -21,10 +21,6 @@ spec:
   {{- end }}
   clusterIP: None
   ports:
-    - port: {{ .Values.webWorker.service.port }}
-      targetPort: web
-      protocol: TCP
-      name: web
     - port: 9090
       targetPort: agent
       protocol: TCP
