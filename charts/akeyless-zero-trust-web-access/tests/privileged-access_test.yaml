@@ -163,6 +163,16 @@ tests:
       - failedTemplate:
           errorPattern: "authorizedAccessIDs is empty"
 
+  - it: "an empty AUTHORIZED_ACCESS_IDS in both env lists does not count"
+    template: templates/configmap.yaml
+    set:
+      config.ztwaAuth.authorizedAccessIDs: []
+      dispatcher.env: [{name: AUTHORIZED_ACCESS_IDS, value: ""}]
+      webProxy.env: [{name: AUTHORIZED_ACCESS_IDS, value: ""}]
+    asserts:
+      - failedTemplate:
+          errorPattern: "authorizedAccessIDs is empty"
+
   - it: "AUTHORIZED_ACCESS_IDS in one env list only fails and names the other"
     template: templates/configmap.yaml
     set:
@@ -188,6 +198,14 @@ tests:
     asserts:
       - failedTemplate:
           errorPattern: "authorizedAccessIDs is set, so remove AUTHORIZED_ACCESS_IDS from dispatcher.env and webProxy.env"
+
+  - it: "authorizedAccessIDs together with an empty list in env still fails"
+    template: templates/configmap.yaml
+    set:
+      webProxy.env: [{name: AUTHORIZED_ACCESS_IDS, value: ""}]
+    asserts:
+      - failedTemplate:
+          errorPattern: "authorizedAccessIDs is set, so remove AUTHORIZED_ACCESS_IDS"
 
   - it: "the schema rejects an empty authorized access ID"
     template: templates/dispatcher-deployment.yaml

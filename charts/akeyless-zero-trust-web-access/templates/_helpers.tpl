@@ -184,14 +184,18 @@ without.
 {{- if and (has (toString $za.ztwaAccessType) (list "aws_iam" "azure_ad" "gcp")) $hasAccessSecret -}}
   {{- fail (printf "config.ztwaAuth.ztwaAccessType %s uses config.ztwaAuth.ztwaAccessID. Remove config.ztwaAuth.ztwaExistingSecret, an API key in that Secret would be used in place of the cloud identity" (toString $za.ztwaAccessType)) -}}
 {{- end -}}
-{{- /* With authorizedAccessIDs empty, both images take the list from AUTHORIZED_ACCESS_IDS in their env. */}}
+{{- /* With authorizedAccessIDs empty, both images take the list from AUTHORIZED_ACCESS_IDS in their env. An empty value does not count. */}}
+{{- $envNamed := dict -}}
 {{- $envIDs := dict -}}
 {{- range $svc := list "dispatcher" "webProxy" -}}
   {{- range ((index $v $svc) | default dict).env | default list -}}
-    {{- if eq (toString .name) "AUTHORIZED_ACCESS_IDS" -}}{{- $_ := set $envIDs $svc true -}}{{- end -}}
+    {{- if eq (toString .name) "AUTHORIZED_ACCESS_IDS" -}}
+      {{- $_ := set $envNamed $svc true -}}
+      {{- if or (get . "valueFrom") (get . "value") -}}{{- $_ := set $envIDs $svc true -}}{{- end -}}
+    {{- end -}}
   {{- end -}}
 {{- end -}}
-{{- if and $za.authorizedAccessIDs $envIDs -}}
+{{- if and $za.authorizedAccessIDs $envNamed -}}
   {{- fail "config.ztwaAuth.authorizedAccessIDs is set, so remove AUTHORIZED_ACCESS_IDS from dispatcher.env and webProxy.env. Set the list in one place only" -}}
 {{- end -}}
 {{- if not $za.authorizedAccessIDs -}}

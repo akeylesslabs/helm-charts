@@ -184,7 +184,7 @@ When a field was set in both `sessionRecording.upload` and `dispatcher.config.re
 The render also fails when:
 
 - `config.ztwaAuth.ztwaAccessID` is empty.
-- `config.ztwaAuth.authorizedAccessIDs` is empty, and `AUTHORIZED_ACCESS_IDS` is not set in both `dispatcher.env` and `webProxy.env`. The dispatcher and the web proxy accept no user without them.
+- `config.ztwaAuth.authorizedAccessIDs` is empty, and `AUTHORIZED_ACCESS_IDS` is not set to a value in both `dispatcher.env` and `webProxy.env`. The dispatcher and the web proxy accept no user without them.
 - `config.ztwaAuth.authorizedAccessIDs` is set, and `AUTHORIZED_ACCESS_IDS` is also set in `dispatcher.env` or `webProxy.env`.
 - `dispatcher.initContainer.imagePullSecrets` or `webProxy.initContainer.imagePullSecrets` is set. Move it to `dispatcher.image.imagePullSecrets` or `webProxy.image.imagePullSecrets`.
 - `config.ztwaAuth.ztwaAccessType` is `access_key` and `config.ztwaAuth.ztwaExistingSecret` is not set.
