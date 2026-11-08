@@ -59,22 +59,6 @@
       "type": "object",
       "additionalProperties": true,
       "properties": {
-        "initContainer": {
-          "type": "object",
-          "additionalProperties": true,
-          "properties": {
-            "imagePullSecrets": {
-              "type": "array",
-              "description": "Merged on the dispatcher pod with image.imagePullSecrets and dispatcher.image.imagePullSecrets; deduplicated at pod spec.",
-              "items": {
-                "type": "object",
-                "additionalProperties": true,
-                "properties": { "name": { "type": "string" } },
-                "required": ["name"]
-              }
-            }
-          }
-        },
         "image": {
           "type": "object",
           "additionalProperties": true,
@@ -132,21 +116,6 @@
       "type": "object",
       "additionalProperties": true,
       "properties": {
-        "initContainer": {
-          "type": "object",
-          "additionalProperties": true,
-          "properties": {
-            "imagePullSecrets": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "additionalProperties": true,
-                "properties": { "name": { "type": "string" } },
-                "required": ["name"]
-              }
-            }
-          }
-        },
         "image": {
           "type": "object",
           "additionalProperties": true,

@@ -30,8 +30,7 @@ spec:
         # shared-upload PVC group; the proxy mounts no such volume.
         fsGroup: 65534
       volumes:
-        # Shared read-write config dir. The proxy needs zero privileged creds, so the
-        # dispatcher's privileged-access secret and -cm-akeyless configmap are NOT mounted.
+        # Config dir the proxy entrypoint writes from its env. The proxy needs no privileged credentials.
         - name: ng-config
           emptyDir: {}
 {{- if .Values.config.gatewayCert.tlsExistingSecret }}
@@ -42,35 +41,7 @@ spec:
               - key: tls.crt
                 path: gw-cert.pem
 {{- end }}
-      initContainers:
-        - name: bootstrap
-          image: "{{ .Values.webProxy.initContainer.image.repository }}:{{ .Values.webProxy.initContainer.image.tag }}"
-          imagePullPolicy: {{ .Values.webProxy.initContainer.image.pullPolicy }}
-          command: ['sh']
-          args:
-            - "-c"
-            - |
-              set -ex
-              echo "{{ required "config.gatewayURL is required" .Values.config.gatewayURL }}" > /etc/akeyless/akeyless_config_file
-{{- if .Values.config.ztwaAuth.authorizedAccessIDs }}
-              echo {{ range $index, $element := .Values.config.ztwaAuth.authorizedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_access_ids
-{{- end }}
-          resources:
-{{- toYaml .Values.webProxy.initContainer.resources | nindent 12 }}
-          securityContext:
-            runAsUser: 65534
-            runAsGroup: 65534
-            runAsNonRoot: true
-            allowPrivilegeEscalation: false
-          volumeMounts:
-            - name: ng-config
-              mountPath: /etc/akeyless
-{{- if .Values.config.gatewayCert.tlsExistingSecret }}
-            - name: gw-signed-ca
-              mountPath: "/etc/ssl/certs/gw-cert.pem"
-              subPath: gw-cert.pem
-{{- end }}
-{{- with include "akeyless-zero-web-access.imagePullSecrets" (dict "Root" $ "initPullSecrets" .Values.webProxy.initContainer.imagePullSecrets "imagePullSecrets" .Values.webProxy.image.imagePullSecrets) }}{{ . | nindent 6 }}{{ end }}
+{{- with include "akeyless-zero-web-access.imagePullSecrets" (dict "Root" $ "initPullSecrets" (list) "imagePullSecrets" .Values.webProxy.image.imagePullSecrets) }}{{ . | nindent 6 }}{{ end }}
       containers:
         - name: {{ .Values.webProxy.containerName }}
           image: "{{ .Values.webProxy.image.repository }}:{{ .Values.webProxy.image.tag | default .Chart.AppVersion }}"
@@ -84,6 +55,12 @@ spec:
             - containerPort: 19414
               name: proxy
           env:
+            - name: GATEWAY_URL
+              value: {{ required "config.gatewayURL is required" .Values.config.gatewayURL | quote }}
+{{- if .Values.config.ztwaAuth.authorizedAccessIDs }}
+            - name: AUTHORIZED_ACCESS_IDS
+              value: {{ join "," .Values.config.ztwaAuth.authorizedAccessIDs | quote }}
+{{- end }}
 {{- if .Values.httpProxySettings.http_proxy }}
             - name: HTTP_PROXY
               value: {{ .Values.httpProxySettings.http_proxy }}
@@ -103,7 +80,7 @@ spec:
               value: {{ .Values.httpProxySettings.no_proxy }}
 {{- end }}
 {{- if .Values.config.gatewayCert.tlsExistingSecret }}
-            - name: AKEYLESS_CA_BUNDLE
+            - name: GATEWAY_CERT
               value: "/etc/ssl/certs/gw-cert.pem"
 {{- end }}
 {{- if .Values.webProxy.env }}

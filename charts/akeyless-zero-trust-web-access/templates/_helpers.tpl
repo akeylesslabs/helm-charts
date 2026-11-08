@@ -166,6 +166,11 @@ without.
 {{- if kindIs "map" $za.ztwaExistingSecret -}}
   {{- $moved = append $moved "config.ztwaAuth.ztwaExistingSecret is one Secret name, with only the key ztwa-access-key. Its access entry moved to ztwaExistingSecret itself, and its authorizedAccessIDs entry was removed, put the IDs in config.ztwaAuth.authorizedAccessIDs" -}}
 {{- end -}}
+{{- range $svc := list "dispatcher" "webProxy" -}}
+  {{- if (((index $v $svc) | default dict).initContainer | default dict).imagePullSecrets -}}
+    {{- $moved = append $moved (printf "%s.initContainer was removed, move its imagePullSecrets to %s.image.imagePullSecrets" $svc $svc) -}}
+  {{- end -}}
+{{- end -}}
 {{- if $moved -}}
   {{- fail (printf "values from an older chart layout found. Update them and run again, the README section \"Upgrading to the 4.0.0 values layout\" has the full map:\n- %s" (join "\n- " $moved)) -}}
 {{- end -}}
@@ -179,20 +184,23 @@ without.
 {{- if and (has (toString $za.ztwaAccessType) (list "aws_iam" "azure_ad" "gcp")) $hasAccessSecret -}}
   {{- fail (printf "config.ztwaAuth.ztwaAccessType %s uses config.ztwaAuth.ztwaAccessID. Remove config.ztwaAuth.ztwaExistingSecret, an API key in that Secret would be used in place of the cloud identity" (toString $za.ztwaAccessType)) -}}
 {{- end -}}
-{{- /* Both images copy ALLOWED_ACCESS_IDS from their env over the list the init container writes. */}}
+{{- /* With authorizedAccessIDs empty, both images take the list from AUTHORIZED_ACCESS_IDS or ALLOWED_ACCESS_IDS in their env. */}}
 {{- $envIDs := dict -}}
 {{- range $svc := list "dispatcher" "webProxy" -}}
   {{- range ((index $v $svc) | default dict).env | default list -}}
-    {{- if eq (toString .name) "ALLOWED_ACCESS_IDS" -}}{{- $_ := set $envIDs $svc true -}}{{- end -}}
+    {{- if has (toString .name) (list "AUTHORIZED_ACCESS_IDS" "ALLOWED_ACCESS_IDS") -}}{{- $_ := set $envIDs $svc true -}}{{- end -}}
   {{- end -}}
+{{- end -}}
+{{- if and $za.authorizedAccessIDs $envIDs -}}
+  {{- fail "config.ztwaAuth.authorizedAccessIDs is set, so remove AUTHORIZED_ACCESS_IDS and ALLOWED_ACCESS_IDS from dispatcher.env and webProxy.env. Set the list in one place only" -}}
 {{- end -}}
 {{- if not $za.authorizedAccessIDs -}}
   {{- $inDispatcher := hasKey $envIDs "dispatcher" -}}
   {{- $inProxy := hasKey $envIDs "webProxy" -}}
   {{- if and $inDispatcher (not $inProxy) -}}
-    {{- fail "ALLOWED_ACCESS_IDS is set in dispatcher.env but not in webProxy.env, so the web proxy accepts no user. Set it in both, or set config.ztwaAuth.authorizedAccessIDs" -}}
+    {{- fail "AUTHORIZED_ACCESS_IDS is set in dispatcher.env but not in webProxy.env, so the web proxy accepts no user. Set it in both, or set config.ztwaAuth.authorizedAccessIDs" -}}
   {{- else if and $inProxy (not $inDispatcher) -}}
-    {{- fail "ALLOWED_ACCESS_IDS is set in webProxy.env but not in dispatcher.env, so the dispatcher accepts no user. Set it in both, or set config.ztwaAuth.authorizedAccessIDs" -}}
+    {{- fail "AUTHORIZED_ACCESS_IDS is set in webProxy.env but not in dispatcher.env, so the dispatcher accepts no user. Set it in both, or set config.ztwaAuth.authorizedAccessIDs" -}}
   {{- else if not $inDispatcher -}}
     {{- fail "config.ztwaAuth.authorizedAccessIDs is empty, and the dispatcher and the web proxy accept no user without it" -}}
   {{- end -}}

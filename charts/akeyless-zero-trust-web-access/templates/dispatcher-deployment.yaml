@@ -47,77 +47,12 @@ spec:
               - key: tls.crt
                 path: gw-cert.pem           
 {{- end }}
-        - name: configmap-akeyless
-          configMap:
-            name: {{ $.Release.Name }}-cm-akeyless
         {{ if and .Values.persistence .Values.persistence.shareStorageVolume }}
         - name: {{ .Values.persistence.shareStorageVolume.name | title | lower }}
           persistentVolumeClaim:
             claimName: {{ printf "%s-%s" $.Release.Name .Values.persistence.shareStorageVolume.name | title | lower }}
         {{ end }}
-      initContainers:
-        # Since k8s 1.9.4, config maps mount read-only volumes. Since the Docker image also writes to the config file,
-        # the file must be mounted as read-write. We use init containers to copy from the config map read-only
-        # path, to a read-write path
-        - name: bootstrap
-          image: "{{ .Values.dispatcher.initContainer.image.repository }}:{{ .Values.dispatcher.initContainer.image.tag }}"
-          imagePullPolicy: {{ .Values.dispatcher.initContainer.image.pullPolicy }}
-          {{- if .Values.config.ztwaAuth.ztwaExistingSecret }}
-          env:
-            - name: accessID
-              value: {{ .Values.config.ztwaAuth.ztwaAccessID | quote }}
-            - name: accessKey
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.config.ztwaAuth.ztwaExistingSecret }}
-                  key: ztwa-access-key
-          {{- end }}
-          command: ['sh']
-          args:
-            - "-c"
-            - |
-              set -ex
-{{- if .Values.config.ztwaAuth.ztwaExistingSecret }}
-              echo "{{ required "config.gatewayURL is required" .Values.config.gatewayURL }}" > /etc/akeyless/akeyless_config_file
-{{- /* xtrace would print the access key to the init container log. Line ends are
-stripped because a key file often ends in a newline, and the dispatcher reads its auth
-from the last line of the file. */}}
-              set +x
-              printf 'cmd=auth&access-id=%s&access-key=%s\n' "$(printf '%s' "$accessID" | tr -d '\r\n')" "$(printf '%s' "$accessKey" | tr -d '\r\n')" >> /etc/akeyless/akeyless_config_file
-              set -x
-{{- end }}
-              [ "$(ls /configmap_akeyless)" ] && cp /configmap_akeyless/* /etc/akeyless
-              echo {{ include "akeyless-zero-web-access.fullname" . }}-discovery > /etc/akeyless/service-dns
-              export WEB_WORKER_SERVICE_DNS=$(cat /etc/akeyless/service-dns)
-              echo {{ .Values.config.allowedInternalAuth }} > /etc/akeyless/allowed_internal_auth
-              echo {{ .Values.config.disableSecureCookie }} > /etc/akeyless/disable_secure_cookie
-{{- if .Values.config.ztwaAuth.authorizedAccessIDs }}
-              echo {{ range $index, $element := .Values.config.ztwaAuth.authorizedAccessIDs -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_access_ids
-{{- end }}
-{{- if .Values.config.allowedBastionUrls }}
-              echo {{ range $index, $element := .Values.config.allowedBastionUrls -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_bastion_urls
-{{- end }}
-{{- if .Values.config.allowedProxyUrls }}
-              echo {{ range $index, $element := .Values.config.allowedProxyUrls -}}{{- if $index -}},{{- end -}}{{ $element }}{{ end }} > /etc/akeyless/allowed_proxy_urls
-{{- end }}
-          resources:
-{{- toYaml .Values.dispatcher.initContainer.resources | nindent 12 }}
-          securityContext:
-            runAsUser: 65534
-            runAsGroup: 65534
-            runAsNonRoot: true
-            allowPrivilegeEscalation: false
-          volumeMounts:
-            - name: configmap-akeyless
-              mountPath: /configmap_akeyless
-            - name: ng-config
-              mountPath: /etc/akeyless
-{{- if .Values.config.gatewayCert.tlsExistingSecret }}
-            - name: gw-signed-ca
-              mountPath: "/etc/ssl/certs/gw-cert.pem"
-              subPath: gw-cert.pem
-{{- end }}
-{{- with include "akeyless-zero-web-access.imagePullSecrets" (dict "Root" $ "initPullSecrets" .Values.dispatcher.initContainer.imagePullSecrets "imagePullSecrets" .Values.dispatcher.image.imagePullSecrets) }}{{ . | nindent 6 }}{{ end }}
+{{- with include "akeyless-zero-web-access.imagePullSecrets" (dict "Root" $ "initPullSecrets" (list) "imagePullSecrets" .Values.dispatcher.image.imagePullSecrets) }}{{ . | nindent 6 }}{{ end }}
       containers:
         - name: {{ .Values.dispatcher.containerName }}
           image: "{{ .Values.dispatcher.image.repository }}:{{ .Values.dispatcher.image.tag  | default .Chart.AppVersion }}"
@@ -137,13 +72,42 @@ from the last line of the file. */}}
               value: {{ include "akeyless-zero-web-access.fullname" . }}-discovery
             - name: VERSION
               value: {{ .Chart.AppVersion }}
+            - name: SERVICE_DNS
+              value: {{ include "akeyless-zero-web-access.fullname" . }}-discovery
+            - name: GATEWAY_URL
+              value: {{ required "config.gatewayURL is required" .Values.config.gatewayURL | quote }}
+            - name: ZTWA_ACCESS_ID
+              value: {{ required "config.ztwaAuth.ztwaAccessID is required" .Values.config.ztwaAuth.ztwaAccessID | quote }}
+{{- if .Values.config.ztwaAuth.ztwaAccessType }}
+            - name: ZTWA_ACCESS_TYPE
+              value: {{ .Values.config.ztwaAuth.ztwaAccessType | quote }}
+{{- end }}
+{{- if .Values.config.ztwaAuth.ztwaExistingSecret }}
+            - name: ZTWA_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.config.ztwaAuth.ztwaExistingSecret | quote }}
+                  key: ztwa-access-key
+{{- end }}
+{{- if .Values.config.ztwaAuth.authorizedAccessIDs }}
+            - name: AUTHORIZED_ACCESS_IDS
+              value: {{ join "," .Values.config.ztwaAuth.authorizedAccessIDs | quote }}
+{{- end }}
+{{- if .Values.config.allowedBastionUrls }}
+            - name: ALLOWED_BASTION_URLS
+              value: {{ join "," .Values.config.allowedBastionUrls | quote }}
+{{- end }}
+{{- if .Values.config.allowedProxyUrls }}
+            - name: ALLOWED_PROXY_URLS
+              value: {{ join "," .Values.config.allowedProxyUrls | quote }}
+{{- end }}
+            - name: ALLOWED_INTERNAL_AUTH
+              value: {{ .Values.config.allowedInternalAuth | quote }}
+            - name: DISABLE_SECURE_COOKIE
+              value: {{ .Values.config.disableSecureCookie | quote }}
 {{- if .Values.config.clusterName }}
             - name: CLUSTER_NAME
               value: {{ .Values.config.clusterName }}
-{{- end }}
-{{- if has (toString .Values.config.ztwaAuth.ztwaAccessType) (list "aws_iam" "azure_ad" "gcp") }}
-            - name: ADMIN_ACCESS_ID_TYPE
-              value: {{ .Values.config.ztwaAuth.ztwaAccessType | quote }}
 {{- end }}
 {{- if .Values.httpProxySettings.http_proxy }}
             - name: HTTP_PROXY
@@ -205,15 +169,13 @@ from the last line of the file. */}}
               value: {{ $sse.kmsKeyId | quote }}
             {{- end }}
 {{- if .Values.config.gatewayCert.tlsExistingSecret }}
-            - name: AKEYLESS_CA_BUNDLE
+            - name: GATEWAY_CERT
               value: "/etc/ssl/certs/gw-cert.pem"
 {{- end }}
 {{- if .Values.dispatcher.env }}
           {{- toYaml .Values.dispatcher.env | nindent 12 }}
 {{- end }}
           volumeMounts:
-            - name: configmap-akeyless
-              mountPath: /configmap_conf
             - name: ng-config
               mountPath: /etc/akeyless
             - name: akeyless-config

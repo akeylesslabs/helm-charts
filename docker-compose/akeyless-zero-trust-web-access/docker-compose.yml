@@ -1,5 +1,5 @@
 ## Akeyless Zero Trust Web Access with Docker Compose.
-## Set PRIVILEGED_ACCESS_ID, ALLOWED_ACCESS_IDS and, for the access_key type, PRIVILEGED_ACCESS_KEY
+## Set ZTWA_ACCESS_ID, AUTHORIZED_ACCESS_IDS and, for the access_key type, ZTWA_ACCESS_KEY
 ## in a .env file next to this file. Docker Compose reads it on its own. Do not commit it.
 ## https://docs.akeyless.io/docs/sra-web-access-docker
 ##
@@ -13,11 +13,11 @@ services:
       - "9000:9000"
     volumes:
       - $PWD/shared:/etc/shared
-      ## Gateway CA certificate, when it is not signed by a public CA. Also set AKEYLESS_CA_BUNDLE below.
+      ## Gateway CA certificate, when it is not signed by a public CA. Also set GATEWAY_CERT below.
       ##
       # - /path/to/your-ca-bundle.pem:/var/akeyless/certs/ca-bundle.pem:ro
     environment:
-      ## This is the name of this ZTWA cluster. A change to it, or to PRIVILEGED_ACCESS_ID, registers a new bastion.
+      ## This is the name of this ZTWA cluster. A change to it, or to ZTWA_ACCESS_ID, registers a new bastion.
       ## https://docs.akeyless.io/docs/sra-web-access-on-k8s-adv-config#cluster-name
       ##
       - CLUSTER_NAME=compose-ztwa
@@ -25,57 +25,93 @@ services:
       ## Akeyless API URL that the dispatcher and the web proxy use.
       ## Keep the default for the Akeyless SaaS, or set the API URL of your Akeyless Gateway.
       ##
-      - AKEYLESS_GW_URL=https://api.akeyless.io
+      - GATEWAY_URL=https://api.akeyless.io
       ## Auth method that reads the secrets of the web targets. It needs Read and List permissions on them.
-      ## Supported types: access_key, cloud identity (aws_iam/azure_ad/gcp). Leave PRIVILEGED_ACCESS_KEY empty for a cloud identity.
-      ## Set ADMIN_ACCESS_ID_TYPE when the container cannot reach the instance metadata service (IMDS).
-      ## https://docs.akeyless.io/docs/auth-with-aws#aws-instance-metadata-service
+      ## Supported types: access_key, cloud identity (aws_iam/azure_ad/gcp). Leave ZTWA_ACCESS_TYPE unset to auto detect.
+      ## Set a cloud type when the container cannot reach the instance metadata service (IMDS).
+      ## If using access_key, you must also set ZTWA_ACCESS_KEY which includes the key
+      ## https://docs.akeyless.io/docs/sra-web-access-docker
       ##
-      - PRIVILEGED_ACCESS_ID=${PRIVILEGED_ACCESS_ID:?set PRIVILEGED_ACCESS_ID in .env}
-      - PRIVILEGED_ACCESS_KEY=${PRIVILEGED_ACCESS_KEY:-}
-      # - ADMIN_ACCESS_ID_TYPE=aws_iam
+      - ZTWA_ACCESS_ID=${ZTWA_ACCESS_ID:?set ZTWA_ACCESS_ID in .env}
+      # - ZTWA_ACCESS_TYPE=aws_iam
+      ## Set it in .env for the access_key type. Not allowed with a cloud type.
+      ##
+      - ZTWA_ACCESS_KEY=${ZTWA_ACCESS_KEY:-}
+
       ## List Access IDs that can open ZTWA sessions (comma separated list), for example your SAML auth method.
       ## Required: with no Access IDs the dispatcher and the web proxy accept no user.
+      ## The users also need List permission on the secrets of the web targets.
       ##
-      - ALLOWED_ACCESS_IDS=${ALLOWED_ACCESS_IDS:?set ALLOWED_ACCESS_IDS in .env}
-      ## When false, the dispatcher accepts only requests with preemptive JWT auth.
-      ##
-      - ALLOW_INTERNAL_AUTH=false
-      ## When false, the browser sends the dispatcher session cookie only over HTTPS.
-      ##
-      - DISABLE_SECURE_COOKIE=true
-      ## External URLs of the dispatcher (port 9000) and of the web proxy (port 19414), comma separated.
+      - AUTHORIZED_ACCESS_IDS=${AUTHORIZED_ACCESS_IDS:?set AUTHORIZED_ACCESS_IDS in .env}
+
+      ## External URLs of the dispatcher on port 9000, comma separated.
       ## The Portal redirects users only to these URLs.
       ## https://docs.akeyless.io/docs/sra-web-access-on-k8s-adv-config#redirect-to-bastion-urls
       ##
       - ALLOWED_BASTION_URLS=
+
+      ## External URLs of the web proxy on port 19414, for proxy mode sessions, comma separated.
+      ## This is not http_proxy, the outbound proxy of the container.
+      ## https://docs.akeyless.io/docs/sra-web-access-browsing-proxy
+      ##
       - ALLOWED_PROXY_URLS=
+
+      ## When false, the dispatcher accepts only requests with preemptive JWT auth.
+      ##
+      - ALLOWED_INTERNAL_AUTH=false
+
+      ## When false, the browser sends the dispatcher session cookie only over HTTPS.
+      ##
+      - DISABLE_SECURE_COOKIE=true
+
       ## The media server that serves the live view.
       ##
       - MEDIA_SERVER=mediamtx:8889
-      ## Session recording. Set ENABLE_RECORDING=true together with MTX_PATHDEFAULTS_RECORD=yes on the media server.
+
+      ## Session recording. The media server records each session to the shared folder, and the dispatcher uploads it to S3.
+      ## Record sessions. Set it together with MTX_PATHDEFAULTS_RECORD=yes on the media server.
+      ## Upload to S3 needs ENABLE_RECORDING_UPLOAD as well.
       ## https://docs.akeyless.io/docs/sra-web-access-session-recording
       ##
       - ENABLE_RECORDING=false
-      ## Upload of the recordings to S3 or an S3 compatible storage. RECORDING_S3_BUCKET and RECORDING_S3_REGION
-      ## are required when ENABLE_RECORDING_UPLOAD is true. Set the S3 credentials in .env, or leave them empty
-      ## to use the AWS default credential chain, for example an instance profile.
-      ## RECORDING_S3_ENDPOINT is for S3 compatible services, for example MinIO.
-      ## RECORDING_SSE_TYPE: empty (none), sse-s3 or sse-kms. RECORDING_SSE_KMS_KEY_ID is for sse-kms only.
+
+      ## Upload to S3 or an S3 compatible storage.
       ##
       - ENABLE_RECORDING_UPLOAD=false
+
+      ## Required when ENABLE_RECORDING_UPLOAD is true.
+      ##
       - RECORDING_S3_BUCKET=
       - RECORDING_S3_REGION=
+
+      ## Optional prefix for the uploaded objects, for example "recordings".
+      ##
       - RECORDING_S3_PREFIX=
+
+      ## Endpoint of an S3 compatible service, for example MinIO. Leave empty for AWS S3.
+      ##
       - RECORDING_S3_ENDPOINT=
+
+      ## S3 credentials, set them in .env.
+      ## When empty, the dispatcher uses the AWS default credential chain, for example an instance profile.
+      ##
       - RECORDING_S3_ACCESS_KEY_ID=${RECORDING_S3_ACCESS_KEY_ID:-}
       - RECORDING_S3_ACCESS_KEY_SECRET=${RECORDING_S3_ACCESS_KEY_SECRET:-}
+
+      ## Gzip the recordings before upload.
+      ##
       - RECORDING_COMPRESS=false
+
+      ## Server side encryption of the uploaded objects. RECORDING_SSE_TYPE: empty (none), sse-s3 or sse-kms.
+      ## RECORDING_SSE_KMS_KEY_ID: KMS key ID or ARN for sse-kms. Empty uses the default KMS key.
+      ## https://docs.aws.amazon.com/AmazonS3/latest/userguide/serv-side-encryption.html
+      ##
       - RECORDING_SSE_TYPE=
       - RECORDING_SSE_KMS_KEY_ID=
+
       ## Gateway CA certificate from the volume above.
       ##
-      # - AKEYLESS_CA_BUNDLE=/var/akeyless/certs/ca-bundle.pem
+      # - GATEWAY_CERT=/var/akeyless/certs/ca-bundle.pem
       ## Linux system HTTP Proxy, the outbound proxy of the container
       ## https://docs.akeyless.io/docs/sra-web-access-on-k8s-adv-config#proxy
       ##
@@ -96,17 +132,21 @@ services:
     image: "akeyless/zero-trust-web-proxy"
     ports:
       - "19414:19414"
-    ## Gateway CA certificate, when it is not signed by a public CA. Also set AKEYLESS_CA_BUNDLE below.
+    ## Gateway CA certificate, when it is not signed by a public CA. Also set GATEWAY_CERT below.
     ##
     # volumes:
     #   - /path/to/your-ca-bundle.pem:/var/akeyless/certs/ca-bundle.pem:ro
     environment:
-      - AKEYLESS_GW_URL=https://api.akeyless.io
-      - ALLOWED_ACCESS_IDS=${ALLOWED_ACCESS_IDS:?set ALLOWED_ACCESS_IDS in .env}
+      ## Akeyless API URL, the same as on the dispatcher.
+      ##
+      - GATEWAY_URL=https://api.akeyless.io
+      ## Access IDs that can open ZTWA sessions, the same list as on the dispatcher.
+      ##
+      - AUTHORIZED_ACCESS_IDS=${AUTHORIZED_ACCESS_IDS:?set AUTHORIZED_ACCESS_IDS in .env}
       ## HTTP proxy by default. Set WEB_PROXY_TYPE=SOCKS for a SOCKS5 proxy.
       ##
       # - WEB_PROXY_TYPE=SOCKS
-      # - AKEYLESS_CA_BUNDLE=/var/akeyless/certs/ca-bundle.pem
+      # - GATEWAY_CERT=/var/akeyless/certs/ca-bundle.pem
       ## Linux system HTTP Proxy, the outbound proxy of the container
       ##
       # - http_proxy=
@@ -133,7 +173,7 @@ services:
     volumes:
       - $PWD/shared:/etc/shared
       ## Gateway CA certificate, when it is not signed by a public CA. The browser trusts it too.
-      ## Also set AKEYLESS_CA_BUNDLE below.
+      ## Also set GATEWAY_CERT below.
       ##
       # - /path/to/your-ca-bundle.pem:/var/akeyless/certs/ca-bundle.pem:ro
     environment:
@@ -144,7 +184,7 @@ services:
       ## The worker publishes its screen to the media server, which serves the live view and records it.
       ##
       - WHIP_PUBLISH_URL_BASE=http://mediamtx:8889
-      # - AKEYLESS_CA_BUNDLE=/var/akeyless/certs/ca-bundle.pem
+      # - GATEWAY_CERT=/var/akeyless/certs/ca-bundle.pem
       ## Linux system HTTP Proxy, the outbound proxy of the container
       ##
       # - http_proxy=
