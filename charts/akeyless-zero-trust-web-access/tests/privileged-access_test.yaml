@@ -142,16 +142,26 @@ tests:
           path: spec.template.spec.containers[0].env
           content: {name: AUTHORIZED_ACCESS_IDS, value: "p-1"}
 
-  - it: "the older ALLOWED_ACCESS_IDS from a Secret in both env lists still works"
+  - it: "AUTHORIZED_ACCESS_IDS from a Secret in both env lists replaces authorizedAccessIDs"
     template: templates/proxy-deployment.yaml
     set:
       config.ztwaAuth.authorizedAccessIDs: []
-      dispatcher.env: [{name: ALLOWED_ACCESS_IDS, valueFrom: {secretKeyRef: {name: ids, key: ids}}}]
-      webProxy.env: [{name: ALLOWED_ACCESS_IDS, valueFrom: {secretKeyRef: {name: ids, key: ids}}}]
+      dispatcher.env: [{name: AUTHORIZED_ACCESS_IDS, valueFrom: {secretKeyRef: {name: ids, key: ids}}}]
+      webProxy.env: [{name: AUTHORIZED_ACCESS_IDS, valueFrom: {secretKeyRef: {name: ids, key: ids}}}]
     asserts:
       - contains:
           path: spec.template.spec.containers[0].env
-          content: {name: ALLOWED_ACCESS_IDS, valueFrom: {secretKeyRef: {name: ids, key: ids}}}
+          content: {name: AUTHORIZED_ACCESS_IDS, valueFrom: {secretKeyRef: {name: ids, key: ids}}}
+
+  - it: "the old ALLOWED_ACCESS_IDS in env does not count"
+    template: templates/configmap.yaml
+    set:
+      config.ztwaAuth.authorizedAccessIDs: []
+      dispatcher.env: [{name: ALLOWED_ACCESS_IDS, value: "p-1"}]
+      webProxy.env: [{name: ALLOWED_ACCESS_IDS, value: "p-1"}]
+    asserts:
+      - failedTemplate:
+          errorPattern: "authorizedAccessIDs is empty"
 
   - it: "AUTHORIZED_ACCESS_IDS in one env list only fails and names the other"
     template: templates/configmap.yaml
@@ -162,11 +172,11 @@ tests:
       - failedTemplate:
           errorPattern: "AUTHORIZED_ACCESS_IDS is set in dispatcher.env but not in webProxy.env"
 
-  - it: "ALLOWED_ACCESS_IDS in the web proxy env only fails and names the dispatcher"
+  - it: "AUTHORIZED_ACCESS_IDS in the web proxy env only fails and names the dispatcher"
     template: templates/configmap.yaml
     set:
       config.ztwaAuth.authorizedAccessIDs: []
-      webProxy.env: [{name: ALLOWED_ACCESS_IDS, value: "p-1"}]
+      webProxy.env: [{name: AUTHORIZED_ACCESS_IDS, value: "p-1"}]
     asserts:
       - failedTemplate:
           errorPattern: "is set in webProxy.env but not in dispatcher.env"
@@ -174,10 +184,10 @@ tests:
   - it: "authorizedAccessIDs together with the list in env fails"
     template: templates/configmap.yaml
     set:
-      webProxy.env: [{name: ALLOWED_ACCESS_IDS, value: "p-9"}]
+      webProxy.env: [{name: AUTHORIZED_ACCESS_IDS, value: "p-9"}]
     asserts:
       - failedTemplate:
-          errorPattern: "authorizedAccessIDs is set, so remove AUTHORIZED_ACCESS_IDS and ALLOWED_ACCESS_IDS"
+          errorPattern: "authorizedAccessIDs is set, so remove AUTHORIZED_ACCESS_IDS from dispatcher.env and webProxy.env"
 
   - it: "the schema rejects an empty authorized access ID"
     template: templates/dispatcher-deployment.yaml
