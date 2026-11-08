@@ -170,19 +170,30 @@ tests:
       - failedTemplate:
           errorPattern: "(?s)sessionRecording moved to recording.*dlp was removed"
 
-  - it: "configmap.yaml renders no dispatcher log forwarding ConfigMap"
+  - it: "pull secrets on a removed init container fail and name the new key"
+    template: templates/configmap.yaml
+    set:
+      webProxy.initContainer.imagePullSecrets: [{name: regcred}]
+    asserts:
+      - failedTemplate:
+          errorPattern: "webProxy.initContainer was removed, move its imagePullSecrets to webProxy.image.imagePullSecrets"
+
+  - it: "an old init container block without pull secrets still renders"
+    template: templates/dispatcher-deployment.yaml
+    set:
+      dispatcher.initContainer: {image: {repository: busybox, tag: 1.30.1}, imagePullSecrets: []}
+    asserts:
+      - notExists:
+          path: spec.template.spec.initContainers
+
+  - it: "configmap.yaml renders only the web policies ConfigMap"
     template: templates/configmap.yaml
     asserts:
       - hasDocuments:
-          count: 2
-      - equal:
-          path: metadata.name
-          value: ztwa-cm-akeyless
-        documentIndex: 0
+          count: 1
       - equal:
           path: metadata.name
           value: ztwa-cm-web-policies
-        documentIndex: 1
 
   - it: "the dispatcher mounts no log forwarding config"
     template: templates/dispatcher-deployment.yaml
@@ -192,9 +203,8 @@ tests:
           content:
             name: configmap-akeyless-config
           any: true
-      - notMatchRegex:
-          path: spec.template.spec.initContainers[0].args[1]
-          pattern: "configmap_akeyless_config"
+      - notExists:
+          path: spec.template.spec.initContainers
 
   - it: "config settings reach the dispatcher"
     template: templates/dispatcher-deployment.yaml
@@ -206,12 +216,33 @@ tests:
       - contains:
           path: spec.template.spec.containers[0].env
           content: {name: CLUSTER_NAME, value: prod-ztwa}
-      - matchRegex:
-          path: spec.template.spec.initContainers[0].args[1]
-          pattern: "echo https://ztwa.my.org:9000,https://ztwa2.my.org:9000 > /etc/akeyless/allowed_bastion_urls"
-      - matchRegex:
-          path: spec.template.spec.initContainers[0].args[1]
-          pattern: "echo https://ztwa.my.org:19414 > /etc/akeyless/allowed_proxy_urls"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: ALLOWED_BASTION_URLS, value: "https://ztwa.my.org:9000,https://ztwa2.my.org:9000"}
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: ALLOWED_PROXY_URLS, value: "https://ztwa.my.org:19414"}
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: ALLOWED_INTERNAL_AUTH, value: "false"}
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: DISABLE_SECURE_COOKIE, value: "true"}
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: SERVICE_DNS, value: ztwa-akeyless-zero-trust-web-access-discovery}
+
+  - it: "empty URL lists render no URL env vars"
+    template: templates/dispatcher-deployment.yaml
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content: {name: ALLOWED_BASTION_URLS}
+          any: true
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content: {name: ALLOWED_PROXY_URLS}
+          any: true
 
   - it: "config.gatewayURL and gatewayCert reach the web proxy"
     template: templates/proxy-deployment.yaml
@@ -219,9 +250,14 @@ tests:
       config.gatewayURL: https://gw.my.org
       config.gatewayCert.tlsExistingSecret: gw-ca
     asserts:
-      - matchRegex:
-          path: spec.template.spec.initContainers[0].args[1]
-          pattern: "echo \"https://gw.my.org\" > /etc/akeyless/akeyless_config_file"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: GATEWAY_URL, value: "https://gw.my.org"}
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: GATEWAY_CERT, value: /etc/ssl/certs/gw-cert.pem}
+      - notExists:
+          path: spec.template.spec.initContainers
       - contains:
           path: spec.template.spec.volumes
           content:

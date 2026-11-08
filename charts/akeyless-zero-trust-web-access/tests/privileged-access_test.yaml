@@ -6,59 +6,60 @@ set:
   config.ztwaAuth.ztwaAccessID: p-priv
   config.ztwaAuth.authorizedAccessIDs: [p-1, p-2]
 tests:
-  - it: "without an access Secret the auth line carries an empty access key"
-    template: templates/configmap.yaml
-    documentIndex: 0
+  - it: "the dispatcher gets the gateway URL and the access ID from env, with no key and no init container"
+    template: templates/dispatcher-deployment.yaml
     asserts:
-      - equal:
-          path: data.akeyless_config_file
-          value: |
-            https://api.akeyless.io
-            cmd=auth&access-id=p-priv&access-key=
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: GATEWAY_URL, value: "https://api.akeyless.io"}
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: ZTWA_ACCESS_ID, value: p-priv}
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content: {name: ZTWA_ACCESS_KEY}
+          any: true
+      - notExists:
+          path: spec.template.spec.initContainers
 
-  - it: "without an access Secret or accessID the render fails"
-    template: templates/configmap.yaml
+  - it: "without an accessID the render fails"
+    template: templates/dispatcher-deployment.yaml
     set:
       config.ztwaAuth.ztwaAccessID: ""
     asserts:
       - failedTemplate:
           errorPattern: "config.ztwaAuth.ztwaAccessID is required"
 
-  - it: "an access Secret replaces the auth line, the ID comes from values and the key from the Secret"
+  - it: "an access Secret gives the key to the dispatcher only, from the Secret"
     templates:
-      - templates/configmap.yaml
       - templates/dispatcher-deployment.yaml
+      - templates/proxy-deployment.yaml
     set:
       config.ztwaAuth.ztwaExistingSecret: priv-secret
     asserts:
-      - notExists:
-          path: data.akeyless_config_file
-        template: templates/configmap.yaml
-        documentIndex: 0
       - contains:
-          path: spec.template.spec.initContainers[0].env
+          path: spec.template.spec.containers[0].env
           content:
-            name: accessID
-            value: p-priv
-        template: templates/dispatcher-deployment.yaml
-      - contains:
-          path: spec.template.spec.initContainers[0].env
-          content:
-            name: accessKey
+            name: ZTWA_ACCESS_KEY
             valueFrom:
               secretKeyRef:
                 name: priv-secret
                 key: ztwa-access-key
         template: templates/dispatcher-deployment.yaml
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content: {name: ZTWA_ACCESS_KEY}
+          any: true
+        template: templates/proxy-deployment.yaml
 
-  - it: "the init container turns xtrace off and strips line ends while it writes the access key"
-    template: templates/dispatcher-deployment.yaml
-    set:
-      config.ztwaAuth.ztwaExistingSecret: priv-secret
+  - it: "the chart renders no auth ConfigMap"
+    template: templates/configmap.yaml
     asserts:
-      - matchRegex:
-          path: spec.template.spec.initContainers[0].args[1]
-          pattern: "set \\+x\\nprintf 'cmd=auth&access-id=%s&access-key=%s\\\\n' \"\\$\\(printf '%s' \"\\$accessID\" \\| tr -d '\\\\r\\\\n'\\)\" \"\\$\\(printf '%s' \"\\$accessKey\" \\| tr -d '\\\\r\\\\n'\\)\" >> /etc/akeyless/akeyless_config_file\\nset -x\\n"
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.name
+          value: ztwa-cm-web-policies
 
   - it: "access_key without an access Secret fails"
     template: templates/configmap.yaml
@@ -77,37 +78,22 @@ tests:
       - failedTemplate:
           errorPattern: "ztwaAccessType gcp uses config.ztwaAuth.ztwaAccessID. Remove config.ztwaAuth.ztwaExistingSecret,"
 
-  - it: "access_key with an access Secret renders no ADMIN_ACCESS_ID_TYPE"
-    template: templates/dispatcher-deployment.yaml
-    set:
-      config.ztwaAuth.ztwaAccessType: access_key
-      config.ztwaAuth.ztwaExistingSecret: priv-secret
-    asserts:
-      - notContains:
-          path: spec.template.spec.containers[0].env
-          content:
-            name: ADMIN_ACCESS_ID_TYPE
-          any: true
-
-  - it: "auto detect renders no ADMIN_ACCESS_ID_TYPE"
+  - it: "auto detect renders no ZTWA_ACCESS_TYPE"
     template: templates/dispatcher-deployment.yaml
     asserts:
       - notContains:
           path: spec.template.spec.containers[0].env
-          content:
-            name: ADMIN_ACCESS_ID_TYPE
+          content: {name: ZTWA_ACCESS_TYPE}
           any: true
 
-  - it: "a cloud accessType renders ADMIN_ACCESS_ID_TYPE"
+  - it: "an accessType renders ZTWA_ACCESS_TYPE"
     template: templates/dispatcher-deployment.yaml
     set:
       config.ztwaAuth.ztwaAccessType: azure_ad
     asserts:
       - contains:
           path: spec.template.spec.containers[0].env
-          content:
-            name: ADMIN_ACCESS_ID_TYPE
-            value: azure_ad
+          content: {name: ZTWA_ACCESS_TYPE, value: azure_ad}
 
   - it: "the schema rejects an unknown accessType"
     template: templates/dispatcher-deployment.yaml
@@ -122,12 +108,12 @@ tests:
       - templates/dispatcher-deployment.yaml
       - templates/proxy-deployment.yaml
     asserts:
-      - matchRegex:
-          path: spec.template.spec.initContainers[0].args[1]
-          pattern: "echo p-1,p-2 > /etc/akeyless/allowed_access_ids"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: AUTHORIZED_ACCESS_IDS, value: "p-1,p-2"}
 
-  - it: "an access ID is required"
-    template: templates/configmap.yaml
+  - it: "an access ID is required with an access Secret too"
+    template: templates/dispatcher-deployment.yaml
     set:
       config.ztwaAuth.ztwaAccessID: ""
       config.ztwaAuth.ztwaExistingSecret: priv-secret
@@ -143,38 +129,83 @@ tests:
       - failedTemplate:
           errorPattern: "authorizedAccessIDs is empty"
 
-  - it: "ALLOWED_ACCESS_IDS in both env lists replaces authorizedAccessIDs"
+  - it: "AUTHORIZED_ACCESS_IDS in both env lists replaces authorizedAccessIDs"
     templates:
       - templates/dispatcher-deployment.yaml
       - templates/proxy-deployment.yaml
     set:
       config.ztwaAuth.authorizedAccessIDs: []
-      dispatcher.env: [{name: ALLOWED_ACCESS_IDS, value: "p-1"}]
-      webProxy.env: [{name: ALLOWED_ACCESS_IDS, value: "p-1"}]
+      dispatcher.env: [{name: AUTHORIZED_ACCESS_IDS, value: "p-1"}]
+      webProxy.env: [{name: AUTHORIZED_ACCESS_IDS, value: "p-1"}]
     asserts:
       - contains:
           path: spec.template.spec.containers[0].env
-          content: {name: ALLOWED_ACCESS_IDS, value: "p-1"}
+          content: {name: AUTHORIZED_ACCESS_IDS, value: "p-1"}
 
-  - it: "ALLOWED_ACCESS_IDS from a Secret in both env lists replaces authorizedAccessIDs"
+  - it: "AUTHORIZED_ACCESS_IDS from a Secret in both env lists replaces authorizedAccessIDs"
     template: templates/proxy-deployment.yaml
     set:
       config.ztwaAuth.authorizedAccessIDs: []
-      dispatcher.env: [{name: ALLOWED_ACCESS_IDS, valueFrom: {secretKeyRef: {name: ids, key: ids}}}]
-      webProxy.env: [{name: ALLOWED_ACCESS_IDS, valueFrom: {secretKeyRef: {name: ids, key: ids}}}]
+      dispatcher.env: [{name: AUTHORIZED_ACCESS_IDS, valueFrom: {secretKeyRef: {name: ids, key: ids}}}]
+      webProxy.env: [{name: AUTHORIZED_ACCESS_IDS, valueFrom: {secretKeyRef: {name: ids, key: ids}}}]
     asserts:
       - contains:
           path: spec.template.spec.containers[0].env
-          content: {name: ALLOWED_ACCESS_IDS, valueFrom: {secretKeyRef: {name: ids, key: ids}}}
+          content: {name: AUTHORIZED_ACCESS_IDS, valueFrom: {secretKeyRef: {name: ids, key: ids}}}
 
-  - it: "ALLOWED_ACCESS_IDS in one env list only fails and names the other"
+  - it: "the old ALLOWED_ACCESS_IDS in env does not count"
     template: templates/configmap.yaml
     set:
       config.ztwaAuth.authorizedAccessIDs: []
       dispatcher.env: [{name: ALLOWED_ACCESS_IDS, value: "p-1"}]
+      webProxy.env: [{name: ALLOWED_ACCESS_IDS, value: "p-1"}]
     asserts:
       - failedTemplate:
-          errorPattern: "ALLOWED_ACCESS_IDS is set in dispatcher.env but not in webProxy.env"
+          errorPattern: "authorizedAccessIDs is empty"
+
+  - it: "an empty AUTHORIZED_ACCESS_IDS in both env lists does not count"
+    template: templates/configmap.yaml
+    set:
+      config.ztwaAuth.authorizedAccessIDs: []
+      dispatcher.env: [{name: AUTHORIZED_ACCESS_IDS, value: ""}]
+      webProxy.env: [{name: AUTHORIZED_ACCESS_IDS, value: ""}]
+    asserts:
+      - failedTemplate:
+          errorPattern: "authorizedAccessIDs is empty"
+
+  - it: "AUTHORIZED_ACCESS_IDS in one env list only fails and names the other"
+    template: templates/configmap.yaml
+    set:
+      config.ztwaAuth.authorizedAccessIDs: []
+      dispatcher.env: [{name: AUTHORIZED_ACCESS_IDS, value: "p-1"}]
+    asserts:
+      - failedTemplate:
+          errorPattern: "AUTHORIZED_ACCESS_IDS is set in dispatcher.env but not in webProxy.env"
+
+  - it: "AUTHORIZED_ACCESS_IDS in the web proxy env only fails and names the dispatcher"
+    template: templates/configmap.yaml
+    set:
+      config.ztwaAuth.authorizedAccessIDs: []
+      webProxy.env: [{name: AUTHORIZED_ACCESS_IDS, value: "p-1"}]
+    asserts:
+      - failedTemplate:
+          errorPattern: "is set in webProxy.env but not in dispatcher.env"
+
+  - it: "authorizedAccessIDs together with the list in env fails"
+    template: templates/configmap.yaml
+    set:
+      webProxy.env: [{name: AUTHORIZED_ACCESS_IDS, value: "p-9"}]
+    asserts:
+      - failedTemplate:
+          errorPattern: "authorizedAccessIDs is set, so remove AUTHORIZED_ACCESS_IDS from dispatcher.env and webProxy.env"
+
+  - it: "authorizedAccessIDs together with an empty list in env still fails"
+    template: templates/configmap.yaml
+    set:
+      webProxy.env: [{name: AUTHORIZED_ACCESS_IDS, value: ""}]
+    asserts:
+      - failedTemplate:
+          errorPattern: "authorizedAccessIDs is set, so remove AUTHORIZED_ACCESS_IDS"
 
   - it: "the schema rejects an empty authorized access ID"
     template: templates/dispatcher-deployment.yaml
@@ -189,6 +220,6 @@ tests:
     set:
       config.ztwaAuth.authorizedAccessIDs: [12345]
     asserts:
-      - matchRegex:
-          path: spec.template.spec.initContainers[0].args[1]
-          pattern: "echo 12345 > /etc/akeyless/allowed_access_ids"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: AUTHORIZED_ACCESS_IDS, value: "12345"}

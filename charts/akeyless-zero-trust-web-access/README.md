@@ -177,13 +177,16 @@ Upgrade with your values file (`-f <values file>`) or `--reset-then-reuse-values
 | `webWorker.config.dispatcherDNS` | `dispatcher.dispatcherDNS` |
 | `HPA.webWorker.sessionTerminationGracePeriodSeconds` | `webWorker.terminationGracePeriodSeconds` |
 | `HPA.dispatcher` | Removed. The chart runs one dispatcher per worker pool |
+| `dispatcher.initContainer`, `webProxy.initContainer` | Removed. The dispatcher and the web proxy read their settings from env |
 
 When a field was set in both `sessionRecording.upload` and `dispatcher.config.recording`, keep the `dispatcher.config.recording` value. The old chart used that one.
 
 The render also fails when:
 
 - `config.ztwaAuth.ztwaAccessID` is empty.
-- `config.ztwaAuth.authorizedAccessIDs` is empty, and `ALLOWED_ACCESS_IDS` is not set in both `dispatcher.env` and `webProxy.env`. The dispatcher and the web proxy accept no user without them.
+- `config.ztwaAuth.authorizedAccessIDs` is empty, and `AUTHORIZED_ACCESS_IDS` is not set to a value in both `dispatcher.env` and `webProxy.env`. The dispatcher and the web proxy accept no user without them.
+- `config.ztwaAuth.authorizedAccessIDs` is set, and `AUTHORIZED_ACCESS_IDS` is also set in `dispatcher.env` or `webProxy.env`.
+- `dispatcher.initContainer.imagePullSecrets` or `webProxy.initContainer.imagePullSecrets` is set. Move it to `dispatcher.image.imagePullSecrets` or `webProxy.image.imagePullSecrets`.
 - `config.ztwaAuth.ztwaAccessType` is `access_key` and `config.ztwaAuth.ztwaExistingSecret` is not set.
 - `config.ztwaAuth.ztwaAccessType` is `aws_iam`, `azure_ad` or `gcp` and `config.ztwaAuth.ztwaExistingSecret` is set.
 
@@ -335,8 +338,6 @@ The following table lists the configurable parameters of the Zero Trust Web Acce
 |-------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
 | `image.imagePullSecrets`                  | List of `{ name: <secret> }` merged into `spec.imagePullSecrets` for every pod (with per-workload lists, deduplicated) | `[]`                                                         |
 | `image.dockerRepositoryCreds`             | **Deprecated**, use `image.imagePullSecrets`. Base64 dockerconfig for the Akeyless registry                           | `nil`                                                        |
-| `dispatcher.initContainer.imagePullSecrets` | Extra pull secret refs for the dispatcher init container; merged at the pod (with global and main)                  | `[]`                                                         |
-| `dispatcher.initContainer.resources`     | Init container resource requests/limits; defaults match the dispatcher main container                                 | `requests: cpu: 100m, memory: 128Mi, limits: memory: 512Mi` |
 | `dispatcher.image.imagePullSecrets`       | Extra pull secret refs for the dispatcher main container; merged at the pod                                         | `[]`                                                         |
 | `webWorker.initContainer.imagePullSecrets` | Extra pull secret refs for the web worker init; merged at the pod                                                     | `[]`                                                         |
 | `webWorker.initContainer.resources`      | Init container resource requests/limits                                                                               | `requests: cpu: 100m, memory: 128Mi, limits: memory: 512Mi`  |
@@ -364,8 +365,6 @@ The following table lists the configurable parameters of the Zero Trust Web Acce
 | `webProxy.image.tag`                      | Zero Trust Web Access Proxy image tag (defaults to the chart `appVersion`)                                          | `nil`                                                        |
 | `webProxy.image.pullPolicy`               | Zero Trust Web Access Proxy image pull policy                                                                       | `Always`                                                     |
 | `webProxy.image.imagePullSecrets`         | Extra pull secret refs for the web proxy main container; merged at the pod                                         | `[]`                                                         |
-| `webProxy.initContainer.imagePullSecrets` | Extra pull secret refs for the web proxy init container; merged at the pod                                         | `[]`                                                         |
-| `webProxy.initContainer.resources`        | Init container resource requests/limits                                                                            | `requests: cpu: 100m, memory: 128Mi, limits: memory: 512Mi` |
 | `webProxy.containerName`                  | Zero Trust Web Access Proxy container name                                                                          | `web-proxy`                                                  |
 | `webProxy.replicaCount`                   | Number of Zero Trust Web Access Proxy nodes (unset → inherits `dispatcher.replicaCount`)                            | `nil`                                                        |
 | `webProxy.env`                            | Extra env for the proxy container (e.g. `WEB_PROXY_TYPE: SOCKS`)                                                    | `[]`                                                         |
