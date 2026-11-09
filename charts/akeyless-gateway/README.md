@@ -35,6 +35,27 @@ To install the chart run the following:
 helm install gateway akeyless/akeyless-gateway
 ```
 
+## Upgrade Notes
+
+### 3.12.1: SRA SSH replicas
+
+From 3.12.1 the SRA SSH deployment sets `spec.replicas` from `sra.sshConfig.replicaCount` only when `sra.sshConfig.hpa.enabled` is false, the same as the SRA web and Gateway deployments. Earlier versions did the opposite.
+
+| Release before the upgrade | Effect of the first upgrade to 3.12.1 or later |
+| --- | --- |
+| SSH HPA off, default values | None. The deployment keeps 1 replica. |
+| SSH HPA off, `sra.sshConfig.replicaCount` set | The deployment scales to `replicaCount`. Before 3.12.1 the value was ignored. |
+| SSH HPA off, scaled by hand | The deployment scales to `replicaCount`. Set `replicaCount` to the count you run before the upgrade. |
+| SSH HPA on | Helm removes `spec.replicas` from the deployment, so it scales to 1 and the HPA scales it back. SSH sessions on the removed pods end. |
+
+With the SSH HPA on, run the first upgrade to 3.12.1 or later in a maintenance window:
+
+1. Before the upgrade, record the current count: `kubectl get hpa -n <namespace>`.
+2. Run `helm upgrade`.
+3. Confirm the HPA restored the count and the SSH pods are ready: `kubectl get hpa,deployment -n <namespace>`.
+
+Later upgrades do not change `spec.replicas`, and the HPA stays in control.
+
 ## Cluster DNS Domain
 
 Clusters whose DNS search domain is not the default `svc.cluster.local` (for example `svc.custom.local`) must set `clusterDomain` so SRA internal service URLs resolve correctly:
