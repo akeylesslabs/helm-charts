@@ -32,21 +32,26 @@ spec:
         {{- include "akeyless-gateway.clusterCache.labels" . | nindent 8 }}
     spec:
       {{- include "cache.imagePullSecrets" . | indent 2 }}
-      {{- if .Values.gateway.deployment.tolerations }}
+      {{- $cache := .Values.globalConfig.clusterCache }}
+      {{- $tolerations := ternary .Values.gateway.deployment.tolerations $cache.tolerations (kindIs "invalid" $cache.tolerations) }}
+      {{- $nodeSelector := ternary .Values.gateway.deployment.nodeSelector $cache.nodeSelector (kindIs "invalid" $cache.nodeSelector) }}
+      {{- $affinity := ternary .Values.gateway.deployment.affinity $cache.affinity (kindIs "invalid" $cache.affinity) }}
+      {{- $topologySpreadConstraints := ternary .Values.gateway.deployment.topologySpreadConstraints $cache.topologySpreadConstraints (kindIs "invalid" $cache.topologySpreadConstraints) }}
+      {{- if $tolerations }}
       tolerations:
-        {{- toYaml .Values.gateway.deployment.tolerations | nindent 8 }}
+        {{- toYaml $tolerations | nindent 8 }}
       {{- end }}
-      {{- if .Values.gateway.deployment.nodeSelector }}
+      {{- if $nodeSelector }}
       nodeSelector:
-        {{- toYaml .Values.gateway.deployment.nodeSelector | nindent 8 }}
+        {{- toYaml $nodeSelector | nindent 8 }}
       {{- end }}
-      {{- if .Values.gateway.deployment.affinity.enabled }}
+      {{- if and $affinity $affinity.enabled }}
       affinity:
-        {{- toYaml .Values.gateway.deployment.affinity.data | nindent 8 }}
+        {{- toYaml $affinity.data | nindent 8 }}
       {{- end }}
-      {{- if .Values.gateway.deployment.topologySpreadConstraints }}
+      {{- if $topologySpreadConstraints }}
       topologySpreadConstraints:
-        {{- toYaml .Values.gateway.deployment.topologySpreadConstraints | nindent 8 }}
+        {{- toYaml $topologySpreadConstraints | nindent 8 }}
       {{- end }}
       {{- if .Values.strictSecurityPolicy.enabled }}
       securityContext:
