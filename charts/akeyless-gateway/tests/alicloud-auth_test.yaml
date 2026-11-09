@@ -1,0 +1,110 @@
+suite: akeyless-gateway alicloud gateway auth
+set:
+  globalConfig.gatewayAuth.gatewayAccessId: p-xxxxxxxxxxxx
+tests:
+  - it: alicloud sets ADMIN_ACCESS_ID_TYPE and no access key
+    template: templates/deployment.yaml
+    set:
+      globalConfig.gatewayAuth.gatewayAccessType: alicloud
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GATEWAY_ACCESS_TYPE
+            value: alicloud
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: ADMIN_ACCESS_ID_TYPE
+            value: alicloud
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GATEWAY_ACCESS_KEY
+          any: true
+
+  - it: alicloud keeps a user-set ADMIN_ACCESS_ID_TYPE without a duplicate
+    template: templates/deployment.yaml
+    set:
+      globalConfig.gatewayAuth.gatewayAccessType: alicloud
+      globalConfig.env:
+        - name: ADMIN_ACCESS_ID_TYPE
+          value: alicloud
+        - name: OTHER_ENV
+          value: x
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: ADMIN_ACCESS_ID_TYPE
+            value: alicloud
+          count: 1
+
+  - it: access_key does not set ADMIN_ACCESS_ID_TYPE
+    template: templates/deployment.yaml
+    set:
+      globalConfig.gatewayAuth.gatewayAccessType: access_key
+      globalConfig.gatewayAuth.gatewayCredentialsExistingSecret: access-key
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: ADMIN_ACCESS_ID_TYPE
+          any: true
+
+  - it: created service account carries the RRSA annotation
+    template: templates/sa.yaml
+    set:
+      globalConfig.serviceAccount.create: true
+      globalConfig.serviceAccount.annotations:
+        pod-identity.alibabacloud.com/role-name: gw-role
+    release:
+      name: gw
+    asserts:
+      - equal:
+          path: metadata.name
+          value: gw-akeyless-gateway
+      - equal:
+          path: metadata.annotations["pod-identity.alibabacloud.com/role-name"]
+          value: gw-role
+
+  - it: existing service account is used by name and not created
+    templates:
+      - templates/sa.yaml
+      - templates/deployment.yaml
+    set:
+      globalConfig.serviceAccount.create: false
+      globalConfig.serviceAccount.serviceAccountName: existing-sa
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: templates/sa.yaml
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: existing-sa
+        template: templates/deployment.yaml
+
+  - it: notes warn that annotations are ignored for an existing service account
+    template: templates/NOTES.txt
+    set:
+      globalConfig.serviceAccount.create: false
+      globalConfig.serviceAccount.serviceAccountName: existing-sa
+      globalConfig.serviceAccount.annotations:
+        pod-identity.alibabacloud.com/role-name: gw-role
+    release:
+      namespace: akeyless
+    asserts:
+      - matchRegexRaw:
+          pattern: "annotations is ignored"
+      - matchRegexRaw:
+          pattern: "kubectl -n akeyless annotate --overwrite serviceaccount existing-sa pod-identity.alibabacloud.com/role-name=gw-role"
+
+  - it: notes do not warn when the chart creates the service account
+    template: templates/NOTES.txt
+    set:
+      globalConfig.serviceAccount.create: true
+      globalConfig.serviceAccount.annotations:
+        pod-identity.alibabacloud.com/role-name: gw-role
+    asserts:
+      - notMatchRegexRaw:
+          pattern: "annotations is ignored"

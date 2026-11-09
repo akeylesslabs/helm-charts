@@ -35,6 +35,27 @@ To install the chart run the following:
 helm install gateway akeyless/akeyless-gateway
 ```
 
+## Upgrade Notes
+
+### 3.12.1: SRA SSH replicas
+
+From 3.12.1 the SRA SSH deployment sets `spec.replicas` from `sra.sshConfig.replicaCount` only when `sra.sshConfig.hpa.enabled` is false, the same as the SRA web and Gateway deployments. Earlier versions did the opposite.
+
+| Release before the upgrade | Effect of the first upgrade to 3.12.1 or later |
+| --- | --- |
+| SSH HPA off, default values | None. The deployment keeps 1 replica. |
+| SSH HPA off, `sra.sshConfig.replicaCount` set | The deployment scales to `replicaCount`. Before 3.12.1 the value was ignored. |
+| SSH HPA off, scaled by hand | The deployment scales to `replicaCount`. Set `replicaCount` to the count you run before the upgrade. |
+| SSH HPA on | Helm removes `spec.replicas` from the deployment, so it scales to 1 and the HPA scales it back. SSH sessions on the removed pods end. |
+
+With the SSH HPA on, run the first upgrade to 3.12.1 or later in a maintenance window:
+
+1. Before the upgrade, record the current count: `kubectl get hpa -n <namespace>`.
+2. Run `helm upgrade`.
+3. Confirm the HPA restored the count and the SSH pods are ready: `kubectl get hpa,deployment -n <namespace>`.
+
+Later upgrades do not change `spec.replicas`, and the HPA stays in control.
+
 ## Cluster DNS Domain
 
 Clusters whose DNS search domain is not the default `svc.cluster.local` (for example `svc.custom.local`) must set `clusterDomain` so SRA internal service URLs resolve correctly:
@@ -58,6 +79,72 @@ gateway:
       - name: custom-secret
         mountPath: /etc/custom-secret
         readOnly: true
+```
+
+## Custom CA for SRA
+
+Environments that re-sign outbound TLS with an internal CA (a TLS-intercepting proxy) must trust that CA in the SRA components from their first outbound connection. The Gateway has `gateway.customCA`. The SRA web and SSH deployments have their own, `sra.customCA`:
+
+```yaml
+sra:
+  enabled: true
+  customCA:
+    enabled: true
+    volumeName: "ca-certificates"
+    volumeType: "configMap"   # or "secret"
+    volumeSourceName: "<configmap-or-secret-name>"  # key must be ca-certificates.crt
+```
+
+The option is **opt-in and default-off**. When false, the deployments are unchanged. When true, the chart:
+
+- Mounts the key `ca-certificates.crt` of the named ConfigMap or Secret at `/etc/ssl/certs/ca-certificates.crt` in the SRA web and SSH containers.
+- Fails the render when `volumeSourceName` is empty or `volumeType` is neither `configMap` nor `secret`.
+
+**Notes:**
+
+- The file replaces the image's bundle file. Put in it every CA that signs the traffic the SRA components must trust, including the proxy's CA.
+- `sra.customCA` and `gateway.customCA` are independent. Set both when both components sit behind the proxy.
+- The bundle is read at pod start, and a file mounted with `subPath` is not refreshed in a running pod. Restart the SRA pods after changing the bundle.
+
+## Extra Objects
+
+`extraObjects` renders additional Kubernetes manifests as part of the release. Each entry is rendered with `tpl`, so it can reference `.Release`, `.Chart` and `.Values`. Custom resources require their CRDs to be installed before the release.
+
+```yaml
+extraObjects:
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: "{{ .Release.Name }}-extra"
+      namespace: "{{ .Release.Namespace }}"
+    data:
+      chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+```
+
+An entry is either a map or a string (`- |`). What the chart does to each:
+
+| | String entry | Map entry |
+|---|---|---|
+| Values and types | exactly as written | numbers are read as 64-bit floats: `1.0` renders as `1`, integers above 2^53 lose precision |
+| Templated values | keep their type: `{{ .Values.x }}` renders a number | always strings: `"{{ .Values.x }}"` renders `'3'` |
+| Key order, quoting, comments | kept | keys sorted, quoting normalized, comments dropped |
+| `{{ }}` anywhere in the object | evaluated as a template | evaluated as a template |
+
+The chart tests cover values and types, templated values and `{{ }}` handling. Key order, quoting and comments follow Helm and are not tested here.
+
+To pass a literal `{{ }}` through, for example a Prometheus alert using `{{ $labels.instance }}`, escape it as `{{ "{{" }}` and `{{ "}}" }}`. Use a string entry when a field needs an exact value or a templated number or boolean:
+
+```yaml
+extraMinAvailable: 1
+extraObjects:
+  - |
+    apiVersion: policy/v1
+    kind: PodDisruptionBudget
+    metadata:
+      name: "{{ .Release.Name }}-extra"
+      namespace: "{{ .Release.Namespace }}"
+    spec:
+      minAvailable: {{ .Values.extraMinAvailable }}
 ```
 
 ## Strict Security Policy (Kyverno/PSA Compliance)
@@ -84,6 +171,30 @@ This enforces:
 **SRA SSH Bastion:** Phase A interim hardening (narrow capabilities, documented Kyverno exception). See [STRICT_SECURITY_POLICY.md](./STRICT_SECURITY_POLICY.md) for full details, SSH exception requirements, and Phase B roadmap.
 
 For comprehensive documentation, troubleshooting, and validation steps, see **[STRICT_SECURITY_POLICY.md](./STRICT_SECURITY_POLICY.md)**.
+
+## Read-Only Root Filesystem
+
+For environments that require an immutable container root filesystem, enable `gateway.deployment.readOnlyRootFilesystem`:
+
+```yaml
+gateway:
+  deployment:
+    readOnlyRootFilesystem: true
+```
+
+The feature is **opt-in and default-off**. When false, the deployment is unchanged. When true, the chart:
+
+- Sets the container `securityContext.readOnlyRootFilesystem: true` (also works alongside `strictSecurityPolicy.enabled`).
+- Injects `READ_ONLY_ROOT_FS=true`, which tells the Gateway image to redirect its startup writes to writable volumes.
+- Mounts `emptyDir` volumes for the paths the Gateway writes at runtime: `/tmp`, `/run`, `/akeyless/tmp`, `/akeyless/bin`, `/var/run/akeyless`, `/var/log/akeyless`, `/var/log/supervisor`, `/var/akeyless/conf`, `/app`, `/download_center`, `/usr/local/share/ca-certificates`, `/etc/ssl/certs`, and the Gateway config dir.
+- On startup, the Gateway image seeds `/usr/local/share/ca-certificates` and `/etc/ssl/certs` from image-baked trust stores so `update-ca-certificates` and the CA Certificate Store work under read-only rootfs.
+
+**Requirements and limitations:**
+
+- **Minimum Gateway image version:** requires a Gateway image that supports `READ_ONLY_ROOT_FS` (image version `5.0.0` or later). CA Certificate Store with full OS trust store support requires an image that includes CA trust-store seed paths (`/opt/akeyless/ca-certificates-seed`, `/opt/akeyless/ssl-certs-seed`). Enabling the flag against an older image sets the env var but the image will attempt to write to the read-only rootfs and fail to start.
+- **Logging:** logs go to stdout/stderr (collected by the container runtime). File-based logging to the rootfs is not supported in this mode — including the `LOG_FORWARDING` env that would write `~/.akeyless/logand.conf` (skipped when `READ_ONLY_ROOT_FS=true`).
+- **Splunk forwarder / file-based log forwarding:** not supported under a read-only rootfs.
+- **FIPS:** supported. Under a read-only rootfs the image activates FIPS via `OPENSSL_CONF` and selects the FIPS binary without mutating the rootfs.
 
 ## Argo CD Instructions
 When deploying the Akeyless Gateway with Argo CD, follow these instructions:
