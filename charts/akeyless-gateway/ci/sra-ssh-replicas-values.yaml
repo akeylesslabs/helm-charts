@@ -1,0 +1,16 @@
+globalConfig:
+  gatewayAuth:
+    gatewayAccessType: access_key
+    gatewayCredentialsExistingSecret: akeyless-auth
+
+gateway:
+  service:
+    type: ClusterIP
+
+sra:
+  enabled: true
+  sshConfig:
+    CAPublicKey: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICtj3A/MC0TrqnZOCL/hgDtUIto/LYstpOWvQHIRARAk chart-testing
+    replicaCount: 2
+    service:
+      type: ClusterIP
