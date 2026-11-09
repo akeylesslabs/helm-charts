@@ -71,6 +71,9 @@ spec:
       {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
       {{ include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 6}}
       {{- end }}
+      {{- if .Values.sra.customCA.enabled }}
+      {{- include "akeyless-sra.customCA.volume" . | nindent 6 }}
+      {{- end }}
       - name: configmap-creds
         configMap:
           name: {{ $.Release.Name }}-cm-creds
@@ -191,5 +194,8 @@ spec:
             {{- end }}
             {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
               {{ include "akeyless-gateway.clusterCache.tlsVolumeMounts" . | nindent 12 }}
+            {{- end }}
+            {{- if .Values.sra.customCA.enabled }}
+            {{- include "akeyless-sra.customCA.volumeMount" . | nindent 12 }}
             {{- end }}
 {{- end }}
