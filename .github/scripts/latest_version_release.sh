@@ -42,6 +42,12 @@ fi
 
 echo "Charts to release for service '${service}' (RELEASE_LEGACY_SRA=${release_legacy_sra}): ${charts[*]}"
 
+# Push the version bump(s) to a dedicated branch instead of main, so the change
+# goes through a real pull request (and required reviews/branch protection)
+# instead of a direct push. See ASM-21327.
+bump_branch="helm-version-bump-${GITHUB_RUN_ID}"
+git checkout -b "${bump_branch}"
+
 updated_charts_summary=()
 for chart in "${charts[@]}"; do
   if [[ ! -d "$GITHUB_WORKSPACE/charts/${chart}" ]]; then
@@ -101,7 +107,7 @@ for chart in "${charts[@]}"; do
     fi
 
     git add -A && git commit -m "Updated ${service} helm chart version to latest: ${new_app_version}" || die "Failed to commit changes to git"
-    git push origin HEAD
+    git push origin "${bump_branch}"
 
     echo "${chart} app version was successfully updated to latest: ${new_app_version}"
     echo "${chart} Helm chart version was updated to: ${new_chart_version}"
@@ -110,6 +116,7 @@ for chart in "${charts[@]}"; do
 done
 
 echo "released=true" >> "${GITHUB_OUTPUT}"
+echo "bump_branch=${bump_branch}" >> "${GITHUB_OUTPUT}"
 echo "new_chart_version=$new_chart_version" >> "${GITHUB_ENV}"
 echo "new_chart_version=$new_chart_version" >> "${GITHUB_OUTPUT}"
 echo "charts=${charts[*]}" >> "${GITHUB_ENV}"

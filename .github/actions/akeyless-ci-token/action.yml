@@ -1,0 +1,23 @@
+name: Mint akeyless-ci App token
+description: Generates a short-lived GitHub App installation token for akeyless-ci
+inputs:
+  app-id:
+    required: true
+  app-private-key:
+    required: true
+  repositories:
+    required: false
+    default: ""
+outputs:
+  token:
+    description: Installation access token
+    value: ${{ steps.mint.outputs.token }}
+runs:
+  using: composite
+  steps:
+    - id: mint
+      uses: actions/create-github-app-token@v2
+      with:
+        app-id: ${{ inputs.app-id }}
+        private-key: ${{ inputs.app-private-key }}
+        repositories: ${{ inputs.repositories }}
