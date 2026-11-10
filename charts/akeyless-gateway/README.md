@@ -35,6 +35,27 @@ To install the chart run the following:
 helm install gateway akeyless/akeyless-gateway
 ```
 
+## Upgrade Notes
+
+### 3.12.1: SRA SSH replicas
+
+From 3.12.1 the SRA SSH deployment sets `spec.replicas` from `sra.sshConfig.replicaCount` only when `sra.sshConfig.hpa.enabled` is false, the same as the SRA web and Gateway deployments. Earlier versions did the opposite.
+
+| Release before the upgrade | Effect of the first upgrade to 3.12.1 or later |
+| --- | --- |
+| SSH HPA off, default values | None. The deployment keeps 1 replica. |
+| SSH HPA off, `sra.sshConfig.replicaCount` set | The deployment scales to `replicaCount`. Before 3.12.1 the value was ignored. |
+| SSH HPA off, scaled by hand | The deployment scales to `replicaCount`. Set `replicaCount` to the count you run before the upgrade. |
+| SSH HPA on | Helm removes `spec.replicas` from the deployment, so it scales to 1 and the HPA scales it back. SSH sessions on the removed pods end. |
+
+With the SSH HPA on, run the first upgrade to 3.12.1 or later in a maintenance window:
+
+1. Before the upgrade, record the current count: `kubectl get hpa -n <namespace>`.
+2. Run `helm upgrade`.
+3. Confirm the HPA restored the count and the SSH pods are ready: `kubectl get hpa,deployment -n <namespace>`.
+
+Later upgrades do not change `spec.replicas`, and the HPA stays in control.
+
 ## Cluster DNS Domain
 
 Clusters whose DNS search domain is not the default `svc.cluster.local` (for example `svc.custom.local`) must set `clusterDomain` so SRA internal service URLs resolve correctly:
@@ -59,6 +80,31 @@ gateway:
         mountPath: /etc/custom-secret
         readOnly: true
 ```
+
+## Custom CA for SRA
+
+Environments that re-sign outbound TLS with an internal CA (a TLS-intercepting proxy) must trust that CA in the SRA components from their first outbound connection. The Gateway has `gateway.customCA`. The SRA web and SSH deployments have their own, `sra.customCA`:
+
+```yaml
+sra:
+  enabled: true
+  customCA:
+    enabled: true
+    volumeName: "ca-certificates"
+    volumeType: "configMap"   # or "secret"
+    volumeSourceName: "<configmap-or-secret-name>"  # key must be ca-certificates.crt
+```
+
+The option is **opt-in and default-off**. When false, the deployments are unchanged. When true, the chart:
+
+- Mounts the key `ca-certificates.crt` of the named ConfigMap or Secret at `/etc/ssl/certs/ca-certificates.crt` in the SRA web and SSH containers.
+- Fails the render when `volumeSourceName` is empty or `volumeType` is neither `configMap` nor `secret`.
+
+**Notes:**
+
+- The file replaces the image's bundle file. Put in it every CA that signs the traffic the SRA components must trust, including the proxy's CA.
+- `sra.customCA` and `gateway.customCA` are independent. Set both when both components sit behind the proxy.
+- The bundle is read at pod start, and a file mounted with `subPath` is not refreshed in a running pod. Restart the SRA pods after changing the bundle.
 
 ## Extra Objects
 

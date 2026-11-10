@@ -15,7 +15,7 @@ metadata:
   {{- toYaml .Values.sra.sshConfig.deployment.annotations | nindent 4 }}
   {{- end }}
 spec:
-  {{- if .Values.sra.sshConfig.hpa.enabled }}
+  {{- if not .Values.sra.sshConfig.hpa.enabled }}
   replicas: {{ default 1 .Values.sra.sshConfig.replicaCount }}
   {{- end }}
   {{- if .Values.sra.sshConfig.deployment.strategy }}
@@ -65,11 +65,14 @@ spec:
         secret:
           secretName: {{ .Values.globalConfig.TLSConf.tlsExistingSecret }}
           items:
-            - key: tlsCertificate
+            - key: {{ (.Values.globalConfig.TLSConf).tlsCertificateSecretKeyName | default "tlsCertificate" }}
               path: gw-cert.pem
       {{- end }}
       {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
       {{ include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 6}}
+      {{- end }}
+      {{- if .Values.sra.customCA.enabled }}
+      {{- include "akeyless-sra.customCA.volume" . | nindent 6 }}
       {{- end }}
       - name: configmap-creds
         configMap:
@@ -191,5 +194,8 @@ spec:
             {{- end }}
             {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
               {{ include "akeyless-gateway.clusterCache.tlsVolumeMounts" . | nindent 12 }}
+            {{- end }}
+            {{- if .Values.sra.customCA.enabled }}
+            {{- include "akeyless-sra.customCA.volumeMount" . | nindent 12 }}
             {{- end }}
 {{- end }}

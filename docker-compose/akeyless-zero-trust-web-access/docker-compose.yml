@@ -1,48 +1,195 @@
-version: "3.9"
+## Akeyless Zero Trust Web Access with Docker Compose.
+## Set ZTWA_ACCESS_ID, AUTHORIZED_ACCESS_IDS and, for the access_key type, ZTWA_ACCESS_KEY
+## in a .env file next to this file. Docker Compose reads it on its own. Do not commit it.
+## https://docs.akeyless.io/docs/sra-web-access-docker
+##
+
 services:
   dispatcher:
     image: "akeyless/zero-trust-web-dispatcher"
+    group_add:
+      - "10000"
     ports:
       - "9000:9000"
-      - "19414:19414"
     volumes:
       - $PWD/shared:/etc/shared
+      ## Gateway CA certificate, when it is not signed by a public CA. Also set GATEWAY_CERT below.
+      ##
+      # - /path/to/your-ca-bundle.pem:/var/akeyless/certs/ca-bundle.pem:ro
     environment:
+      ## This is the name of this ZTWA cluster. A change to it, or to ZTWA_ACCESS_ID, registers a new bastion.
+      ## https://docs.akeyless.io/docs/sra-web-access-on-k8s-adv-config#cluster-name
+      ##
       - CLUSTER_NAME=compose-ztwa
       - SERVICE_DNS=worker
-      - AKEYLESS_GW_URL=https://rest.akeyless.io
-      - PRIVILEGED_ACCESS_ID=<MUST_BE_PROVIDED>
-      - PRIVILEGED_ACCESS_KEY= # When using Cloud Identity (recommended), can be left empty
-      - ALLOWED_ACCESS_IDS=<MUST_BE_PROVIDED>
-      - ALLOW_INTERNAL_AUTH=false
-      - DISABLE_SECURE_COOKIE=true
-      - LOG_FORWARDING=
+      ## Akeyless API URL that the dispatcher and the web proxy use.
+      ## Keep the default for the Akeyless SaaS, or set the API URL of your Akeyless Gateway.
+      ##
+      - GATEWAY_URL=https://api.akeyless.io
+      ## Auth method that reads the secrets of the web targets. It needs Read and List permissions on them.
+      ## Supported types: access_key, cloud identity (aws_iam/azure_ad/gcp). Leave ZTWA_ACCESS_TYPE unset to auto detect.
+      ## Set a cloud type when the container cannot reach the instance metadata service (IMDS).
+      ## If using access_key, you must also set ZTWA_ACCESS_KEY which includes the key
+      ## https://docs.akeyless.io/docs/sra-web-access-docker
+      ##
+      - ZTWA_ACCESS_ID=${ZTWA_ACCESS_ID:?set ZTWA_ACCESS_ID in .env}
+      # - ZTWA_ACCESS_TYPE=aws_iam
+      ## Set it in .env for the access_key type. Not allowed with a cloud type.
+      ##
+      - ZTWA_ACCESS_KEY=${ZTWA_ACCESS_KEY:-}
+
+      ## List Access IDs that can open ZTWA sessions (comma separated list), for example your SAML auth method.
+      ## Required: with no Access IDs the dispatcher and the web proxy accept no user.
+      ## The users also need List permission on the secrets of the web targets.
+      ##
+      - AUTHORIZED_ACCESS_IDS=${AUTHORIZED_ACCESS_IDS:?set AUTHORIZED_ACCESS_IDS in .env}
+
+      ## External URLs of the dispatcher on port 9000, comma separated.
+      ## The Portal redirects users only to these URLs.
+      ## https://docs.akeyless.io/docs/sra-web-access-on-k8s-adv-config#redirect-to-bastion-urls
+      ##
       - ALLOWED_BASTION_URLS=
-      #- http_proxy=
-      #- https_proxy=
-      #- no_proxy=
+
+      ## External URLs of the web proxy on port 19414, for proxy mode sessions, comma separated.
+      ## This is not http_proxy, the outbound proxy of the container.
+      ## https://docs.akeyless.io/docs/sra-web-access-browsing-proxy
+      ##
+      - ALLOWED_PROXY_URLS=
+
+      ## When false, the dispatcher accepts only requests with preemptive JWT auth.
+      ##
+      - ALLOWED_INTERNAL_AUTH=false
+
+      ## When false, the browser sends the dispatcher session cookie only over HTTPS.
+      ##
+      - DISABLE_SECURE_COOKIE=true
+
+      ## The media server that serves the live view.
+      ##
+      - MEDIA_SERVER=mediamtx:8889
+
+      ## Session recording. The media server records each session to the shared folder, and the dispatcher uploads it to S3.
+      ## Record sessions. Set it together with MTX_PATHDEFAULTS_RECORD=yes on the media server.
+      ## Upload to S3 needs ENABLE_RECORDING_UPLOAD as well.
+      ## https://docs.akeyless.io/docs/sra-web-access-session-recording
+      ##
+      - ENABLE_RECORDING=false
+
+      ## Upload to S3 or an S3 compatible storage.
+      ##
+      - ENABLE_RECORDING_UPLOAD=false
+
+      ## Required when ENABLE_RECORDING_UPLOAD is true.
+      ##
+      - RECORDING_S3_BUCKET=
+      - RECORDING_S3_REGION=
+
+      ## Optional prefix for the uploaded objects, for example "recordings".
+      ##
+      - RECORDING_S3_PREFIX=
+
+      ## Endpoint of an S3 compatible service, for example MinIO. Leave empty for AWS S3.
+      ##
+      - RECORDING_S3_ENDPOINT=
+
+      ## S3 credentials, set them in .env.
+      ## When empty, the dispatcher uses the AWS default credential chain, for example an instance profile.
+      ##
+      - RECORDING_S3_ACCESS_KEY_ID=${RECORDING_S3_ACCESS_KEY_ID:-}
+      - RECORDING_S3_ACCESS_KEY_SECRET=${RECORDING_S3_ACCESS_KEY_SECRET:-}
+
+      ## Gzip the recordings before upload.
+      ##
+      - RECORDING_COMPRESS=false
+
+      ## Server side encryption of the uploaded objects. RECORDING_SSE_TYPE: empty (none), sse-s3 or sse-kms.
+      ## RECORDING_SSE_KMS_KEY_ID: KMS key ID or ARN for sse-kms. Empty uses the default KMS key.
+      ## https://docs.aws.amazon.com/AmazonS3/latest/userguide/serv-side-encryption.html
+      ##
+      - RECORDING_SSE_TYPE=
+      - RECORDING_SSE_KMS_KEY_ID=
+
+      ## Gateway CA certificate from the volume above.
+      ##
+      # - GATEWAY_CERT=/var/akeyless/certs/ca-bundle.pem
+      ## Linux system HTTP Proxy, the outbound proxy of the container
+      ## https://docs.akeyless.io/docs/sra-web-access-on-k8s-adv-config#proxy
+      ##
+      # - http_proxy=
+      # - https_proxy=
+      # - no_proxy=
     restart: unless-stopped
     networks:
       vpcbr:
         ipv4_address: 10.5.0.2
+        aliases:
+          - ztwa_dispatcher
+
+  ## Web proxy for proxy mode sessions, on port 19414. It needs no privileged credentials.
+  ## https://docs.akeyless.io/docs/sra-web-access-browsing-proxy
+  ##
+  proxy:
+    image: "akeyless/zero-trust-web-proxy"
+    ports:
+      - "19414:19414"
+    ## Gateway CA certificate, when it is not signed by a public CA. Also set GATEWAY_CERT below.
+    ##
+    # volumes:
+    #   - /path/to/your-ca-bundle.pem:/var/akeyless/certs/ca-bundle.pem:ro
+    environment:
+      ## Akeyless API URL, the same as on the dispatcher.
+      ##
+      - GATEWAY_URL=https://api.akeyless.io
+      ## Access IDs that can open ZTWA sessions, the same list as on the dispatcher.
+      ##
+      - AUTHORIZED_ACCESS_IDS=${AUTHORIZED_ACCESS_IDS:?set AUTHORIZED_ACCESS_IDS in .env}
+      ## HTTP proxy by default. Set WEB_PROXY_TYPE=SOCKS for a SOCKS5 proxy.
+      ##
+      # - WEB_PROXY_TYPE=SOCKS
+      # - GATEWAY_CERT=/var/akeyless/certs/ca-bundle.pem
+      ## Linux system HTTP Proxy, the outbound proxy of the container
+      ##
+      # - http_proxy=
+      # - https_proxy=
+      # - no_proxy=
+    restart: unless-stopped
+    networks:
+      - vpcbr
 
   worker:
     image: "akeyless/zero-trust-web-worker"
-    security_opt:
-      - seccomp=unconfined
+    ports:
+      - "9190:9090"
+    ## The worker runs as UID and GID 1000. Group 72 runs the init scripts, group 10000 owns /etc/shared.
+    ##
+    group_add:
+      - "72"
+      - "10000"
     shm_size: '2gb'
+    ## In-memory /config, so no browser profile data stays after a container restart.
+    ##
+    tmpfs:
+      - /config:uid=1000,gid=1000,mode=0755
     volumes:
-      - $PWD/policies.json:/usr/lib/firefox/distribution/policies.json:ro
       - $PWD/shared:/etc/shared
+      ## Gateway CA certificate, when it is not signed by a public CA. The browser trusts it too.
+      ## Also set GATEWAY_CERT below.
+      ##
+      # - /path/to/your-ca-bundle.pem:/var/akeyless/certs/ca-bundle.pem:ro
     environment:
       - INTERNAL_DISPATCHER_IP=10.5.0.2
+      - DISPATCHER_DNS=ztwa_dispatcher
       - DISPLAY_WIDTH=2560
       - DISPLAY_HEIGHT=1200
-      - DLP_CONF=
-      - LOG_FORWARDING=
-      #- http_proxy=
-      #- https_proxy=
-      #- no_proxy=
+      ## The worker publishes its screen to the media server, which serves the live view and records it.
+      ##
+      - WHIP_PUBLISH_URL_BASE=http://mediamtx:8889
+      # - GATEWAY_CERT=/var/akeyless/certs/ca-bundle.pem
+      ## Linux system HTTP Proxy, the outbound proxy of the container
+      ##
+      # - http_proxy=
+      # - https_proxy=
+      # - no_proxy=
     healthcheck:
       test: curl -f http://localhost:9090/healthy
       interval: 1s
@@ -55,6 +202,47 @@ services:
     depends_on:
      - dispatcher
 
+  ## Media server for the live view. Video goes from this host to the browser over UDP 8189.
+  ## It also records the sessions when MTX_PATHDEFAULTS_RECORD=yes.
+  ##
+  mediamtx:
+    image: "bluenviron/mediamtx:1.21.0-ffmpeg"
+    ports:
+      - "8189:8189/udp"
+    volumes:
+      - $PWD/shared:/etc/shared
+    environment:
+      - MTX_RTSP=no
+      - MTX_RTMP=no
+      - MTX_HLS=no
+      - MTX_SRT=no
+      - MTX_MOQ=no
+      - MTX_API=no
+      - MTX_METRICS=no
+      - MTX_PLAYBACK=no
+      - MTX_WEBRTC=yes
+      - MTX_WEBRTCADDRESS=:8889
+      - MTX_WEBRTCENCRYPTION=no
+      - MTX_WEBRTCLOCALUDPADDRESS=:8189
+      - MTX_WEBRTCIPSFROMINTERFACES=no
+      ## The address browsers reach this host on, an IP or a hostname.
+      ##
+      - MTX_WEBRTCADDITIONALHOSTS=<MUST_BE_PROVIDED>
+      ## Set to yes together with ENABLE_RECORDING=true on the dispatcher.
+      ##
+      - MTX_PATHDEFAULTS_RECORD=no
+      - MTX_PATHDEFAULTS_RECORDPATH=/etc/shared/inprogress/rec_%path_%s
+      - MTX_PATHDEFAULTS_RECORDFORMAT=fmp4
+      - MTX_PATHDEFAULTS_RECORDPARTDURATION=1s
+      - MTX_PATHDEFAULTS_RECORDSEGMENTDURATION=24h
+      - MTX_PATHDEFAULTS_RECORDDELETEAFTER=0s
+      - MTX_PATHDEFAULTS_RUNONRECORDSEGMENTCOMPLETE=sh -c 'mkdir -p -m 2775 /etc/shared/recordings && mv "$$MTX_SEGMENT_PATH" /etc/shared/recordings/'
+    restart: unless-stopped
+    networks:
+      - vpcbr
+
+  ## Restarts a container whose healthcheck fails.
+  ##
   autoheal:
     restart: unless-stopped
     image: willfarrell/autoheal
@@ -70,4 +258,3 @@ networks:
      config:
        - subnet: 10.5.0.0/24
          gateway: 10.5.0.1
-

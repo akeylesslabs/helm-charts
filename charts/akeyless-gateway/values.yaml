@@ -26,7 +26,7 @@ strictSecurityPolicy:
 
 globalConfig:
   gatewayAuth:
-    ## Supported types: access_key, certificate, universal identity, cloud identity (aws_iam/azure_ad/gcp)
+    ## Supported types: access_key, certificate, universal identity, cloud identity (aws_iam/azure_ad/gcp/alicloud)
     ## If using access_key, certificate or universal identity, you must also add gatewayCredentialsExistingSecret which includes the key/certificate/token
     ## https://docs.akeyless.io/docs/gateway-chart#authentication
     ##
@@ -62,6 +62,12 @@ globalConfig:
   ## Read and Update the Gateway's Kubernetes Secret
   ## 2. The service account must have read and update access to the Kubernetes secret used by the Gateway.
   ## By default, this secret is named <deployment>-cache-encryption-key, unless a custom name has been specified.
+  ##
+  ## annotations are applied only when create is true. With an existing service account (create: false),
+  ## add the annotations to that service account yourself.
+  ## Cloud identity examples:
+  ##   EKS (IRSA):  eks.amazonaws.com/role-arn: arn:aws:iam::<account-id>:role/<role-name>
+  ##   ACK (RRSA):  pod-identity.alibabacloud.com/role-name: <ram-role-name>
   ##
   serviceAccount:
     create: false
@@ -352,6 +358,9 @@ gateway:
     labels: {}
     type: LoadBalancer
 
+    loadBalancerIP: ""
+    externalTrafficPolicy: ""
+
     ## Gateway service port
     ##
     port: 8000
@@ -578,6 +587,12 @@ sra:
   ## For more information on a Quick Start guide for Remote Access <https://docs.akeyless.io/docs/remote-access-quick-start-guide>
   ## Or setup SRA on K8s <https://docs.akeyless.io/docs/remote-access-setup-k8s>
   enabled: false
+
+  customCA:
+    enabled: false
+    volumeName: "ca-certificates"
+    volumeType: "configMap"
+    volumeSourceName: ""
 
   image:
     ##  Default image repository is: akeyless/zero-trust-bastion

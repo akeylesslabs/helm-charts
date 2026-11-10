@@ -5,6 +5,28 @@
   "type": "object",
   "additionalProperties": true,
   "properties": {
+    "config": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "ztwaAuth": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "ztwaAccessType": {
+              "type": "string",
+              "enum": ["", "access_key", "aws_iam", "azure_ad", "gcp"],
+              "description": "Auth method type of ztwaAccessID. Empty string (default) auto detects: access_key when ztwaExistingSecret is set, else the cloud identity found from IMDS. The dispatcher uses a cloud type when its IMDS probe cannot find the cloud, for clusters where the pod cannot reach 169.254.169.254."
+            },
+            "authorizedAccessIDs": {
+              "type": "array",
+              "items": { "type": ["string", "integer"], "minLength": 1 },
+              "description": "Access IDs of the users that can open ZTWA sessions."
+            }
+          }
+        }
+      }
+    },
     "extraObjects": {
       "type": "array",
       "items": { "type": ["object", "string"] }
@@ -37,22 +59,6 @@
       "type": "object",
       "additionalProperties": true,
       "properties": {
-        "initContainer": {
-          "type": "object",
-          "additionalProperties": true,
-          "properties": {
-            "imagePullSecrets": {
-              "type": "array",
-              "description": "Merged on the dispatcher pod with image.imagePullSecrets and dispatcher.image.imagePullSecrets; deduplicated at pod spec.",
-              "items": {
-                "type": "object",
-                "additionalProperties": true,
-                "properties": { "name": { "type": "string" } },
-                "required": ["name"]
-              }
-            }
-          }
-        },
         "image": {
           "type": "object",
           "additionalProperties": true,
@@ -64,24 +70,6 @@
                 "additionalProperties": true,
                 "properties": { "name": { "type": "string" } },
                 "required": ["name"]
-              }
-            }
-          }
-        },
-        "config": {
-          "type": "object",
-          "additionalProperties": true,
-          "properties": {
-            "cloudIdentity": {
-              "type": "object",
-              "additionalProperties": true,
-              "description": "Cloud identity override. Forces the dispatcher to authenticate via the configured cloud identity instead of probing IMDS. Use this on clusters where the dispatcher pod cannot reach 169.254.169.254 (e.g. EKS with IMDSv2 hop-limit=1).",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "enum": ["", "aws_iam", "azure_ad", "gcp"],
-                  "description": "Set to short-circuit IMDS classification and authenticate via the configured cloud identity. Empty string (default) preserves IMDS auto-detection."
-                }
               }
             }
           }
@@ -120,6 +108,44 @@
                 "required": ["name"]
               }
             }
+          }
+        }
+      }
+    },
+    "webProxy": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "image": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "imagePullSecrets": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": true,
+                "properties": { "name": { "type": "string" } },
+                "required": ["name"]
+              }
+            }
+          }
+        },
+        "service": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "type": { "type": "string" },
+            "port": { "type": "integer" }
+          }
+        },
+        "ingress": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "parentGateway": { "type": "string" },
+            "sectionName": { "type": "string" }
           }
         }
       }

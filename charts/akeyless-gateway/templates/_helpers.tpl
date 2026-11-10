@@ -306,6 +306,25 @@ component: cache
   readOnly: true
 {{- end -}}
 
+{{- define "akeyless-sra.customCA.volume" -}}
+- name: {{ .Values.sra.customCA.volumeName | quote }}
+{{- if eq (.Values.sra.customCA.volumeType | lower) "configmap" }}
+  configMap:
+    name: {{ .Values.sra.customCA.volumeSourceName | required "sra.customCA.volumeSourceName is required when sra.customCA.enabled is true" | quote }}
+{{- else if eq (.Values.sra.customCA.volumeType | lower) "secret" }}
+  secret:
+    secretName: {{ .Values.sra.customCA.volumeSourceName | required "sra.customCA.volumeSourceName is required when sra.customCA.enabled is true" | quote }}
+{{- else }}
+  {{- fail (printf "sra.customCA.volumeType must be either 'configmap' or 'secret', got %s" .Values.sra.customCA.volumeType) }}
+{{- end }}
+{{- end -}}
+
+{{- define "akeyless-sra.customCA.volumeMount" -}}
+- name: {{ .Values.sra.customCA.volumeName | quote }}
+  mountPath: /etc/ssl/certs/ca-certificates.crt
+  subPath: ca-certificates.crt
+{{- end -}}
+
 {{- define "akeyless-gateway.clusterCache.password" }}
 {{- /*### REDIS_PASS instead of REDIS_PASSWORD due to bc*/}}
   - name: REDIS_PASS
@@ -427,6 +446,18 @@ check gateway auth config
       secretKeyRef:
         name: {{ .Values.globalConfig.gatewayAuth.gatewayCredentialsExistingSecret }}
         key: gateway-access-key
+  {{- end }}
+  {{- if eq .Values.globalConfig.gatewayAuth.gatewayAccessType "alicloud" }}
+  {{- $userSet := false }}
+  {{- range .Values.globalConfig.env }}
+  {{- if eq (toString .name) "ADMIN_ACCESS_ID_TYPE" }}
+  {{- $userSet = true }}
+  {{- end }}
+  {{- end }}
+  {{- if not $userSet }}
+  - name: ADMIN_ACCESS_ID_TYPE
+    value: alicloud
+  {{- end }}
   {{- end }}
 {{- end -}}
 

@@ -1,0 +1,370 @@
+suite: values layout
+release:
+  name: ztwa
+  namespace: sra
+set:
+  config.ztwaAuth.ztwaAccessID: p-priv
+  config.ztwaAuth.authorizedAccessIDs: [p-1]
+tests:
+  - it: "dispatcher.config from the old layout fails and names config"
+    template: templates/configmap.yaml
+    set:
+      dispatcher.config.clusterName: old
+    asserts:
+      - failedTemplate:
+          errorPattern: "dispatcher.config moved to config"
+
+  - it: "sessionRecording fails and names recording"
+    template: templates/configmap.yaml
+    set:
+      sessionRecording.enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: "sessionRecording moved to recording"
+
+  - it: "recording.upload fails and names recording.s3"
+    template: templates/configmap.yaml
+    set:
+      recording.upload.enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: "recording.upload moved to recording.s3"
+
+  - it: "top level dlp fails as removed"
+    template: templates/configmap.yaml
+    set:
+      dlp.enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: "dlp was removed"
+
+  - it: "webWorker.config.dispatcherDNS fails and names dispatcher.dispatcherDNS"
+    template: templates/configmap.yaml
+    set:
+      webWorker.config.dispatcherDNS: rbi.dispatcher
+    asserts:
+      - failedTemplate:
+          errorPattern: "webWorker.config.dispatcherDNS moved to dispatcher.dispatcherDNS"
+
+  - it: "HPA sessionTerminationGracePeriodSeconds fails and names the worker key"
+    template: templates/configmap.yaml
+    set:
+      HPA.webWorker.sessionTerminationGracePeriodSeconds: 1800
+    asserts:
+      - failedTemplate:
+          errorPattern: "moved to webWorker.terminationGracePeriodSeconds"
+
+  - it: "a plain accessKey fails and points to the access Secret"
+    template: templates/configmap.yaml
+    set:
+      config.ztwaAuth.accessKey: plain
+    asserts:
+      - failedTemplate:
+          errorPattern: "config.ztwaAuth.accessKey is not a setting, put the key in the Secret named in config.ztwaAuth.ztwaExistingSecret"
+
+  - it: "allowedAccessIDs fails and names authorizedAccessIDs"
+    template: templates/configmap.yaml
+    set:
+      config.ztwaAuth.allowedAccessIDs: [p-1]
+    asserts:
+      - failedTemplate:
+          errorPattern: "config.ztwaAuth.allowedAccessIDs moved to config.ztwaAuth.authorizedAccessIDs"
+
+  - it: "a ztwaExistingSecret map fails and names the flat Secret and authorizedAccessIDs"
+    template: templates/configmap.yaml
+    set:
+      config.ztwaAuth.ztwaExistingSecret.access: priv-secret
+      config.ztwaAuth.ztwaExistingSecret.authorizedAccessIDs: ids-secret
+    asserts:
+      - failedTemplate:
+          errorPattern: "config.ztwaAuth.ztwaExistingSecret is one Secret name, with only the key ztwa-access-key"
+
+  - it: "config.privilegedAccess fails and names config.ztwaAuth"
+    template: templates/configmap.yaml
+    set:
+      config.privilegedAccess.accessID: p-old
+    asserts:
+      - failedTemplate:
+          errorPattern: "config.privilegedAccess moved to config.ztwaAuth: accessID to ztwaAccessID, accessType to ztwaAccessType, existingSecretNames.access to ztwaExistingSecret"
+
+  - it: "config.apiGatewayURL and apiGatewayCert fail and name the new keys"
+    template: templates/configmap.yaml
+    set:
+      config.apiGatewayURL: https://gw.example
+      config.apiGatewayCert.tlsCertsSecretName: gw-ca
+    asserts:
+      - failedTemplate:
+          errorPattern: "(?s)config.apiGatewayURL moved to config.gatewayURL.*config.apiGatewayCert.tlsCertsSecretName moved to config.gatewayCert.tlsExistingSecret"
+
+  - it: "config.cloudIdentity fails and names accessType"
+    template: templates/configmap.yaml
+    set:
+      config.cloudIdentity.type: aws_iam
+    asserts:
+      - failedTemplate:
+          errorPattern: "config.cloudIdentity.type moved to config.ztwaAuth.ztwaAccessType"
+
+  - it: "config.logForward fails as removed"
+    template: templates/configmap.yaml
+    set:
+      config.logForward: target_log_type="splunk"
+    asserts:
+      - failedTemplate:
+          errorPattern: "config.logForward and config.existingLogForwardSecretName were removed"
+
+  - it: "an old values file gets the layout message before the authorized IDs check"
+    template: templates/configmap.yaml
+    set:
+      config.ztwaAuth.authorizedAccessIDs: null
+      dispatcher.config.clusterName: old
+    asserts:
+      - failedTemplate:
+          errorPattern: "dispatcher.config moved to config"
+
+  - it: "sessionRecording names the removed quality and watchdog keys"
+    template: templates/configmap.yaml
+    set:
+      sessionRecording.quality: 720p
+    asserts:
+      - failedTemplate:
+          errorPattern: "sessionRecording.quality and sessionRecording.watchdog were removed"
+
+  - it: "config.recording fails and names recording.s3"
+    template: templates/configmap.yaml
+    set:
+      config.recording.s3Bucket: old
+    asserts:
+      - failedTemplate:
+          errorPattern: "config.recording moved to recording.s3"
+
+  - it: "config.existingLogForwardSecretName fails as removed"
+    template: templates/configmap.yaml
+    set:
+      config.existingLogForwardSecretName: logand
+    asserts:
+      - failedTemplate:
+          errorPattern: "config.logForward and config.existingLogForwardSecretName were removed"
+
+  - it: "config.listOnlyCredentials fails as removed"
+    template: templates/configmap.yaml
+    set:
+      config.listOnlyCredentials.samlAccessID: p-saml
+    asserts:
+      - failedTemplate:
+          errorPattern: "config.listOnlyCredentials was removed"
+
+  - it: "HPA.dispatcher fails as removed"
+    template: templates/configmap.yaml
+    set:
+      HPA.dispatcher.minReplicas: 1
+    asserts:
+      - failedTemplate:
+          errorPattern: "HPA.dispatcher was removed"
+
+  - it: "several old keys are reported together"
+    template: templates/configmap.yaml
+    set:
+      sessionRecording.enabled: true
+      dlp.enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: "(?s)sessionRecording moved to recording.*dlp was removed"
+
+  - it: "pull secrets on a removed init container fail and name the new key"
+    template: templates/configmap.yaml
+    set:
+      webProxy.initContainer.imagePullSecrets: [{name: regcred}]
+    asserts:
+      - failedTemplate:
+          errorPattern: "webProxy.initContainer was removed, move its imagePullSecrets to webProxy.image.imagePullSecrets"
+
+  - it: "an old init container block without pull secrets still renders"
+    template: templates/dispatcher-deployment.yaml
+    set:
+      dispatcher.initContainer: {image: {repository: busybox, tag: 1.30.1}, imagePullSecrets: []}
+    asserts:
+      - notExists:
+          path: spec.template.spec.initContainers
+
+  - it: "configmap.yaml renders only the web policies ConfigMap"
+    template: templates/configmap.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.name
+          value: ztwa-cm-web-policies
+
+  - it: "the dispatcher mounts no log forwarding config"
+    template: templates/dispatcher-deployment.yaml
+    asserts:
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: configmap-akeyless-config
+          any: true
+      - notExists:
+          path: spec.template.spec.initContainers
+
+  - it: "config settings reach the dispatcher"
+    template: templates/dispatcher-deployment.yaml
+    set:
+      config.clusterName: prod-ztwa
+      config.allowedBastionUrls: ["https://ztwa.my.org:9000", "https://ztwa2.my.org:9000"]
+      config.allowedProxyUrls: ["https://ztwa.my.org:19414"]
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: CLUSTER_NAME, value: prod-ztwa}
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: ALLOWED_BASTION_URLS, value: "https://ztwa.my.org:9000,https://ztwa2.my.org:9000"}
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: ALLOWED_PROXY_URLS, value: "https://ztwa.my.org:19414"}
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: ALLOWED_INTERNAL_AUTH, value: "false"}
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: DISABLE_SECURE_COOKIE, value: "true"}
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: SERVICE_DNS, value: ztwa-akeyless-zero-trust-web-access-discovery}
+
+  - it: "empty URL lists render no URL env vars"
+    template: templates/dispatcher-deployment.yaml
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content: {name: ALLOWED_BASTION_URLS}
+          any: true
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content: {name: ALLOWED_PROXY_URLS}
+          any: true
+
+  - it: "config.gatewayURL and gatewayCert reach the web proxy"
+    template: templates/proxy-deployment.yaml
+    set:
+      config.gatewayURL: https://gw.my.org
+      config.gatewayCert.tlsExistingSecret: gw-ca
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: GATEWAY_URL, value: "https://gw.my.org"}
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: GATEWAY_CERT, value: /etc/ssl/certs/gw-cert.pem}
+      - notExists:
+          path: spec.template.spec.initContainers
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: gw-signed-ca
+            secret:
+              secretName: gw-ca
+              items:
+                - key: tls.crt
+                  path: gw-cert.pem
+
+  - it: "config.gatewayCert reaches the dispatcher and the worker"
+    templates:
+      - templates/dispatcher-deployment.yaml
+      - templates/web-worker-deployment.yaml
+    set:
+      config.gatewayCert.tlsExistingSecret: gw-ca
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: gw-signed-ca
+            secret:
+              secretName: gw-ca
+              items:
+                - key: tls.crt
+                  path: gw-cert.pem
+
+  - it: "dispatcher.dispatcherDNS sets the dispatcher host alias"
+    template: templates/dispatcher-deployment.yaml
+    set:
+      dispatcher.dispatcherDNS: custom.dispatcher
+    asserts:
+      - equal:
+          path: spec.template.spec.hostAliases[0].hostnames[0]
+          value: custom.dispatcher
+
+  - it: "webWorker.terminationGracePeriodSeconds sets the worker grace period"
+    template: templates/web-worker-deployment.yaml
+    set:
+      webWorker.terminationGracePeriodSeconds: 1800
+    asserts:
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 1800
+
+  - it: "webWorker.terminationGracePeriodSeconds keeps 0"
+    template: templates/web-worker-deployment.yaml
+    set:
+      webWorker.terminationGracePeriodSeconds: 0
+    asserts:
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 0
+
+  - it: "the worker grace period defaults to 3600"
+    template: templates/web-worker-deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 3600
+
+  - it: "NOTES warns about webWorker.config.recording"
+    template: templates/NOTES.txt
+    set:
+      webWorker.config.recording: {fps: 10}
+    asserts:
+      - matchRegexRaw:
+          pattern: "webWorker.config.recording was removed and is ignored"
+
+  - it: "the worker mounts and copies no DLP config"
+    template: templates/web-worker-deployment.yaml
+    asserts:
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: configmap-conf
+          any: true
+      - notMatchRegex:
+          path: spec.template.spec.initContainers[0].args[1]
+          pattern: "configmap_conf"
+
+  - it: "HPA min and max replicas default to 3 and 14"
+    template: templates/horizontalPodAutoscaler.yaml
+    set:
+      HPA.enabled: true
+      metrics.enabled: true
+      webProxy.replicaCount: 1
+    asserts:
+      - equal:
+          path: spec.minReplicas
+          value: 3
+      - equal:
+          path: spec.maxReplicas
+          value: 14
+
+  - it: "HPA min and max replicas come from values"
+    template: templates/horizontalPodAutoscaler.yaml
+    set:
+      HPA.enabled: true
+      metrics.enabled: true
+      HPA.webWorker.minReplicas: 2
+      HPA.webWorker.maxReplicas: 8
+      webProxy.replicaCount: 1
+    asserts:
+      - equal:
+          path: spec.minReplicas
+          value: 2
+      - equal:
+          path: spec.maxReplicas
+          value: 8

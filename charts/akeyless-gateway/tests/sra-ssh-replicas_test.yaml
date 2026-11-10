@@ -1,0 +1,55 @@
+suite: akeyless-gateway SRA SSH replicas
+templates:
+  - templates/akeyless-secure-remote-access/ssh-deployment.yaml
+  - templates/akeyless-secure-remote-access/hpa.yaml
+set:
+  sra.enabled: true
+  sra.sshConfig.CAPublicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC7 test
+tests:
+  - it: renders the default replica count when the SSH HPA is off
+    template: templates/akeyless-secure-remote-access/ssh-deployment.yaml
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 1
+
+  - it: renders a static replica count when the SSH HPA is off
+    template: templates/akeyless-secure-remote-access/ssh-deployment.yaml
+    set:
+      sra.sshConfig.replicaCount: 3
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  - it: leaves replicas to the HPA when the SSH HPA is on
+    template: templates/akeyless-secure-remote-access/ssh-deployment.yaml
+    set:
+      sra.sshConfig.hpa.enabled: true
+      sra.sshConfig.replicaCount: 3
+    asserts:
+      - notExists:
+          path: spec.replicas
+
+  - it: renders the SSH HPA against the SSH deployment when the SSH HPA is on
+    template: templates/akeyless-secure-remote-access/hpa.yaml
+    set:
+      sra.sshConfig.hpa.enabled: true
+      sra.sshConfig.hpa.minReplicas: 2
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: HorizontalPodAutoscaler
+      - equal:
+          path: spec.scaleTargetRef.name
+          value: ssh-RELEASE-NAME-akeyless-gateway
+      - equal:
+          path: spec.minReplicas
+          value: 2
+
+  - it: renders no SSH HPA when the SSH HPA is off
+    template: templates/akeyless-secure-remote-access/hpa.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
