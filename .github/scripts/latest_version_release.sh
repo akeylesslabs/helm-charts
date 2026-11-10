@@ -107,13 +107,17 @@ for chart in "${charts[@]}"; do
     fi
 
     git add -A && git commit -m "Updated ${service} helm chart version to latest: ${new_app_version}" || die "Failed to commit changes to git"
-    git push origin "${bump_branch}"
 
     echo "${chart} app version was successfully updated to latest: ${new_app_version}"
     echo "${chart} Helm chart version was updated to: ${new_chart_version}"
     updated_charts_summary+=("${chart} app version: ${new_app_version} Helm chart version: ${new_chart_version}")
   popd
 done
+
+# Force-push: a retry of the same workflow run reuses GITHUB_RUN_ID, so a
+# stale branch/PR from a prior failed attempt (e.g. the merge step failing)
+# must not block this run with a non-fast-forward rejection.
+git push -f origin "${bump_branch}" || die "Failed to push ${bump_branch}"
 
 echo "released=true" >> "${GITHUB_OUTPUT}"
 echo "bump_branch=${bump_branch}" >> "${GITHUB_OUTPUT}"

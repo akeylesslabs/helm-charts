@@ -104,7 +104,7 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.akeyless-ci.outputs.token }}
         run: |
-          gh pr merge "${{ steps.release.outputs.bump_branch }}" --merge --delete-branch
+          gh pr merge "${{ steps.release.outputs.bump_branch }}" --squash --delete-branch
 
       - name: Dispatch manifest update
         if: steps.release.outputs.released == 'true'
