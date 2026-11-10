@@ -306,23 +306,72 @@ component: cache
   readOnly: true
 {{- end -}}
 
-{{- define "akeyless-sra.customCA.volume" -}}
-- name: {{ .Values.sra.customCA.volumeName | quote }}
-{{- if eq (.Values.sra.customCA.volumeType | lower) "configmap" }}
+{{- define "akeyless-gateway.customCA.extend" -}}
+{{- if and .enabled (eq (.mode | default "extend") "extend") -}}true{{- end -}}
+{{- end -}}
+
+{{- define "akeyless-gateway.customCA.replace" -}}
+{{- if and .enabled (eq (.mode | default "extend") "replace") -}}true{{- end -}}
+{{- end -}}
+
+{{- define "akeyless-gateway.customCA.sourceVolume" -}}
+{{- $ca := .ca -}}
+- name: {{ $ca.volumeName | quote }}
+{{- if eq ($ca.volumeType | lower) "configmap" }}
   configMap:
-    name: {{ .Values.sra.customCA.volumeSourceName | required "sra.customCA.volumeSourceName is required when sra.customCA.enabled is true" | quote }}
-{{- else if eq (.Values.sra.customCA.volumeType | lower) "secret" }}
+    name: {{ $ca.volumeSourceName | required (printf "%s.volumeSourceName is required when %s.enabled is true" .key .key) | quote }}
+{{- else if eq ($ca.volumeType | lower) "secret" }}
   secret:
-    secretName: {{ .Values.sra.customCA.volumeSourceName | required "sra.customCA.volumeSourceName is required when sra.customCA.enabled is true" | quote }}
+    secretName: {{ $ca.volumeSourceName | required (printf "%s.volumeSourceName is required when %s.enabled is true" .key .key) | quote }}
 {{- else }}
-  {{- fail (printf "sra.customCA.volumeType must be either 'configmap' or 'secret', got %s" .Values.sra.customCA.volumeType) }}
+  {{- fail (printf "%s.volumeType must be either 'configmap' or 'secret', got %s" .key $ca.volumeType) }}
 {{- end }}
 {{- end -}}
 
-{{- define "akeyless-sra.customCA.volumeMount" -}}
-- name: {{ .Values.sra.customCA.volumeName | quote }}
+{{- define "akeyless-gateway.customCA.replaceMount" -}}
+- name: {{ .volumeName | quote }}
   mountPath: /etc/ssl/certs/ca-certificates.crt
   subPath: ca-certificates.crt
+{{- end -}}
+
+{{- define "akeyless-gateway.customCA.trustVolumes" -}}
+- name: usr-local-ca-certificates
+  emptyDir: {}
+- name: etc-ssl-certs
+  emptyDir: {}
+{{- end -}}
+
+{{- define "akeyless-gateway.customCA.trustVolumeMounts" -}}
+- name: usr-local-ca-certificates
+  mountPath: /usr/local/share/ca-certificates
+- name: etc-ssl-certs
+  mountPath: /etc/ssl/certs
+{{- end -}}
+
+{{- define "akeyless-gateway.customCA.initContainer" -}}
+- name: custom-ca-trust
+  image: {{ .image | quote }}
+  imagePullPolicy: {{ .pullPolicy }}
+  {{- with .securityContext }}
+  {{- . | nindent 2 }}
+  {{- end }}
+  command:
+    - /bin/sh
+    - -ec
+    - |
+      cp -RP /etc/ssl/certs/. /trust/etc-ssl-certs/
+      cp -RP /usr/local/share/ca-certificates/. /trust/usr-local-ca-certificates/
+      cp /custom-ca/ca-certificates.crt /trust/usr-local-ca-certificates/custom-ca.crt
+      printf '\n' >> /trust/etc-ssl-certs/ca-certificates.crt
+      cat /custom-ca/ca-certificates.crt >> /trust/etc-ssl-certs/ca-certificates.crt
+  volumeMounts:
+    - name: {{ .ca.volumeName | quote }}
+      mountPath: /custom-ca
+      readOnly: true
+    - name: usr-local-ca-certificates
+      mountPath: /trust/usr-local-ca-certificates
+    - name: etc-ssl-certs
+      mountPath: /trust/etc-ssl-certs
 {{- end -}}
 
 {{- define "akeyless-gateway.clusterCache.password" }}
@@ -805,4 +854,39 @@ Usage: {{ include "akeyless-gateway.validateNoPlaintextSecrets" . }}
     {{- end }}
   {{- end }}
 {{- end }}
+{{- end -}}
+
+{{- define "akeyless-gateway.containerSecurityContext" -}}
+{{- if or .Values.gateway.deployment.containerSecurityContext .Values.strictSecurityPolicy.enabled .Values.gateway.deployment.readOnlyRootFilesystem -}}
+securityContext:
+  {{- if .Values.strictSecurityPolicy.enabled }}
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: {{ .Values.gateway.deployment.readOnlyRootFilesystem }}
+  {{- else }}
+  {{- with .Values.gateway.deployment.containerSecurityContext }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
+  {{- if .Values.gateway.deployment.readOnlyRootFilesystem }}
+  readOnlyRootFilesystem: true
+  {{- end }}
+  {{- end }}
+{{- end }}
+{{- end -}}
+
+{{- define "akeyless-sra.image" -}}
+{{ .Values.sra.image.repository | default "akeyless/zero-trust-bastion" }}:{{ .Values.sra.image.tag | default .Chart.Annotations.sraVersion }}
+{{- end -}}
+
+{{- define "akeyless-sra.customCA.initSecurityContext" -}}
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
 {{- end -}}

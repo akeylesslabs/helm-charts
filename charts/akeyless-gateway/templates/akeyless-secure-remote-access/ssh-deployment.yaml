@@ -72,15 +72,22 @@ spec:
       {{ include "akeyless-gateway.clusterCache.tlsVolume" . | nindent 6}}
       {{- end }}
       {{- if .Values.sra.customCA.enabled }}
-      {{- include "akeyless-sra.customCA.volume" . | nindent 6 }}
+      {{- include "akeyless-gateway.customCA.sourceVolume" (dict "ca" .Values.sra.customCA "key" "sra.customCA") | nindent 6 }}
+      {{- end }}
+      {{- if include "akeyless-gateway.customCA.extend" .Values.sra.customCA }}
+      {{- include "akeyless-gateway.customCA.trustVolumes" . | nindent 6 }}
       {{- end }}
       - name: configmap-creds
         configMap:
           name: {{ $.Release.Name }}-cm-creds
       {{- include "akeyless-sra.imagePullSecrets" . | indent 2 }}
+      {{- if include "akeyless-gateway.customCA.extend" .Values.sra.customCA }}
+      initContainers:
+        {{- include "akeyless-gateway.customCA.initContainer" (dict "ca" .Values.sra.customCA "image" (include "akeyless-sra.image" .) "pullPolicy" .Values.sra.image.pullPolicy "securityContext" (include "akeyless-sra.customCA.initSecurityContext" .)) | nindent 8 }}
+      {{- end }}
       containers:
         - name: gateway-sra-ssh
-          image: "{{ .Values.sra.image.repository | default "akeyless/zero-trust-bastion" }}:{{ .Values.sra.image.tag | default .Chart.Annotations.sraVersion }}"
+          image: "{{ include "akeyless-sra.image" . }}"
           imagePullPolicy: {{ .Values.sra.image.pullPolicy }}
           {{- include "akeyless-sra-ssh.containerSecurityContext" . | nindent 10 }}
           ports:
@@ -195,7 +202,10 @@ spec:
             {{- if (eq "true" (include "akeyless-gateway.clusterCache.enableTls" . )) }}
               {{ include "akeyless-gateway.clusterCache.tlsVolumeMounts" . | nindent 12 }}
             {{- end }}
-            {{- if .Values.sra.customCA.enabled }}
-            {{- include "akeyless-sra.customCA.volumeMount" . | nindent 12 }}
+            {{- if include "akeyless-gateway.customCA.extend" .Values.sra.customCA }}
+            {{- include "akeyless-gateway.customCA.trustVolumeMounts" . | nindent 12 }}
+            {{- end }}
+            {{- if include "akeyless-gateway.customCA.replace" .Values.sra.customCA }}
+            {{- include "akeyless-gateway.customCA.replaceMount" .Values.sra.customCA | nindent 12 }}
             {{- end }}
 {{- end }}

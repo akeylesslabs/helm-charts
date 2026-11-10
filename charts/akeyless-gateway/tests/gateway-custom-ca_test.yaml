@@ -1,0 +1,263 @@
+suite: akeyless-gateway custom CA
+templates:
+  - templates/deployment.yaml
+tests:
+  - it: renders no init container and no trust volumes when customCA is off
+    set:
+      gateway.customCA.volumeSourceName: corp-ca
+    asserts:
+      - notExists:
+          path: spec.template.spec.initContainers
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: etc-ssl-certs
+            emptyDir: {}
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: ca-certificates
+            configMap:
+              name: corp-ca
+
+  - it: extends the image trust store by default
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: corp-ca
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: ca-certificates
+            configMap:
+              name: corp-ca
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: etc-ssl-certs
+            emptyDir: {}
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: usr-local-ca-certificates
+            emptyDir: {}
+      - lengthEqual:
+          path: spec.template.spec.initContainers
+          count: 1
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: custom-ca-trust
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: akeyless/gateway:5.6.0
+      - contains:
+          path: spec.template.spec.initContainers[0].volumeMounts
+          content:
+            name: ca-certificates
+            mountPath: /custom-ca
+            readOnly: true
+      - contains:
+          path: spec.template.spec.initContainers[0].volumeMounts
+          content:
+            name: etc-ssl-certs
+            mountPath: /trust/etc-ssl-certs
+      - contains:
+          path: spec.template.spec.initContainers[0].volumeMounts
+          content:
+            name: usr-local-ca-certificates
+            mountPath: /trust/usr-local-ca-certificates
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: etc-ssl-certs
+            mountPath: /etc/ssl/certs
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: usr-local-ca-certificates
+            mountPath: /usr/local/share/ca-certificates
+
+  - it: never mounts the bundle over the image's bundle file in extend mode
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: corp-ca
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: ca-certificates
+            mountPath: /etc/ssl/certs/ca-certificates.crt
+            subPath: ca-certificates.crt
+
+  - it: copies the image trust store and appends the bundle in the init container
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: corp-ca
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].command[0]
+          value: /bin/sh
+      - matchRegex:
+          path: spec.template.spec.initContainers[0].command[2]
+          pattern: cp -RP /etc/ssl/certs/\. /trust/etc-ssl-certs/
+      - matchRegex:
+          path: spec.template.spec.initContainers[0].command[2]
+          pattern: cp -RP /usr/local/share/ca-certificates/\. /trust/usr-local-ca-certificates/
+      - matchRegex:
+          path: spec.template.spec.initContainers[0].command[2]
+          pattern: cp /custom-ca/ca-certificates\.crt /trust/usr-local-ca-certificates/custom-ca\.crt
+      - matchRegex:
+          path: spec.template.spec.initContainers[0].command[2]
+          pattern: cat /custom-ca/ca-certificates\.crt >> /trust/etc-ssl-certs/ca-certificates\.crt
+
+  - it: uses the configured gateway image for the init container
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: corp-ca
+      gateway.deployment.image.repository: registry.example.com/gateway
+      gateway.deployment.image.tag: 9.9.9
+      gateway.deployment.image.pullPolicy: Always
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: registry.example.com/gateway:9.9.9
+      - equal:
+          path: spec.template.spec.initContainers[0].imagePullPolicy
+          value: Always
+
+  - it: gives the init container the gateway container security context
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: corp-ca
+      strictSecurityPolicy.enabled: true
+      gateway.deployment.readOnlyRootFilesystem: true
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].securityContext
+          value:
+            runAsNonRoot: true
+            runAsUser: 1001
+            runAsGroup: 1001
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+
+  - it: renders no init container security context when the gateway has none
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: corp-ca
+    asserts:
+      - notExists:
+          path: spec.template.spec.initContainers[0].securityContext
+
+  - it: shares the read-only root filesystem trust volumes instead of declaring them twice
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: corp-ca
+      gateway.deployment.readOnlyRootFilesystem: true
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          count: 1
+          content:
+            name: etc-ssl-certs
+            emptyDir: {}
+      - contains:
+          path: spec.template.spec.volumes
+          count: 1
+          content:
+            name: usr-local-ca-certificates
+            emptyDir: {}
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          count: 1
+          content:
+            name: etc-ssl-certs
+            mountPath: /etc/ssl/certs
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          count: 1
+          content:
+            name: usr-local-ca-certificates
+            mountPath: /usr/local/share/ca-certificates
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: custom-ca-trust
+
+  - it: mounts the bundle over the image's bundle file in replace mode
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.mode: replace
+      gateway.customCA.volumeSourceName: corp-ca
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: ca-certificates
+            mountPath: /etc/ssl/certs/ca-certificates.crt
+            subPath: ca-certificates.crt
+      - notExists:
+          path: spec.template.spec.initContainers
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: etc-ssl-certs
+            emptyDir: {}
+
+  - it: mounts a secret bundle when the volume type is secret
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeType: Secret
+      gateway.customCA.volumeSourceName: corp-ca
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: ca-certificates
+            secret:
+              secretName: corp-ca
+
+  - it: uses the configured volume name for the source volume and both mounts
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeName: corp-trust
+      gateway.customCA.volumeSourceName: corp-ca
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: corp-trust
+            configMap:
+              name: corp-ca
+      - contains:
+          path: spec.template.spec.initContainers[0].volumeMounts
+          content:
+            name: corp-trust
+            mountPath: /custom-ca
+            readOnly: true
+
+  - it: fails when enabled without a source name
+    set:
+      gateway.customCA.enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: gateway.customCA.volumeSourceName is required when gateway.customCA.enabled is true
+
+  - it: fails on an unknown volume type
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeType: bogus
+      gateway.customCA.volumeSourceName: corp-ca
+    asserts:
+      - failedTemplate:
+          errorMessage: gateway.customCA.volumeType must be either 'configmap' or 'secret', got bogus
+
+  - it: rejects an unknown mode
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.mode: append
+      gateway.customCA.volumeSourceName: corp-ca
+    asserts:
+      - failedTemplate: {}
