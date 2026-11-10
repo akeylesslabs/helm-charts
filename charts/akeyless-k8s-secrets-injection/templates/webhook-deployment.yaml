@@ -1,3 +1,20 @@
+{{- $jwt := .Values.jwtProjectedToken | default dict }}
+{{- $accType := (.Values.env | default dict).AKEYLESS_ACCESS_TYPE | default "" | toString | trim }}
+{{- if and (has $accType (list "jwt" "oauth2")) (not $jwt.enabled) }}
+{{- fail "env.AKEYLESS_ACCESS_TYPE is jwt/oauth2 but jwtProjectedToken.enabled is false. Enable jwtProjectedToken and set its audience." }}
+{{- end }}
+{{- if $jwt.enabled }}
+{{- $aud := $jwt.audience | default "" | toString | trim }}
+{{- if not $aud }}
+{{- fail "jwtProjectedToken.audience is required when jwtProjectedToken.enabled is true" }}
+{{- end }}
+{{- if lt (int ($jwt.expirationSeconds | default 3600)) 600 }}
+{{- fail "jwtProjectedToken.expirationSeconds must be at least 600" }}
+{{- end }}
+{{- if eq (trimSuffix "/" ($jwt.mountPath | default "" | toString | trim)) "/var/run/secrets/kubernetes.io/serviceaccount" }}
+{{- fail "jwtProjectedToken.mountPath must not be the ServiceAccount token path" }}
+{{- end }}
+{{- end }}
 apiVersion: apps/v1
 kind: {{ include "deployment.type" $ }}
 metadata:
@@ -41,17 +58,14 @@ spec:
         secret:
           defaultMode: 420
           secretName: {{ include "vault-secrets-webhook.tlsSecretName" . }}
-{{- if (.Values.jwtProjectedToken | default dict).enabled }}
-{{- if not ((.Values.jwtProjectedToken | default dict).audience) }}
-{{- fail "jwtProjectedToken.audience is required when jwtProjectedToken.enabled is true" }}
-{{- end }}
-      - name: {{ ((.Values.jwtProjectedToken | default dict).volumeName) | default "akeyless-jwt" }}
+{{- if $jwt.enabled }}
+      - name: {{ $jwt.volumeName | default "akeyless-jwt" }}
         projected:
           sources:
           - serviceAccountToken:
               path: token
-              expirationSeconds: {{ ((.Values.jwtProjectedToken | default dict).expirationSeconds) | default 3600 }}
-              audience: {{ ((.Values.jwtProjectedToken | default dict).audience) | quote }}
+              expirationSeconds: {{ $jwt.expirationSeconds | default 3600 }}
+              audience: {{ $jwt.audience | quote }}
 {{- end }}
       containers:
         - name: {{ .Chart.Name }}
@@ -94,14 +108,14 @@ spec:
 {{- end }}
           - name: AKEYLESS_AGENT_IMAGE
             value: "{{ .Values.image.agentImage }}:{{ .Values.image.tag | default .Chart.AppVersion  }}"
-{{- if (.Values.jwtProjectedToken | default dict).enabled }}
+{{- if $jwt.enabled }}
           - name: AKEYLESS_JWT_FILE
-            value: {{ printf "%s/token" (((.Values.jwtProjectedToken | default dict).mountPath) | default "/var/run/secrets/akeyless/jwt") | quote }}
+            value: {{ printf "%s/token" ($jwt.mountPath | default "/var/run/secrets/akeyless/jwt") | quote }}
           - name: AKEYLESS_JWT_AUDIENCE
-            value: {{ ((.Values.jwtProjectedToken | default dict).audience) | quote }}
+            value: {{ $jwt.audience | quote }}
 {{- end }}
           {{- range $key, $value := .Values.env }}
-          {{- if and ($.Values.jwtProjectedToken | default dict).enabled (or (eq $key "AKEYLESS_JWT_FILE") (eq $key "AKEYLESS_JWT_AUDIENCE")) }}
+          {{- if and $jwt.enabled (or (eq $key "AKEYLESS_JWT_FILE") (eq $key "AKEYLESS_JWT_AUDIENCE")) }}
           {{- else }}
           - name: {{ $key }}
             value: {{ $value | quote }}
@@ -129,9 +143,9 @@ spec:
           volumeMounts:
           - mountPath: /var/serving-cert
             name: serving-cert
-{{- if (.Values.jwtProjectedToken | default dict).enabled }}
-          - name: {{ ((.Values.jwtProjectedToken | default dict).volumeName) | default "akeyless-jwt" }}
-            mountPath: {{ ((.Values.jwtProjectedToken | default dict).mountPath) | default "/var/run/secrets/akeyless/jwt" }}
+{{- if $jwt.enabled }}
+          - name: {{ $jwt.volumeName | default "akeyless-jwt" }}
+            mountPath: {{ $jwt.mountPath | default "/var/run/secrets/akeyless/jwt" }}
             readOnly: true
 {{- end }}
 {{- if not .Values.openshiftEnabled }}

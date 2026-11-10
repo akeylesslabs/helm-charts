@@ -1,7 +1,6 @@
 replicaCount: 1
 
-# ct install pulls a published image. Chart.appVersion targets JWT (0.42.0, not
-# released yet); pin the last published tag so install CI can go green.
+# Pin last published injector until 0.42.0 (JWT) is released with this chart.
 image:
   tag: "0.41.0"
 

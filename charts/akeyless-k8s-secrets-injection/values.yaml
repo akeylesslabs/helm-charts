@@ -139,7 +139,7 @@ service:
 
 env:
   AKEYLESS_URL: "https://vault.akeyless.io"
-  AKEYLESS_ACCESS_TYPE: ""  # azure_ad/aws_iam/api_key/k8s/jwt (alias oauth2)
+  AKEYLESS_ACCESS_TYPE: ""  # azure_ad/aws_iam/gcp/api_key/k8s/universal_identity/jwt (alias oauth2)
   AKEYLESS_ACCESS_ID: ""
 
  # AKEYLESS_API_GW_URL: "https://api-gw-url"
