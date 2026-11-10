@@ -126,6 +126,18 @@ tests:
               drop:
                 - ALL
 
+  - it: uses sra.customCA.resources for the init container when set
+    set:
+      sra.customCA.enabled: true
+      sra.customCA.volumeSourceName: corp-ca
+      sra.customCA.resources.requests.cpu: 20m
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].resources
+          value:
+            requests:
+              cpu: 20m
+
   - it: uses the configured SRA image for the init container
     set:
       sra.customCA.enabled: true

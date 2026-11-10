@@ -146,7 +146,7 @@ spec:
       {{- end }}
       {{- if include "akeyless-gateway.customCA.extend" .Values.gateway.customCA }}
       initContainers:
-        {{- include "akeyless-gateway.customCA.initContainer" (dict "ca" .Values.gateway.customCA "image" (include "akeyless-gateway.gatewayImage" .) "pullPolicy" .Values.gateway.deployment.image.pullPolicy "securityContext" (include "akeyless-gateway.containerSecurityContext" .)) | nindent 8 }}
+        {{- include "akeyless-gateway.customCA.initContainer" (dict "ca" .Values.gateway.customCA "resources" (include "akeyless-gateway.customCA.initResources" (dict "ca" .Values.gateway.customCA "strict" .Values.strictSecurityPolicy.enabled) | fromYaml) "image" (include "akeyless-gateway.gatewayImage" .) "pullPolicy" .Values.gateway.deployment.image.pullPolicy "securityContext" (include "akeyless-gateway.containerSecurityContext" .)) | nindent 8 }}
       {{- end }}
       containers:
         - name: {{ include "akeyless-gateway.containerName" . }}

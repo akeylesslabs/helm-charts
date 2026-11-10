@@ -355,6 +355,10 @@ component: cache
   {{- with .securityContext }}
   {{- . | nindent 2 }}
   {{- end }}
+  {{- with .resources }}
+  resources:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   command:
     - /bin/sh
     - -ec
@@ -889,4 +893,17 @@ securityContext:
   capabilities:
     drop:
       - ALL
+{{- end -}}
+
+{{- define "akeyless-gateway.customCA.initResources" -}}
+{{- if .ca.resources -}}
+{{- toYaml .ca.resources -}}
+{{- else if .strict -}}
+requests:
+  cpu: 10m
+  memory: 32Mi
+limits:
+  cpu: 100m
+  memory: 64Mi
+{{- end -}}
 {{- end -}}

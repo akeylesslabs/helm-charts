@@ -83,7 +83,7 @@ spec:
       {{- include "akeyless-sra.imagePullSecrets" . | indent 2 }}
       {{- if include "akeyless-gateway.customCA.extend" .Values.sra.customCA }}
       initContainers:
-        {{- include "akeyless-gateway.customCA.initContainer" (dict "ca" .Values.sra.customCA "image" (include "akeyless-sra.image" .) "pullPolicy" .Values.sra.image.pullPolicy "securityContext" (include "akeyless-sra.customCA.initSecurityContext" .)) | nindent 8 }}
+        {{- include "akeyless-gateway.customCA.initContainer" (dict "ca" .Values.sra.customCA "resources" (include "akeyless-gateway.customCA.initResources" (dict "ca" .Values.sra.customCA "strict" .Values.strictSecurityPolicy.enabled) | fromYaml) "image" (include "akeyless-sra.image" .) "pullPolicy" .Values.sra.image.pullPolicy "securityContext" (include "akeyless-sra.customCA.initSecurityContext" .)) | nindent 8 }}
       {{- end }}
       containers:
         - name: gateway-sra-ssh

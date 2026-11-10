@@ -144,6 +144,43 @@ tests:
                 - ALL
             readOnlyRootFilesystem: true
 
+  - it: sets no init container resources by default
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: corp-ca
+    asserts:
+      - notExists:
+          path: spec.template.spec.initContainers[0].resources
+
+  - it: gives the init container explicit resources under the strict security policy
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: corp-ca
+      strictSecurityPolicy.enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].resources
+          value:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+
+  - it: uses customCA.resources for the init container when set
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: corp-ca
+      strictSecurityPolicy.enabled: true
+      gateway.customCA.resources.limits.memory: 256Mi
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].resources
+          value:
+            limits:
+              memory: 256Mi
+
   - it: renders no init container security context when the gateway has none
     set:
       gateway.customCA.enabled: true
