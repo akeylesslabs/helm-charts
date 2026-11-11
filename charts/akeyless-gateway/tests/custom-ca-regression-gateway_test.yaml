@@ -179,3 +179,81 @@ tests:
     asserts:
       - matchSnapshot:
           path: spec.template.spec
+
+  - it: customCA default mode, extra mount on /usr/local/share/ca-certificates keeps the 3.12.1 pod spec
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: corp-ca
+      gateway.deployment.extraVolumes:
+        - name: corp-local-certs
+          secret:
+            secretName: corp-ca
+      gateway.deployment.extraVolumeMounts:
+        - name: corp-local-certs
+          mountPath: /usr/local/share/ca-certificates
+          readOnly: true
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA default mode, extra mount on /etc/ssl/certs/ keeps the 3.12.1 pod spec
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: corp-ca
+      gateway.deployment.extraVolumes:
+        - name: corp-certs
+          emptyDir: {}
+      gateway.deployment.extraVolumeMounts:
+        - name: corp-certs
+          mountPath: /etc/ssl/certs/
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA default mode, extra volume named etc-ssl-certs keeps the 3.12.1 pod spec
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: corp-ca
+      gateway.deployment.extraVolumes:
+        - name: etc-ssl-certs
+          emptyDir: {}
+      gateway.deployment.extraVolumeMounts:
+        - name: etc-ssl-certs
+          mountPath: /corp/certs
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA default mode, extra volume named usr-local-ca-certificates keeps the 3.12.1 pod spec
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: corp-ca
+      gateway.deployment.extraVolumes:
+        - name: usr-local-ca-certificates
+          emptyDir: {}
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA default mode, persistence on /usr/local/share/ca-certificates keeps the 3.12.1 pod spec
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: corp-ca
+      gateway.persistence.enabled: true
+      gateway.persistence.existingClaim: corp-pvc
+      gateway.persistence.mountPath: /usr/local/share/ca-certificates
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA default mode, secrets store on /etc/ssl/certs keeps the 3.12.1 pod spec
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: corp-ca
+      gateway.secretsStore.enabled: true
+      gateway.secretsStore.mountPath: /etc/ssl/certs
+      gateway.secretsStore.provider.type: aws
+      gateway.secretsStore.provider.secretProviderClassName: corp-spc
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec

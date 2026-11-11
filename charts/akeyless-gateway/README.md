@@ -135,6 +135,8 @@ sra:
 
 `extend` accepts a full bundle too: roots that are already in the image are trusted twice, which has no effect.
 
+When the Gateway release already uses `/etc/ssl/certs` or `/usr/local/share/ca-certificates`, `gateway.customCA` renders as `replace`, so the pod spec stays as it was. That is the case for a `gateway.deployment.extraVolumeMounts`, `gateway.persistence.mountPath` or `gateway.secretsStore.mountPath` on either path, or a `gateway.deployment.extraVolumes` entry named `etc-ssl-certs` or `usr-local-ca-certificates` without `readOnlyRootFilesystem`. Remove that mount to get `extend`.
+
 In `extend` the init container parses each certificate in the bundle. When a certificate does not parse, it logs a warning and the pod starts as before: `kubectl logs <pod> -c custom-ca-trust` shows `customCA: warning: ... holds N PEM certificates and M parse`. TLS clients skip a certificate that does not parse, so that CA is not trusted. The usual cause is a bundle written on one line, for example with `kubectl create secret --from-literal`: create it with `--from-file` instead, so each `-----BEGIN CERTIFICATE-----` and `-----END CERTIFICATE-----` marker sits on its own line.
 
 `custom-ca-trust` runs the component's own image, so `extend` needs `/bin/sh`, `cp`, `cat` and `printf` in that image, as the Gateway and SRA images have. The check also uses `awk`, `tr` and `openssl`, and is skipped when the image lacks `awk` or `openssl`. With a custom image that has no shell, the init container fails and the pod does not start: use `mode: replace`.

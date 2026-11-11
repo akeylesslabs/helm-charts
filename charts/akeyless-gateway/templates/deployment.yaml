@@ -140,11 +140,11 @@ spec:
         - name: download-center
           emptyDir: {}
       {{- end }}
-      {{- if or .Values.gateway.deployment.readOnlyRootFilesystem (include "akeyless-gateway.customCA.extend" .Values.gateway.customCA) }}
+      {{- if or .Values.gateway.deployment.readOnlyRootFilesystem (include "akeyless-gateway.customCA.gatewayExtend" .) }}
         {{- include "akeyless-gateway.customCA.trustVolumes" . | nindent 8 }}
       {{- end }}
       {{- end }}
-      {{- if include "akeyless-gateway.customCA.extend" .Values.gateway.customCA }}
+      {{- if include "akeyless-gateway.customCA.gatewayExtend" . }}
       initContainers:
         {{- include "akeyless-gateway.customCA.initContainer" (dict "ca" .Values.gateway.customCA "resources" (include "akeyless-gateway.customCA.initResources" (dict "ca" .Values.gateway.customCA "strict" .Values.strictSecurityPolicy.enabled) | fromYaml) "image" (include "akeyless-gateway.gatewayImage" .) "pullPolicy" .Values.gateway.deployment.image.pullPolicy "securityContext" (include "akeyless-gateway.containerSecurityContext" .)) | nindent 8 }}
       {{- end }}
@@ -182,10 +182,10 @@ spec:
           volumeMounts:
             - name: akeyless-config
               mountPath: {{include "akeyless-gateway.root.config.path" $}}/.akeyless
-          {{- if or .Values.gateway.deployment.readOnlyRootFilesystem (include "akeyless-gateway.customCA.extend" .Values.gateway.customCA) }}
+          {{- if or .Values.gateway.deployment.readOnlyRootFilesystem (include "akeyless-gateway.customCA.gatewayExtend" .) }}
             {{- include "akeyless-gateway.customCA.trustVolumeMounts" . | nindent 12 }}
           {{- end }}
-          {{- if include "akeyless-gateway.customCA.replace" .Values.gateway.customCA }}
+          {{- if include "akeyless-gateway.customCA.gatewayReplace" . }}
             {{- include "akeyless-gateway.customCA.replaceMount" .Values.gateway.customCA | nindent 12 }}
           {{- end }}
           {{- if .Values.gateway.secretsStore.enabled }}

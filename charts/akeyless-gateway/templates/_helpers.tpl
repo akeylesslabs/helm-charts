@@ -314,6 +314,31 @@ component: cache
 {{- if and .enabled (eq (.mode | default "extend") "replace") -}}true{{- end -}}
 {{- end -}}
 
+{{- define "akeyless-gateway.customCA.gatewayTrustTaken" -}}
+{{- $paths := list "/etc/ssl/certs" "/usr/local/share/ca-certificates" -}}
+{{- $names := list "etc-ssl-certs" "usr-local-ca-certificates" -}}
+{{- $taken := false -}}
+{{- range .Values.gateway.deployment.extraVolumeMounts -}}
+{{- if has (trimSuffix "/" (toString .mountPath)) $paths -}}{{- $taken = true -}}{{- end -}}
+{{- end -}}
+{{- if not .Values.gateway.deployment.readOnlyRootFilesystem -}}
+{{- range .Values.gateway.deployment.extraVolumes -}}
+{{- if has (toString .name) $names -}}{{- $taken = true -}}{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- if and (eq .Values.gateway.persistence.enabled true) (has (trimSuffix "/" (toString .Values.gateway.persistence.mountPath)) $paths) -}}{{- $taken = true -}}{{- end -}}
+{{- if and .Values.gateway.secretsStore.enabled (has (trimSuffix "/" (toString .Values.gateway.secretsStore.mountPath)) $paths) -}}{{- $taken = true -}}{{- end -}}
+{{- if $taken -}}true{{- end -}}
+{{- end -}}
+
+{{- define "akeyless-gateway.customCA.gatewayExtend" -}}
+{{- if and (include "akeyless-gateway.customCA.extend" .Values.gateway.customCA) (not (include "akeyless-gateway.customCA.gatewayTrustTaken" .)) -}}true{{- end -}}
+{{- end -}}
+
+{{- define "akeyless-gateway.customCA.gatewayReplace" -}}
+{{- if or (include "akeyless-gateway.customCA.replace" .Values.gateway.customCA) (and (include "akeyless-gateway.customCA.extend" .Values.gateway.customCA) (include "akeyless-gateway.customCA.gatewayTrustTaken" .)) -}}true{{- end -}}
+{{- end -}}
+
 {{- define "akeyless-gateway.customCA.sourceVolume" -}}
 {{- $ca := .ca -}}
 - name: {{ $ca.volumeName | quote }}
