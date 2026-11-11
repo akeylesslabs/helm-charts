@@ -8,9 +8,7 @@ maintainers:
 type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
-# Main already published 2.6.0 (injector 0.41.0, no JWT). This PR adds jwtProjectedToken.
 version: 2.7.0
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application.
-# JWT lives in injector PR #126; ship as 0.42.0+ (0.41.0 on main does not include JWT).
 appVersion: 0.42.0

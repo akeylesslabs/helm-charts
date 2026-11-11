@@ -89,15 +89,14 @@ extraObjects:
 
 ### Upgrade notes
 
-- Chart-owned `.Values.env` entries are now rendered with `| quote`. If you previously
-  quoted values yourself (for example `--set-string 'env.FOO="true"'`), remove the
-  extra quotes so the webhook does not see `"\"true\""`.
+- `env` values are now rendered with `| quote`. If you previously quoted values
+  yourself (for example `--set-string 'env.FOO="true"'`), remove the extra quotes
+  so the webhook does not see `"\"true\""`.
 
 ### OAuth2 / JWT authentication
 
-Requires injector image **0.42.0+** (`AKEYLESS_ACCESS_TYPE=jwt`; companion
-akeylesslabs/akeyless-kubernetes-webhook-secrets#126). Published 0.41.0 does not
-include OAuth2/JWT.
+Requires injector image **0.42.0+** (`AKEYLESS_ACCESS_TYPE=jwt`). Published 0.41.0
+does not include OAuth2/JWT.
 
 For `AKEYLESS_ACCESS_TYPE: jwt` (alias `oauth2`), enable a kubelet-rotated projected
 ServiceAccount token. Do not put a static JWT in `env`. The audience is required and
@@ -145,9 +144,8 @@ with this audience can assume the linked role.
 
 ### Webhook network access
 
-`/pods` has no caller authentication in this release (ASM-21292 / SEC-001 held). Prefer a
-NetworkPolicy (or equivalent) so only the control plane can reach the webhook
-Service.
+`/pods` has no caller authentication. Use a NetworkPolicy (or equivalent) so only
+the control plane can reach the webhook Service.
 
 ### Upgrading to chart 2.0.0
 
