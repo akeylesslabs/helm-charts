@@ -135,9 +135,9 @@ sra:
 
 `extend` accepts a full bundle too: roots that are already in the image are trusted twice, which has no effect.
 
-In `extend` the init container checks the bundle before it changes the trust store. Every `-----BEGIN CERTIFICATE-----` and `-----END CERTIFICATE-----` marker must sit on its own line, and every certificate must parse. Otherwise `custom-ca-trust` exits 1 and the pod does not start. Read the reason with `kubectl logs <pod> -c custom-ca-trust`. A bundle written on one line, for example with `kubectl create secret --from-literal`, fails this check: create it with `--from-file` instead.
+In `extend` the init container parses each certificate in the bundle. When a certificate does not parse, it logs a warning and the pod starts as before: `kubectl logs <pod> -c custom-ca-trust` shows `customCA: warning: ... holds N PEM certificates and M parse`. TLS clients skip a certificate that does not parse, so that CA is not trusted. The usual cause is a bundle written on one line, for example with `kubectl create secret --from-literal`: create it with `--from-file` instead, so each `-----BEGIN CERTIFICATE-----` and `-----END CERTIFICATE-----` marker sits on its own line.
 
-`custom-ca-trust` runs the component's own image, so `extend` needs `/bin/sh`, `cp`, `cat`, `printf`, `grep`, `tr` and `openssl` in that image, as the Gateway and SRA images have. With a custom image that lacks them, the init container fails and the pod does not start: use `mode: replace`.
+`custom-ca-trust` runs the component's own image, so `extend` needs `/bin/sh`, `cp`, `cat` and `printf` in that image, as the Gateway and SRA images have. The check also uses `awk`, `tr` and `openssl`, and is skipped when the image lacks `awk` or `openssl`. With a custom image that has no shell, the init container fails and the pod does not start: use `mode: replace`.
 
 ### Build a bundle for replace mode
 
