@@ -939,15 +939,32 @@ securityContext:
       - ALL
 {{- end -}}
 
+{{- define "akeyless-gateway.containerResources" -}}
+{{- $r := .resources | default dict -}}
+{{- if .strict.enabled -}}
+requests:
+{{- if $r.requests }}
+  {{- toYaml $r.requests | nindent 2 }}
+{{- else }}
+  cpu: {{ .strict.resources.requests.cpu | quote }}
+  memory: {{ .strict.resources.requests.memory | quote }}
+{{- end }}
+limits:
+{{- if $r.limits }}
+  {{- toYaml $r.limits | nindent 2 }}
+{{- else }}
+  cpu: {{ .strict.resources.limits.cpu | quote }}
+  memory: {{ .strict.resources.limits.memory | quote }}
+{{- end }}
+{{- else -}}
+{{- toYaml .resources -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "akeyless-gateway.customCA.initResources" -}}
 {{- if .ca.resources -}}
 {{- toYaml .ca.resources -}}
-{{- else if .strict -}}
-requests:
-  cpu: 10m
-  memory: 32Mi
-limits:
-  cpu: 100m
-  memory: 64Mi
+{{- else -}}
+{{- include "akeyless-gateway.containerResources" (dict "resources" .resources "strict" .strict) -}}
 {{- end -}}
 {{- end -}}

@@ -118,7 +118,7 @@ sra:
 | --- | --- | --- |
 | `enabled` | `false` | Off renders nothing for the component. |
 | `mode` | `extend` | How the bundle reaches the container trust store. See [Modes](#modes). |
-| `resources` | `{}` | Requests and limits for the `custom-ca-trust` init container in `extend` mode. Empty renders none, except under `strictSecurityPolicy.enabled`, which sets 10m / 32Mi requests and 100m / 64Mi limits. |
+| `resources` | `{}` | Requests and limits for the `custom-ca-trust` init container in `extend` mode. Empty gives it the same resources as the component container (`gateway.resources`, `sra.webConfig.resources`, `sra.sshConfig.resources`, with the `strictSecurityPolicy` defaults), so a namespace quota or limit range admits it as it admits that container. An init container does not add to the pod's scheduled requests. |
 | `volumeName` | `ca-certificates` | Name of the pod volume that holds the bundle. |
 | `volumeType` | `configMap` | `configMap` or `secret`, case-insensitive. Any other value fails the render. |
 | `volumeSourceName` | `""` | Name of the ConfigMap or Secret. Required when `enabled` is true. It must have the key `ca-certificates.crt`, which holds one or more PEM certificates. |

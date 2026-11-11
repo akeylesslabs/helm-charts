@@ -146,7 +146,7 @@ spec:
       {{- end }}
       {{- if include "akeyless-gateway.customCA.gatewayExtend" . }}
       initContainers:
-        {{- include "akeyless-gateway.customCA.initContainer" (dict "ca" .Values.gateway.customCA "resources" (include "akeyless-gateway.customCA.initResources" (dict "ca" .Values.gateway.customCA "strict" .Values.strictSecurityPolicy.enabled) | fromYaml) "image" (include "akeyless-gateway.gatewayImage" .) "pullPolicy" .Values.gateway.deployment.image.pullPolicy "securityContext" (include "akeyless-gateway.containerSecurityContext" .)) | nindent 8 }}
+        {{- include "akeyless-gateway.customCA.initContainer" (dict "ca" .Values.gateway.customCA "resources" (include "akeyless-gateway.customCA.initResources" (dict "ca" .Values.gateway.customCA "resources" .Values.gateway.resources "strict" .Values.strictSecurityPolicy) | fromYaml) "image" (include "akeyless-gateway.gatewayImage" .) "pullPolicy" .Values.gateway.deployment.image.pullPolicy "securityContext" (include "akeyless-gateway.containerSecurityContext" .)) | nindent 8 }}
       {{- end }}
       containers:
         - name: {{ include "akeyless-gateway.containerName" . }}
@@ -242,26 +242,7 @@ spec:
           {{- end }}
           {{- end}}
           resources:
-          {{- if .Values.strictSecurityPolicy.enabled }}
-            {{- if or (not .Values.gateway.resources) (not .Values.gateway.resources.requests) }}
-            requests:
-              cpu: {{ .Values.strictSecurityPolicy.resources.requests.cpu | quote }}
-              memory: {{ .Values.strictSecurityPolicy.resources.requests.memory | quote }}
-            {{- else }}
-            requests:
-              {{- toYaml .Values.gateway.resources.requests | nindent 14 }}
-            {{- end }}
-            {{- if or (not .Values.gateway.resources) (not .Values.gateway.resources.limits) }}
-            limits:
-              cpu: {{ .Values.strictSecurityPolicy.resources.limits.cpu | quote }}
-              memory: {{ .Values.strictSecurityPolicy.resources.limits.memory | quote }}
-            {{- else }}
-            limits:
-              {{- toYaml .Values.gateway.resources.limits | nindent 14 }}
-            {{- end }}
-          {{- else }}
-          {{- toYaml .Values.gateway.resources | nindent 12 }}
-          {{- end }}
+            {{- include "akeyless-gateway.containerResources" (dict "resources" .Values.gateway.resources "strict" $.Values.strictSecurityPolicy) | nindent 12 }}
           env:
             {{- if .Values.gateway.deployment.readOnlyRootFilesystem }}
             - name: READ_ONLY_ROOT_FS

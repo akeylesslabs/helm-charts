@@ -168,7 +168,7 @@ tests:
       - notExists:
           path: spec.template.spec.initContainers[0].resources
 
-  - it: gives the init container explicit resources under the strict security policy
+  - it: gives the init container the gateway container resources under the strict security policy
     set:
       gateway.customCA.enabled: true
       gateway.customCA.volumeSourceName: corp-ca
@@ -178,11 +178,60 @@ tests:
           path: spec.template.spec.initContainers[0].resources
           value:
             requests:
-              cpu: 10m
-              memory: 32Mi
+              cpu: "1"
+              memory: 2G
             limits:
-              cpu: 100m
-              memory: 64Mi
+              cpu: "2"
+              memory: 4G
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value:
+            requests:
+              cpu: "1"
+              memory: 2G
+            limits:
+              cpu: "2"
+              memory: 4G
+
+  - it: gives the init container the gateway resources so a namespace quota or limit range admits it as it admits the gateway
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: corp-ca
+      gateway.resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: "2"
+          memory: 2Gi
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].resources
+          value:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi
+
+  - it: mixes the gateway requests with the strict limits as the gateway container does
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: corp-ca
+      strictSecurityPolicy.enabled: true
+      gateway.resources.requests.cpu: 300m
+      gateway.resources.requests.memory: 600Mi
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].resources
+          value:
+            requests:
+              cpu: 300m
+              memory: 600Mi
+            limits:
+              cpu: "2"
+              memory: 4G
 
   - it: uses customCA.resources for the init container when set
     set:

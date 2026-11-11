@@ -83,7 +83,7 @@ spec:
       {{- include "akeyless-sra.imagePullSecrets" . | indent 2 }}
       {{- if include "akeyless-gateway.customCA.extend" .Values.sra.customCA }}
       initContainers:
-        {{- include "akeyless-gateway.customCA.initContainer" (dict "ca" .Values.sra.customCA "resources" (include "akeyless-gateway.customCA.initResources" (dict "ca" .Values.sra.customCA "strict" .Values.strictSecurityPolicy.enabled) | fromYaml) "image" (include "akeyless-sra.image" .) "pullPolicy" .Values.sra.image.pullPolicy "securityContext" (include "akeyless-sra.customCA.initSecurityContext" .)) | nindent 8 }}
+        {{- include "akeyless-gateway.customCA.initContainer" (dict "ca" .Values.sra.customCA "resources" (include "akeyless-gateway.customCA.initResources" (dict "ca" .Values.sra.customCA "resources" .Values.sra.sshConfig.resources "strict" .Values.strictSecurityPolicy) | fromYaml) "image" (include "akeyless-sra.image" .) "pullPolicy" .Values.sra.image.pullPolicy "securityContext" (include "akeyless-sra.customCA.initSecurityContext" .)) | nindent 8 }}
       {{- end }}
       containers:
         - name: gateway-sra-ssh
@@ -159,26 +159,7 @@ spec:
             {{- toYaml .Values.globalConfig.env | nindent 12 }}
             {{- end }}
           resources:
-          {{- if .Values.strictSecurityPolicy.enabled }}
-            {{- if or (not .Values.sra.sshConfig.resources) (not .Values.sra.sshConfig.resources.requests) }}
-            requests:
-              cpu: {{ .Values.strictSecurityPolicy.resources.requests.cpu | quote }}
-              memory: {{ .Values.strictSecurityPolicy.resources.requests.memory | quote }}
-            {{- else }}
-            requests:
-              {{- toYaml .Values.sra.sshConfig.resources.requests | nindent 14 }}
-            {{- end }}
-            {{- if or (not .Values.sra.sshConfig.resources) (not .Values.sra.sshConfig.resources.limits) }}
-            limits:
-              cpu: {{ .Values.strictSecurityPolicy.resources.limits.cpu | quote }}
-              memory: {{ .Values.strictSecurityPolicy.resources.limits.memory | quote }}
-            {{- else }}
-            limits:
-              {{- toYaml .Values.sra.sshConfig.resources.limits | nindent 14 }}
-            {{- end }}
-          {{- else }}
-            {{- toYaml .Values.sra.sshConfig.resources | nindent 12 }}
-          {{- end }}
+            {{- include "akeyless-gateway.containerResources" (dict "resources" .Values.sra.sshConfig.resources "strict" $.Values.strictSecurityPolicy) | nindent 12 }}
           livenessProbe:
             httpGet:
               path: /status

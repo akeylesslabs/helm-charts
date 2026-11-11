@@ -153,6 +153,42 @@ tests:
             requests:
               cpu: 20m
 
+  - it: gives each init container its own SRA container resources
+    set:
+      sra.customCA.enabled: true
+      sra.customCA.volumeSourceName: corp-ca
+      sra.webConfig.resources:
+        requests:
+          cpu: 70m
+          memory: 70Mi
+        limits:
+          cpu: 700m
+      sra.sshConfig.resources:
+        requests:
+          cpu: 90m
+          memory: 90Mi
+        limits:
+          cpu: 900m
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].resources
+          value:
+            requests:
+              cpu: 70m
+              memory: 70Mi
+            limits:
+              cpu: 700m
+        template: templates/akeyless-secure-remote-access/deployment.yaml
+      - equal:
+          path: spec.template.spec.initContainers[0].resources
+          value:
+            requests:
+              cpu: 90m
+              memory: 90Mi
+            limits:
+              cpu: 900m
+        template: templates/akeyless-secure-remote-access/ssh-deployment.yaml
+
   - it: uses the configured SRA image for the init container
     set:
       sra.customCA.enabled: true

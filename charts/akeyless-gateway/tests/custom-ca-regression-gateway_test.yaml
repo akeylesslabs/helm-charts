@@ -257,3 +257,36 @@ tests:
     asserts:
       - matchSnapshot:
           path: spec.template.spec
+
+  - it: customCA replace, gateway resources
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.mode: replace
+      gateway.customCA.volumeSourceName: corp-ca
+      gateway.resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: "2"
+          memory: 2Gi
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA off, strictSecurityPolicy with gateway requests only
+    set:
+      strictSecurityPolicy.enabled: true
+      gateway.resources.requests.cpu: 300m
+      gateway.resources.requests.memory: 600Mi
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA off, strictSecurityPolicy with gateway limits only
+    set:
+      strictSecurityPolicy.enabled: true
+      gateway.resources.limits.cpu: "3"
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec

@@ -71,3 +71,31 @@ tests:
     asserts:
       - matchSnapshot:
           path: spec.template.spec
+
+  - it: sra.customCA replace, SRA resources
+    set:
+      sra.customCA.enabled: true
+      sra.customCA.mode: replace
+      sra.customCA.volumeSourceName: corp-ca
+      sra.webConfig.resources:
+        limits:
+          cpu: 700m
+      sra.sshConfig.resources:
+        requests:
+          memory: 90Mi
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: sra.customCA off, strictSecurityPolicy with SRA requests only
+    set:
+      strictSecurityPolicy.enabled: true
+      sra.webConfig.resources:
+        requests:
+          cpu: 70m
+      sra.sshConfig.resources:
+        requests:
+          cpu: 90m
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec

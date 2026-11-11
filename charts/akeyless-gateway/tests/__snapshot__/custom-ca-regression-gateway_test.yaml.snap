@@ -1383,6 +1383,203 @@ customCA off, strictSecurityPolicy and readOnlyRootFilesystem:
         name: usr-local-ca-certificates
       - emptyDir: {}
         name: etc-ssl-certs
+customCA off, strictSecurityPolicy with gateway limits only:
+  1: |
+    containers:
+      - env:
+          - name: ARTIFACTS_REPO
+            value: artifacts.site2.akeyless.io
+          - name: GATEWAY_ACCESS_TYPE
+            value: access_key
+          - name: GATEWAY_ACCESS_ID
+            valueFrom:
+              secretKeyRef:
+                key: gateway-access-id
+                name: RELEASE-NAME-conf-secret
+          - name: GATEWAY_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: gateway-access-key
+                name: gw-creds
+          - name: GATEWAY_CLUSTER_CACHE
+            value: enable
+          - name: USE_CLUSTER_CACHE
+            value: "true"
+          - name: REDIS_ADDR
+            value: RELEASE-NAME-akeyless-gateway-cache-svc.NAMESPACE.svc:6379
+          - name: ENABLE_CACHE_TLS
+            value: "false"
+          - name: STORE_CACHE_ENCRYPTION_KEY_TO_K8S_SECRETS
+            value: "false"
+          - name: REDIS_PASS
+            valueFrom:
+              secretKeyRef:
+                key: cache-pass
+                name: RELEASE-NAME-cache-secret
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: UNIFIED_GATEWAY
+            value: "true"
+          - name: MIN_TLS_VERSION
+            value: TLSv1.2
+          - name: VERSION
+            value: 5.6.0
+          - name: chart_name
+            value: akeyless-gateway
+          - name: chart_version
+            value: 0.0.0-regression
+        image: akeyless/gateway:5.6.0
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 10
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        name: akeyless-gateway
+        ports:
+          - containerPort: 8000
+            name: gateway
+          - containerPort: 8080
+            name: internal-gw-api
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+        resources:
+          limits:
+            cpu: "3"
+          requests:
+            cpu: "1"
+            memory: 2G
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          readOnlyRootFilesystem: false
+          runAsGroup: 1001
+          runAsNonRoot: true
+          runAsUser: 1001
+        volumeMounts:
+          - mountPath: /home/akeyless/.akeyless
+            name: akeyless-config
+    securityContext:
+      fsGroup: 1001
+      runAsGroup: 1001
+      runAsNonRoot: true
+      runAsUser: 1001
+      seccompProfile:
+        type: RuntimeDefault
+    serviceAccountName: default
+    volumes:
+      - emptyDir: {}
+        name: akeyless-config
+customCA off, strictSecurityPolicy with gateway requests only:
+  1: |
+    containers:
+      - env:
+          - name: ARTIFACTS_REPO
+            value: artifacts.site2.akeyless.io
+          - name: GATEWAY_ACCESS_TYPE
+            value: access_key
+          - name: GATEWAY_ACCESS_ID
+            valueFrom:
+              secretKeyRef:
+                key: gateway-access-id
+                name: RELEASE-NAME-conf-secret
+          - name: GATEWAY_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: gateway-access-key
+                name: gw-creds
+          - name: GATEWAY_CLUSTER_CACHE
+            value: enable
+          - name: USE_CLUSTER_CACHE
+            value: "true"
+          - name: REDIS_ADDR
+            value: RELEASE-NAME-akeyless-gateway-cache-svc.NAMESPACE.svc:6379
+          - name: ENABLE_CACHE_TLS
+            value: "false"
+          - name: STORE_CACHE_ENCRYPTION_KEY_TO_K8S_SECRETS
+            value: "false"
+          - name: REDIS_PASS
+            valueFrom:
+              secretKeyRef:
+                key: cache-pass
+                name: RELEASE-NAME-cache-secret
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: UNIFIED_GATEWAY
+            value: "true"
+          - name: MIN_TLS_VERSION
+            value: TLSv1.2
+          - name: VERSION
+            value: 5.6.0
+          - name: chart_name
+            value: akeyless-gateway
+          - name: chart_version
+            value: 0.0.0-regression
+        image: akeyless/gateway:5.6.0
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 10
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        name: akeyless-gateway
+        ports:
+          - containerPort: 8000
+            name: gateway
+          - containerPort: 8080
+            name: internal-gw-api
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+        resources:
+          limits:
+            cpu: "2"
+            memory: 4G
+          requests:
+            cpu: 300m
+            memory: 600Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          readOnlyRootFilesystem: false
+          runAsGroup: 1001
+          runAsNonRoot: true
+          runAsUser: 1001
+        volumeMounts:
+          - mountPath: /home/akeyless/.akeyless
+            name: akeyless-config
+    securityContext:
+      fsGroup: 1001
+      runAsGroup: 1001
+      runAsNonRoot: true
+      runAsUser: 1001
+      seccompProfile:
+        type: RuntimeDefault
+    serviceAccountName: default
+    volumes:
+      - emptyDir: {}
+        name: akeyless-config
 customCA replace, TLS, metrics, image override and extra volumes:
   1: |
     containers:
@@ -1825,6 +2022,95 @@ customCA replace, custom volume name and mixed-case type:
       - name: corp-bundle
         secret:
           secretName: corp-ca
+customCA replace, gateway resources:
+  1: |
+    containers:
+      - env:
+          - name: ARTIFACTS_REPO
+            value: artifacts.site2.akeyless.io
+          - name: GATEWAY_ACCESS_TYPE
+            value: access_key
+          - name: GATEWAY_ACCESS_ID
+            valueFrom:
+              secretKeyRef:
+                key: gateway-access-id
+                name: RELEASE-NAME-conf-secret
+          - name: GATEWAY_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: gateway-access-key
+                name: gw-creds
+          - name: GATEWAY_CLUSTER_CACHE
+            value: enable
+          - name: USE_CLUSTER_CACHE
+            value: "true"
+          - name: REDIS_ADDR
+            value: RELEASE-NAME-akeyless-gateway-cache-svc.NAMESPACE.svc:6379
+          - name: ENABLE_CACHE_TLS
+            value: "false"
+          - name: STORE_CACHE_ENCRYPTION_KEY_TO_K8S_SECRETS
+            value: "false"
+          - name: REDIS_PASS
+            valueFrom:
+              secretKeyRef:
+                key: cache-pass
+                name: RELEASE-NAME-cache-secret
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: UNIFIED_GATEWAY
+            value: "true"
+          - name: MIN_TLS_VERSION
+            value: TLSv1.2
+          - name: VERSION
+            value: 5.6.0
+          - name: chart_name
+            value: akeyless-gateway
+          - name: chart_version
+            value: 0.0.0-regression
+        image: akeyless/gateway:5.6.0
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 10
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        name: akeyless-gateway
+        ports:
+          - containerPort: 8000
+            name: gateway
+          - containerPort: 8080
+            name: internal-gw-api
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+        resources:
+          limits:
+            cpu: "2"
+            memory: 2Gi
+          requests:
+            cpu: 200m
+            memory: 512Mi
+        volumeMounts:
+          - mountPath: /home/akeyless/.akeyless
+            name: akeyless-config
+          - mountPath: /etc/ssl/certs/ca-certificates.crt
+            name: ca-certificates
+            subPath: ca-certificates.crt
+    serviceAccountName: default
+    volumes:
+      - emptyDir: {}
+        name: akeyless-config
+      - configMap:
+          name: corp-ca
+        name: ca-certificates
 customCA replace, readOnlyRootFilesystem:
   1: |
     containers:
