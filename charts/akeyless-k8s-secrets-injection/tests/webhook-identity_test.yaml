@@ -1,0 +1,63 @@
+suite: akeyless-secrets-injection webhook identity
+release:
+  name: injector
+  namespace: akeyless
+tests:
+  - it: "sets the injector name to the release fullname"
+    template: templates/webhook-deployment.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: AKEYLESS_INJECTOR_NAME
+            value: injector-akeyless-secrets-injection
+
+  - it: "reads the pod namespace from the downward API"
+    template: templates/webhook-deployment.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+
+  - it: "keeps the injector name on the fullname with an existing TLS secret"
+    template: templates/webhook-deployment.yaml
+    set:
+      mutatingWebhook.tls.existingSecretName: my-tls
+      mutatingWebhook.tls.caBundle: TESTCA
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: AKEYLESS_INJECTOR_NAME
+            value: injector-akeyless-secrets-injection
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TLS_SECRET_NAME
+            value: my-tls
+
+  - it: "follows fullnameOverride"
+    template: templates/webhook-deployment.yaml
+    set:
+      fullnameOverride: custom-injector
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: AKEYLESS_INJECTOR_NAME
+            value: custom-injector
+
+  - it: "passes an installation id from env values"
+    template: templates/webhook-deployment.yaml
+    set:
+      env.AKEYLESS_INJECTOR_INSTALLATION_ID: prod-cluster-1
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: AKEYLESS_INJECTOR_INSTALLATION_ID
+            value: prod-cluster-1

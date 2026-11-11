@@ -149,6 +149,8 @@ env:
  # AKEYLESS_API_KEY: "<api_key>"
  # AKEYLESS_CRASH_POD_ON_ERROR: "enable"
  # AKEYLESS_K8S_AUTH_CONF_NAME: "K8s_conf_name"
+ # Optional stable identity for injector certificate-expiration events.
+ # AKEYLESS_INJECTOR_INSTALLATION_ID: ""
 
  # the gw base64 certificate file e.g: 'cat my-gw.crt | base64'
  # AKEYLESS_GW_CERTIFICATE:
