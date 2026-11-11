@@ -87,6 +87,66 @@ extraObjects:
 
 ## Configuration
 
+### Upgrade notes
+
+- `env` values are now rendered with `| quote`. If you previously quoted values
+  yourself (for example `--set-string 'env.FOO="true"'`), remove the extra quotes
+  so the webhook does not see `"\"true\""`.
+
+### OAuth2 / JWT authentication
+
+Requires injector image **0.42.0+** (`AKEYLESS_ACCESS_TYPE=jwt`). Published 0.41.0
+does not include OAuth2/JWT.
+
+For `AKEYLESS_ACCESS_TYPE: jwt` (alias `oauth2`), enable a kubelet-rotated projected
+ServiceAccount token. Do not put a static JWT in `env`. The audience is required and
+must match the Akeyless oauth2/jwt auth method. Set `jwtProjectedToken.enabled=true`
+whenever access type is jwt/oauth2 (the chart fails the render otherwise).
+
+```yaml
+env:
+  AKEYLESS_ACCESS_TYPE: jwt
+  AKEYLESS_ACCESS_ID: "<oauth2/jwt auth-method access id>"
+  # AKEYLESS_API_GW_URL: "https://your-gateway"  # optional; set only to force a Gateway
+
+jwtProjectedToken:
+  enabled: true
+  audience: akeyless.io   # dedicated audience; do not reuse the Kubernetes API audience
+```
+
+The chart mounts the projected token and sets `AKEYLESS_JWT_FILE` /
+`AKEYLESS_JWT_AUDIENCE` on the webhook Deployment. Workload pods receive their own
+projected token from the injector so init and sidecar refresh use the same identity.
+`expirationSeconds`, `mountPath`, and `volumeName` apply to the **webhook** pod only;
+workload tokens use a fixed 3600s mount at `/var/run/secrets/akeyless/jwt`.
+
+#### Authorization
+
+An oauth2/jwt auth method is not bound by Kubernetes namespace/SA lists. Scope it with
+`--force-sub-claims` and per-role `sub` associations (example):
+
+```bash
+akeyless auth-method create oauth2 --name k8s-injector-jwt \
+  --jwks-uri <cluster-or-gateway-jwks> --issuer <cluster-issuer> \
+  --audience akeyless.io --unique-identifier sub --force-sub-claims
+
+# Webhook identity (registry creds / restart rollout / cert events)
+akeyless assoc-role-am --role-name injector-webhook --am-name k8s-injector-jwt \
+  --sub-claims sub=system:serviceaccount:<release-ns>:<webhook-sa>
+
+# App workloads
+akeyless assoc-role-am --role-name app-a --am-name k8s-injector-jwt \
+  --sub-claims sub=system:serviceaccount:app-a:*
+```
+
+Without sub-claim associations, any service account that can mint a projected token
+with this audience can assume the linked role.
+
+### Webhook network access
+
+`/pods` has no caller authentication. Use a NetworkPolicy (or equivalent) so only
+the control plane can reach the webhook Service.
+
 ### Upgrading to chart 2.0.0
 
 The top-level `webhookFailurePolicy` value was removed. Move it under `mutatingWebhook.failurePolicy`:
