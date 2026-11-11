@@ -104,7 +104,15 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.akeyless-ci.outputs.token }}
         run: |
-          gh pr merge "${{ steps.release.outputs.bump_branch }}" --squash --delete-branch
+          for attempt in $(seq 1 30); do
+            if gh pr merge "${{ steps.release.outputs.bump_branch }}" --squash --delete-branch; then
+              exit 0
+            fi
+            echo "PR not mergeable yet (attempt ${attempt}/30) -- waiting on the required chart-test check..."
+            sleep 20
+          done
+          echo "::error::PR for ${{ steps.release.outputs.bump_branch }} did not become mergeable after 30 attempts (10 minutes)"
+          exit 1
 
       - name: Dispatch manifest update
         if: steps.release.outputs.released == 'true'
