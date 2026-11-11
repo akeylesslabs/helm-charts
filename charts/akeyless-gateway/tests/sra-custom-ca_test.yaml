@@ -94,6 +94,18 @@ tests:
           path: spec.template.spec.initContainers[0].command[2]
           pattern: cat /custom-ca/ca-certificates\.crt >> /trust/etc-ssl-certs/ca-certificates\.crt
 
+  - it: rejects a bundle with no parseable PEM certificate before touching the trust store
+    set:
+      sra.customCA.enabled: true
+      sra.customCA.volumeSourceName: corp-ca
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.initContainers[0].command[2]
+          pattern: (?s)^src=/custom-ca/ca-certificates\.crt\n.*openssl crl2pkcs7 -nocrl -certfile "\$src".*\[ "\$parsed" -ne "\$begin" \].*exit 1\n.*cp -RP /etc/ssl/certs/
+      - matchRegex:
+          path: spec.template.spec.initContainers[0].command[2]
+          pattern: in configMap corp-ca has \$begin BEGIN and \$end END markers
+
   - it: runs the web init container with the web container security context
     template: templates/akeyless-secure-remote-access/deployment.yaml
     set:

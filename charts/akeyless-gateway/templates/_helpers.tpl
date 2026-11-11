@@ -363,6 +363,14 @@ component: cache
     - /bin/sh
     - -ec
     - |
+      src=/custom-ca/ca-certificates.crt
+      begin=$(tr -d '\r' < "$src" | grep -c '^-----BEGIN CERTIFICATE-----$' || true)
+      end=$(tr -d '\r' < "$src" | grep -c '^-----END CERTIFICATE-----$' || true)
+      parsed=$(openssl crl2pkcs7 -nocrl -certfile "$src" 2>/dev/null | openssl pkcs7 -print_certs -noout 2>/dev/null | grep -c '^subject=' || true)
+      if [ "$begin" -eq 0 ] || [ "$end" -ne "$begin" ] || [ "$parsed" -ne "$begin" ]; then
+        echo "customCA: ca-certificates.crt in {{ .ca.volumeType }} {{ .ca.volumeSourceName }} has $begin BEGIN and $end END markers and $parsed certificates that parse; it must hold one or more PEM certificates, each marker on its own line" >&2
+        exit 1
+      fi
       cp -RP /etc/ssl/certs/. /trust/etc-ssl-certs/
       cp -RP /usr/local/share/ca-certificates/. /trust/usr-local-ca-certificates/
       cp /custom-ca/ca-certificates.crt /trust/usr-local-ca-certificates/custom-ca.crt

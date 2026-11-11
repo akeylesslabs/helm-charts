@@ -135,6 +135,8 @@ sra:
 
 `extend` accepts a full bundle too: roots that are already in the image are trusted twice, which has no effect.
 
+In `extend` the init container checks the bundle before it changes the trust store. Every `-----BEGIN CERTIFICATE-----` and `-----END CERTIFICATE-----` marker must sit on its own line, and every certificate must parse. Otherwise `custom-ca-trust` exits 1 and the pod does not start. Read the reason with `kubectl logs <pod> -c custom-ca-trust`. A bundle written on one line, for example with `kubectl create secret --from-literal`, fails this check: create it with `--from-file` instead.
+
 ### Build a bundle for replace mode
 
 Start from the bundle in the image you run, then add your CAs:
