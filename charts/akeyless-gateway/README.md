@@ -137,6 +137,8 @@ sra:
 
 In `extend` the init container checks the bundle before it changes the trust store. Every `-----BEGIN CERTIFICATE-----` and `-----END CERTIFICATE-----` marker must sit on its own line, and every certificate must parse. Otherwise `custom-ca-trust` exits 1 and the pod does not start. Read the reason with `kubectl logs <pod> -c custom-ca-trust`. A bundle written on one line, for example with `kubectl create secret --from-literal`, fails this check: create it with `--from-file` instead.
 
+`custom-ca-trust` runs the component's own image, so `extend` needs `/bin/sh`, `cp`, `cat`, `printf`, `grep`, `tr` and `openssl` in that image, as the Gateway and SRA images have. With a custom image that lacks them, the init container fails and the pod does not start: use `mode: replace`.
+
 ### Build a bundle for replace mode
 
 Start from the bundle in the image you run, then add your CAs:
