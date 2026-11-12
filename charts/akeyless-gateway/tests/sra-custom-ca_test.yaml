@@ -23,10 +23,194 @@ tests:
             name: ca-certificates
             mountPath: /etc/ssl/certs/ca-certificates.crt
             subPath: ca-certificates.crt
+      - notExists:
+          path: spec.template.spec.initContainers
 
-  - it: mounts a configMap bundle over the system trust file
+  - it: extends the image trust store by default
     set:
       sra.customCA.enabled: true
+      sra.customCA.volumeSourceName: corp-ca
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: ca-certificates
+            configMap:
+              name: corp-ca
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: etc-ssl-certs
+            emptyDir: {}
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: usr-local-ca-certificates
+            emptyDir: {}
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: custom-ca-trust
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: akeyless/zero-trust-bastion:3.7.0
+      - contains:
+          path: spec.template.spec.initContainers[0].volumeMounts
+          content:
+            name: ca-certificates
+            mountPath: /custom-ca
+            readOnly: true
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: etc-ssl-certs
+            mountPath: /etc/ssl/certs
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: usr-local-ca-certificates
+            mountPath: /usr/local/share/ca-certificates
+      - notContains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: ca-certificates
+            mountPath: /etc/ssl/certs/ca-certificates.crt
+            subPath: ca-certificates.crt
+
+  - it: copies the image trust store and appends the bundle in the init container
+    set:
+      sra.customCA.enabled: true
+      sra.customCA.volumeSourceName: corp-ca
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.initContainers[0].command[2]
+          pattern: cp -RP /etc/ssl/certs/\. /trust/etc-ssl-certs/
+      - matchRegex:
+          path: spec.template.spec.initContainers[0].command[2]
+          pattern: cp -RP /usr/local/share/ca-certificates/\. /trust/usr-local-ca-certificates/
+      - matchRegex:
+          path: spec.template.spec.initContainers[0].command[2]
+          pattern: cp /custom-ca/ca-certificates\.crt /trust/usr-local-ca-certificates/custom-ca\.crt
+      - matchRegex:
+          path: spec.template.spec.initContainers[0].command[2]
+          pattern: cat /custom-ca/ca-certificates\.crt >> /trust/etc-ssl-certs/ca-certificates\.crt
+
+  - it: warns about bundle certificates that do not parse and never stops the pod
+    set:
+      sra.customCA.enabled: true
+      sra.customCA.volumeSourceName: corp-ca
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.initContainers[0].command[2]
+          pattern: (?s)^src=/custom-ca/ca-certificates\.crt\nif command -v awk >/dev/null 2>&1 && command -v openssl >/dev/null 2>&1; then\n.*openssl x509 -noout -in "\$f".*\nfi\ncp -RP /etc/ssl/certs/
+      - matchRegex:
+          path: spec.template.spec.initContainers[0].command[2]
+          pattern: 'customCA: warning: ca-certificates\.crt in configMap corp-ca holds \$total PEM certificates and \$good parse'
+      - notMatchRegex:
+          path: spec.template.spec.initContainers[0].command[2]
+          pattern: exit 1
+
+  - it: runs the web init container with the web container security context
+    template: templates/akeyless-secure-remote-access/deployment.yaml
+    set:
+      sra.customCA.enabled: true
+      sra.customCA.volumeSourceName: corp-ca
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].securityContext
+          value:
+            runAsNonRoot: true
+            runAsUser: 1001
+            runAsGroup: 1001
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: false
+
+  - it: runs the SSH init container without the SSH container's privileges
+    template: templates/akeyless-secure-remote-access/ssh-deployment.yaml
+    set:
+      sra.customCA.enabled: true
+      sra.customCA.volumeSourceName: corp-ca
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].securityContext
+          value:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+
+  - it: uses sra.customCA.resources for the init container when set
+    set:
+      sra.customCA.enabled: true
+      sra.customCA.volumeSourceName: corp-ca
+      sra.customCA.resources.requests.cpu: 20m
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].resources
+          value:
+            requests:
+              cpu: 20m
+
+  - it: gives each init container its own SRA container resources
+    set:
+      sra.customCA.enabled: true
+      sra.customCA.volumeSourceName: corp-ca
+      sra.webConfig.resources:
+        requests:
+          cpu: 70m
+          memory: 70Mi
+        limits:
+          cpu: 700m
+      sra.sshConfig.resources:
+        requests:
+          cpu: 90m
+          memory: 90Mi
+        limits:
+          cpu: 900m
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].resources
+          value:
+            requests:
+              cpu: 70m
+              memory: 70Mi
+            limits:
+              cpu: 700m
+        template: templates/akeyless-secure-remote-access/deployment.yaml
+      - equal:
+          path: spec.template.spec.initContainers[0].resources
+          value:
+            requests:
+              cpu: 90m
+              memory: 90Mi
+            limits:
+              cpu: 900m
+        template: templates/akeyless-secure-remote-access/ssh-deployment.yaml
+
+  - it: uses the configured SRA image for the init container
+    set:
+      sra.customCA.enabled: true
+      sra.customCA.volumeSourceName: corp-ca
+      sra.image.repository: registry.example.com/zero-trust-bastion
+      sra.image.tag: 9.9.9
+      sra.image.pullPolicy: Always
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: registry.example.com/zero-trust-bastion:9.9.9
+      - equal:
+          path: spec.template.spec.initContainers[0].imagePullPolicy
+          value: Always
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: registry.example.com/zero-trust-bastion:9.9.9
+
+  - it: mounts a configMap bundle over the system trust file in replace mode
+    set:
+      sra.customCA.enabled: true
+      sra.customCA.mode: replace
       sra.customCA.volumeSourceName: corp-ca
     asserts:
       - contains:
@@ -41,10 +225,18 @@ tests:
             name: ca-certificates
             mountPath: /etc/ssl/certs/ca-certificates.crt
             subPath: ca-certificates.crt
+      - notExists:
+          path: spec.template.spec.initContainers
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: etc-ssl-certs
+            emptyDir: {}
 
   - it: mounts a secret bundle when the volume type is secret
     set:
       sra.customCA.enabled: true
+      sra.customCA.mode: replace
       sra.customCA.volumeType: secret
       sra.customCA.volumeSourceName: corp-ca
     asserts:
@@ -74,7 +266,7 @@ tests:
             secret:
               secretName: corp-ca
 
-  - it: uses the configured volume name for the volume and the mount
+  - it: uses the configured volume name for the volume and the mounts
     set:
       sra.customCA.enabled: true
       sra.customCA.volumeName: corp-trust
@@ -87,6 +279,20 @@ tests:
             configMap:
               name: corp-ca
       - contains:
+          path: spec.template.spec.initContainers[0].volumeMounts
+          content:
+            name: corp-trust
+            mountPath: /custom-ca
+            readOnly: true
+
+  - it: uses the configured volume name for the replace mount
+    set:
+      sra.customCA.enabled: true
+      sra.customCA.mode: replace
+      sra.customCA.volumeName: corp-trust
+      sra.customCA.volumeSourceName: corp-ca
+    asserts:
+      - contains:
           path: spec.template.spec.containers[0].volumeMounts
           content:
             name: corp-trust
@@ -96,6 +302,7 @@ tests:
   - it: renders names that look like booleans as strings
     set:
       sra.customCA.enabled: true
+      sra.customCA.mode: replace
       sra.customCA.volumeName: "true"
       sra.customCA.volumeSourceName: "true"
     asserts:
@@ -148,3 +355,5 @@ tests:
             name: ca-certificates
             mountPath: /etc/ssl/certs/ca-certificates.crt
             subPath: ca-certificates.crt
+      - notExists:
+          path: spec.template.spec.initContainers

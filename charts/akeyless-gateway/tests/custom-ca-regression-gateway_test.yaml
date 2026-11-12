@@ -1,0 +1,293 @@
+suite: akeyless-gateway custom CA regression, gateway pod spec equals the 3.12.1 render
+templates:
+  - templates/deployment.yaml
+chart:
+  version: 0.0.0-regression
+set:
+  version: 5.6.0
+  globalConfig.gatewayAuth.gatewayAccessId: p-regression
+  globalConfig.gatewayAuth.gatewayAccessType: access_key
+  globalConfig.gatewayAuth.gatewayCredentialsExistingSecret: gw-creds
+tests:
+  - it: customCA off
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA off with a source name set
+    set:
+      gateway.customCA.volumeSourceName: corp-ca
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA off, strictSecurityPolicy
+    set:
+      strictSecurityPolicy.enabled: true
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA off, readOnlyRootFilesystem
+    set:
+      gateway.deployment.readOnlyRootFilesystem: true
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA off, strictSecurityPolicy and readOnlyRootFilesystem
+    set:
+      strictSecurityPolicy.enabled: true
+      gateway.deployment.readOnlyRootFilesystem: true
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA off, containerSecurityContext
+    set:
+      gateway.deployment.containerSecurityContext:
+        runAsUser: 2000
+        allowPrivilegeEscalation: false
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA off, containerSecurityContext and readOnlyRootFilesystem
+    set:
+      gateway.deployment.containerSecurityContext:
+        runAsUser: 2000
+      gateway.deployment.readOnlyRootFilesystem: true
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA off, TLS, metrics, image override and extra volumes
+    set:
+      globalConfig.TLSConf.tlsExistingSecret: gw-tls
+      globalConfig.metrics.enabled: true
+      globalConfig.metrics.metricsExistingSecret: gw-metrics
+      gateway.deployment.image.repository: registry.example.com/gateway
+      gateway.deployment.image.tag: 9.9.9
+      gateway.deployment.extraVolumes:
+        - name: extra
+          emptyDir: {}
+      gateway.deployment.extraVolumeMounts:
+        - name: extra
+          mountPath: /extra
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA replace, configMap
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.mode: replace
+      gateway.customCA.volumeSourceName: corp-ca
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA replace, secret
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.mode: replace
+      gateway.customCA.volumeType: secret
+      gateway.customCA.volumeSourceName: corp-ca
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA replace, custom volume name and mixed-case type
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.mode: replace
+      gateway.customCA.volumeName: corp-bundle
+      gateway.customCA.volumeType: Secret
+      gateway.customCA.volumeSourceName: corp-ca
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA replace, strictSecurityPolicy
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.mode: replace
+      gateway.customCA.volumeSourceName: corp-ca
+      strictSecurityPolicy.enabled: true
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA replace, readOnlyRootFilesystem
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.mode: replace
+      gateway.customCA.volumeSourceName: corp-ca
+      gateway.deployment.readOnlyRootFilesystem: true
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA replace, strictSecurityPolicy and readOnlyRootFilesystem
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.mode: replace
+      gateway.customCA.volumeSourceName: corp-ca
+      strictSecurityPolicy.enabled: true
+      gateway.deployment.readOnlyRootFilesystem: true
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA replace, containerSecurityContext
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.mode: replace
+      gateway.customCA.volumeSourceName: corp-ca
+      gateway.deployment.containerSecurityContext:
+        runAsUser: 2000
+        allowPrivilegeEscalation: false
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA replace, TLS, metrics, image override and extra volumes
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.mode: replace
+      gateway.customCA.volumeSourceName: corp-ca
+      globalConfig.TLSConf.tlsExistingSecret: gw-tls
+      globalConfig.metrics.enabled: true
+      globalConfig.metrics.metricsExistingSecret: gw-metrics
+      gateway.deployment.image.repository: registry.example.com/gateway
+      gateway.deployment.image.tag: 9.9.9
+      gateway.deployment.extraVolumes:
+        - name: extra
+          emptyDir: {}
+      gateway.deployment.extraVolumeMounts:
+        - name: extra
+          mountPath: /extra
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA replace, cluster cache off
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.mode: replace
+      gateway.customCA.volumeSourceName: corp-ca
+      globalConfig.clusterCache.enabled: false
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA default mode, extra mount on /usr/local/share/ca-certificates keeps the 3.12.1 pod spec
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: corp-ca
+      gateway.deployment.extraVolumes:
+        - name: corp-local-certs
+          secret:
+            secretName: corp-ca
+      gateway.deployment.extraVolumeMounts:
+        - name: corp-local-certs
+          mountPath: /usr/local/share/ca-certificates
+          readOnly: true
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA default mode, extra mount on /etc/ssl/certs/ keeps the 3.12.1 pod spec
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: corp-ca
+      gateway.deployment.extraVolumes:
+        - name: corp-certs
+          emptyDir: {}
+      gateway.deployment.extraVolumeMounts:
+        - name: corp-certs
+          mountPath: /etc/ssl/certs/
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA default mode, extra volume named etc-ssl-certs keeps the 3.12.1 pod spec
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: corp-ca
+      gateway.deployment.extraVolumes:
+        - name: etc-ssl-certs
+          emptyDir: {}
+      gateway.deployment.extraVolumeMounts:
+        - name: etc-ssl-certs
+          mountPath: /corp/certs
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA default mode, extra volume named usr-local-ca-certificates keeps the 3.12.1 pod spec
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: corp-ca
+      gateway.deployment.extraVolumes:
+        - name: usr-local-ca-certificates
+          emptyDir: {}
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA default mode, persistence on /usr/local/share/ca-certificates keeps the 3.12.1 pod spec
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: corp-ca
+      gateway.persistence.enabled: true
+      gateway.persistence.existingClaim: corp-pvc
+      gateway.persistence.mountPath: /usr/local/share/ca-certificates
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA default mode, secrets store on /etc/ssl/certs keeps the 3.12.1 pod spec
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: corp-ca
+      gateway.secretsStore.enabled: true
+      gateway.secretsStore.mountPath: /etc/ssl/certs
+      gateway.secretsStore.provider.type: aws
+      gateway.secretsStore.provider.secretProviderClassName: corp-spc
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA replace, gateway resources
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.mode: replace
+      gateway.customCA.volumeSourceName: corp-ca
+      gateway.resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: "2"
+          memory: 2Gi
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA off, strictSecurityPolicy with gateway requests only
+    set:
+      strictSecurityPolicy.enabled: true
+      gateway.resources.requests.cpu: 300m
+      gateway.resources.requests.memory: 600Mi
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: customCA off, strictSecurityPolicy with gateway limits only
+    set:
+      strictSecurityPolicy.enabled: true
+      gateway.resources.limits.cpu: "3"
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec

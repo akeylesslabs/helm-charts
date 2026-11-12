@@ -37,6 +37,17 @@ helm install gateway akeyless/akeyless-gateway
 
 ## Upgrade Notes
 
+### 3.13.0: custom CA extends the trust store
+
+From 3.13.0 `gateway.customCA` and `sra.customCA` default to `mode: extend`: the bundle is added to the image trust store. Before 3.13.0 the bundle replaced `/etc/ssl/certs/ca-certificates.crt`.
+
+| Release before the upgrade | Effect of the upgrade to 3.13.0 or later |
+| --- | --- |
+| `customCA.enabled: false` | None. |
+| `customCA.enabled: true`, bundle holds only your CAs | Public roots are trusted again, beside your CAs. The pods restart with the new init container. |
+| `customCA.enabled: true`, bundle holds public roots and your CAs | No change in trust. The pods restart with the new init container. |
+| You need the earlier behaviour | Set `mode: replace`. The pod spec stays as before the upgrade. |
+
 ### 3.12.1: SRA SSH replicas
 
 From 3.12.1 the SRA SSH deployment sets `spec.replicas` from `sra.sshConfig.replicaCount` only when `sra.sshConfig.hpa.enabled` is false, the same as the SRA web and Gateway deployments. Earlier versions did the opposite.
@@ -81,30 +92,85 @@ gateway:
         readOnly: true
 ```
 
-## Custom CA for SRA
+## Custom CA
 
-Environments that re-sign outbound TLS with an internal CA (a TLS-intercepting proxy) must trust that CA in the SRA components from their first outbound connection. The Gateway has `gateway.customCA`. The SRA web and SSH deployments have their own, `sra.customCA`:
+Environments that re-sign outbound TLS with an internal CA (a TLS-intercepting proxy), or that reach internal services signed by a private CA, must trust that CA from the first outbound connection. The Gateway uses `gateway.customCA`. The SRA web and SSH deployments use `sra.customCA`. The two are independent: set both when both components need the CA.
 
 ```yaml
-sra:
-  enabled: true
+gateway:
   customCA:
     enabled: true
+    mode: "extend"            # or "replace"
     volumeName: "ca-certificates"
     volumeType: "configMap"   # or "secret"
-    volumeSourceName: "<configmap-or-secret-name>"  # key must be ca-certificates.crt
+    volumeSourceName: "<configmap-or-secret-name>"
+
+sra:
+  customCA:
+    enabled: true
+    mode: "extend"
+    volumeName: "ca-certificates"
+    volumeType: "configMap"
+    volumeSourceName: "<configmap-or-secret-name>"
 ```
 
-The option is **opt-in and default-off**. When false, the deployments are unchanged. When true, the chart:
+| Value | Default | Meaning |
+| --- | --- | --- |
+| `enabled` | `false` | Off renders nothing for the component. |
+| `mode` | `extend` | How the bundle reaches the container trust store. See [Modes](#modes). |
+| `resources` | `{}` | Requests and limits for the `custom-ca-trust` init container in `extend` mode. Empty gives it the same resources as the component container (`gateway.resources`, `sra.webConfig.resources`, `sra.sshConfig.resources`, with the `strictSecurityPolicy` defaults), so a namespace quota or limit range admits it as it admits that container. An init container does not add to the pod's scheduled requests. |
+| `volumeName` | `ca-certificates` | Name of the pod volume that holds the bundle. |
+| `volumeType` | `configMap` | `configMap` or `secret`, case-insensitive. Any other value fails the render. |
+| `volumeSourceName` | `""` | Name of the ConfigMap or Secret. Required when `enabled` is true. It must have the key `ca-certificates.crt`, which holds one or more PEM certificates. |
 
-- Mounts the key `ca-certificates.crt` of the named ConfigMap or Secret at `/etc/ssl/certs/ca-certificates.crt` in the SRA web and SSH containers.
-- Fails the render when `volumeSourceName` is empty or `volumeType` is neither `configMap` nor `secret`.
+### Modes
 
-**Notes:**
+| | `extend` (default) | `replace` |
+| --- | --- | --- |
+| What the bundle holds | Only your CAs: the proxy CA, internal roots, intermediates. | Every CA the container trusts, public roots included. |
+| Effect on the image trust store | Your CAs are added. The public roots in the image stay trusted. | The bundle is mounted over `/etc/ssl/certs/ca-certificates.crt` and hides the image's file. |
+| Pod changes | An init container, `custom-ca-trust`, runs the same image. It copies `/etc/ssl/certs` and `/usr/local/share/ca-certificates` into `emptyDir` volumes, appends the bundle to `ca-certificates.crt`, and adds it as `custom-ca.crt` for `update-ca-certificates`. The container mounts both volumes. | One `subPath` mount. No init container. |
+| Gateway CA Certificate Store | Works. Certificates added at runtime are added beside your CAs. | `update-ca-certificates` cannot replace the mounted file, so certificates added at runtime do not reach the system trust store. |
+| With `gateway.deployment.readOnlyRootFilesystem` | Supported. The init container fills the same trust volumes, and the image's startup seed does not overwrite the bundle. | Not recommended. The bundle must hold every CA. |
 
-- The file replaces the image's bundle file. Put in it every CA that signs the traffic the SRA components must trust, including the proxy's CA.
-- `sra.customCA` and `gateway.customCA` are independent. Set both when both components sit behind the proxy.
-- The bundle is read at pod start, and a file mounted with `subPath` is not refreshed in a running pod. Restart the SRA pods after changing the bundle.
+`extend` accepts a full bundle too: roots that are already in the image are trusted twice, which has no effect.
+
+When the Gateway release already uses `/etc/ssl/certs` or `/usr/local/share/ca-certificates`, `gateway.customCA` renders as `replace`, so the pod spec stays as it was. That is the case for a `gateway.deployment.extraVolumeMounts`, `gateway.persistence.mountPath` or `gateway.secretsStore.mountPath` on either path, or a `gateway.deployment.extraVolumes` entry named `etc-ssl-certs` or `usr-local-ca-certificates` without `readOnlyRootFilesystem`. Remove that mount to get `extend`.
+
+In `extend` the init container parses each certificate in the bundle. When a certificate does not parse, it logs a warning and the pod starts as before: `kubectl logs <pod> -c custom-ca-trust` shows `customCA: warning: ... holds N PEM certificates and M parse`. TLS clients skip a certificate that does not parse, so that CA is not trusted. The usual cause is a bundle written on one line, for example with `kubectl create secret --from-literal`: create it with `--from-file` instead, so each `-----BEGIN CERTIFICATE-----` and `-----END CERTIFICATE-----` marker sits on its own line.
+
+`custom-ca-trust` runs the component's own image, so `extend` needs `/bin/sh`, `cp`, `cat` and `printf` in that image, as the Gateway and SRA images have. The check also uses `awk`, `tr` and `openssl`, and is skipped when the image lacks `awk` or `openssl`. With a custom image that has no shell, the init container fails and the pod does not start: use `mode: replace`.
+
+### Build a bundle for replace mode
+
+Start from the bundle in the image you run, then add your CAs:
+
+```bash
+docker run --rm --entrypoint cat akeyless/gateway:<tag> /etc/ssl/certs/ca-certificates.crt > ca-certificates.crt
+cat private-root.crt private-intermediate.crt >> ca-certificates.crt
+kubectl -n <namespace> create configmap <name> --from-file=ca-certificates.crt
+```
+
+Use `akeyless/zero-trust-bastion:<tag>` for the SRA bundle.
+
+### Verify
+
+From a running Gateway pod, check that a public chain and a chain signed by your CA both verify. Pass `-CAfile`: the `openssl` binary in the Gateway image does not read `/etc/ssl` by default, so without it every chain fails to verify.
+
+```bash
+kubectl -n <namespace> exec deploy/<gateway-deployment> -- sh -c \
+  'echo | openssl s_client -CAfile /etc/ssl/certs/ca-certificates.crt -connect <host>:<port> -servername <host> 2>&1 | grep "Verify return code"'
+```
+
+Expect `Verify return code: 0 (ok)` for a public endpoint, for example the message queue on port 5671, and for an internal endpoint signed by your CA.
+
+### Rotate the bundle
+
+The bundle is read when the pod starts. In both modes a changed ConfigMap or Secret does not reach a running pod. Restart the pods after a change:
+
+```bash
+kubectl -n <namespace> rollout restart deployment/<deployment>
+```
 
 ## Extra Objects
 

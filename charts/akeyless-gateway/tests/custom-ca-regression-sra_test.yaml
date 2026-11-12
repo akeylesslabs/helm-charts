@@ -1,0 +1,102 @@
+suite: akeyless-gateway custom CA regression, SRA pod specs equal the 3.12.1 render
+templates:
+  - templates/akeyless-secure-remote-access/deployment.yaml
+  - templates/akeyless-secure-remote-access/ssh-deployment.yaml
+chart:
+  version: 0.0.0-regression
+set:
+  version: 5.6.0
+  sra.enabled: true
+  sra.sshConfig.CAPublicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC7 test
+tests:
+  - it: sra.customCA off
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: sra.customCA off with a source name set
+    set:
+      sra.customCA.volumeSourceName: corp-ca
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: sra.customCA off, strictSecurityPolicy
+    set:
+      strictSecurityPolicy.enabled: true
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: sra.customCA replace, configMap
+    set:
+      sra.customCA.enabled: true
+      sra.customCA.mode: replace
+      sra.customCA.volumeSourceName: corp-ca
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: sra.customCA replace, secret with a custom volume name
+    set:
+      sra.customCA.enabled: true
+      sra.customCA.mode: replace
+      sra.customCA.volumeName: corp-bundle
+      sra.customCA.volumeType: Secret
+      sra.customCA.volumeSourceName: corp-ca
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: sra.customCA replace, strictSecurityPolicy, image override and cache TLS
+    set:
+      sra.customCA.enabled: true
+      sra.customCA.mode: replace
+      sra.customCA.volumeSourceName: corp-ca
+      strictSecurityPolicy.enabled: true
+      sra.image.repository: registry.example.com/sra
+      sra.image.tag: 1.2.3
+      globalConfig.TLSConf.tlsExistingSecret: gw-tls
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: sra.customCA and gateway.customCA both replace
+    set:
+      sra.customCA.enabled: true
+      sra.customCA.mode: replace
+      sra.customCA.volumeSourceName: corp-ca
+      gateway.customCA.enabled: true
+      gateway.customCA.mode: replace
+      gateway.customCA.volumeSourceName: corp-ca
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: sra.customCA replace, SRA resources
+    set:
+      sra.customCA.enabled: true
+      sra.customCA.mode: replace
+      sra.customCA.volumeSourceName: corp-ca
+      sra.webConfig.resources:
+        limits:
+          cpu: 700m
+      sra.sshConfig.resources:
+        requests:
+          memory: 90Mi
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec
+
+  - it: sra.customCA off, strictSecurityPolicy with SRA requests only
+    set:
+      strictSecurityPolicy.enabled: true
+      sra.webConfig.resources:
+        requests:
+          cpu: 70m
+      sra.sshConfig.resources:
+        requests:
+          cpu: 90m
+    asserts:
+      - matchSnapshot:
+          path: spec.template.spec

@@ -306,23 +306,120 @@ component: cache
   readOnly: true
 {{- end -}}
 
-{{- define "akeyless-sra.customCA.volume" -}}
-- name: {{ .Values.sra.customCA.volumeName | quote }}
-{{- if eq (.Values.sra.customCA.volumeType | lower) "configmap" }}
+{{- define "akeyless-gateway.customCA.extend" -}}
+{{- if and .enabled (eq (.mode | default "extend") "extend") -}}true{{- end -}}
+{{- end -}}
+
+{{- define "akeyless-gateway.customCA.replace" -}}
+{{- if and .enabled (eq (.mode | default "extend") "replace") -}}true{{- end -}}
+{{- end -}}
+
+{{- define "akeyless-gateway.customCA.gatewayTrustTaken" -}}
+{{- $paths := list "/etc/ssl/certs" "/usr/local/share/ca-certificates" -}}
+{{- $names := list "etc-ssl-certs" "usr-local-ca-certificates" -}}
+{{- $taken := false -}}
+{{- range .Values.gateway.deployment.extraVolumeMounts -}}
+{{- if has (trimSuffix "/" (toString .mountPath)) $paths -}}{{- $taken = true -}}{{- end -}}
+{{- end -}}
+{{- if not .Values.gateway.deployment.readOnlyRootFilesystem -}}
+{{- range .Values.gateway.deployment.extraVolumes -}}
+{{- if has (toString .name) $names -}}{{- $taken = true -}}{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- if and (eq .Values.gateway.persistence.enabled true) (has (trimSuffix "/" (toString .Values.gateway.persistence.mountPath)) $paths) -}}{{- $taken = true -}}{{- end -}}
+{{- if and .Values.gateway.secretsStore.enabled (has (trimSuffix "/" (toString .Values.gateway.secretsStore.mountPath)) $paths) -}}{{- $taken = true -}}{{- end -}}
+{{- if $taken -}}true{{- end -}}
+{{- end -}}
+
+{{- define "akeyless-gateway.customCA.gatewayExtend" -}}
+{{- if and (include "akeyless-gateway.customCA.extend" .Values.gateway.customCA) (not (include "akeyless-gateway.customCA.gatewayTrustTaken" .)) -}}true{{- end -}}
+{{- end -}}
+
+{{- define "akeyless-gateway.customCA.gatewayReplace" -}}
+{{- if or (include "akeyless-gateway.customCA.replace" .Values.gateway.customCA) (and (include "akeyless-gateway.customCA.extend" .Values.gateway.customCA) (include "akeyless-gateway.customCA.gatewayTrustTaken" .)) -}}true{{- end -}}
+{{- end -}}
+
+{{- define "akeyless-gateway.customCA.sourceVolume" -}}
+{{- $ca := .ca -}}
+- name: {{ $ca.volumeName | quote }}
+{{- if eq ($ca.volumeType | lower) "configmap" }}
   configMap:
-    name: {{ .Values.sra.customCA.volumeSourceName | required "sra.customCA.volumeSourceName is required when sra.customCA.enabled is true" | quote }}
-{{- else if eq (.Values.sra.customCA.volumeType | lower) "secret" }}
+    name: {{ $ca.volumeSourceName | required (printf "%s.volumeSourceName is required when %s.enabled is true" .key .key) | quote }}
+{{- else if eq ($ca.volumeType | lower) "secret" }}
   secret:
-    secretName: {{ .Values.sra.customCA.volumeSourceName | required "sra.customCA.volumeSourceName is required when sra.customCA.enabled is true" | quote }}
+    secretName: {{ $ca.volumeSourceName | required (printf "%s.volumeSourceName is required when %s.enabled is true" .key .key) | quote }}
 {{- else }}
-  {{- fail (printf "sra.customCA.volumeType must be either 'configmap' or 'secret', got %s" .Values.sra.customCA.volumeType) }}
+  {{- fail (printf "%s.volumeType must be either 'configmap' or 'secret', got %s" .key $ca.volumeType) }}
 {{- end }}
 {{- end -}}
 
-{{- define "akeyless-sra.customCA.volumeMount" -}}
-- name: {{ .Values.sra.customCA.volumeName | quote }}
+{{- define "akeyless-gateway.customCA.replaceMount" -}}
+- name: {{ .volumeName | quote }}
   mountPath: /etc/ssl/certs/ca-certificates.crt
   subPath: ca-certificates.crt
+{{- end -}}
+
+{{- define "akeyless-gateway.customCA.trustVolumes" -}}
+- name: usr-local-ca-certificates
+  emptyDir: {}
+- name: etc-ssl-certs
+  emptyDir: {}
+{{- end -}}
+
+{{- define "akeyless-gateway.customCA.trustVolumeMounts" -}}
+- name: usr-local-ca-certificates
+  mountPath: /usr/local/share/ca-certificates
+- name: etc-ssl-certs
+  mountPath: /etc/ssl/certs
+{{- end -}}
+
+{{- define "akeyless-gateway.customCA.initContainer" -}}
+- name: custom-ca-trust
+  image: {{ .image | quote }}
+  imagePullPolicy: {{ .pullPolicy }}
+  {{- with .securityContext }}
+  {{- . | nindent 2 }}
+  {{- end }}
+  {{- with .resources }}
+  resources:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  command:
+    - /bin/sh
+    - -ec
+    - |
+      src=/custom-ca/ca-certificates.crt
+      if command -v awk >/dev/null 2>&1 && command -v openssl >/dev/null 2>&1; then
+        work=/trust/usr-local-ca-certificates/.custom-ca-check
+        mkdir -p "$work"
+        tr -d '\r' < "$src" | awk -v d="$work" '/^-----BEGIN CERTIFICATE-----$/ { n++; f = d "/" n ".pem"; w = 1 } w { print > f } /^-----END CERTIFICATE-----$/ { if (w) close(f); w = 0 }'
+        total=0
+        good=0
+        for f in "$work"/*.pem; do
+          [ -e "$f" ] || continue
+          total=$((total + 1))
+          if openssl x509 -noout -in "$f" >/dev/null 2>&1; then
+            good=$((good + 1))
+          fi
+        done
+        rm -rf "$work"
+        if [ "$good" -eq 0 ] || [ "$good" -lt "$total" ]; then
+          echo "customCA: warning: ca-certificates.crt in {{ .ca.volumeType }} {{ .ca.volumeSourceName }} holds $total PEM certificates and $good parse; TLS clients skip the rest. Put each BEGIN and END marker on its own line." >&2
+        fi
+      fi
+      cp -RP /etc/ssl/certs/. /trust/etc-ssl-certs/
+      cp -RP /usr/local/share/ca-certificates/. /trust/usr-local-ca-certificates/
+      cp /custom-ca/ca-certificates.crt /trust/usr-local-ca-certificates/custom-ca.crt
+      printf '\n' >> /trust/etc-ssl-certs/ca-certificates.crt
+      cat /custom-ca/ca-certificates.crt >> /trust/etc-ssl-certs/ca-certificates.crt
+  volumeMounts:
+    - name: {{ .ca.volumeName | quote }}
+      mountPath: /custom-ca
+      readOnly: true
+    - name: usr-local-ca-certificates
+      mountPath: /trust/usr-local-ca-certificates
+    - name: etc-ssl-certs
+      mountPath: /trust/etc-ssl-certs
 {{- end -}}
 
 {{- define "akeyless-gateway.clusterCache.password" }}
@@ -805,4 +902,69 @@ Usage: {{ include "akeyless-gateway.validateNoPlaintextSecrets" . }}
     {{- end }}
   {{- end }}
 {{- end }}
+{{- end -}}
+
+{{- define "akeyless-gateway.containerSecurityContext" -}}
+{{- if or .Values.gateway.deployment.containerSecurityContext .Values.strictSecurityPolicy.enabled .Values.gateway.deployment.readOnlyRootFilesystem -}}
+securityContext:
+  {{- if .Values.strictSecurityPolicy.enabled }}
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: {{ .Values.gateway.deployment.readOnlyRootFilesystem }}
+  {{- else }}
+  {{- with .Values.gateway.deployment.containerSecurityContext }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
+  {{- if .Values.gateway.deployment.readOnlyRootFilesystem }}
+  readOnlyRootFilesystem: true
+  {{- end }}
+  {{- end }}
+{{- end }}
+{{- end -}}
+
+{{- define "akeyless-sra.image" -}}
+{{ .Values.sra.image.repository | default "akeyless/zero-trust-bastion" }}:{{ .Values.sra.image.tag | default .Chart.Annotations.sraVersion }}
+{{- end -}}
+
+{{- define "akeyless-sra.customCA.initSecurityContext" -}}
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+{{- end -}}
+
+{{- define "akeyless-gateway.containerResources" -}}
+{{- $r := .resources | default dict -}}
+{{- if .strict.enabled -}}
+requests:
+{{- if $r.requests }}
+  {{- toYaml $r.requests | nindent 2 }}
+{{- else }}
+  cpu: {{ .strict.resources.requests.cpu | quote }}
+  memory: {{ .strict.resources.requests.memory | quote }}
+{{- end }}
+limits:
+{{- if $r.limits }}
+  {{- toYaml $r.limits | nindent 2 }}
+{{- else }}
+  cpu: {{ .strict.resources.limits.cpu | quote }}
+  memory: {{ .strict.resources.limits.memory | quote }}
+{{- end }}
+{{- else -}}
+{{- toYaml .resources -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "akeyless-gateway.customCA.initResources" -}}
+{{- if .ca.resources -}}
+{{- toYaml .ca.resources -}}
+{{- else -}}
+{{- include "akeyless-gateway.containerResources" (dict "resources" .resources "strict" .strict) -}}
+{{- end -}}
 {{- end -}}

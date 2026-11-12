@@ -556,6 +556,8 @@ gateway:
 
   customCA:
     enabled: false
+    mode: "extend"
+    resources: {}
     # Name of the volume to mount
     volumeName: "ca-certificates"
     # Type of the volume to mount: either 'configMap' or 'secret'
@@ -590,6 +592,8 @@ sra:
 
   customCA:
     enabled: false
+    mode: "extend"
+    resources: {}
     volumeName: "ca-certificates"
     volumeType: "configMap"
     volumeSourceName: ""
