@@ -734,7 +734,7 @@ customCA off, TLS, metrics, image override and extra volumes:
             value: akeyless-gateway
           - name: chart_version
             value: 0.0.0-regression
-        image: registry.example.com/gateway:9.9.9
+        image: registry.example.com/gateway:5.6.0
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 10
@@ -1634,7 +1634,7 @@ customCA replace, TLS, metrics, image override and extra volumes:
             value: akeyless-gateway
           - name: chart_version
             value: 0.0.0-regression
-        image: registry.example.com/gateway:9.9.9
+        image: registry.example.com/gateway:5.6.0
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 10

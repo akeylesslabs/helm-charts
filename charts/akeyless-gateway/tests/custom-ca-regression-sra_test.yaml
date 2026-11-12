@@ -5,6 +5,7 @@ templates:
 chart:
   version: 0.0.0-regression
 set:
+  version: 5.6.0
   sra.enabled: true
   sra.sshConfig.CAPublicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC7 test
 tests:

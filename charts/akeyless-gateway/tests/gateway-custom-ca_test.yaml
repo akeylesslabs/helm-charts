@@ -1,6 +1,8 @@
 suite: akeyless-gateway custom CA
 templates:
   - templates/deployment.yaml
+set:
+  version: 5.6.0
 tests:
   - it: renders no init container and no trust volumes when customCA is off
     set:
@@ -128,6 +130,7 @@ tests:
 
   - it: uses the configured gateway image for the init container
     set:
+      version: ""
       gateway.customCA.enabled: true
       gateway.customCA.volumeSourceName: corp-ca
       gateway.deployment.image.repository: registry.example.com/gateway

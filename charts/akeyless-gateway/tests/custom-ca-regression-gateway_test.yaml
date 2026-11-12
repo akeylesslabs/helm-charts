@@ -4,6 +4,7 @@ templates:
 chart:
   version: 0.0.0-regression
 set:
+  version: 5.6.0
   globalConfig.gatewayAuth.gatewayAccessId: p-regression
   globalConfig.gatewayAuth.gatewayAccessType: access_key
   globalConfig.gatewayAuth.gatewayCredentialsExistingSecret: gw-creds
