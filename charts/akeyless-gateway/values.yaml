@@ -716,7 +716,7 @@ sra:
       enabled: false
       # minAvailable: ""
       # maxUnavailable: ""
-      
+
 gatewayAPI:
 ## Expose the Gateway using the Kubernetes Gateway API instead of an Ingress resource.
 ## Set gateway.create to true to have this chart create the Gateway resource, or leave it
