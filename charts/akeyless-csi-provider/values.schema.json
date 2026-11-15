@@ -42,6 +42,12 @@
                 "extraArgs": {
                     "type": "array"
                 },
+                "azureObjectID": {
+                    "type": "string"
+                },
+                "extraEnvironmentVars": {
+                    "type": "object"
+                },
                 "image": {
                     "type": "object",
                     "properties": {
