@@ -6,6 +6,13 @@
 {{ $caBundleAnnotations := $tls.caBundleAnnotations | default dict }}
 {{ $servingCert := dict }}
 {{ $generatedCA := dict }}
+{{ $imageTag := .Values.image.tag | default .Chart.AppVersion | toString }}
+{{ $imageVersion := regexFind "^v?[0-9]+\\.[0-9]+\\.[0-9]+" $imageTag }}
+{{ $admissionReviewVersions := list "v1" "v1beta1" }}
+{{- /* k8s-webhook-server images before 0.41.0 answer only AdmissionReview v1beta1. */}}
+{{- if and $imageVersion (semverCompare "<0.41.0" $imageVersion) }}
+  {{- $admissionReviewVersions = list "v1beta1" }}
+{{- end }}
 
 {{- if $existingSecret }}
   {{- if eq $existingSecret $fullName }}
@@ -77,7 +84,7 @@ items:
     objectSelector:
       {{- $objectSelector := dig "objectSelector" dict $mutatingWebhook }}
       {{- tpl (toYaml $objectSelector) . | nindent 6 }}
-    admissionReviewVersions: ["v1beta1"]
+    admissionReviewVersions: {{ toJson $admissionReviewVersions }}
     sideEffects: None #Unknown
   {{- with dig "matchConditions" list $mutatingWebhook }}
     matchConditions:
