@@ -52,7 +52,7 @@ tests:
           value: custom-ca-trust
       - equal:
           path: spec.template.spec.initContainers[0].image
-          value: akeyless/zero-trust-bastion:3.7.0
+          value: akeyless/zero-trust-bastion:3.7.1
       - contains:
           path: spec.template.spec.initContainers[0].volumeMounts
           content:

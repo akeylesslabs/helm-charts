@@ -33,7 +33,7 @@ sra.customCA and gateway.customCA both replace:
             value: akeyless-gateway
           - name: chart_version
             value: 0.0.0-regression
-        image: akeyless/zero-trust-bastion:3.7.0
+        image: akeyless/zero-trust-bastion:3.7.1
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 10
@@ -111,12 +111,12 @@ sra.customCA and gateway.customCA both replace:
           - name: REMOTE_ACCESS_TYPE
             value: ssh-proxy
           - name: VERSION
-            value: 3.7.0
+            value: 3.7.1
           - name: chart_name
             value: akeyless-gateway
           - name: chart_version
             value: 0.0.0-regression
-        image: akeyless/zero-trust-bastion:3.7.0
+        image: akeyless/zero-trust-bastion:3.7.1
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 5
@@ -218,7 +218,7 @@ sra.customCA off:
             value: akeyless-gateway
           - name: chart_version
             value: 0.0.0-regression
-        image: akeyless/zero-trust-bastion:3.7.0
+        image: akeyless/zero-trust-bastion:3.7.1
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 10
@@ -290,12 +290,12 @@ sra.customCA off:
           - name: REMOTE_ACCESS_TYPE
             value: ssh-proxy
           - name: VERSION
-            value: 3.7.0
+            value: 3.7.1
           - name: chart_name
             value: akeyless-gateway
           - name: chart_version
             value: 0.0.0-regression
-        image: akeyless/zero-trust-bastion:3.7.0
+        image: akeyless/zero-trust-bastion:3.7.1
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 5
@@ -391,7 +391,7 @@ sra.customCA off with a source name set:
             value: akeyless-gateway
           - name: chart_version
             value: 0.0.0-regression
-        image: akeyless/zero-trust-bastion:3.7.0
+        image: akeyless/zero-trust-bastion:3.7.1
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 10
@@ -463,12 +463,12 @@ sra.customCA off with a source name set:
           - name: REMOTE_ACCESS_TYPE
             value: ssh-proxy
           - name: VERSION
-            value: 3.7.0
+            value: 3.7.1
           - name: chart_name
             value: akeyless-gateway
           - name: chart_version
             value: 0.0.0-regression
-        image: akeyless/zero-trust-bastion:3.7.0
+        image: akeyless/zero-trust-bastion:3.7.1
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 5
@@ -564,7 +564,7 @@ sra.customCA off, strictSecurityPolicy:
             value: akeyless-gateway
           - name: chart_version
             value: 0.0.0-regression
-        image: akeyless/zero-trust-bastion:3.7.0
+        image: akeyless/zero-trust-bastion:3.7.1
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 10
@@ -639,12 +639,12 @@ sra.customCA off, strictSecurityPolicy:
           - name: REMOTE_ACCESS_TYPE
             value: ssh-proxy
           - name: VERSION
-            value: 3.7.0
+            value: 3.7.1
           - name: chart_name
             value: akeyless-gateway
           - name: chart_version
             value: 0.0.0-regression
-        image: akeyless/zero-trust-bastion:3.7.0
+        image: akeyless/zero-trust-bastion:3.7.1
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 5
@@ -743,7 +743,7 @@ sra.customCA off, strictSecurityPolicy with SRA requests only:
             value: akeyless-gateway
           - name: chart_version
             value: 0.0.0-regression
-        image: akeyless/zero-trust-bastion:3.7.0
+        image: akeyless/zero-trust-bastion:3.7.1
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 10
@@ -818,12 +818,12 @@ sra.customCA off, strictSecurityPolicy with SRA requests only:
           - name: REMOTE_ACCESS_TYPE
             value: ssh-proxy
           - name: VERSION
-            value: 3.7.0
+            value: 3.7.1
           - name: chart_name
             value: akeyless-gateway
           - name: chart_version
             value: 0.0.0-regression
-        image: akeyless/zero-trust-bastion:3.7.0
+        image: akeyless/zero-trust-bastion:3.7.1
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 5
@@ -922,7 +922,7 @@ sra.customCA replace, SRA resources:
             value: akeyless-gateway
           - name: chart_version
             value: 0.0.0-regression
-        image: akeyless/zero-trust-bastion:3.7.0
+        image: akeyless/zero-trust-bastion:3.7.1
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 10
@@ -1002,12 +1002,12 @@ sra.customCA replace, SRA resources:
           - name: REMOTE_ACCESS_TYPE
             value: ssh-proxy
           - name: VERSION
-            value: 3.7.0
+            value: 3.7.1
           - name: chart_name
             value: akeyless-gateway
           - name: chart_version
             value: 0.0.0-regression
-        image: akeyless/zero-trust-bastion:3.7.0
+        image: akeyless/zero-trust-bastion:3.7.1
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 5
@@ -1109,7 +1109,7 @@ sra.customCA replace, configMap:
             value: akeyless-gateway
           - name: chart_version
             value: 0.0.0-regression
-        image: akeyless/zero-trust-bastion:3.7.0
+        image: akeyless/zero-trust-bastion:3.7.1
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 10
@@ -1187,12 +1187,12 @@ sra.customCA replace, configMap:
           - name: REMOTE_ACCESS_TYPE
             value: ssh-proxy
           - name: VERSION
-            value: 3.7.0
+            value: 3.7.1
           - name: chart_name
             value: akeyless-gateway
           - name: chart_version
             value: 0.0.0-regression
-        image: akeyless/zero-trust-bastion:3.7.0
+        image: akeyless/zero-trust-bastion:3.7.1
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 5
@@ -1294,7 +1294,7 @@ sra.customCA replace, secret with a custom volume name:
             value: akeyless-gateway
           - name: chart_version
             value: 0.0.0-regression
-        image: akeyless/zero-trust-bastion:3.7.0
+        image: akeyless/zero-trust-bastion:3.7.1
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 10
@@ -1372,12 +1372,12 @@ sra.customCA replace, secret with a custom volume name:
           - name: REMOTE_ACCESS_TYPE
             value: ssh-proxy
           - name: VERSION
-            value: 3.7.0
+            value: 3.7.1
           - name: chart_name
             value: akeyless-gateway
           - name: chart_version
             value: 0.0.0-regression
-        image: akeyless/zero-trust-bastion:3.7.0
+        image: akeyless/zero-trust-bastion:3.7.1
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 5
@@ -1569,7 +1569,7 @@ sra.customCA replace, strictSecurityPolicy, image override and cache TLS:
           - name: REMOTE_ACCESS_TYPE
             value: ssh-proxy
           - name: VERSION
-            value: 3.7.0
+            value: 3.7.1
           - name: chart_name
             value: akeyless-gateway
           - name: chart_version
