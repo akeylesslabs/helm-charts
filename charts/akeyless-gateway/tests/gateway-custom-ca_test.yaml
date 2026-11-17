@@ -22,6 +22,31 @@ tests:
             configMap:
               name: corp-ca
 
+  - it: renders the trust volumes and mounts when customCA is the only volume source
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: corp-ca
+      globalConfig.metrics.enabled: false
+      cacheHA.enabled: true
+      cacheHA.redis.tlsPort: ""
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: etc-ssl-certs
+            emptyDir: {}
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: ca-certificates
+            configMap:
+              name: corp-ca
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: etc-ssl-certs
+            mountPath: /etc/ssl/certs
+
   - it: extends the image trust store by default
     set:
       gateway.customCA.enabled: true

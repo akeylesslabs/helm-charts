@@ -71,7 +71,7 @@ spec:
         {{- toYaml .Values.gateway.deployment.tolerations | nindent 8 }}
       {{- end }}
       {{- include "akeyless-gateway.imagePullSecrets" . | indent 2 }}
-      {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true) (.Values.gateway.secretsStore.enabled) (.Values.gateway.akeylessConfigVol) (.Values.gateway.deployment.extraVolumes) (.Values.gateway.deployment.readOnlyRootFilesystem) }}
+      {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true) (.Values.gateway.secretsStore.enabled) (.Values.gateway.akeylessConfigVol) (.Values.gateway.deployment.extraVolumes) (.Values.gateway.deployment.readOnlyRootFilesystem) (.Values.gateway.customCA.enabled) }}
       volumes:
         - name: akeyless-config
           {{- if .Values.gateway.akeylessConfigVol }}
@@ -178,7 +178,7 @@ spec:
               path: /health
               port: 8080
           {{- toYaml .Values.gateway.deployment.readinessProbe | trim | nindent 12 }}
-          {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true) (.Values.gateway.secretsStore.enabled) (.Values.gateway.akeylessConfigVol) (.Values.gateway.deployment.extraVolumeMounts) (.Values.gateway.deployment.readOnlyRootFilesystem)}}
+          {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true) (.Values.gateway.secretsStore.enabled) (.Values.gateway.akeylessConfigVol) (.Values.gateway.deployment.extraVolumeMounts) (.Values.gateway.deployment.readOnlyRootFilesystem) (.Values.gateway.customCA.enabled) }}
           volumeMounts:
             - name: akeyless-config
               mountPath: {{include "akeyless-gateway.root.config.path" $}}/.akeyless
