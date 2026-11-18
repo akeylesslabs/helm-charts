@@ -1,6 +1,11 @@
 replicaCount: 1
 
-# Leave image.tag unset so the Deployment uses Chart.appVersion.
+# Temporary: Chart.appVersion is 0.42.0 (JWT), which is not published yet.
+# ct install needs a pullable tag; drop this pin once 0.42.0 is on the registry
+# so installs use Chart.appVersion when image.tag is empty.
+image:
+  tag: "0.41.0"
+
 env:
   AKEYLESS_ACCESS_TYPE: api_key
   AKEYLESS_ACCESS_ID: p-12345678911123
