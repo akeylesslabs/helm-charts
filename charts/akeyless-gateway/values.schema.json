@@ -38,6 +38,18 @@
       "gateway": {
         "type": "object",
         "properties": {
+          "customCA": {
+            "type": "object",
+            "properties": {
+              "mode": {
+                "enum": [
+                  "extend",
+                  "replace"
+                ],
+                "description": "extend: an init container copies the image trust store into writable volumes and adds the bundle to it. replace: the bundle is mounted over /etc/ssl/certs/ca-certificates.crt and must hold every CA the container trusts."
+              }
+            }
+          },
           "service": {
             "type": "object",
             "properties": {
@@ -56,6 +68,18 @@
       "sra": {
         "type": "object",
         "properties": {
+          "customCA": {
+            "type": "object",
+            "properties": {
+              "mode": {
+                "enum": [
+                  "extend",
+                  "replace"
+                ],
+                "description": "extend: an init container copies the image trust store into writable volumes and adds the bundle to it. replace: the bundle is mounted over /etc/ssl/certs/ca-certificates.crt and must hold every CA the container trusts."
+              }
+            }
+          },
           "sshConfig": {
             "type": "object",
             "properties": {

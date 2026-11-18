@@ -1,0 +1,17 @@
+globalConfig:
+  gatewayAuth:
+    gatewayAccessType: access_key
+    gatewayCredentialsExistingSecret: akeyless-auth
+
+gateway:
+  service:
+    type: ClusterIP
+  customCA:
+    enabled: true
+    mode: replace
+    volumeSourceName: custom-ca
+
+sra:
+  sshConfig:
+    service:
+      type: ClusterIP

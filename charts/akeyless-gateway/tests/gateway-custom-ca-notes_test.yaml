@@ -1,0 +1,42 @@
+suite: akeyless-gateway custom CA notes
+templates:
+  - templates/NOTES.txt
+set:
+  version: 5.6.0
+tests:
+  - it: warns when extend stays on replace because the trust store is already mounted
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: corp-ca
+      gateway.deployment.extraVolumes:
+        - name: own-certs
+          configMap:
+            name: own-certs
+      gateway.deployment.extraVolumeMounts:
+        - name: own-certs
+          mountPath: /etc/ssl/certs
+    asserts:
+      - matchRegexRaw:
+          pattern: "gateway.customCA.mode is extend, but this release already mounts"
+      - matchRegexRaw:
+          pattern: "only the file in\\s+corp-ca"
+
+  - it: does not warn when extend extends the system bundle
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.volumeSourceName: corp-ca
+    asserts:
+      - notMatchRegexRaw:
+          pattern: "gateway.customCA.mode is extend"
+
+  - it: does not warn when the user chose replace
+    set:
+      gateway.customCA.enabled: true
+      gateway.customCA.mode: replace
+      gateway.customCA.volumeSourceName: corp-ca
+      gateway.deployment.extraVolumeMounts:
+        - name: own-certs
+          mountPath: /etc/ssl/certs
+    asserts:
+      - notMatchRegexRaw:
+          pattern: "gateway.customCA.mode is extend"
