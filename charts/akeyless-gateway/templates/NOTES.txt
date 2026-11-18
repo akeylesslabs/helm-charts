@@ -43,3 +43,11 @@ For more information:
         kubectl -n {{ $.Release.Namespace }} annotate --overwrite serviceaccount {{ include "akeyless-gateway.getServiceAccountName" $ }} {{ $key }}={{ $value }}
 {{- end }}
 {{- end }}
+{{- if and (include "akeyless-gateway.customCA.extend" .Values.gateway.customCA) (include "akeyless-gateway.customCA.gatewayTrustTaken" .) }}
+
+  ⚠️  gateway.customCA.mode is extend, but this release already mounts
+      /etc/ssl/certs or /usr/local/share/ca-certificates, so the Gateway
+      stays on replace: its CA bundle is only the file in
+      {{ .Values.gateway.customCA.volumeSourceName }}. Include the public roots in that
+      file, or remove the other mount to extend the system bundle.
+{{- end }}
