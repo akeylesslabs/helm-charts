@@ -46,12 +46,14 @@ spec:
             {{- if .Values.csi.extraArgs }}
               {{- toYaml .Values.csi.extraArgs | nindent 12 }}
             {{- end }}
+          {{- if or .Values.csi.azureObjectID .Values.csi.extraEnvironmentVars }}
           env:
             {{- if .Values.csi.azureObjectID }}
             - name: AKEYLESS_AZURE_OBJECT_ID
               value: {{ .Values.csi.azureObjectID | quote }}
             {{- end }}
             {{- include "akeyless.extraEnvironmentVars" (dict "extraEnvironmentVars" .Values.csi.extraEnvironmentVars) | nindent 12 }}
+          {{- end }}
           volumeMounts:
             - name: providervol
               mountPath: "/provider"

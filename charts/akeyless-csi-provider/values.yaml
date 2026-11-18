@@ -39,8 +39,8 @@ csi:
 
   image:
     repository: "akeyless/akeyless-csi-provider"
-    # Prefer a pinned release tag that includes fail-closed Mount (no CrashLoop on
-    # bad SecretProviderClass). Floating "latest" may lag GitHub main.
+    # Prefer a pinned release tag (no CrashLoop on bad SecretProviderClass).
+    # Floating "latest" may lag GitHub main.
     tag: "latest"
     pullPolicy: IfNotPresent
 

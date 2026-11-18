@@ -22,5 +22,5 @@ SecretProviderClass example:
   # leave akeylessAzureObjectID empty for WI / DefaultAzureCredential
 
 Invalid or unauthorized SecretProviderClass mounts should fail the Mount RPC
-only; the provider pod must stay Ready (fail-closed). If the provider
-CrashLoopBackOffs on mount errors, upgrade the image past the SEC-002 fix.
+only; the provider pod must stay Ready. Prefer a pinned csi.image.tag rather
+than floating "latest" so mount failures do not CrashLoop the provider.

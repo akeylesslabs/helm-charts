@@ -56,8 +56,8 @@ Alternatively, set `csi.azureObjectID` (or SPC `akeylessAzureObjectID`) to reque
 a specific user-assigned managed identity from IMDS — analogous to
 `globalConfig.gatewayAuth.azureObjectID` on the gateway chart.
 
-Pin `csi.image.tag` to a release that includes fail-closed Mount handling so a
-bad SecretProviderClass fails the mount only and does not CrashLoop the provider.
+Prefer a pinned `csi.image.tag` rather than floating `latest`, so a bad
+SecretProviderClass fails the mount only and does not CrashLoop the provider.
 
 See also: [Akeyless CSI Provider](https://github.com/akeylesslabs/akeyless-csi-provider)
 and [Akeyless Azure AD auth method](https://docs.akeyless.io/docs/azure-ad).
