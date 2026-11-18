@@ -89,6 +89,86 @@ extraObjects:
 
 ## Configuration
 
+### OAuth2 / JWT authentication
+
+Use this when the webhook and injected workloads should authenticate to Akeyless with
+a short-lived Kubernetes projected ServiceAccount token (oauth2/jwt auth method),
+instead of a static API key, cloud IAM, or the classic Kubernetes auth method.
+
+**When to use it**
+- You want per-ServiceAccount identity (`sub=system:serviceaccount:<ns>:<sa>`) without
+  storing long-lived credentials in the chart values.
+- Your cluster can issue projected tokens for a dedicated audience (not the Kubernetes
+  API audience), and Akeyless can validate them via JWKS.
+
+**When not to use it**
+- Existing installs that already use `api_key`, `k8s`, `aws_iam`, `azure_ad`, `gcp`, or
+  `universal_identity` and do not need projected-token auth.
+- Clusters or policies that cannot mint projected SA tokens with a custom audience.
+
+**Requirements:** injector image **0.42.0+** (Chart.appVersion). Image `0.41.0` and
+older reject `AKEYLESS_ACCESS_TYPE=jwt`. Leave `image.tag` empty to use Chart.appVersion,
+or set it explicitly to a JWT-capable tag.
+
+Set `env.AKEYLESS_ACCESS_TYPE` to `jwt` (alias `oauth2`) and enable
+`jwtProjectedToken` with a required `audience` that matches the Akeyless auth method.
+Do not put a static JWT in `env`. The chart fails the render if access type is
+jwt/oauth2 while `jwtProjectedToken.enabled` is false.
+
+```yaml
+env:
+  AKEYLESS_ACCESS_TYPE: jwt
+  AKEYLESS_ACCESS_ID: "<oauth2/jwt auth-method access id>"
+  # AKEYLESS_API_GW_URL: "https://your-gateway"  # optional; set only to force a Gateway
+
+jwtProjectedToken:
+  enabled: true
+  audience: akeyless.io   # dedicated audience; do not reuse the Kubernetes API audience
+```
+
+The chart mounts the projected token and sets `AKEYLESS_JWT_FILE` /
+`AKEYLESS_JWT_AUDIENCE` on the webhook Deployment. Workload pods receive their own
+projected token from the injector so init and sidecar refresh use the same identity.
+`expirationSeconds`, `mountPath`, and `volumeName` apply to the **webhook** pod only;
+workload tokens use a fixed 3600s mount at `/var/run/secrets/akeyless/jwt`.
+
+#### Authorization
+
+An oauth2/jwt auth method is not bound by Kubernetes namespace/SA lists. Scope it with
+`--force-sub-claims` and per-role `sub` associations (example):
+
+```bash
+akeyless auth-method create oauth2 --name k8s-injector-jwt \
+  --jwks-uri <cluster-or-gateway-jwks> --issuer <cluster-issuer> \
+  --audience akeyless.io --unique-identifier sub --force-sub-claims
+
+# Webhook identity (registry creds / restart rollout / cert events)
+akeyless assoc-role-am --role-name injector-webhook --am-name k8s-injector-jwt \
+  --sub-claims sub=system:serviceaccount:<release-ns>:<webhook-sa>
+
+# App workloads
+akeyless assoc-role-am --role-name app-a --am-name k8s-injector-jwt \
+  --sub-claims sub=system:serviceaccount:app-a:*
+```
+
+Without sub-claim associations, any service account that can mint a projected token
+with this audience can assume the linked role.
+
+### Webhook network access
+
+`/pods` has no caller authentication. Use a NetworkPolicy (or equivalent) so only
+the control plane can reach the webhook Service.
+
+## Upgrade notes
+
+Copy the bullets for a chart version into the matching GitHub Release notes when
+publishing that chart.
+
+### Chart 2.8.0
+
+- Adds opt-in `jwtProjectedToken` for `AKEYLESS_ACCESS_TYPE=jwt`/`oauth2` (requires
+  injector image 0.42.0+).
+
 ### Upgrading to chart 2.0.0
 
 The top-level `webhookFailurePolicy` value was removed. Move it under `mutatingWebhook.failurePolicy`:
