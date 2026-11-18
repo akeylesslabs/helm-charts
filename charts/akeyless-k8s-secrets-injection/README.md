@@ -168,9 +168,6 @@ publishing that chart.
 
 - Adds opt-in `jwtProjectedToken` for `AKEYLESS_ACCESS_TYPE=jwt`/`oauth2` (requires
   injector image 0.42.0+).
-- `.Values.env` entries are rendered with `| quote`. If you previously quoted values
-  yourself (for example `--set-string 'env.FOO="true"'`), remove the extra quotes so
-  the webhook does not see `"\"true\""`.
 
 ### Upgrading to chart 2.0.0
 
