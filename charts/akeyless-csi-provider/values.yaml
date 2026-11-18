@@ -39,23 +39,8 @@ csi:
 
   image:
     repository: "akeyless/akeyless-csi-provider"
-    # Prefer a pinned release tag that includes fail-closed Mount (no CrashLoop on
-    # bad SecretProviderClass). Floating "latest" may lag GitHub main.
     tag: "latest"
     pullPolicy: IfNotPresent
-
-  # Optional Azure managed-identity object ID for akeylessAccessType: azure_ad.
-  # Injected as AKEYLESS_AZURE_OBJECT_ID (same role as gatewayAuth.azureObjectID
-  # on the gateway chart). Leave empty when using AKS Workload Identity or the
-  # node IMDS default identity; set when a specific user-assigned MI object ID
-  # must be requested from IMDS.
-  azureObjectID: ""
-
-  # Extra environment variables for the provider container (key: value map).
-  # Example:
-  #   extraEnvironmentVars:
-  #     AKEYLESS_GCP_AUDIENCE: "akeyless.io"
-  extraEnvironmentVars: {}
 
   # volumes is a list of volumes made available to all containers. These are rendered
   # via toYaml rather than pre-processed like the extraVolumes value.

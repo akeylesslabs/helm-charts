@@ -50,14 +50,7 @@ csi:
 
 In your `SecretProviderClass`, use `akeylessAccessType: azure_ad` and leave
 `akeylessAzureObjectID` unset (empty) so token acquisition uses Workload Identity
-or the node IMDS default identity rather than a specific `object_id`.
-
-Alternatively, set `csi.azureObjectID` (or SPC `akeylessAzureObjectID`) to request
-a specific user-assigned managed identity from IMDS — analogous to
-`globalConfig.gatewayAuth.azureObjectID` on the gateway chart.
-
-Pin `csi.image.tag` to a release that includes fail-closed Mount handling so a
-bad SecretProviderClass fails the mount only and does not CrashLoop the provider.
+rather than the Azure IMDS endpoint.
 
 See also: [Akeyless CSI Provider](https://github.com/akeylesslabs/akeyless-csi-provider)
 and [Akeyless Azure AD auth method](https://docs.akeyless.io/docs/azure-ad).
