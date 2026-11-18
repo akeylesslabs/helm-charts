@@ -3,6 +3,8 @@
 This chart will install a mutating admission webhook, that injects an executable to containers in pods which than can request secrets from Akeyless Vault through environment variable definitions or local file on the container.
 This chart has been tested to work with Kubernetes version 1.16, and above. 
 
+The webhook accepts AdmissionReview `v1` and `v1beta1`. If `image.tag` is set to a version older than `0.41.0`, the chart registers only `v1beta1`, because older webhook images cannot answer `v1`.
+
 ## Before you start
 
 Before you install this chart you must create a namespace for it, this is due to the order in which the resources in the charts are applied (Helm collects all of the resources in a given Chart and it's dependencies, groups them by resource type, and then installs them in a predefined order (see [here](https://github.com/helm/helm/blob/master/pkg/releaseutil/kind_sorter.go#L31)).
