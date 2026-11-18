@@ -20,6 +20,9 @@ spec:
       labels:
         app: {{ template "vault-secrets-webhook.fullname" . }}
         release: {{ .Release.Name }}
+        {{- if .Values.deployment.labels }}
+        {{- toYaml .Values.deployment.labels | nindent 8 }}
+        {{- end }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/apiservice-webhook.yaml") . | sha256sum }}
         {{- if and .Values.metrics.enabled .Values.metrics.prometheus.enabled }}
