@@ -89,21 +89,31 @@ extraObjects:
 
 ## Configuration
 
-### Upgrade notes
-
-- `env` values are now rendered with `| quote`. If you previously quoted values
-  yourself (for example `--set-string 'env.FOO="true"'`), remove the extra quotes
-  so the webhook does not see `"\"true\""`.
-
 ### OAuth2 / JWT authentication
 
-Requires injector image **0.42.0+** (`AKEYLESS_ACCESS_TYPE=jwt`). Published 0.41.0
-does not include OAuth2/JWT.
+Use this when the webhook and injected workloads should authenticate to Akeyless with
+a short-lived Kubernetes projected ServiceAccount token (oauth2/jwt auth method),
+instead of a static API key, cloud IAM, or the classic Kubernetes auth method.
 
-For `AKEYLESS_ACCESS_TYPE: jwt` (alias `oauth2`), enable a kubelet-rotated projected
-ServiceAccount token. Do not put a static JWT in `env`. The audience is required and
-must match the Akeyless oauth2/jwt auth method. Set `jwtProjectedToken.enabled=true`
-whenever access type is jwt/oauth2 (the chart fails the render otherwise).
+**When to use it**
+- You want per-ServiceAccount identity (`sub=system:serviceaccount:<ns>:<sa>`) without
+  storing long-lived credentials in the chart values.
+- Your cluster can issue projected tokens for a dedicated audience (not the Kubernetes
+  API audience), and Akeyless can validate them via JWKS.
+
+**When not to use it**
+- Existing installs that already use `api_key`, `k8s`, `aws_iam`, `azure_ad`, `gcp`, or
+  `universal_identity` and do not need projected-token auth.
+- Clusters or policies that cannot mint projected SA tokens with a custom audience.
+
+**Requirements:** injector image **0.42.0+** (Chart.appVersion). Image `0.41.0` and
+older reject `AKEYLESS_ACCESS_TYPE=jwt`. Leave `image.tag` empty to use Chart.appVersion,
+or set it explicitly to a JWT-capable tag.
+
+Set `env.AKEYLESS_ACCESS_TYPE` to `jwt` (alias `oauth2`) and enable
+`jwtProjectedToken` with a required `audience` that matches the Akeyless auth method.
+Do not put a static JWT in `env`. The chart fails the render if access type is
+jwt/oauth2 while `jwtProjectedToken.enabled` is false.
 
 ```yaml
 env:
@@ -148,6 +158,19 @@ with this audience can assume the linked role.
 
 `/pods` has no caller authentication. Use a NetworkPolicy (or equivalent) so only
 the control plane can reach the webhook Service.
+
+## Upgrade notes
+
+Copy the bullets for a chart version into the matching GitHub Release notes when
+publishing that chart.
+
+### Chart 2.8.0
+
+- Adds opt-in `jwtProjectedToken` for `AKEYLESS_ACCESS_TYPE=jwt`/`oauth2` (requires
+  injector image 0.42.0+).
+- `.Values.env` entries are rendered with `| quote`. If you previously quoted values
+  yourself (for example `--set-string 'env.FOO="true"'`), remove the extra quotes so
+  the webhook does not see `"\"true\""`.
 
 ### Upgrading to chart 2.0.0
 

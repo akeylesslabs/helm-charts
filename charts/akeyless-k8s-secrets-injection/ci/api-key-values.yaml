@@ -1,9 +1,6 @@
 replicaCount: 1
 
-# Pin last published injector until 0.42.0 (JWT) is released with this chart.
-image:
-  tag: "0.41.0"
-
+# Leave image.tag unset so the Deployment uses Chart.appVersion.
 env:
   AKEYLESS_ACCESS_TYPE: api_key
   AKEYLESS_ACCESS_ID: p-12345678911123
