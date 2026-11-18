@@ -1,0 +1,123 @@
+suite: akeyless-gateway clusterCache scheduling
+templates:
+  - templates/akeyless-cache/cache.yaml
+tests:
+  - it: inherits gateway tolerations when the cache sets none
+    set:
+      gateway.deployment.tolerations:
+        - key: gateway-only
+          operator: Equal
+          value: "yes"
+          effect: NoSchedule
+    asserts:
+      - equal:
+          path: spec.template.spec.tolerations[0].key
+          value: gateway-only
+
+  - it: prefers its own tolerations over the gateway's
+    set:
+      gateway.deployment.tolerations:
+        - key: gateway-only
+          operator: Equal
+          value: "yes"
+          effect: NoSchedule
+      globalConfig.clusterCache.tolerations:
+        - key: cache-only
+          operator: Equal
+          value: "yes"
+          effect: NoSchedule
+    asserts:
+      - equal:
+          path: spec.template.spec.tolerations[0].key
+          value: cache-only
+      - lengthEqual:
+          path: spec.template.spec.tolerations
+          count: 1
+
+  - it: inherits gateway nodeSelector when the cache sets none
+    set:
+      gateway.deployment.nodeSelector:
+        role: gateway
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector.role
+          value: gateway
+
+  - it: prefers its own nodeSelector over the gateway's
+    set:
+      gateway.deployment.nodeSelector:
+        role: gateway
+      globalConfig.clusterCache.nodeSelector:
+        role: cache
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector.role
+          value: cache
+
+  - it: inherits gateway topologySpreadConstraints when the cache sets none
+    set:
+      gateway.deployment.topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+    asserts:
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[0].topologyKey
+          value: topology.kubernetes.io/zone
+
+  - it: prefers its own topologySpreadConstraints over the gateway's
+    set:
+      gateway.deployment.topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+      globalConfig.clusterCache.topologySpreadConstraints:
+        - maxSkew: 2
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+    asserts:
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[0].topologyKey
+          value: kubernetes.io/hostname
+      - lengthEqual:
+          path: spec.template.spec.topologySpreadConstraints
+          count: 1
+
+  - it: prefers its own affinity over the gateway's
+    set:
+      gateway.deployment.affinity:
+        enabled: true
+        data:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: role
+                      operator: In
+                      values: [gateway]
+      globalConfig.clusterCache.affinity:
+        enabled: true
+        data:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: role
+                      operator: In
+                      values: [cache]
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].values[0]
+          value: cache
+
+  - it: gives the cache no tolerations when explicitly emptied while the gateway has some
+    set:
+      gateway.deployment.tolerations:
+        - key: gateway-only
+          operator: Equal
+          value: "yes"
+          effect: NoSchedule
+      globalConfig.clusterCache.tolerations: []
+    asserts:
+      - notExists:
+          path: spec.template.spec.tolerations
