@@ -24,6 +24,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - id: akeyless-ci
+        uses: ./.github/actions/akeyless-ci-token
+        with:
+          app-id: ${{ secrets.AKEYLESS_CI_APP_ID }}
+          app-private-key: ${{ secrets.AKEYLESS_CI_APP_PRIVATE_KEY }}
+
       - name: Configure Git
         run: |
           git config user.name "$GITHUB_ACTOR"
@@ -40,7 +46,7 @@ jobs:
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@a0d2dc62c5e491af8ef6ba64a2e02bcf3fb33aa1 # v1
         env:
-          CR_TOKEN: "${{ secrets.AKEYLESS_CI_GITHUB_TOKEN }}"
+          CR_TOKEN: "${{ steps.akeyless-ci.outputs.token }}"
 
   update-latest-helm-chart-version:
     if: github.event_name == 'deployment' && github.event.deployment.task == 'update-latest-version'
@@ -57,7 +63,19 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0
-          token: ${{ secrets.AKEYLESS_CI_COMMIT_PUSH_TOKEN }}
+
+      - id: akeyless-ci
+        uses: ./.github/actions/akeyless-ci-token
+        with:
+          app-id: ${{ secrets.AKEYLESS_CI_APP_ID }}
+          app-private-key: ${{ secrets.AKEYLESS_CI_APP_PRIVATE_KEY }}
+          repositories: helm-charts,akeyless-k8s-manifests
+
+      - name: Checkout with akeyless-ci token
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+          token: ${{ steps.akeyless-ci.outputs.token }}
 
       - name: Configure Git
         run: |
@@ -70,11 +88,37 @@ jobs:
           GITHUB_CONTEXT: ${{ toJson(github.event.deployment) }}
         run: .github/scripts/latest_version_release.sh
 
+      - name: Create Pull Request
+        if: steps.release.outputs.released == 'true'
+        env:
+          GH_TOKEN: ${{ steps.akeyless-ci.outputs.token }}
+        run: |
+          gh pr create \
+            --title "Updated ${{ github.event.deployment.payload.service }} helm chart version to latest: ${{ github.event.deployment.payload.app_version }}" \
+            --body "This PR is auto-generated to bump the helm chart version(s) following a deployment event for \`${{ github.event.deployment.payload.service }}\`." \
+            --head "${{ steps.release.outputs.bump_branch }}" \
+            --base main
+
+      - name: Merge Pull Request
+        if: steps.release.outputs.released == 'true'
+        env:
+          GH_TOKEN: ${{ steps.akeyless-ci.outputs.token }}
+        run: |
+          for attempt in $(seq 1 30); do
+            if gh pr merge "${{ steps.release.outputs.bump_branch }}" --squash --delete-branch; then
+              exit 0
+            fi
+            echo "PR not mergeable yet (attempt ${attempt}/30) -- waiting on the required chart-test check..."
+            sleep 20
+          done
+          echo "::error::PR for ${{ steps.release.outputs.bump_branch }} did not become mergeable after 30 attempts (10 minutes)"
+          exit 1
+
       - name: Dispatch manifest update
         if: steps.release.outputs.released == 'true'
         uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9
         with:
-          github-token: ${{ secrets.AKEYLESS_CI_COMMIT_PUSH_TOKEN }}
+          github-token: ${{ steps.akeyless-ci.outputs.token }}
           script: |
             await github.rest.actions.createWorkflowDispatch({
               owner: 'akeylesslabs',
