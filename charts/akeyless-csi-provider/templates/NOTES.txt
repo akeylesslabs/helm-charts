@@ -1,0 +1,26 @@
+Akeyless CSI Provider has been installed.
+
+Azure AD (azure_ad) authentication
+----------------------------------
+The provider DaemonSet obtains the Azure token used for Akeyless azure_ad auth
+(not the application pod). On AKS Workload Identity:
+
+  csi:
+    serviceAccount:
+      annotations:
+        azure.workload.identity/client-id: "<MI_CLIENT_ID>"
+    pod:
+      labels:
+        azure.workload.identity/use: "true"
+
+Or set csi.azureObjectID to a user-assigned managed identity object ID for IMDS.
+
+SecretProviderClass example:
+
+  akeylessAccessType: azure_ad
+  akeylessAccessID: "p-xxxxxxxx"
+  # leave akeylessAzureObjectID empty for WI / DefaultAzureCredential
+
+Invalid or unauthorized SecretProviderClass mounts should fail the Mount RPC
+only; the provider pod must stay Ready. Prefer a pinned csi.image.tag rather
+than floating "latest" so mount failures do not CrashLoop the provider.
