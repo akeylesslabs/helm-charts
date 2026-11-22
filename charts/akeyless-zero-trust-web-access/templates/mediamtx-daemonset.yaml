@@ -122,6 +122,31 @@ spec:
       targetPort: {{ .Values.mediamtx.iceUDPPort }}
       protocol: UDP
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ printf "%s-mediamtx-discovery" .Release.Name }}
+  labels:
+    app: mediamtx
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  clusterIP: None
+  {{- with .Values.ipFamilyPolicy }}
+  ipFamilyPolicy: {{ . }}
+  {{- end }}
+  {{- with .Values.ipFamilies }}
+  ipFamilies:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  selector:
+    app: mediamtx
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - name: whip
+      port: {{ .Values.mediamtx.webrtcPort }}
+      targetPort: {{ .Values.mediamtx.webrtcPort }}
+      protocol: TCP
+---
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:

@@ -133,7 +133,7 @@ The web worker runs a Chromium-based browser (`akeyless/zero-trust-web-worker`).
 1. Rewrite any custom `webWorker.config.policies` from Firefox schema to Chrome Enterprise JSON.
 2. Review the worker pod spec changes (`/config` emptyDir, policy mount path) before rollout.
 3. Open the live view's network path. Browsers now get the video straight from a media server on each node, over UDP `mediamtx.iceUDPPort` (default `8189`), on top of the dispatcher's port. Allow it from users' networks to every node that runs workers, or to the addresses in `mediamtx.additionalHosts`. There is no TCP fallback. The port is a hostPort, so the cluster's CNI must support hostPort, and two releases in one cluster need different ports. Namespaces under Pod Security `baseline` or `restricted`, and OpenShift's `restricted` SCC, refuse a hostPort, and there the media server does not start. Install into a namespace that allows it.
-4. Keep the supported layout: one dispatcher per worker pool, on the same node as its workers.
+4. Keep the supported layout: one dispatcher per worker pool.
 5. Recording now comes from the media server, out of the live stream:
    - The 4 hour cap is gone. A session is recorded for its full length, in files of up to 24 hours.
    - The live view and the recording fail together.

@@ -131,7 +131,7 @@ spec:
 {{- $s3 := $rec.s3 | default dict }}
 {{- $sse := $s3.sse | default dict }}
             - name: MEDIA_SERVER
-              value: {{ printf "%s-mediamtx:%v" .Release.Name .Values.mediamtx.webrtcPort | quote }}
+              value: {{ printf "%s-mediamtx-discovery:%v" .Release.Name .Values.mediamtx.webrtcPort | quote }}
             - name: ENABLE_RECORDING
               value: {{ ternary "true" "false" ($rec.enabled | default false) | quote }}
             - name: ENABLE_RECORDING_UPLOAD
