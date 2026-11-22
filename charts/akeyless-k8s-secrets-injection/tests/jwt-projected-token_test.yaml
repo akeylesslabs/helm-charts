@@ -1,0 +1,228 @@
+suite: akeyless-secrets-injection jwt projected token
+release:
+  name: injector
+  namespace: akeyless
+tests:
+  - it: "does not mount a projected JWT volume by default"
+    template: templates/webhook-deployment.yaml
+    asserts:
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: akeyless-jwt
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: AKEYLESS_JWT_FILE
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: AKEYLESS_JWT_AUDIENCE
+
+  - it: "fails when audience is whitespace only"
+    template: templates/webhook-deployment.yaml
+    set:
+      jwtProjectedToken.enabled: true
+      jwtProjectedToken.audience: "   "
+    asserts:
+      - failedTemplate:
+          errorMessage: "jwtProjectedToken.audience is required when jwtProjectedToken.enabled is true"
+
+  - it: "trims audience when rendering the projected token and env"
+    template: templates/webhook-deployment.yaml
+    set:
+      jwtProjectedToken.enabled: true
+      jwtProjectedToken.audience: " akeyless.io "
+      env.AKEYLESS_ACCESS_TYPE: jwt
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[1].projected.sources[0].serviceAccountToken.audience
+          value: akeyless.io
+      - equal:
+          path: spec.template.spec.containers[0].env[?(@.name=="AKEYLESS_JWT_AUDIENCE")].value
+          value: akeyless.io
+
+  - it: "mounts a projected SA token with audience when enabled"
+    template: templates/webhook-deployment.yaml
+    set:
+      jwtProjectedToken.enabled: true
+      jwtProjectedToken.audience: akeyless.io
+      env.AKEYLESS_ACCESS_TYPE: jwt
+      env.AKEYLESS_ACCESS_ID: p-jwt
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: akeyless-jwt
+            projected:
+              sources:
+                - serviceAccountToken:
+                    path: token
+                    expirationSeconds: 3600
+                    audience: akeyless.io
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: akeyless-jwt
+            mountPath: /var/run/secrets/akeyless/jwt
+            readOnly: true
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: AKEYLESS_JWT_FILE
+            value: /var/run/secrets/akeyless/jwt/token
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: AKEYLESS_JWT_AUDIENCE
+            value: akeyless.io
+
+  - it: "treats access type case-insensitively"
+    template: templates/webhook-deployment.yaml
+    set:
+      jwtProjectedToken.enabled: false
+      env.AKEYLESS_ACCESS_TYPE: JWT
+    asserts:
+      - failedTemplate:
+          errorMessage: "env.AKEYLESS_ACCESS_TYPE is jwt/oauth2 but jwtProjectedToken.enabled is false. Enable jwtProjectedToken and set its audience."
+
+  - it: "fails when enabled without audience"
+    template: templates/webhook-deployment.yaml
+    set:
+      jwtProjectedToken.enabled: true
+      jwtProjectedToken.audience: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: "jwtProjectedToken.audience is required when jwtProjectedToken.enabled is true"
+
+  - it: "fails when access type is jwt but projected token is disabled"
+    template: templates/webhook-deployment.yaml
+    set:
+      jwtProjectedToken.enabled: false
+      env.AKEYLESS_ACCESS_TYPE: jwt
+    asserts:
+      - failedTemplate:
+          errorMessage: "env.AKEYLESS_ACCESS_TYPE is jwt/oauth2 but jwtProjectedToken.enabled is false. Enable jwtProjectedToken and set its audience."
+
+  - it: "fails when access type is oauth2 but projected token is disabled"
+    template: templates/webhook-deployment.yaml
+    set:
+      jwtProjectedToken.enabled: false
+      env.AKEYLESS_ACCESS_TYPE: oauth2
+    asserts:
+      - failedTemplate:
+          errorMessage: "env.AKEYLESS_ACCESS_TYPE is jwt/oauth2 but jwtProjectedToken.enabled is false. Enable jwtProjectedToken and set its audience."
+
+  - it: "fails when expirationSeconds is below 600"
+    template: templates/webhook-deployment.yaml
+    set:
+      jwtProjectedToken.enabled: true
+      jwtProjectedToken.audience: akeyless.io
+      jwtProjectedToken.expirationSeconds: 60
+    asserts:
+      - failedTemplate:
+          errorMessage: "jwtProjectedToken.expirationSeconds must be between 600 and 4294967295"
+
+  - it: "fails when expirationSeconds is not an integer"
+    template: templates/webhook-deployment.yaml
+    set:
+      jwtProjectedToken.enabled: true
+      jwtProjectedToken.audience: akeyless.io
+      jwtProjectedToken.expirationSeconds: 1h
+    asserts:
+      - failedTemplate:
+          errorMessage: "jwtProjectedToken.expirationSeconds must be an integer number of seconds"
+
+  - it: "fails when mountPath collides with the ServiceAccount token path"
+    template: templates/webhook-deployment.yaml
+    set:
+      jwtProjectedToken.enabled: true
+      jwtProjectedToken.audience: akeyless.io
+      jwtProjectedToken.mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+    asserts:
+      - failedTemplate:
+          errorMessage: "jwtProjectedToken.mountPath must not overlap the ServiceAccount token path"
+
+  - it: "fails when mountPath is a parent of the ServiceAccount token path"
+    template: templates/webhook-deployment.yaml
+    set:
+      jwtProjectedToken.enabled: true
+      jwtProjectedToken.audience: akeyless.io
+      jwtProjectedToken.mountPath: /var/run/secrets
+    asserts:
+      - failedTemplate:
+          errorMessage: "jwtProjectedToken.mountPath must not overlap the ServiceAccount token path"
+
+  - it: "fails when volumeName collides with serving-cert"
+    template: templates/webhook-deployment.yaml
+    set:
+      jwtProjectedToken.enabled: true
+      jwtProjectedToken.audience: akeyless.io
+      jwtProjectedToken.volumeName: serving-cert
+    asserts:
+      - failedTemplate:
+          errorMessage: "jwtProjectedToken.volumeName must be set and must not be serving-cert"
+
+  - it: "fails when env audience conflicts with jwtProjectedToken.audience"
+    template: templates/webhook-deployment.yaml
+    set:
+      jwtProjectedToken.enabled: true
+      jwtProjectedToken.audience: akeyless.io
+      env.AKEYLESS_ACCESS_TYPE: jwt
+      env.AKEYLESS_JWT_AUDIENCE: wrong-aud
+    asserts:
+      - failedTemplate:
+          errorMessage: "env.AKEYLESS_JWT_AUDIENCE conflicts with jwtProjectedToken.audience; remove it from env or match the projected audience"
+
+  - it: "skips matching JWT env keys from Values.env when projected token is enabled"
+    template: templates/webhook-deployment.yaml
+    set:
+      jwtProjectedToken.enabled: true
+      jwtProjectedToken.audience: akeyless.io
+      env.AKEYLESS_ACCESS_TYPE: jwt
+      env.AKEYLESS_JWT_FILE: /var/run/secrets/akeyless/jwt/token
+      env.AKEYLESS_JWT_AUDIENCE: akeyless.io
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[?(@.name=="AKEYLESS_JWT_FILE")].value
+          value: /var/run/secrets/akeyless/jwt/token
+      - equal:
+          path: spec.template.spec.containers[0].env[?(@.name=="AKEYLESS_JWT_AUDIENCE")].value
+          value: akeyless.io
+
+  - it: "honors custom volumeName mountPath and expirationSeconds"
+    template: templates/webhook-deployment.yaml
+    set:
+      jwtProjectedToken.enabled: true
+      jwtProjectedToken.audience: custom-aud
+      jwtProjectedToken.volumeName: custom-jwt-vol
+      jwtProjectedToken.mountPath: /custom/jwt
+      jwtProjectedToken.expirationSeconds: 7200
+      env.AKEYLESS_ACCESS_TYPE: jwt
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: custom-jwt-vol
+            projected:
+              sources:
+                - serviceAccountToken:
+                    path: token
+                    expirationSeconds: 7200
+                    audience: custom-aud
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: custom-jwt-vol
+            mountPath: /custom/jwt
+            readOnly: true
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: AKEYLESS_JWT_FILE
+            value: /custom/jwt/token
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: AKEYLESS_JWT_AUDIENCE
+            value: custom-aud
