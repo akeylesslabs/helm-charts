@@ -167,8 +167,7 @@ publishing that chart.
 ### Chart 2.8.1
 
 - Drops the temporary chart-testing image pin now that injector `0.42.0` is published;
-  ct installs use Chart.appVersion. Adds `ci/jwt-values.yaml` so install CI covers
-  `jwtProjectedToken`.
+  ct installs use Chart.appVersion.
 
 ### Chart 2.8.0
 
