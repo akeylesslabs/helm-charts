@@ -48,3 +48,9 @@ tests:
           content:
             name: MEDIA_SERVER
             value: ztwa-mediamtx-discovery:8889
+
+  - it: "lets workers run on any node"
+    template: templates/web-worker-deployment.yaml
+    asserts:
+      - notExists:
+          path: spec.template.spec.affinity.podAffinity
