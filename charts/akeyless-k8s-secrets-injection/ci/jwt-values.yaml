@@ -1,0 +1,11 @@
+replicaCount: 1
+
+# Exercises jwtProjectedToken with Chart.appVersion (0.42.0+).
+# Access ID is a placeholder; ct only needs the webhook Deployment to become Ready.
+env:
+  AKEYLESS_ACCESS_TYPE: jwt
+  AKEYLESS_ACCESS_ID: p-12345678911123
+
+jwtProjectedToken:
+  enabled: true
+  audience: akeyless.io

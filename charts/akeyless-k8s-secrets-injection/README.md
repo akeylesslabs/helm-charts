@@ -164,6 +164,12 @@ the control plane can reach the webhook Service.
 Copy the bullets for a chart version into the matching GitHub Release notes when
 publishing that chart.
 
+### Chart 2.8.1
+
+- Drops the temporary chart-testing image pin now that injector `0.42.0` is published;
+  ct installs use Chart.appVersion. Adds `ci/jwt-values.yaml` so install CI covers
+  `jwtProjectedToken`.
+
 ### Chart 2.8.0
 
 - Adds opt-in `jwtProjectedToken` for `AKEYLESS_ACCESS_TYPE=jwt`/`oauth2` (requires
