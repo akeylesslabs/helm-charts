@@ -565,13 +565,8 @@ gateway:
     # Name of the ConfigMap or Secret containing the custom CA certificates.
     volumeSourceName: ""  # Must have a key named 'ca-certificates.crt'.
 
-  ## Claude (Anthropic) Workload Identity Federation, Token Source = File.
-  ## Mounts a projected service account token at /var/run/secrets/anthropic.com/token,
-  ## the file the Gateway presents to Anthropic for a Claude target that uses Gateway Cloud Identity.
-  ## In the Claude Console, register the cluster's service account issuer and set the federation rule
-  ## subject to system:serviceaccount:<namespace>:<service account>.
-  ## Keep expirationSeconds at 600 and set token_lifetime_seconds to 1200 or more on the rule:
-  ## Anthropic accepts each token (jti) once, so the token must rotate before the access token expires.
+  ## Claude Workload Identity Federation (Token Source = File): mounts an Anthropic-audience
+  ## service account token at /var/run/secrets/anthropic.com/token. See README.
   anthropicWorkloadIdentity:
     enabled: false
     audience: https://api.anthropic.com
