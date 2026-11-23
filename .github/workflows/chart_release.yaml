@@ -25,10 +25,10 @@ jobs:
           fetch-depth: 0
 
       - id: akeyless-ci
-        uses: ./.github/actions/akeyless-ci-token
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
         with:
           app-id: ${{ secrets.AKEYLESS_CI_APP_ID }}
-          app-private-key: ${{ secrets.AKEYLESS_CI_APP_PRIVATE_KEY }}
+          private-key: ${{ secrets.AKEYLESS_CI_APP_PRIVATE_KEY }}
 
       - name: Configure Git
         run: |
@@ -59,19 +59,14 @@ jobs:
       charts: ${{ steps.release.outputs.charts }}
       updated_charts_summary: ${{ steps.release.outputs.updated_charts_summary }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-        with:
-          fetch-depth: 0
-
       - id: akeyless-ci
-        uses: ./.github/actions/akeyless-ci-token
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
         with:
           app-id: ${{ secrets.AKEYLESS_CI_APP_ID }}
-          app-private-key: ${{ secrets.AKEYLESS_CI_APP_PRIVATE_KEY }}
+          private-key: ${{ secrets.AKEYLESS_CI_APP_PRIVATE_KEY }}
           repositories: helm-charts,akeyless-k8s-manifests
 
-      - name: Checkout with akeyless-ci token
+      - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0

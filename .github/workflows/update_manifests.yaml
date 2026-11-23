@@ -10,17 +10,14 @@ jobs:
     permissions:
       contents: write
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-
     - id: akeyless-ci
-      uses: ./.github/actions/akeyless-ci-token
+      uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
       with:
         app-id: ${{ secrets.AKEYLESS_CI_APP_ID }}
-        app-private-key: ${{ secrets.AKEYLESS_CI_APP_PRIVATE_KEY }}
+        private-key: ${{ secrets.AKEYLESS_CI_APP_PRIVATE_KEY }}
         repositories: helm-charts,akeyless-k8s-manifests
 
-    - name: Checkout with akeyless-ci token
+    - name: Checkout
       uses: actions/checkout@v3
       with:
         token: ${{ steps.akeyless-ci.outputs.token }}
