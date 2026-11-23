@@ -44,12 +44,13 @@
               "enabled": { "type": "boolean" },
               "audience": {
                 "type": "string",
-                "minLength": 1,
+                "pattern": "\\S",
                 "description": "Audience of the projected token. Must match the aud the Claude Console federation rule expects."
               },
               "expirationSeconds": {
                 "type": "integer",
                 "minimum": 600,
+                "maximum": 4294967295,
                 "description": "Lifetime of the projected token. Kubernetes requires at least 600 and rotates the token after 80% of it."
               }
             }

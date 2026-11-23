@@ -115,11 +115,16 @@ spec:
             claimName: {{ .Values.gateway.persistence.existingClaim | default (printf "%s-pvc" (include "akeyless-gateway.fullname" .)) }}
       {{- end }}
       {{- if .Values.gateway.anthropicWorkloadIdentity.enabled }}
+      {{- range .Values.gateway.deployment.extraVolumeMounts }}
+      {{- if eq (trimSuffix "/" (toString .mountPath)) "/var/run/secrets/anthropic.com" }}
+      {{- fail "gateway.anthropicWorkloadIdentity.enabled mounts /var/run/secrets/anthropic.com; remove that path from gateway.deployment.extraVolumeMounts (and its volume from extraVolumes)" }}
+      {{- end }}
+      {{- end }}
         - name: anthropic-wif-token
           projected:
             sources:
               - serviceAccountToken:
-                  audience: {{ .Values.gateway.anthropicWorkloadIdentity.audience | default "https://api.anthropic.com" | quote }}
+                  audience: {{ .Values.gateway.anthropicWorkloadIdentity.audience | default "https://api.anthropic.com" | trim | quote }}
                   expirationSeconds: {{ .Values.gateway.anthropicWorkloadIdentity.expirationSeconds | default 600 | int }}
                   path: token
       {{- end }}

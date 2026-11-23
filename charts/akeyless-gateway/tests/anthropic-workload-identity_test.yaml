@@ -5,10 +5,22 @@ set:
   globalConfig.gatewayAuth.gatewayAccessId: p-xxxxxxxxxxxx
   globalConfig.gatewayAuth.gatewayAccessType: azure_ad
 tests:
-  - it: disabled by default renders no anthropic token volume
+  - it: disabled by default renders no anthropic token volume or mount
+    set:
+      gateway.deployment.extraVolumeMounts:
+        - name: extra
+          mountPath: /extra
+      gateway.deployment.extraVolumes:
+        - name: extra
+          emptyDir: {}
     asserts:
       - notContains:
           path: spec.template.spec.volumes
+          content:
+            name: anthropic-wif-token
+          any: true
+      - notContains:
+          path: spec.template.spec.containers[0].volumeMounts
           content:
             name: anthropic-wif-token
           any: true
@@ -79,4 +91,43 @@ tests:
       gateway.anthropicWorkloadIdentity.enabled: true
       gateway.anthropicWorkloadIdentity.expirationSeconds: 300
     asserts:
-      - failedTemplate: {}
+      - failedTemplate:
+          errorPattern: "expirationSeconds"
+
+  - it: rejects a lifetime above the Kubernetes maximum
+    set:
+      gateway.anthropicWorkloadIdentity.enabled: true
+      gateway.anthropicWorkloadIdentity.expirationSeconds: 4294967296
+    asserts:
+      - failedTemplate:
+          errorPattern: "expirationSeconds"
+
+  - it: rejects a blank audience
+    set:
+      gateway.anthropicWorkloadIdentity.enabled: true
+      gateway.anthropicWorkloadIdentity.audience: "   "
+    asserts:
+      - failedTemplate:
+          errorPattern: "audience"
+
+  - it: trims the audience
+    set:
+      gateway.anthropicWorkloadIdentity.enabled: true
+      gateway.anthropicWorkloadIdentity.audience: " https://api.anthropic.com "
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[?(@.name == "anthropic-wif-token")].projected.sources[0].serviceAccountToken.audience
+          value: https://api.anthropic.com
+
+  - it: fails when extraVolumeMounts already uses the anthropic path
+    set:
+      gateway.anthropicWorkloadIdentity.enabled: true
+      gateway.deployment.extraVolumes:
+        - name: manual
+          emptyDir: {}
+      gateway.deployment.extraVolumeMounts:
+        - name: manual
+          mountPath: /var/run/secrets/anthropic.com/
+    asserts:
+      - failedTemplate:
+          errorPattern: "remove that path from gateway.deployment.extraVolumeMounts"

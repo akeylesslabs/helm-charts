@@ -104,12 +104,17 @@ gateway:
     # expirationSeconds: 600
 ```
 
+Requires Gateway 5.7.0 or later (Claude target with Gateway Cloud Identity). Scanning Anthropic with an `org:admin` rule needs the first Gateway release after 5.7.1. On an older Gateway the value only adds an unused file.
+
+If you already mount a token at `/var/run/secrets/anthropic.com` through `gateway.deployment.extraVolumes` and `extraVolumeMounts`, remove that volume and mount before you enable the value. The chart fails the render otherwise, because the API server rejects two mounts at one path.
+
 In the Claude Console (Settings → Workload identity):
 
 - Register the cluster's service account issuer (`kubectl get --raw /.well-known/openid-configuration` prints it). Anthropic must reach its discovery document and JWKS; on AKS, enable the OIDC issuer first. A cluster whose issuer is not public can use inline keys instead, which must be updated after every signing key rotation.
 - Create a federation rule with subject `system:serviceaccount:<namespace>:<service account>`, audience `https://api.anthropic.com`, and `token_lifetime_seconds` of 1200 or more.
+  The chart sets the service account from `globalConfig.serviceAccount` (the release full name when `create: true`). Read it with `kubectl -n <namespace> get deploy <release>-akeyless-gateway -o jsonpath='{.spec.template.spec.serviceAccountName}'`.
 
-Keep `expirationSeconds` at 600. Anthropic accepts each token (`jti`) once, and Kubernetes rotates the token after 80% of its lifetime, so a longer lifetime makes refreshes fail until the token rotates. One Gateway token serves one set of Claude federation IDs.
+Keep `expirationSeconds` at 600. Anthropic accepts each token (`jti`) once, and Kubernetes rotates the token after 80% of its lifetime, so a longer lifetime makes refreshes fail until the token rotates. One Gateway token serves one set of Claude federation IDs. After the Gateway process restarts inside the same pod (for example an auto-update), the token in the file was already exchanged, so Anthropic refuses it (`jti_reused`) until the kubelet rotates the file, about 8 minutes with 600 s. A new pod gets a new token and is not affected.
 
 ## Custom CA
 
