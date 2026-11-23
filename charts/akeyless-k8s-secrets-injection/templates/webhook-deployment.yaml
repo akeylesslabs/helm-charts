@@ -4,8 +4,8 @@ metadata:
   name: {{ template "vault-secrets-webhook.fullname" . }}
   labels:
     {{- include "vault-secrets-webhook.labels" . | nindent 4 }}
-    {{- if .Values.deployment.labels }}
-      {{- toYaml .Values.deployment.labels | nindent 4 }}
+    {{- with omit (.Values.deployment.labels | default dict) "app" "release" }}
+    {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
   {{- if and (eq (include "deployment.type" $) "Deployment") (not .Values.HPA.enabled) }}
@@ -20,8 +20,8 @@ spec:
       labels:
         app: {{ template "vault-secrets-webhook.fullname" . }}
         release: {{ .Release.Name }}
-        {{- if .Values.deployment.labels }}
-        {{- toYaml .Values.deployment.labels | nindent 8 }}
+        {{- with omit (.Values.deployment.labels | default dict) "app" "release" }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/apiservice-webhook.yaml") . | sha256sum }}
