@@ -92,6 +92,25 @@ gateway:
         readOnly: true
 ```
 
+## Claude Workload Identity Federation
+
+A Claude target that uses Gateway Cloud Identity with Token Source `File` reads its identity token from `/var/run/secrets/anthropic.com/token`. The default service account token at `/var/run/secrets/kubernetes.io/serviceaccount/token` cannot be used: its audience is the Kubernetes API server, and the Gateway does not read that path. Enable `gateway.anthropicWorkloadIdentity` to mount a token for Anthropic:
+
+```yaml
+gateway:
+  anthropicWorkloadIdentity:
+    enabled: true
+    # audience: https://api.anthropic.com
+    # expirationSeconds: 600
+```
+
+In the Claude Console (Settings → Workload identity):
+
+- Register the cluster's service account issuer (`kubectl get --raw /.well-known/openid-configuration` prints it). Anthropic must reach its discovery document and JWKS; on AKS, enable the OIDC issuer first. A cluster whose issuer is not public can use inline keys instead, which must be updated after every signing key rotation.
+- Create a federation rule with subject `system:serviceaccount:<namespace>:<service account>`, audience `https://api.anthropic.com`, and `token_lifetime_seconds` of 1200 or more.
+
+Keep `expirationSeconds` at 600. Anthropic accepts each token (`jti`) once, and Kubernetes rotates the token after 80% of its lifetime, so a longer lifetime makes refreshes fail until the token rotates. One Gateway token serves one set of Claude federation IDs.
+
 ## Custom CA
 
 Environments that re-sign outbound TLS with an internal CA (a TLS-intercepting proxy), or that reach internal services signed by a private CA, must trust that CA from the first outbound connection. The Gateway uses `gateway.customCA`. The SRA web and SSH deployments use `sra.customCA`. The two are independent: set both when both components need the CA.

@@ -38,6 +38,22 @@
       "gateway": {
         "type": "object",
         "properties": {
+          "anthropicWorkloadIdentity": {
+            "type": "object",
+            "properties": {
+              "enabled": { "type": "boolean" },
+              "audience": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Audience of the projected token. Must match the aud the Claude Console federation rule expects."
+              },
+              "expirationSeconds": {
+                "type": "integer",
+                "minimum": 600,
+                "description": "Lifetime of the projected token. Kubernetes requires at least 600 and rotates the token after 80% of it."
+              }
+            }
+          },
           "customCA": {
             "type": "object",
             "properties": {

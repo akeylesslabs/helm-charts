@@ -1,0 +1,17 @@
+# ct install fixture: exercises gateway.anthropicWorkloadIdentity end-to-end.
+# The kubelet must mint the projected token for the pod to start.
+globalConfig:
+  gatewayAuth:
+    gatewayAccessType: access_key
+    gatewayCredentialsExistingSecret: akeyless-auth
+
+gateway:
+  service:
+    type: ClusterIP
+  anthropicWorkloadIdentity:
+    enabled: true
+
+sra:
+  sshConfig:
+    service:
+      type: ClusterIP

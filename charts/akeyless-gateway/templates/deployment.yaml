@@ -71,7 +71,7 @@ spec:
         {{- toYaml .Values.gateway.deployment.tolerations | nindent 8 }}
       {{- end }}
       {{- include "akeyless-gateway.imagePullSecrets" . | indent 2 }}
-      {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true) (.Values.gateway.secretsStore.enabled) (.Values.gateway.akeylessConfigVol) (.Values.gateway.deployment.extraVolumes) (.Values.gateway.deployment.readOnlyRootFilesystem) (.Values.gateway.customCA.enabled) }}
+      {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true) (.Values.gateway.secretsStore.enabled) (.Values.gateway.akeylessConfigVol) (.Values.gateway.deployment.extraVolumes) (.Values.gateway.deployment.readOnlyRootFilesystem) (.Values.gateway.customCA.enabled) (.Values.gateway.anthropicWorkloadIdentity.enabled) }}
       volumes:
         - name: akeyless-config
           {{- if .Values.gateway.akeylessConfigVol }}
@@ -113,6 +113,15 @@ spec:
         - name: persistent-storage
           persistentVolumeClaim:
             claimName: {{ .Values.gateway.persistence.existingClaim | default (printf "%s-pvc" (include "akeyless-gateway.fullname" .)) }}
+      {{- end }}
+      {{- if .Values.gateway.anthropicWorkloadIdentity.enabled }}
+        - name: anthropic-wif-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  audience: {{ .Values.gateway.anthropicWorkloadIdentity.audience | default "https://api.anthropic.com" | quote }}
+                  expirationSeconds: {{ .Values.gateway.anthropicWorkloadIdentity.expirationSeconds | default 600 | int }}
+                  path: token
       {{- end }}
       {{- with .Values.gateway.deployment.extraVolumes }}
         {{- toYaml . | nindent 8 }}
@@ -178,7 +187,7 @@ spec:
               path: /health
               port: 8080
           {{- toYaml .Values.gateway.deployment.readinessProbe | trim | nindent 12 }}
-          {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true) (.Values.gateway.secretsStore.enabled) (.Values.gateway.akeylessConfigVol) (.Values.gateway.deployment.extraVolumeMounts) (.Values.gateway.deployment.readOnlyRootFilesystem) (.Values.gateway.customCA.enabled) }}
+          {{- if or (.Values.globalConfig.customerFragmentsExistingSecret) (.Values.globalConfig.TLSConf.tlsExistingSecret) (.Values.globalConfig.metrics.enabled) (include "akeyless-gateway.clusterCache.enableTls" .) (eq .Values.gateway.persistence.enabled true) (.Values.gateway.secretsStore.enabled) (.Values.gateway.akeylessConfigVol) (.Values.gateway.deployment.extraVolumeMounts) (.Values.gateway.deployment.readOnlyRootFilesystem) (.Values.gateway.customCA.enabled) (.Values.gateway.anthropicWorkloadIdentity.enabled) }}
           volumeMounts:
             - name: akeyless-config
               mountPath: {{include "akeyless-gateway.root.config.path" $}}/.akeyless
@@ -214,6 +223,11 @@ spec:
           {{- if eq .Values.gateway.persistence.enabled true }}
             - name: persistent-storage
               mountPath: {{ .Values.gateway.persistence.mountPath }}
+          {{- end }}
+          {{- if .Values.gateway.anthropicWorkloadIdentity.enabled }}
+            - name: anthropic-wif-token
+              mountPath: /var/run/secrets/anthropic.com
+              readOnly: true
           {{- end }}
           {{- with .Values.gateway.deployment.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
