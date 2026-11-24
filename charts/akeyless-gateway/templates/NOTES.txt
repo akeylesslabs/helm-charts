@@ -4,6 +4,7 @@
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Modern PAM {{ index .Chart.Annotations "modernPamVersion" }} is installed as the V2 bastion of this gateway.
+Web console path: {{ if .Values.modernPam.ingress.enabled }}the Modern PAM ingress{{ else }}the gateway proxy{{ end }}, never both.
 {{- $legacy := include "akeyless-gateway.modernPamLegacyNotes" . | trim }}
 {{- if $legacy }}
 

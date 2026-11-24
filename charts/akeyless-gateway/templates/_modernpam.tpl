@@ -23,12 +23,19 @@ name modern-pam, else release-modern-pam. The alias would give a mixed case name
 {{- end -}}
 {{- end -}}
 
-{{/* Where the gateway reaches the V2 control API and web gate, the V2 counterparts of the two V1 internal URLs. */}}
+{{/*
+Where the gateway reaches the V2 control API and web gate, the V2 counterparts of the two V1 internal URLs.
+The web console has one path. By default it is the gateway's proxy, which needs the second URL. Turning on
+the V2 ingress makes the ingress the path and leaves the gateway without the web URL, so the two never serve
+the same console at once.
+*/}}
 {{- define "akeyless-gateway.modernPamGatewayConfig" }}
   - name: REMOTE_ACCESS_SSH_SERVICE_INTERNAL_URL
     value: "http://{{ include "akeyless-gateway.modernPamFullname" . }}.{{ .Release.Namespace }}.{{ include "akeyless-gateway.clusterSvcDomain" . }}:9900"
+{{- if not .Values.modernPam.ingress.enabled }}
   - name: REMOTE_ACCESS_WEB_SERVICE_INTERNAL_URL
     value: "http://{{ include "akeyless-gateway.modernPamFullname" . }}-web.{{ .Release.Namespace }}.{{ include "akeyless-gateway.clusterSvcDomain" . }}:8888"
+{{- end }}
 {{- end -}}
 
 {{/*
