@@ -37,6 +37,10 @@ helm install gateway akeyless/akeyless-gateway
 
 ## Upgrade Notes
 
+### 3.14.0: token request RBAC for a dedicated service account
+
+When the Gateway runs as its own service account (`globalConfig.serviceAccount.create: true` or `serviceAccountName` set), the chart now also creates a Role and RoleBinding named `<service account>-token-request`. They let that service account request tokens for itself only, which the Claude target's Kubernetes token source needs. The user that runs `helm upgrade` needs permission to create Roles and RoleBindings in the namespace. Nothing is created on the `default` service account.
+
 ### 3.13.0: custom CA extends the trust store
 
 From 3.13.0 `gateway.customCA` and `sra.customCA` default to `mode: extend`: the bundle is added to the image trust store. Before 3.13.0 the bundle replaced `/etc/ssl/certs/ca-certificates.crt`.
@@ -171,6 +175,18 @@ The bundle is read when the pod starts. In both modes a changed ConfigMap or Sec
 ```bash
 kubectl -n <namespace> rollout restart deployment/<deployment>
 ```
+
+## Claude Workload Identity Federation (Token Source = Kubernetes)
+
+A Claude target with Token Source **Kubernetes** (`wif_identity_token_source: kubernetes`) needs no volume and no chart value. Before every exchange the Gateway requests a 10-minute token for its own service account, with audience `https://api.anthropic.com`, from the Kubernetes API. Run the Gateway as its own service account and the chart grants exactly that:
+
+```yaml
+globalConfig:
+  serviceAccount:
+    create: true   # service account <release>-akeyless-gateway
+```
+
+The federation rule in the Claude Console matches `system:serviceaccount:<namespace>:<service account>`. On the `default` service account the chart grants nothing: every pod that runs as `default` would get the same Anthropic identity. Requires a Gateway version with the Kubernetes token source (akeyless-main-repo PR 8003).
 
 ## Extra Objects
 

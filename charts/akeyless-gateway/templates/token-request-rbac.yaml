@@ -1,0 +1,29 @@
+{{/* Lets the Gateway's own service account request tokens for itself (Claude target, Token Source = Kubernetes). Only for a dedicated service account: on "default" every pod in the namespace would get the same Anthropic identity. */}}
+{{- $sa := include "akeyless-gateway.getServiceAccountName" . }}
+{{- if ne $sa "default" }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ $sa }}-token-request
+  namespace: {{ .Release.Namespace | quote }}
+rules:
+  - apiGroups: [""]
+    resources: ["serviceaccounts/token"]
+    resourceNames: [{{ $sa | quote }}]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ $sa }}-token-request
+  namespace: {{ .Release.Namespace | quote }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ $sa }}
+    namespace: {{ .Release.Namespace | quote }}
+roleRef:
+  kind: Role
+  name: {{ $sa }}-token-request
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}
