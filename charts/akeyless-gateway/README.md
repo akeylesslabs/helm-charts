@@ -37,6 +37,10 @@ helm install gateway akeyless/akeyless-gateway
 
 ## Upgrade Notes
 
+### 3.14.0: Modern PAM (SRA V2) behind `modernPam.enabled`
+
+Nothing changes unless you set `modernPam.enabled: true`, which defaults to `false`. See [Modern PAM (SRA V2)](#modern-pam-sra-v2).
+
 ### 3.13.0: custom CA extends the trust store
 
 From 3.13.0 `gateway.customCA` and `sra.customCA` default to `mode: extend`: the bundle is added to the image trust store. Before 3.13.0 the bundle replaced `/etc/ssl/certs/ca-certificates.crt`.
@@ -66,6 +70,44 @@ With the SSH HPA on, run the first upgrade to 3.12.1 or later in a maintenance w
 3. Confirm the HPA restored the count and the SSH pods are ready: `kubectl get hpa,deployment -n <namespace>`.
 
 Later upgrades do not change `spec.replicas`, and the HPA stays in control.
+
+## Modern PAM (SRA V2)
+
+Modern PAM is the next generation of Secure Remote Access, in public beta. It installs as the V2 bastion of this
+gateway, from the `sra` chart bundled here under the alias `modernPam`.
+
+```yaml
+modernPam:
+  enabled: true
+  gateway:
+    url: http://<release>-akeyless-gateway.<namespace>.svc.cluster.local:8000/api/v2   # required
+  broker:
+    accessId: p-xxxxxxxxxxxx          # an API key identity of its own, not the gateway's
+    existingSecret: modern-pam-broker # a Secret holding that identity's key under the key accessKey
+    allowInProcessNonProduction: true
+  ssh:
+    enabled: true
+    caPublicKey: ssh-rsa AAAA...      # the gateway's SSH certificate issuer public key
+    knownHosts:
+      entries: ["[10.0.0.5]:22 ssh-ed25519 AAAA..."]   # one per SSH target, a target not listed is refused
+```
+
+- **One of `sra.enabled` or `modernPam.enabled`.** A release with both on is refused when it renders. To move a
+  release from V1 to V2 set `sra.enabled: false` and `modernPam.enabled: true` in the same `helm upgrade`, and
+  `helm rollback` returns it to V1. To run V1 and V2 together, use two releases on two clusters, each with its own gateway.
+- **V1 values are accepted under `modernPam`.** `sshConfig.CAPublicKey`, `sshConfig.service.type`,
+  `.externalTrafficPolicy` and `.annotations`, and `env` are mapped to their V2 keys, and everything else under
+  `sshConfig`, `webConfig` and `customCA` is accepted and not applied. The install notes list which was which. A key
+  that was never valid still fails by name.
+- **One replica.** V2 refuses `modernPam.replicaCount` above 1 and says why. `modernPam.podDisruptionBudget` and
+  `modernPam.ssh.service.sessionAffinity` are offered, off by default. The placement values (`nodeSelector`,
+  `tolerations`, `affinity`, `topologySpreadConstraints`) pass through under `modernPam`.
+- **One web path.** By default the gateway proxies the V2 web console. Turning on `modernPam.ingress.enabled` makes the
+  ingress the path and the gateway stops proxying to V2, so the two never serve the same console.
+- **The bastion waits for the gateway** before it starts (`modernPam.gateway.wait`, five minutes by default).
+- **The SSH host key** is generated once and kept across upgrades. Clients see a changed host key once when they move from V1.
+- **A gateway release with bastion registration** (5.8.0 and later) lists the V2 bastion for the CLI. Before it, name
+  it with `akeyless connect --via-sra <host>:<port>`.
 
 ## Cluster DNS Domain
 
