@@ -5,20 +5,31 @@ release:
   name: gw
   namespace: akeyless
 tests:
-  - it: renders nothing on the default service account
+  - it: renders nothing by default, even with a dedicated service account
+    set:
+      globalConfig.serviceAccount.create: true
     asserts:
       - hasDocuments:
           count: 0
 
-  - it: renders nothing when the service account is named default
+  - it: fails on the default service account
     set:
+      gateway.anthropicWorkloadIdentity.tokenRequest.enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: "gateway.anthropicWorkloadIdentity.tokenRequest.enabled needs a dedicated service account: set globalConfig.serviceAccount.create: true or globalConfig.serviceAccount.serviceAccountName"
+
+  - it: fails when the service account is named default
+    set:
+      gateway.anthropicWorkloadIdentity.tokenRequest.enabled: true
       globalConfig.serviceAccount.serviceAccountName: default
     asserts:
-      - hasDocuments:
-          count: 0
+      - failedTemplate:
+          errorMessage: "gateway.anthropicWorkloadIdentity.tokenRequest.enabled needs a dedicated service account: set globalConfig.serviceAccount.create: true or globalConfig.serviceAccount.serviceAccountName"
 
   - it: lets a created service account request tokens for itself only
     set:
+      gateway.anthropicWorkloadIdentity.tokenRequest.enabled: true
       globalConfig.serviceAccount.create: true
     asserts:
       - hasDocuments:
@@ -59,6 +70,7 @@ tests:
 
   - it: uses an existing named service account
     set:
+      gateway.anthropicWorkloadIdentity.tokenRequest.enabled: true
       globalConfig.serviceAccount.serviceAccountName: my-gw-sa
     asserts:
       - hasDocuments:
@@ -76,6 +88,7 @@ tests:
     release:
       name: other
     set:
+      gateway.anthropicWorkloadIdentity.tokenRequest.enabled: true
       globalConfig.serviceAccount.serviceAccountName: my-gw-sa
     asserts:
       - documentIndex: 0
@@ -94,3 +107,37 @@ tests:
         equal:
           path: rules[0].resourceNames
           value: ["my-gw-sa"]
+
+  - it: keeps long names unique and within 253 characters
+    release:
+      name: foo-a.b
+    set:
+      gateway.anthropicWorkloadIdentity.tokenRequest.enabled: true
+      globalConfig.serviceAccount.serviceAccountName: "a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b"
+    asserts:
+      - matchRegex:
+          path: metadata.name
+          pattern: ^foo-a\.b-a\.b-.{200,}-[0-9a-f]{8}$
+      - notMatchRegex:
+          path: metadata.name
+          pattern: .{254,}
+      - documentIndex: 0
+        equal:
+          path: rules[0].resourceNames
+          value: ["a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b"]
+
+  - it: gives a different long name to another release on the same service account
+    release:
+      name: foo
+    set:
+      gateway.anthropicWorkloadIdentity.tokenRequest.enabled: true
+      globalConfig.serviceAccount.serviceAccountName: "a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b"
+    asserts:
+      - documentIndex: 0
+        notEqual:
+          path: metadata.name
+          value: "foo-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b-a.b"
+      - documentIndex: 0
+        matchRegex:
+          path: metadata.name
+          pattern: -[0-9a-f]{8}$
