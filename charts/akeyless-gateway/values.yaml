@@ -572,10 +572,8 @@ gateway:
     enabled: false
     audience: https://api.anthropic.com
     expirationSeconds: 600
-    ## Token Source = Kubernetes (no volume): before each Anthropic login the Gateway asks
-    ## Kubernetes for a new Anthropic token. true = the chart gives the Gateway permission to do that.
-    ## Needs globalConfig.serviceAccount.create: true or serviceAccountName.
-    ## With the default service account, helm install/upgrade stops with an error.
+    ## Token Source = Kubernetes: lets the Gateway get Anthropic tokens from Kubernetes.
+    ## Needs a dedicated service account (globalConfig.serviceAccount).
     tokenRequest:
       enabled: false
 
