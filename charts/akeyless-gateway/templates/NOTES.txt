@@ -1,6 +1,6 @@
 {{- if .Values.modernPam.enabled }}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Akeyless Gateway + Modern PAM (SRA V2)
+  Akeyless Gateway + Modern PAM
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Modern PAM {{ index .Chart.Annotations "modernPamVersion" }} is installed as the V2 bastion of this gateway.

@@ -579,7 +579,7 @@ gateway:
 
 
 ######################################################
-## Modern PAM (SRA V2). One of sra.enabled (V1) or modernPam.enabled (V2) per release, never both: the
+## Modern PAM. One of sra.enabled (V1) or modernPam.enabled (V2) per release, never both: the
 ## release refuses to render with both on. A V1 cluster and a V2 cluster in one estate are two releases.
 ## Everything under modernPam is the V2 chart's own values, see its README. These are required:
 ##   modernPam.gateway.url          the gateway API v2 base, for example

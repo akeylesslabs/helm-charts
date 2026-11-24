@@ -37,9 +37,9 @@ helm install gateway akeyless/akeyless-gateway
 
 ## Upgrade Notes
 
-### 3.14.0: Modern PAM (SRA V2) behind `modernPam.enabled`
+### 3.14.0: Modern PAM behind `modernPam.enabled`
 
-Nothing changes unless you set `modernPam.enabled: true`, which defaults to `false`. See [Modern PAM (SRA V2)](#modern-pam-sra-v2).
+Nothing changes unless you set `modernPam.enabled: true`, which defaults to `false`. See [Modern PAM](#modern-pam).
 
 ### 3.13.0: custom CA extends the trust store
 
@@ -71,9 +71,9 @@ With the SSH HPA on, run the first upgrade to 3.12.1 or later in a maintenance w
 
 Later upgrades do not change `spec.replicas`, and the HPA stays in control.
 
-## Modern PAM (SRA V2)
+## Modern PAM
 
-Modern PAM is the next generation of Secure Remote Access, in public beta. It installs as the V2 bastion of this
+Modern PAM is the next generation of the Akeyless remote access bastion, in public beta. It installs as the V2 bastion of this
 gateway, from the `sra` chart bundled here under the alias `modernPam`.
 
 ```yaml
