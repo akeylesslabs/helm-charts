@@ -37,7 +37,9 @@ helm install gateway akeyless/akeyless-gateway
 
 ## Upgrade Notes
 
-### 3.14.0: token request RBAC for a dedicated service account
+### 3.14.0: Claude Workload Identity Federation
+
+New value `gateway.anthropicWorkloadIdentity` (default off) mounts an Anthropic-audience token for the Claude target's File token source. See [Claude Workload Identity Federation](#claude-workload-identity-federation).
 
 When the Gateway runs as its own service account (`globalConfig.serviceAccount.create: true` or `serviceAccountName` set), the chart now also creates a Role and RoleBinding named `<release>-<service account>-token-request`. They let that service account request tokens for itself only, which the Claude target's Kubernetes token source needs. Nothing is created on the `default` service account.
 
@@ -100,7 +102,23 @@ gateway:
 
 ## Claude Workload Identity Federation
 
-A Claude target that uses Gateway Cloud Identity with Token Source `File` reads its identity token from `/var/run/secrets/anthropic.com/token`. The default service account token at `/var/run/secrets/kubernetes.io/serviceaccount/token` cannot be used: its audience is the Kubernetes API server, and the Gateway does not read that path. Enable `gateway.anthropicWorkloadIdentity` to mount a token for Anthropic:
+A Claude target that uses Gateway Cloud Identity presents a Kubernetes service account token to Anthropic. The default token at `/var/run/secrets/kubernetes.io/serviceaccount/token` cannot be sent: its audience is the Kubernetes API server. Pick one of two Token Sources on the target.
+
+### Token Source = Kubernetes (no volume)
+
+A Claude target with Token Source **Kubernetes** (`wif_identity_token_source: kubernetes`) needs no volume and no chart value. Before every exchange the Gateway requests a 10-minute token for its own service account, with audience `https://api.anthropic.com`, from the Kubernetes API. Run the Gateway as its own service account and the chart grants exactly that:
+
+```yaml
+globalConfig:
+  serviceAccount:
+    create: true   # service account <release>-akeyless-gateway
+```
+
+The federation rule in the Claude Console matches `system:serviceaccount:<namespace>:<service account>`. On the `default` service account the chart grants nothing: every pod that runs as `default` would get the same Anthropic identity. Requires a Gateway version with the Kubernetes token source (akeyless-main-repo PR 8003).
+
+### Token Source = File (mounted token)
+
+The Gateway reads its identity token from `/var/run/secrets/anthropic.com/token`. Enable `gateway.anthropicWorkloadIdentity` to mount a token for Anthropic. This also works on Gateways released before the Kubernetes source:
 
 ```yaml
 gateway:
@@ -203,18 +221,6 @@ The bundle is read when the pod starts. In both modes a changed ConfigMap or Sec
 ```bash
 kubectl -n <namespace> rollout restart deployment/<deployment>
 ```
-
-## Claude Workload Identity Federation (Token Source = Kubernetes)
-
-A Claude target with Token Source **Kubernetes** (`wif_identity_token_source: kubernetes`) needs no volume and no chart value. Before every exchange the Gateway requests a 10-minute token for its own service account, with audience `https://api.anthropic.com`, from the Kubernetes API. Run the Gateway as its own service account and the chart grants exactly that:
-
-```yaml
-globalConfig:
-  serviceAccount:
-    create: true   # service account <release>-akeyless-gateway
-```
-
-The federation rule in the Claude Console matches `system:serviceaccount:<namespace>:<service account>`. On the `default` service account the chart grants nothing: every pod that runs as `default` would get the same Anthropic identity. Requires a Gateway version with the Kubernetes token source (akeyless-main-repo PR 8003).
 
 ## Extra Objects
 
