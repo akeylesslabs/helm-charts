@@ -80,8 +80,8 @@ gateway, from the `sra` chart bundled here under the alias `modernPam`.
 modernPam:
   enabled: true
   gateway:
-    url: http://<release>-akeyless-gateway.<namespace>.svc.cluster.local:8000/api/v2   # required
-    configUrl: http://<release>-akeyless-gateway.<namespace>.svc.cluster.local:8000     # registration and session reports need it
+    url: http://<gateway-service>.<namespace>.svc.cluster.local:<gateway-service-port>/api/v2   # required
+    configUrl: http://<gateway-service>.<namespace>.svc.cluster.local:<gateway-service-port>     # registration and session reports need it
   broker:
     accessId: p-xxxxxxxxxxxx          # an API key identity of its own, not the gateway's
     existingSecret: modern-pam-broker # a Secret holding that identity's key under the key accessKey

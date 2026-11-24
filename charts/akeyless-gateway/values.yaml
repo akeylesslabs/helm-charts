@@ -583,12 +583,15 @@ gateway:
 ## release refuses to render with both on. A V1 cluster and a V2 cluster in one estate are two releases.
 ## Everything under modernPam is the V2 chart's own values, see its README. These are required:
 ##   modernPam.gateway.url          the gateway API v2 base, for example
-##                                  http://<release>-akeyless-gateway.<namespace>.svc.cluster.local:8000/api/v2
+##                                  http://<gateway-service>.<namespace>.svc.cluster.local:<gateway-service-port>/api/v2
+##                                  (take the Service name and port from the release: kubectl get svc -n <namespace>)
 ##   modernPam.broker.accessId      the access id of the identity the broker signs in with
 ##   modernPam.broker.existingSecret  a Secret holding that identity's access key
 ## Values written for the V1 sra: block may be placed under modernPam as they are: sshConfig.CAPublicKey,
-## sshConfig.service.type, .externalTrafficPolicy, .annotations and env are mapped, the rest is ignored, and
-## the install notes list which was which. A key that was never valid still fails by name.
+## sshConfig.service.type, .externalTrafficPolicy, .annotations and env are mapped, the rest of sshConfig, webConfig
+## and customCA is accepted and not applied, and the install notes list which was which. A V1 key that has the same
+## name as a V2 key, such as image.repository, is read as the V2 value, so replace V1 image settings. A key that was
+## never valid still fails by name.
 modernPam:
   enabled: false
   ## The V2 chart is bundled under the alias modernPam, which Helm uses as its chart name, and a mixed case name is not
