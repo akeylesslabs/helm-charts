@@ -39,7 +39,9 @@ helm install gateway akeyless/akeyless-gateway
 
 ### 3.14.0: token request RBAC for a dedicated service account
 
-When the Gateway runs as its own service account (`globalConfig.serviceAccount.create: true` or `serviceAccountName` set), the chart now also creates a Role and RoleBinding named `<service account>-token-request`. They let that service account request tokens for itself only, which the Claude target's Kubernetes token source needs. The user that runs `helm upgrade` needs permission to create Roles and RoleBindings in the namespace. Nothing is created on the `default` service account.
+When the Gateway runs as its own service account (`globalConfig.serviceAccount.create: true` or `serviceAccountName` set), the chart now also creates a Role and RoleBinding named `<release>-<service account>-token-request`. They let that service account request tokens for itself only, which the Claude target's Kubernetes token source needs. Nothing is created on the `default` service account.
+
+Kubernetes only lets a user create a Role that grants permissions the user already holds. So the user that runs `helm upgrade` needs, in the namespace, permission to create Roles and RoleBindings, and also `create` on `serviceaccounts/token` for the Gateway's service account. Ask the cluster administrator for that narrow permission rather than `escalate` or `bind`.
 
 ### 3.13.0: custom CA extends the trust store
 

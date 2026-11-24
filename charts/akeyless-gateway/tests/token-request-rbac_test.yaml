@@ -29,7 +29,7 @@ tests:
       - documentIndex: 0
         equal:
           path: metadata.name
-          value: gw-akeyless-gateway-token-request
+          value: gw-gw-akeyless-gateway-token-request
       - documentIndex: 0
         equal:
           path: metadata.namespace
@@ -55,7 +55,7 @@ tests:
       - documentIndex: 1
         equal:
           path: roleRef.name
-          value: gw-akeyless-gateway-token-request
+          value: gw-gw-akeyless-gateway-token-request
 
   - it: uses an existing named service account
     set:
@@ -71,3 +71,26 @@ tests:
         equal:
           path: subjects[0].name
           value: my-gw-sa
+
+  - it: names the objects per release, so two releases can share a service account
+    release:
+      name: other
+    set:
+      globalConfig.serviceAccount.serviceAccountName: my-gw-sa
+    asserts:
+      - documentIndex: 0
+        equal:
+          path: metadata.name
+          value: other-my-gw-sa-token-request
+      - documentIndex: 1
+        equal:
+          path: metadata.name
+          value: other-my-gw-sa-token-request
+      - documentIndex: 1
+        equal:
+          path: roleRef.name
+          value: other-my-gw-sa-token-request
+      - documentIndex: 0
+        equal:
+          path: rules[0].resourceNames
+          value: ["my-gw-sa"]
