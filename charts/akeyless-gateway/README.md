@@ -80,8 +80,8 @@ gateway, from the `sra` chart bundled here under the alias `modernPam`.
 modernPam:
   enabled: true
   gateway:
-    url: http://<gateway-service>.<namespace>.svc.cluster.local:<gateway-service-port>/api/v2   # required
-    configUrl: http://<gateway-service>.<namespace>.svc.cluster.local:<gateway-service-port>     # registration and session reports need it
+    url: http://<gateway-service>.<namespace>.svc.<cluster-domain>:<gateway-service-port>/api/v2   # required
+    configUrl: http://<gateway-service>.<namespace>.svc.<cluster-domain>:<gateway-service-port>     # registration and session reports need it
   broker:
     accessId: p-xxxxxxxxxxxx          # an API key identity of its own, not the gateway's
     existingSecret: modern-pam-broker # a Secret holding that identity's key under the key accessKey
@@ -93,6 +93,12 @@ modernPam:
       entries: ["[10.0.0.5]:22 ssh-ed25519 AAAA..."]   # one per SSH target, a target not listed is refused
 ```
 
+- **`<cluster-domain>`** is your cluster's DNS domain, `cluster.local` unless the cluster sets another one.
+- **Building the chart from source needs access to the bundled chart.** `helm dependency build` fetches every
+  dependency the chart declares, the Modern PAM one included, even with `modernPam.enabled: false`. It lives in the
+  private package `oci://ghcr.io/akeylesslabs/modern-pam/charts/sra`, so log in first with
+  `helm registry login ghcr.io` using an account that can read that package. Installing a released chart from the
+  Helm repository needs none of this, because the packaged chart already contains it.
 - **One of `sra.enabled` or `modernPam.enabled`.** A release with both on is refused when it renders. To move a
   release from V1 to V2 set `sra.enabled: false` and `modernPam.enabled: true` in the same `helm upgrade`, and
   `helm rollback` returns it to V1. To run V1 and V2 together, use two releases on two clusters, each with its own gateway.

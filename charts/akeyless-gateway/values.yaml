@@ -583,7 +583,7 @@ gateway:
 ## release refuses to render with both on. A V1 cluster and a V2 cluster in one estate are two releases.
 ## Everything under modernPam is the V2 chart's own values, see its README. These are required:
 ##   modernPam.gateway.url          the gateway API v2 base, for example
-##                                  http://<gateway-service>.<namespace>.svc.cluster.local:<gateway-service-port>/api/v2
+##                                  http://<gateway-service>.<namespace>.svc.<cluster-domain>:<gateway-service-port>/api/v2
 ##                                  (take the Service name and port from the release: kubectl get svc -n <namespace>)
 ##   modernPam.broker.accessId      the access id of the identity the broker signs in with
 ##   modernPam.broker.existingSecret  a Secret holding that identity's access key
