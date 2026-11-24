@@ -98,6 +98,32 @@ gateway:
         readOnly: true
 ```
 
+## Claude Workload Identity Federation
+
+A Claude target that uses Gateway Cloud Identity with Token Source `File` reads its identity token from `/var/run/secrets/anthropic.com/token`. The default service account token at `/var/run/secrets/kubernetes.io/serviceaccount/token` cannot be used: its audience is the Kubernetes API server, and the Gateway does not read that path. Enable `gateway.anthropicWorkloadIdentity` to mount a token for Anthropic:
+
+```yaml
+gateway:
+  anthropicWorkloadIdentity:
+    enabled: true
+    # audience: https://api.anthropic.com
+    # expirationSeconds: 600
+```
+
+Requires Gateway 5.7.0 or later (Claude target with Gateway Cloud Identity). Scanning Anthropic with an `org:admin` rule needs the first Gateway release after 5.7.1. On an older Gateway the value only adds an unused file.
+
+If you already mount a token at `/var/run/secrets/anthropic.com` through `gateway.deployment.extraVolumes` and `extraVolumeMounts`, remove that volume and mount before you enable the value. The chart fails the render otherwise, because the API server rejects two mounts at one path.
+
+In the Claude Console (Settings → Workload identity):
+
+- Register the cluster's service account issuer (`kubectl get --raw /.well-known/openid-configuration` prints it). Anthropic must reach its discovery document and JWKS; on AKS, enable the OIDC issuer first. A cluster whose issuer is not public can use inline keys instead, which must be updated after every signing key rotation.
+- Create a federation rule with subject `system:serviceaccount:<namespace>:<service account>`, audience `https://api.anthropic.com`, and `token_lifetime_seconds` of 1200 or more.
+  The service account comes from `globalConfig.serviceAccount`: `serviceAccountName` when set, otherwise `<release>-akeyless-gateway` with `create: true`, or `default` with `create: false`. Read it from the Deployment, named `<gateway.namePrefix>-<fullname>` (`unified-<release>-akeyless-gateway` by default; use the actual name if you set `gateway.namePrefix`, `nameOverride` or `fullnameOverride`):
+  `kubectl -n <namespace> get deploy unified-<release>-akeyless-gateway -o jsonpath='{.spec.template.spec.serviceAccountName}'`
+  Run the Gateway as a dedicated service account (`create: true` or `serviceAccountName`). On `default`, every pod in the namespace that runs as `default` can get the same Anthropic-audience token and pass the rule.
+
+Keep `expirationSeconds` at 600. Anthropic accepts each token (`jti`) once, and Kubernetes rotates the token after 80% of its lifetime, so a longer lifetime makes refreshes fail until the token rotates. One Gateway token serves one set of Claude federation IDs. After the Gateway process restarts inside the same pod (for example an auto-update), the token in the file was already exchanged, so Anthropic refuses it (`jti_reused`) until the kubelet rotates the file, about 8 minutes with 600 s. A new pod gets a new token and is not affected.
+
 ## Custom CA
 
 Environments that re-sign outbound TLS with an internal CA (a TLS-intercepting proxy), or that reach internal services signed by a private CA, must trust that CA from the first outbound connection. The Gateway uses `gateway.customCA`. The SRA web and SSH deployments use `sra.customCA`. The two are independent: set both when both components need the CA.
