@@ -1,3 +1,53 @@
+{{- $jwt := .Values.jwtProjectedToken | default dict }}
+{{- $env := .Values.env | default dict }}
+{{- $accType := index $env "AKEYLESS_ACCESS_TYPE" | default "" | toString | trim | lower }}
+{{- $aud := "" }}
+{{- $jwtVol := "akeyless-jwt" }}
+{{- $jwtMount := "/var/run/secrets/akeyless/jwt" }}
+{{- $jwtExp := 3600 }}
+{{- if and (has $accType (list "jwt" "oauth2")) (not $jwt.enabled) }}
+{{- fail "env.AKEYLESS_ACCESS_TYPE is jwt/oauth2 but jwtProjectedToken.enabled is false. Enable jwtProjectedToken and set its audience." }}
+{{- end }}
+{{- if $jwt.enabled }}
+{{- $aud = $jwt.audience | default "" | toString | trim }}
+{{- if not $aud }}
+{{- fail "jwtProjectedToken.audience is required when jwtProjectedToken.enabled is true" }}
+{{- end }}
+{{- $jwtVol = $jwt.volumeName | default "akeyless-jwt" | toString | trim }}
+{{- if or (not $jwtVol) (eq $jwtVol "serving-cert") }}
+{{- fail "jwtProjectedToken.volumeName must be set and must not be serving-cert" }}
+{{- end }}
+{{- $jwtMount = $jwt.mountPath | default "/var/run/secrets/akeyless/jwt" | toString | trim | trimSuffix "/" }}
+{{- if not $jwtMount }}
+{{- fail "jwtProjectedToken.mountPath must not be empty when jwtProjectedToken.enabled is true" }}
+{{- end }}
+{{- $mpSlash := printf "%s/" $jwtMount }}
+{{- $saSlash := "/var/run/secrets/kubernetes.io/serviceaccount/" }}
+{{- if or (hasPrefix $mpSlash $saSlash) (hasPrefix $saSlash $mpSlash) }}
+{{- fail "jwtProjectedToken.mountPath must not overlap the ServiceAccount token path" }}
+{{- end }}
+{{- $expStr := $jwt.expirationSeconds | default 3600 | toString | trim }}
+{{- if not (regexMatch "^[0-9]+$" $expStr) }}
+{{- fail "jwtProjectedToken.expirationSeconds must be an integer number of seconds" }}
+{{- end }}
+{{- $jwtExp = int $expStr }}
+{{- if or (lt $jwtExp 600) (gt $jwtExp 4294967295) }}
+{{- fail "jwtProjectedToken.expirationSeconds must be between 600 and 4294967295" }}
+{{- end }}
+{{- if hasKey $env "AKEYLESS_JWT_AUDIENCE" }}
+{{- $envAud := index $env "AKEYLESS_JWT_AUDIENCE" | toString | trim }}
+{{- if and $envAud (ne $envAud $aud) }}
+{{- fail "env.AKEYLESS_JWT_AUDIENCE conflicts with jwtProjectedToken.audience; remove it from env or match the projected audience" }}
+{{- end }}
+{{- end }}
+{{- if hasKey $env "AKEYLESS_JWT_FILE" }}
+{{- $wantFile := printf "%s/token" $jwtMount }}
+{{- $envFile := index $env "AKEYLESS_JWT_FILE" | toString | trim }}
+{{- if and $envFile (ne $envFile $wantFile) }}
+{{- fail "env.AKEYLESS_JWT_FILE conflicts with jwtProjectedToken.mountPath; remove it from env or match the projected token path" }}
+{{- end }}
+{{- end }}
+{{- end }}
 apiVersion: apps/v1
 kind: {{ include "deployment.type" $ }}
 metadata:
@@ -41,6 +91,15 @@ spec:
         secret:
           defaultMode: 420
           secretName: {{ include "vault-secrets-webhook.tlsSecretName" . }}
+{{- if $jwt.enabled }}
+      - name: {{ $jwtVol }}
+        projected:
+          sources:
+          - serviceAccountToken:
+              path: token
+              expirationSeconds: {{ $jwtExp }}
+              audience: {{ $aud | quote }}
+{{- end }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -82,9 +141,18 @@ spec:
 {{- end }}
           - name: AKEYLESS_AGENT_IMAGE
             value: "{{ .Values.image.agentImage }}:{{ .Values.image.tag | default .Chart.AppVersion  }}"
-          {{- range $key, $value := .Values.env }}
+{{- if $jwt.enabled }}
+          - name: AKEYLESS_JWT_FILE
+            value: {{ printf "%s/token" $jwtMount | quote }}
+          - name: AKEYLESS_JWT_AUDIENCE
+            value: {{ $aud | quote }}
+{{- end }}
+          {{- range $key, $value := $env }}
+          {{- if and $jwt.enabled (or (eq $key "AKEYLESS_JWT_FILE") (eq $key "AKEYLESS_JWT_AUDIENCE")) }}
+          {{- else }}
           - name: {{ $key }}
             value: {{ $value }}
+          {{- end }}
           {{- end }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
@@ -108,6 +176,11 @@ spec:
           volumeMounts:
           - mountPath: /var/serving-cert
             name: serving-cert
+{{- if $jwt.enabled }}
+          - name: {{ $jwtVol }}
+            mountPath: {{ $jwtMount }}
+            readOnly: true
+{{- end }}
 {{- if not .Values.openshiftEnabled }}
           securityContext: #//only for k8s - not openshift compatible
             runAsUser: 65534
