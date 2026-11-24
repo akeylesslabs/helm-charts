@@ -579,6 +579,24 @@ gateway:
 
 
 ######################################################
+## Modern PAM (SRA V2). One of sra.enabled (V1) or modernPam.enabled (V2) per release, never both: the
+## release refuses to render with both on. A V1 cluster and a V2 cluster in one estate are two releases.
+## Everything under modernPam is the V2 chart's own values, see its README. These are required:
+##   modernPam.gateway.url          the gateway API v2 base, for example
+##                                  http://<release>-akeyless-gateway.<namespace>.svc.cluster.local:8000/api/v2
+##   modernPam.broker.accessId      the access id of the identity the broker signs in with
+##   modernPam.broker.existingSecret  a Secret holding that identity's access key
+## Values written for the V1 sra: block may be placed under modernPam as they are: sshConfig.CAPublicKey,
+## sshConfig.service.type, .externalTrafficPolicy, .annotations and env are mapped, the rest is ignored, and
+## the install notes list which was which. A key that was never valid still fails by name.
+modernPam:
+  enabled: false
+  ## The V2 chart is bundled under the alias modernPam, which Helm uses as its chart name, and a mixed case name is not
+  ## a valid Kubernetes name. This is what names its Deployment and Services: <release>-modern-pam.
+  nameOverride: modern-pam
+
+
+######################################################
 ## Default values for akeyless-secure-remote-access ##
 ######################################################
 

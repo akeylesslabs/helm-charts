@@ -65,6 +65,16 @@
           }
         }
       },
+      "modernPam": {
+        "type": "object",
+        "description": "Modern PAM (SRA V2) through the sra subchart. Only enabled is defined here, every other key belongs to the subchart and is checked by its schema.",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
       "sra": {
         "type": "object",
         "properties": {

@@ -1,4 +1,19 @@
-{{- if eq .Values.sra.enabled true }}
+{{- if .Values.modernPam.enabled }}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Akeyless Gateway + Modern PAM (SRA V2)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Modern PAM {{ index .Chart.Annotations "modernPamVersion" }} is installed as the V2 bastion of this gateway.
+{{- $legacy := include "akeyless-gateway.modernPamLegacyNotes" . | trim }}
+{{- if $legacy }}
+
+V1 values found under modernPam:
+  {{ $legacy }}
+Move them to the V2 keys, the migration guide has the table.
+{{- end }}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{{- else if eq .Values.sra.enabled true }}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   Akeyless Gateway + Secure Remote Access (SRA)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

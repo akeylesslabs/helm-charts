@@ -1,6 +1,6 @@
 apiVersion: v2
 name: akeyless-gateway
-version: 3.13.0
+version: 3.14.0
 description: A Helm chart for Kubernetes that deploys akeyless-gateway
 maintainers:
   - name: Akeyless
@@ -15,9 +15,15 @@ appVersion: 5.7.1_3.7.1
 annotations:
   gatewayVersion: 5.7.1
   sraVersion: 3.7.1
+  modernPamVersion: 0.8.0
 dependencies:
   - name: redis-ha
     version: 4.35.10
     repository: https://dandydeveloper.github.io/charts/
     condition: cacheHA.enabled
     alias: cacheHA
+  - name: sra
+    version: ">=0.8.0-0 <1.0.0"
+    repository: oci://ghcr.io/akeylesslabs/modern-pam/charts
+    condition: modernPam.enabled
+    alias: modernPam
