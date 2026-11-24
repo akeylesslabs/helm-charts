@@ -42,7 +42,7 @@ helm install gateway akeyless/akeyless-gateway
 Two new values, both off by default, so the upgrade changes nothing unless you enable one. See [Claude Workload Identity Federation](#claude-workload-identity-federation).
 
 - `gateway.anthropicWorkloadIdentity.enabled` mounts an Anthropic-audience token for the Claude target's File token source.
-- `gateway.anthropicWorkloadIdentity.tokenRequest.enabled` creates a Role and RoleBinding named `<release>-<service account>-token-request` for the Kubernetes token source. They let the Gateway's dedicated service account request tokens for itself only. On the `default` service account the render fails.
+- `gateway.anthropicWorkloadIdentity.tokenRequest.enabled` creates a Role and RoleBinding named `<release>-akeyless-gateway-token-request` for the Kubernetes token source. They let the Gateway's dedicated service account request tokens for itself only. On the `default` service account the render fails.
 
 Kubernetes only lets a user create a Role that grants permissions the user already holds. So before you enable `tokenRequest`, the user that runs `helm upgrade` needs, in the namespace, permission to create Roles and RoleBindings, and also `create` on `serviceaccounts/token` for the Gateway's service account. Ask the cluster administrator for that narrow permission rather than `escalate` or `bind`.
 
@@ -111,7 +111,7 @@ In the Claude Console (Settings → Workload identity), for both sources:
 
 - Register the cluster's service account issuer (`kubectl get --raw /.well-known/openid-configuration` prints it). Anthropic must reach its discovery document and JWKS; on AKS, enable the OIDC issuer first. A cluster whose issuer is not public can use inline keys instead, which must be updated after every signing key rotation.
 - Create a federation rule with subject `system:serviceaccount:<namespace>:<service account>`, audience `https://api.anthropic.com`, and `token_lifetime_seconds` of 1200 or more.
-  The service account comes from `globalConfig.serviceAccount`: `serviceAccountName` when set, otherwise `<release>-akeyless-gateway` with `create: true`, or `default` with `create: false`. Read it from the Deployment, named `<gateway.namePrefix>-<fullname>` (`unified-<release>-akeyless-gateway` by default; use the actual name if you set `gateway.namePrefix`, `nameOverride` or `fullnameOverride`):
+  The service account comes from `globalConfig.serviceAccount`: `serviceAccountName` when set, otherwise `<release>-akeyless-gateway` with `create: true`, or `default` with `create: false`. Read it from the Deployment, named `<gateway.namePrefix>-<fullname>`: `unified-<release>-akeyless-gateway` by default, or `unified-<release>` when the release name already contains `akeyless-gateway`. Use the actual name if you set `gateway.namePrefix`, `nameOverride` or `fullnameOverride`:
   `kubectl -n <namespace> get deploy unified-<release>-akeyless-gateway -o jsonpath='{.spec.template.spec.serviceAccountName}'`
 
 ### Token Source = Kubernetes (no volume)
