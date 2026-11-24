@@ -58,7 +58,7 @@
                 "properties": {
                   "enabled": {
                     "type": "boolean",
-                    "description": "Role and RoleBinding that let the Gateway's dedicated service account request tokens for itself (Token Source = Kubernetes)."
+                    "description": "Token Source = Kubernetes: give the Gateway permission to ask Kubernetes for Anthropic tokens. Needs a dedicated service account."
                   }
                 }
               }
