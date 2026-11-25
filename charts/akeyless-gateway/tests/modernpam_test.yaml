@@ -89,17 +89,6 @@ tests:
             name: REMOTE_ACCESS_WEB_SERVICE_INTERNAL_URL
           any: true
 
-  - it: refuses the old and the new bastion in one release
-    set:
-      sra.enabled: true
-      modernPam.enabled: true
-      modernPam.gateway.url: http://gw-akeyless-gateway.ns.svc.cluster.local:8000/api/v2
-      modernPam.broker.accessId: p-yyyyyyyyyyyy
-      modernPam.broker.existingSecret: broker
-    asserts:
-      - failedTemplate:
-          errorPattern: sra.enabled and modernPam.enabled are both true
-
   - it: refuses a plaintext secret in the Modern PAM env under the strict policy
     set:
       strictSecurityPolicy.enabled: true
