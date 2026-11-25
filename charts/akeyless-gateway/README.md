@@ -37,9 +37,18 @@ helm install gateway akeyless/akeyless-gateway
 
 ## Upgrade Notes
 
-### 3.14.0: Modern PAM behind `modernPam.enabled`
+### 3.15.0: Modern PAM behind `modernPam.enabled`
 
 Nothing changes unless you set `modernPam.enabled: true`, which defaults to `false`. See [Modern PAM](#modern-pam).
+
+### 3.14.0: Claude Workload Identity Federation
+
+Two new values, both off by default, so the upgrade changes nothing unless you enable one. See [Claude Workload Identity Federation](#claude-workload-identity-federation).
+
+- `gateway.anthropicWorkloadIdentity.enabled` mounts an Anthropic-audience token for the Claude target's File token source.
+- `gateway.anthropicWorkloadIdentity.tokenRequest.enabled` creates a Role and RoleBinding named `<release>-akeyless-gateway-token-request` for the Kubernetes token source. They let the Gateway's dedicated service account request tokens for itself only. On the `default` service account the render fails.
+
+Kubernetes only lets a user create a Role that grants permissions the user already holds. So before you enable `tokenRequest`, the user that runs `helm upgrade` needs, in the namespace, permission to create Roles and RoleBindings, and also `create` on `serviceaccounts/token` for the Gateway's service account. Ask the cluster administrator for that narrow permission rather than `escalate` or `bind`.
 
 ### 3.13.0: custom CA extends the trust store
 
@@ -140,6 +149,53 @@ gateway:
         mountPath: /etc/custom-secret
         readOnly: true
 ```
+
+## Claude Workload Identity Federation
+
+A Claude target that uses Gateway Cloud Identity presents a Kubernetes service account token to Anthropic. The default token at `/var/run/secrets/kubernetes.io/serviceaccount/token` cannot be sent: its audience is the Kubernetes API server. Pick one of two Token Sources on the target, then set up the Claude Console.
+
+Run the Gateway as a dedicated service account (`globalConfig.serviceAccount.create: true` or `globalConfig.serviceAccount.serviceAccountName`). On `default`, every pod in the namespace that runs as `default` can get the same Anthropic-audience token and pass the rule.
+
+In the Claude Console (Settings → Workload identity), for both sources:
+
+- Register the cluster's service account issuer (`kubectl get --raw /.well-known/openid-configuration` prints it). Anthropic must reach its discovery document and JWKS; on AKS, enable the OIDC issuer first. A cluster whose issuer is not public can use inline keys instead, which must be updated after every signing key rotation.
+- Create a federation rule with subject `system:serviceaccount:<namespace>:<service account>`, audience `https://api.anthropic.com`, and `token_lifetime_seconds` of 1200 or more.
+  The service account comes from `globalConfig.serviceAccount`: `serviceAccountName` when set, otherwise `<release>-akeyless-gateway` with `create: true`, or `default` with `create: false`. Read it from the Deployment, named `<gateway.namePrefix>-<fullname>`: `unified-<release>-akeyless-gateway` by default, or `unified-<release>` when the release name already contains `akeyless-gateway`. Use the actual name if you set `gateway.namePrefix`, `nameOverride` or `fullnameOverride`:
+  `kubectl -n <namespace> get deploy unified-<release>-akeyless-gateway -o jsonpath='{.spec.template.spec.serviceAccountName}'`
+
+### Token Source = Kubernetes (no volume)
+
+With Token Source **Kubernetes** (`wif_identity_token_source: kubernetes`), the Gateway requests a 10-minute token for its own service account, with audience `https://api.anthropic.com`, from the Kubernetes API before every exchange. No volume is mounted. Enable the Role that allows it:
+
+```yaml
+globalConfig:
+  serviceAccount:
+    create: true   # service account <release>-akeyless-gateway
+gateway:
+  anthropicWorkloadIdentity:
+    tokenRequest:
+      enabled: true
+```
+
+See the [3.14.0 upgrade note](#3140-claude-workload-identity-federation) for the permission the `helm upgrade` user needs. Requires the first Gateway release after 5.7.1 that lists the Kubernetes token source for the Claude target in its release notes. Without the Role, saving the target fails with "may not request tokens".
+
+### Token Source = File (mounted token)
+
+The Gateway reads its identity token from `/var/run/secrets/anthropic.com/token`. Enable `gateway.anthropicWorkloadIdentity` to mount a token for Anthropic. This also works on Gateways released before the Kubernetes source:
+
+```yaml
+gateway:
+  anthropicWorkloadIdentity:
+    enabled: true
+    # audience: https://api.anthropic.com
+    # expirationSeconds: 600
+```
+
+Requires Gateway 5.7.0 or later (Claude target with Gateway Cloud Identity). Scanning Anthropic with an `org:admin` rule needs the first Gateway release after 5.7.1. On an older Gateway the value only adds an unused file.
+
+If you already mount a token at `/var/run/secrets/anthropic.com` through `gateway.deployment.extraVolumes` and `extraVolumeMounts`, remove that volume and mount before you enable the value. The chart fails the render otherwise, because the API server rejects two mounts at one path.
+
+Keep `expirationSeconds` at 600. Anthropic accepts each token (`jti`) once, and Kubernetes rotates the token after 80% of its lifetime, so a longer lifetime makes refreshes fail until the token rotates. One Gateway token serves one set of Claude federation IDs. After the Gateway process restarts inside the same pod (for example an auto-update), the token in the file was already exchanged, so Anthropic refuses it (`jti_reused`) until the kubelet rotates the file, about 8 minutes with 600 s. A new pod gets a new token and is not affected.
 
 ## Custom CA
 

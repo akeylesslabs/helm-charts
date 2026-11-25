@@ -1,0 +1,137 @@
+suite: gateway token request rbac
+templates:
+  - templates/token-request-rbac.yaml
+release:
+  name: gw
+  namespace: akeyless
+tests:
+  - it: renders nothing by default, even with a dedicated service account
+    set:
+      globalConfig.serviceAccount.create: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: fails on the default service account
+    set:
+      gateway.anthropicWorkloadIdentity.tokenRequest.enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: "gateway.anthropicWorkloadIdentity.tokenRequest.enabled needs a dedicated service account: set globalConfig.serviceAccount.create: true or globalConfig.serviceAccount.serviceAccountName"
+
+  - it: fails when the service account is named default
+    set:
+      gateway.anthropicWorkloadIdentity.tokenRequest.enabled: true
+      globalConfig.serviceAccount.serviceAccountName: default
+    asserts:
+      - failedTemplate:
+          errorMessage: "gateway.anthropicWorkloadIdentity.tokenRequest.enabled needs a dedicated service account: set globalConfig.serviceAccount.create: true or globalConfig.serviceAccount.serviceAccountName"
+
+  - it: lets a created service account request tokens for itself only
+    set:
+      gateway.anthropicWorkloadIdentity.tokenRequest.enabled: true
+      globalConfig.serviceAccount.create: true
+    asserts:
+      - hasDocuments:
+          count: 2
+      - documentIndex: 0
+        isKind:
+          of: Role
+      - documentIndex: 0
+        equal:
+          path: metadata.name
+          value: gw-akeyless-gateway-token-request
+      - documentIndex: 0
+        equal:
+          path: metadata.namespace
+          value: akeyless
+      - documentIndex: 0
+        equal:
+          path: rules
+          value:
+            - apiGroups: [""]
+              resources: ["serviceaccounts/token"]
+              resourceNames: ["gw-akeyless-gateway"]
+              verbs: ["create"]
+      - documentIndex: 1
+        isKind:
+          of: RoleBinding
+      - documentIndex: 1
+        equal:
+          path: subjects
+          value:
+            - kind: ServiceAccount
+              name: gw-akeyless-gateway
+              namespace: akeyless
+      - documentIndex: 1
+        equal:
+          path: roleRef.name
+          value: gw-akeyless-gateway-token-request
+
+  - it: uses an existing named service account
+    set:
+      gateway.anthropicWorkloadIdentity.tokenRequest.enabled: true
+      globalConfig.serviceAccount.serviceAccountName: my-gw-sa
+    asserts:
+      - hasDocuments:
+          count: 2
+      - documentIndex: 0
+        equal:
+          path: rules[0].resourceNames
+          value: ["my-gw-sa"]
+      - documentIndex: 1
+        equal:
+          path: subjects[0].name
+          value: my-gw-sa
+
+  - it: names the objects per release, so two releases can share a service account
+    release:
+      name: other
+    set:
+      gateway.anthropicWorkloadIdentity.tokenRequest.enabled: true
+      globalConfig.serviceAccount.serviceAccountName: my-gw-sa
+    asserts:
+      - documentIndex: 0
+        equal:
+          path: metadata.name
+          value: other-akeyless-gateway-token-request
+      - documentIndex: 1
+        equal:
+          path: metadata.name
+          value: other-akeyless-gateway-token-request
+      - documentIndex: 1
+        equal:
+          path: roleRef.name
+          value: other-akeyless-gateway-token-request
+      - documentIndex: 0
+        equal:
+          path: rules[0].resourceNames
+          value: ["my-gw-sa"]
+
+  - it: does not repeat the chart name when the release contains it
+    release:
+      name: prod-akeyless-gateway
+    set:
+      gateway.anthropicWorkloadIdentity.tokenRequest.enabled: true
+      globalConfig.serviceAccount.serviceAccountName: my-gw-sa
+    asserts:
+      - documentIndex: 0
+        equal:
+          path: metadata.name
+          value: prod-akeyless-gateway-token-request
+
+  - it: names the objects after the release only, so release and service account names cannot combine into the same name
+    release:
+      name: foo-bar
+    set:
+      gateway.anthropicWorkloadIdentity.tokenRequest.enabled: true
+      globalConfig.serviceAccount.serviceAccountName: baz
+    asserts:
+      - documentIndex: 0
+        equal:
+          path: metadata.name
+          value: foo-bar-akeyless-gateway-token-request
+      - documentIndex: 0
+        equal:
+          path: rules[0].resourceNames
+          value: ["baz"]
