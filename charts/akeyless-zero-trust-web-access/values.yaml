@@ -104,7 +104,8 @@ dispatcher:
   image:
     repository: akeyless/zero-trust-web-dispatcher
     pullPolicy: Always
-    # tag: latest
+    ## Defaults to the chart appVersion.
+    # tag:
     imagePullSecrets: []
 
   containerName: "web-dispatcher"
@@ -202,7 +203,8 @@ webWorker:
   image:
     repository: akeyless/zero-trust-web-worker
     pullPolicy: Always
-    # tag: latest
+    ## Defaults to the chart appVersion.
+    # tag:
     imagePullSecrets: []
 
   containerName: "web-worker"
@@ -320,7 +322,8 @@ webProxy:
   image:
     repository: akeyless/zero-trust-web-proxy
     pullPolicy: Always
-    # tag: latest
+    ## Defaults to the chart appVersion.
+    # tag:
     imagePullSecrets: []
 
   containerName: "web-proxy"
