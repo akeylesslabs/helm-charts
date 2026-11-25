@@ -179,6 +179,11 @@ without.
     {{- $moved = append $moved (printf "%s.initContainer was removed, move its imagePullSecrets to %s.image.imagePullSecrets" $svc $svc) -}}
   {{- end -}}
 {{- end -}}
+{{- range $key := list "nodeSelector" "tolerations" -}}
+  {{- if and $v.mediamtx (hasKey $v.mediamtx $key) -}}
+    {{- $moved = append $moved (printf "mediamtx.%s moved to webWorker.%s, which places the workers and the media servers" $key $key) -}}
+  {{- end -}}
+{{- end -}}
 {{- if $moved -}}
   {{- fail (printf "values from an older chart layout found. Update them and run again, the README section \"Upgrading to the 4.0.0 values layout\" has the full map:\n- %s" (join "\n- " $moved)) -}}
 {{- end -}}

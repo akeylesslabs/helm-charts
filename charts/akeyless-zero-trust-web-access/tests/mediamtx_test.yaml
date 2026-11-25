@@ -73,3 +73,55 @@ tests:
     asserts:
       - notExists:
           path: spec.template.spec.affinity.podAffinity
+      - notExists:
+          path: spec.template.spec.nodeSelector
+      - notExists:
+          path: spec.template.spec.tolerations
+
+  - it: "webWorker.nodeSelector and tolerations place both the workers and the media servers"
+    set:
+      webWorker.nodeSelector:
+        ztwa: "true"
+      webWorker.tolerations:
+        - {key: dedicated, value: ztwa, effect: NoSchedule}
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value: {ztwa: "true"}
+        template: templates/web-worker-deployment.yaml
+      - equal:
+          path: spec.template.spec.tolerations
+          value: [{key: dedicated, value: ztwa, effect: NoSchedule}]
+        template: templates/web-worker-deployment.yaml
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value: {ztwa: "true"}
+        template: templates/mediamtx-daemonset.yaml
+        documentSelector:
+          path: kind
+          value: DaemonSet
+      - equal:
+          path: spec.template.spec.tolerations
+          value: [{key: dedicated, value: ztwa, effect: NoSchedule}]
+        template: templates/mediamtx-daemonset.yaml
+        documentSelector:
+          path: kind
+          value: DaemonSet
+
+  - it: "mediamtx.nodeSelector fails and names webWorker.nodeSelector"
+    template: templates/configmap.yaml
+    set:
+      mediamtx.nodeSelector:
+        ztwa: "true"
+    asserts:
+      - failedTemplate:
+          errorPattern: "mediamtx.nodeSelector moved to webWorker.nodeSelector"
+
+  - it: "mediamtx.tolerations fails and names webWorker.tolerations"
+    template: templates/configmap.yaml
+    set:
+      mediamtx.tolerations:
+        - {key: dedicated, value: ztwa, effect: NoSchedule}
+    asserts:
+      - failedTemplate:
+          errorPattern: "mediamtx.tolerations moved to webWorker.tolerations"

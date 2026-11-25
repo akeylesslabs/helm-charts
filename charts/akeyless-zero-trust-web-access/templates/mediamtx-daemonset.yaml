@@ -79,11 +79,11 @@ spec:
               port: {{ .Values.mediamtx.webrtcPort }}
             initialDelaySeconds: 10
             periodSeconds: 20
-{{- with .Values.mediamtx.nodeSelector }}
+{{- with .Values.webWorker.nodeSelector }}
       nodeSelector:
 {{- toYaml . | nindent 8 }}
 {{- end }}
-{{- with .Values.mediamtx.tolerations }}
+{{- with .Values.webWorker.tolerations }}
       tolerations:
 {{- toYaml . | nindent 8 }}
 {{- end }}

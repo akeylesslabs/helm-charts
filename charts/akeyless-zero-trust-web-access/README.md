@@ -179,6 +179,7 @@ Upgrade with your values file (`-f <values file>`) or `--reset-then-reuse-values
 | `HPA.webWorker.sessionTerminationGracePeriodSeconds` | `webWorker.terminationGracePeriodSeconds` |
 | `HPA.dispatcher` | Removed. The chart runs one dispatcher per worker pool |
 | `dispatcher.initContainer`, `webProxy.initContainer` | Removed. The dispatcher and the web proxy read their settings from env |
+| `mediamtx.nodeSelector`, `mediamtx.tolerations` | `webWorker.nodeSelector`, `webWorker.tolerations`, which place the workers and the media servers |
 
 When a field was set in both `sessionRecording.upload` and `dispatcher.config.recording`, keep the `dispatcher.config.recording` value. The old chart used that one.
 
@@ -365,6 +366,8 @@ The following table lists the configurable parameters of the Zero Trust Web Acce
 | `webWorker.readinessProbe`                | Readiness probe configuration for Zero Trust Web Access Web Worker                                                   | Check `values.yaml` file                                     |         
 | `webWorker.resources.limits`              | The resources limits for Zero Trust Web Access Web Worker containers (If HPA is enabled these must be set)           | `memory: 2Gi`                                                |
 | `webWorker.resources.requests`            | The requested resources for Zero Trust Web Access Web Worker containers (If HPA is enabled these must be set)        | `cpu: 1000m, memory: 1Gi`                                    |
+| `webWorker.nodeSelector`                  | Node labels for the workers and the media servers. The chart applies it to both, so every worker has one on its node | `{}`                                                         |
+| `webWorker.tolerations`                   | Tolerations for the workers and the media servers. The chart applies them to both, so every worker has one on its node | `[]`                                                         |
 | `webProxy.image.repository`               | Zero Trust Web Access Proxy image name                                                                              | `akeyless/zero-trust-web-proxy`                              |
 | `webProxy.image.tag`                      | Zero Trust Web Access Proxy image tag (defaults to the chart `appVersion`)                                          | `nil`                                                        |
 | `webProxy.image.pullPolicy`               | Zero Trust Web Access Proxy image pull policy                                                                       | `Always`                                                     |

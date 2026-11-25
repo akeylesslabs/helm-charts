@@ -23,6 +23,14 @@ spec:
       securityContext:
         fsGroup: 10000
         supplementalGroups: [72]
+{{- with .Values.webWorker.nodeSelector }}
+      nodeSelector:
+{{- toYaml . | nindent 8 }}
+{{- end }}
+{{- with .Values.webWorker.tolerations }}
+      tolerations:
+{{- toYaml . | nindent 8 }}
+{{- end }}
       volumes:
         - name: akeyless-conf
           emptyDir: {}

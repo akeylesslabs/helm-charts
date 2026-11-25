@@ -247,6 +247,12 @@ webWorker:
   ##
   terminationGracePeriodSeconds: 3600
 
+  ## Place the workers and the media servers. A worker publishes to the media server on its own node,
+  ## so the chart applies both to the worker Deployment and the media server DaemonSet.
+  ##
+  nodeSelector: {}
+  tolerations: []
+
   env: []
 
   config:
@@ -403,9 +409,6 @@ mediamtx:
       memory: 128Mi
     limits:
       memory: 1Gi
-
-  nodeSelector: {}
-  tolerations: []
 
   ## A media server restart ends the live view and the recording of every session on its node,
   ## so an upgrade does not restart it. Delete the pod on a node with no sessions to move it to the new version.
