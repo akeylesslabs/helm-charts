@@ -1,0 +1,122 @@
+suite: dispatcher TURN relay
+release:
+  name: ztwa
+  namespace: sra
+set:
+  config.ztwaAuth.ztwaAccessID: p-priv
+  config.ztwaAuth.authorizedAccessIDs: [p-1]
+  dispatcher.turn.externalHost: turn.example.com
+tests:
+  - it: "the dispatcher gets the TURN env and the turn container port"
+    template: templates/dispatcher-deployment.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TURN_EXTERNAL_HOST
+            value: turn.example.com
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TURN_PORT
+            value: "3478"
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            containerPort: 3478
+            name: turn
+            protocol: UDP
+
+  - it: "the TURN Service is a UDP-only LoadBalancer to the turn port"
+    template: templates/dispatcher-turn-service.yaml
+    set:
+      dispatcher.turn.serviceAnnotations:
+        service.beta.kubernetes.io/aws-load-balancer-eip-allocations: eipalloc-1
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: ztwa-akeyless-zero-trust-web-access-turn
+      - equal:
+          path: spec.type
+          value: LoadBalancer
+      - equal:
+          path: spec.ports
+          value:
+            - name: turn
+              port: 3478
+              targetPort: turn
+              protocol: UDP
+      - equal:
+          path: spec.selector.app
+          value: dispatcher
+      - equal:
+          path: metadata.annotations["service.beta.kubernetes.io/aws-load-balancer-eip-allocations"]
+          value: eipalloc-1
+
+  - it: "a non-default port reaches the Service port and TURN_PORT"
+    set:
+      dispatcher.turn.port: 3479
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 3479
+        template: templates/dispatcher-turn-service.yaml
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TURN_PORT
+            value: "3479"
+        template: templates/dispatcher-deployment.yaml
+
+  - it: "values without port, as --reuse-values from an older release gives, use 3478"
+    set:
+      dispatcher.turn.port: null
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 3478
+        template: templates/dispatcher-turn-service.yaml
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TURN_PORT
+            value: "3478"
+        template: templates/dispatcher-deployment.yaml
+
+  - it: "mediamtx gets POD_IP and the discovery Service publishes the ice port"
+    template: templates/mediamtx-daemonset.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+        documentIndex: 0
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MTX_WEBRTCADDITIONALHOSTS
+            value: "$(NODE_IP),$(POD_IP)"
+        documentIndex: 0
+      - contains:
+          path: spec.ports
+          content:
+            name: ice
+            port: 8189
+            targetPort: 8189
+            protocol: UDP
+        documentSelector:
+          path: metadata.name
+          value: ztwa-mediamtx-discovery
+
+  - it: "rendering without externalHost fails"
+    template: templates/dispatcher-turn-service.yaml
+    set:
+      dispatcher.turn.externalHost: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: dispatcher.turn.externalHost is required

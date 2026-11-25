@@ -138,6 +138,28 @@ dispatcher:
     type: LoadBalancer
     port: 9000
 
+  ## TURN relay for the live view, for viewers that cannot reach the media servers directly.
+  ## The chart creates a UDP-only LoadBalancer Service, <fullname>-turn, for it.
+  ##
+  turn:
+    ## Required. The DNS name or reserved IP that viewers use to reach the TURN Service's
+    ## load balancer. Choose it before install: a name you control that resolves to the LB,
+    ## or an IP you reserved and assign to the LB through serviceAnnotations.
+    ##
+    externalHost: ""
+    ## The public TURN port, on the load balancer.
+    ##
+    port: 3478
+    ## Annotations of the TURN Service. AWS NLB with reserved Elastic IPs, for example:
+    ##   service.beta.kubernetes.io/aws-load-balancer-type: external
+    ##   service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+    ##   service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+    ##   service.beta.kubernetes.io/aws-load-balancer-eip-allocations: eipalloc-0123456789abcdef0,eipalloc-0fedcba9876543210
+    ##   service.beta.kubernetes.io/aws-load-balancer-healthcheck-protocol: TCP
+    ##   service.beta.kubernetes.io/aws-load-balancer-healthcheck-port: "9000"
+    ##
+    serviceAnnotations: {}
+
   ## Set resources: {} to clear the defaults.
   ##
   resources:

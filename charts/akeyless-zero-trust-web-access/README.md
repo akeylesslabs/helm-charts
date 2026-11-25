@@ -143,7 +143,8 @@ The web worker runs a Chromium-based browser (`akeyless/zero-trust-web-worker`).
    - Finished recordings wait in `recordings/` on the shared volume. `.mkv` recordings an older worker left on the volume are uploaded as they are.
 6. A chart upgrade does not restart the media server, so live sessions survive it. To move a node's media server to the new version, delete its pod while no sessions run on that node.
 7. A proxy or ingress in front of the dispatcher must keep the browser's `Host` header. The live routes compare the browser's `Origin` with it, and answer 403 when they differ.
-8. Move your values to the 4.0.0 layout, see the next section.
+8. Set `dispatcher.turn.externalHost`, now required. The dispatcher relays the video of viewers that cannot reach a media server directly, through a TURN server on UDP `dispatcher.turn.port` (default `3478`). The chart creates a UDP-only LoadBalancer Service, `<fullname>-turn`, for it. Choose the address before you install: a DNS name you control that resolves to the load balancer, or a reserved IP you assign to it with `dispatcher.turn.serviceAnnotations` (on AWS, an NLB with `aws-load-balancer-eip-allocations` and a TCP:9000 health check). Allow UDP `3478` from users' networks to that load balancer, and UDP `32768-60999` from the media servers to the dispatcher pod. Viewers on networks that block UDP get no video. The dispatcher must stay at one replica, and a restart drops the relayed sessions.
+9. Move your values to the 4.0.0 layout, see the next section.
 
 #### Upgrading to the 4.0.0 values layout
 
@@ -347,6 +348,9 @@ The following table lists the configurable parameters of the Zero Trust Web Acce
 | `dispatcher.image.tag`                    | Zero Trust Web Access Dispatcher image tag                                                                           | `latest`                                                     |      
 | `dispatcher.image.pullPolicy`             | Zero Trust Web Access Dispatcher image pull policy                                                                   | `Always`                                                     |  
 | `dispatcher.containerName`                | Zero Trust Web Access Dispatcher container name                                                                      | `web-dispatcher`                                             |    
+| `dispatcher.turn.externalHost`            | **Required.** DNS name or reserved IP that viewers use to reach the TURN Service's load balancer                    | `""`                                                         |
+| `dispatcher.turn.port`                    | Public TURN port on the load balancer (UDP)                                                                          | `3478`                                                       |
+| `dispatcher.turn.serviceAnnotations`      | Annotations of the TURN LoadBalancer Service, for example reserved EIPs on an AWS NLB                                | `{}`                                                         |
 | `dispatcher.replicaCount`                 | Number of dispatchers. Must be `1`, one dispatcher per worker pool                                                                     | `1`                                                          |
 | `dispatcher.livenessProbe`                | Liveness probe configuration for Zero Trust Web Access Dispatcher                                                    | Check `values.yaml` file                                     |                   
 | `dispatcher.readinessProbe`               | Readiness probe configuration for Zero Trust Web Access Dispatcher                                                   | Check `values.yaml` file                                     |         

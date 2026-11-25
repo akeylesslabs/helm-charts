@@ -67,6 +67,9 @@ spec:
               name: web
             - containerPort: 2000
               name: metrics
+            - containerPort: 3478
+              name: turn
+              protocol: UDP
           env:
             - name: WEB_WORKER_SERVICE_DNS
               value: {{ include "akeyless-zero-web-access.fullname" . }}-discovery
@@ -132,6 +135,10 @@ spec:
 {{- $sse := $s3.sse | default dict }}
             - name: MEDIA_SERVER
               value: {{ printf "%s-mediamtx-discovery:%v" .Release.Name .Values.mediamtx.webrtcPort | quote }}
+            - name: TURN_EXTERNAL_HOST
+              value: {{ .Values.dispatcher.turn.externalHost | quote }}
+            - name: TURN_PORT
+              value: {{ .Values.dispatcher.turn.port | default 3478 | quote }}
             - name: ENABLE_RECORDING
               value: {{ ternary "true" "false" ($rec.enabled | default false) | quote }}
             - name: ENABLE_RECORDING_UPLOAD

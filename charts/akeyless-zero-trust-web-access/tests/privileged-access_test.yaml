@@ -3,6 +3,7 @@ release:
   name: ztwa
   namespace: sra
 set:
+  dispatcher.turn.externalHost: turn.example.com
   config.ztwaAuth.ztwaAccessID: p-priv
   config.ztwaAuth.authorizedAccessIDs: [p-1, p-2]
 tests:
