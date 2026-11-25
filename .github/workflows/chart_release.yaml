@@ -20,7 +20,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
@@ -30,7 +30,7 @@ jobs:
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
       - name: Set up Helm
-        uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2 # v5
+        uses: azure/setup-helm@2f5e7bc67f1f9972ab16657bb795f36d8f04de0e # v5.1.0
 
       - name: Add dependency chart repos
         run: |
@@ -38,7 +38,7 @@ jobs:
           helm repo update
 
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@a0d2dc62c5e491af8ef6ba64a2e02bcf3fb33aa1 # v1
+        uses: helm/chart-releaser-action@92c6b97fa9f664492a2592e0d1d80bc6bf378957 # v1.9.0
         env:
           CR_TOKEN: "${{ secrets.AKEYLESS_CI_GITHUB_TOKEN }}"
 
@@ -54,7 +54,7 @@ jobs:
       updated_charts_summary: ${{ steps.release.outputs.updated_charts_summary }}
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           token: ${{ secrets.AKEYLESS_CI_COMMIT_PUSH_TOKEN }}
@@ -72,7 +72,7 @@ jobs:
 
       - name: Dispatch manifest update
         if: steps.release.outputs.released == 'true'
-        uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           github-token: ${{ secrets.AKEYLESS_CI_COMMIT_PUSH_TOKEN }}
           script: |
@@ -104,7 +104,7 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Slack Failure Notification
-        uses: rtCamp/action-slack-notify@f43175ac92c1fb2e8f9cd89aa2984941ac0d30dc # v2
+        uses: rtCamp/action-slack-notify@06cc13f74fa8d4d2296c09455d91e9453e4025f4 # v2.4.1
         env:
           SLACK_CHANNEL: 'operations'
           SLACK_COLOR: '#bd3232'
@@ -152,13 +152,15 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Slack Success Notification
-        uses: rtCamp/action-slack-notify@f43175ac92c1fb2e8f9cd89aa2984941ac0d30dc # v2
+        uses: rtCamp/action-slack-notify@06cc13f74fa8d4d2296c09455d91e9453e4025f4 # v2.4.1
         env:
           SLACK_CHANNEL: 'operations'
           SLACK_COLOR: 'good'
           SLACK_ICON: https://github.com/rtCamp.png?size=48
-          SLACK_TITLE: Helm Chart Latest Version Release Updated
-          SLACK_MESSAGE: '${{ env.slack-message }}'
+          # Since v2.4.0, Slack Notify omits SLACK_TITLE when MSG_MINIMAL is true.
+          SLACK_MESSAGE: |-
+            *Helm Chart Latest Version Release Updated*
+            ${{ env.slack-message }}
           SLACK_USERNAME: githubBot
           SLACK_WEBHOOK: ${{ secrets.SLACK_OPERATIONS_WEBHOOK }}
           MSG_MINIMAL: true
@@ -193,7 +195,7 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Slack Failure Notification
-        uses: rtCamp/action-slack-notify@f43175ac92c1fb2e8f9cd89aa2984941ac0d30dc # v2
+        uses: rtCamp/action-slack-notify@06cc13f74fa8d4d2296c09455d91e9453e4025f4 # v2.4.1
         env:
           SLACK_CHANNEL: 'operations'
           SLACK_COLOR: '#bd3232'
