@@ -111,7 +111,7 @@ tests:
             protocol: UDP
         documentSelector:
           path: metadata.name
-          value: ztwa-mediamtx-discovery
+          value: ztwa-disc-mtx
 
   - it: "rendering without externalHost fails"
     template: templates/dispatcher-turn-service.yaml

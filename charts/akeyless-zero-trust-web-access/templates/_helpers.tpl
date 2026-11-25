@@ -25,6 +25,14 @@ If release name contains chart name it will be used as a full name.
 {{- end -}}
 
 {{/*
+The headless Service the dispatcher finds the media servers by. Helm caps release names at 53,
+leaving 10 characters for a suffix within the 63 a Service name allows.
+*/}}
+{{- define "akeyless-zero-web-access.mediamtxDiscovery" -}}
+{{- printf "%s-disc-mtx" (.Release.Name | trunc 53 | trimSuffix "-") -}}
+{{- end -}}
+
+{{/*
 Create chart name and version as used by the chart label.
 */}}
 {{- define "akeyless-zero-web-access.chart" -}}

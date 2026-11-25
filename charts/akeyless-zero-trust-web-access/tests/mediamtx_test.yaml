@@ -11,7 +11,7 @@ tests:
     template: templates/mediamtx-daemonset.yaml
     documentSelector:
       path: metadata.name
-      value: ztwa-mediamtx-discovery
+      value: ztwa-disc-mtx
     asserts:
       - isKind:
           of: Service
@@ -48,7 +48,25 @@ tests:
           path: spec.template.spec.containers[0].env
           content:
             name: MEDIA_SERVER
-            value: ztwa-mediamtx-discovery:8889
+            value: ztwa-disc-mtx:8889
+
+  - it: "the longest release name keeps the discovery Service within 63 characters"
+    release:
+      name: r2345678901234567890123456789012345678901234567890123
+    asserts:
+      - equal:
+          path: metadata.name
+          value: r2345678901234567890123456789012345678901234567890123-disc-mtx
+        template: templates/mediamtx-daemonset.yaml
+        documentSelector:
+          path: spec.clusterIP
+          value: None
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MEDIA_SERVER
+            value: r2345678901234567890123456789012345678901234567890123-disc-mtx:8889
+        template: templates/dispatcher-deployment.yaml
 
   - it: "lets workers run on any node"
     template: templates/web-worker-deployment.yaml

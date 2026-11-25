@@ -134,7 +134,7 @@ spec:
 {{- $s3 := $rec.s3 | default dict }}
 {{- $sse := $s3.sse | default dict }}
             - name: MEDIA_SERVER
-              value: {{ printf "%s-mediamtx-discovery:%v" .Release.Name .Values.mediamtx.webrtcPort | quote }}
+              value: {{ printf "%s:%v" (include "akeyless-zero-web-access.mediamtxDiscovery" .) .Values.mediamtx.webrtcPort | quote }}
             - name: TURN_EXTERNAL_HOST
               value: {{ .Values.dispatcher.turn.externalHost | quote }}
             - name: TURN_PORT
