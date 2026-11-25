@@ -565,6 +565,18 @@ gateway:
     # Name of the ConfigMap or Secret containing the custom CA certificates.
     volumeSourceName: ""  # Must have a key named 'ca-certificates.crt'.
 
+  ## Claude Workload Identity Federation. See README.
+  anthropicWorkloadIdentity:
+    ## Token Source = File: mounts an Anthropic-audience service account token at
+    ## /var/run/secrets/anthropic.com/token.
+    enabled: false
+    audience: https://api.anthropic.com
+    expirationSeconds: 600
+    ## Token Source = Kubernetes: lets the Gateway get Anthropic tokens from Kubernetes.
+    ## Needs a dedicated service account (globalConfig.serviceAccount).
+    tokenRequest:
+      enabled: false
+
   secretsStore:
     # Enable Secret Store CSI integration
     enabled: false
