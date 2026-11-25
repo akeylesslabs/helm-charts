@@ -10,8 +10,8 @@
   Akeyless Gateway + Modern PAM
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Modern PAM {{ index .Chart.Annotations "modernPamVersion" }} is installed as the V2 bastion of this gateway.
-Gateway address the V2 bastion uses: {{ $gw.url | default "not set, modernPam.gateway.url is required" }}
+Modern PAM {{ index .Chart.Annotations "modernPamVersion" }} is installed beside this gateway. Helm's APP VERSION column shows the gateway's version, so this is the Modern PAM version.
+Gateway address Modern PAM uses: {{ $gw.url | default "not set, modernPam.gateway.url is required" }}
 Web console path: {{ if $ingress.enabled }}the Modern PAM ingress{{ else }}the gateway proxy{{ end }}, never both.
 {{- if $broker.allowInProcessNonProduction }}
 
@@ -47,9 +47,9 @@ Back up secret {{ include "akeyless-gateway.modernPamFullname" . }}-hostkey - it
 {{- $legacy := include "akeyless-gateway.modernPamLegacyNotes" . | trim }}
 {{- if $legacy }}
 
-V1 values found under modernPam:
+Settings for the current bastion found under modernPam:
   {{ $legacy }}
-Move them to the V2 keys, the migration guide has the table.
+Move them to the Modern PAM keys. The chart README lists them.
 {{- end }}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

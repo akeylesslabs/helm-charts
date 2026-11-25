@@ -7,7 +7,7 @@ all, so every read of it goes through this helper or through a dict default, nev
 {{- end -}}
 
 {{/*
-The V2 chart's fullname, which the gateway needs to find its Services. It repeats the
+The Modern PAM chart's fullname, which the gateway needs to find its Services. It repeats the
 subchart's rule: the full override if set, else the release name when it already holds the
 name modern-pam, else release-modern-pam. The alias would give a mixed case name.
 */}}
@@ -25,17 +25,17 @@ name modern-pam, else release-modern-pam. The alias would give a mixed case name
 {{- end -}}
 {{- end -}}
 
-{{/* V1 and V2 are two releases, never one. Rendered by modernpam-guard.yaml on every render. */}}
+{{/* The current bastion and Modern PAM are two releases, never one. Rendered by modernpam-guard.yaml on every render. */}}
 {{- define "akeyless-gateway.modernPamGuard" -}}
 {{- if and .Values.sra.enabled (include "akeyless-gateway.modernPamEnabled" .) -}}
-{{- fail "sra.enabled and modernPam.enabled are both true. A release runs the V1 bastion or the V2 one, never both. To move a cluster from V1 to V2 set sra.enabled to false and modernPam.enabled to true in the same upgrade. To run both in one estate, use two releases on two clusters." -}}
+{{- fail "sra.enabled and modernPam.enabled are both true. A release runs the current bastion or Modern PAM, never both. To move a cluster from the current bastion to Modern PAM set sra.enabled to false and modernPam.enabled to true in the same upgrade. To run both in one estate, use two releases on two clusters." -}}
 {{- end -}}
 {{- end -}}
 
 {{/*
-Where the gateway reaches the V2 control API and web gate, the V2 counterparts of the two V1 internal URLs.
+Where the gateway reaches the Modern PAM control API and web gate, the counterparts of the current bastion's two internal URLs.
 The web console has one path. By default it is the gateway's proxy, which needs the second URL. Turning on
-the V2 ingress makes the ingress the path and leaves the gateway without the web URL, so the two never serve
+the Modern PAM ingress makes the ingress the path and leaves the gateway without the web URL, so the two never serve
 the same console at once.
 */}}
 {{- define "akeyless-gateway.modernPamGatewayConfig" }}
@@ -52,7 +52,7 @@ the same console at once.
 {{- end -}}
 
 {{/*
-V1 keys placed under modernPam and what V2 did with each, one line per key found.
+Keys of the current bastion placed under modernPam and what Modern PAM did with each, one line per key found.
 The mapped list repeats the bundled chart's own compat helper, so re-check it against that chart on every re-pin.
 */}}
 {{- define "akeyless-gateway.modernPamLegacyNotes" -}}
@@ -68,7 +68,7 @@ The mapped list repeats the bundled chart's own compat helper, so re-check it ag
 {{- end -}}
 {{- range $top := list "sshConfig" "webConfig" "customCA" -}}
 {{- if index $mp $top }}
-  {{ $top }}: every key under it that is not listed as mapped above is accepted and not applied by V2
+  {{ $top }}: every key under it that is not listed as mapped above is accepted and not applied by Modern PAM
 {{- end -}}
 {{- end -}}
 {{- end -}}

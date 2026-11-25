@@ -93,7 +93,7 @@
       },
       "modernPam": {
         "type": "object",
-        "description": "Modern PAM through the sra subchart. Only enabled is defined here, every other key belongs to the subchart and is checked by its schema.",
+        "description": "Modern PAM, bundled with this chart. Only enabled is defined here, every other key belongs to the bundled chart and is checked by its schema. The chart README lists them.",
         "properties": {
           "enabled": {
             "type": "boolean",
