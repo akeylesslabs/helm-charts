@@ -14,7 +14,7 @@ jobs:
   release-scripts-test:
     # Unit tests for the release-automation shell logic (e.g. the legacy-SRA release gate).
     # Pure bash, no cluster needed.
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
@@ -26,10 +26,7 @@ jobs:
 
 
   chart-test:
-    # ubuntu-latest currently resolves to ubuntu-24.04, where kind/gateway
-    # installs hit a runner-kernel-specific rsyslog permission failure.
-    # Keep this pin until ubuntu-24.04 runner/kernel or gateway behavior changes.
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
 

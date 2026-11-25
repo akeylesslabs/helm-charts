@@ -44,7 +44,7 @@ jobs:
 
   update-latest-helm-chart-version:
     if: github.event_name == 'deployment' && github.event.deployment.task == 'update-latest-version'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     outputs:
@@ -85,7 +85,7 @@ jobs:
 
   Slack-Notification-on-release-failure:
     name: Slack-On-Release-Failure-Notification
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions: {}
     needs: [ release ]
     if: always() && needs.release.result == 'failure'
@@ -117,7 +117,7 @@ jobs:
 
   Slack-Notification-on-latest-version-success:
     name: Slack-On-Latest-Version-Success-Notification
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions: {}
     needs: [ update-latest-helm-chart-version ]
     if: github.event_name == 'deployment' && github.event.deployment.task == 'update-latest-version' && needs.update-latest-helm-chart-version.result == 'success'
@@ -166,7 +166,7 @@ jobs:
 
   Slack-Notification-on-latest-version-failure:
     name: Slack-On-Latest-Version-Failure-Notification
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions: {}
     needs: [ update-latest-helm-chart-version ]
     if: always() && github.event_name == 'deployment' && github.event.deployment.task == 'update-latest-version' && needs.update-latest-helm-chart-version.result == 'failure'
