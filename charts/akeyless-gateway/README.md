@@ -94,12 +94,12 @@ modernPam:
   broker:
     accessId: p-xxxxxxxxxxxx          # an API key identity of its own, not the gateway's
     existingSecret: modern-pam-broker # a Secret holding that identity's key under the key accessKey
-    allowInProcessNonProduction: true
+    allowInProcessNonProduction: true # required to run it, and NON-PRODUCTION ONLY: the broker shares the bastion's process, so use it for evaluation
   ssh:
     enabled: true
     caPublicKey: ssh-rsa AAAA...      # the gateway's SSH certificate issuer public key
     knownHosts:
-      entries: ["[10.0.0.5]:22 ssh-ed25519 AAAA..."]   # one per SSH target, a target not listed is refused
+      entries: ["[10.0.0.5]:22 ssh-ed25519 AAAA..."]   # one per target. Browser and SSH sessions to a target that is not listed are refused
 ```
 
 - **`<cluster-domain>`** is your cluster's DNS domain, `cluster.local` unless the cluster sets another one.
@@ -108,9 +108,28 @@ modernPam:
   private package `oci://ghcr.io/akeylesslabs/modern-pam/charts/sra`, so log in first with
   `helm registry login ghcr.io` using an account that can read that package. Installing a released chart from the
   Helm repository needs none of this, because the packaged chart already contains it.
+- **Three values decide whether anything works.** `modernPam.broker.allowInProcessNonProduction: true` is
+  required, because without it the Modern PAM pod refuses to start, and it accepts that this build is for
+  evaluation and not for production. `modernPam.ssh.knownHosts.entries` must list the host key of every target
+  (`ssh-keyscan -p <port> <target>`), because a target that is not listed is refused, for browser sessions as well
+  as SSH. `modernPam.ssh.caPublicKey` is the gateway's SSH certificate issuer key when SSH is on. The install notes
+  repeat all three on screen.
+- **Upgrading from an earlier chart changes nothing until you turn Modern PAM on.** `helm upgrade --reuse-values`
+  from a release without a `modernPam` key renders no Modern PAM object and does not touch the gateway. Turning it
+  on adds two environment variables to the gateway, so its pods restart once, and turning it off restarts them again.
 - **One of `sra.enabled` or `modernPam.enabled`.** A release with both on is refused when it renders. To move a
   release from V1 to V2 set `sra.enabled: false` and `modernPam.enabled: true` in the same `helm upgrade`, and
   `helm rollback` returns it to V1. To run V1 and V2 together, use two releases on two clusters, each with its own gateway.
+- **Moving from the current bastion (V1) changes what users connect to.**
+  - The SSH Service changes from `ssh-<release>-akeyless-gateway`, a LoadBalancer on port 22 by default, to
+    `<release>-modern-pam-ssh`, a ClusterIP on port 2222. Nothing outside the cluster can connect until you set
+    `modernPam.ssh.service.type` (and `loadBalancerSourceRanges`), and a new load balancer has a new address.
+  - Clients dial port 2222, because the bastion runs as a non-root process. To keep port 22 for your users, put your own
+    load balancer or proxy in front that answers on 22 and forwards to 2222, and set `modernPam.ssh.externalPort: 22`
+    so clients are told that port.
+  - The V1 bastion's web volumes carry no keep policy, so turning `sra.enabled` off deletes them, and a rollback to V1
+    recreates them empty. Back up what you need from them first.
+  - Rolling back to V1 recreates the V1 SSH Service, again with a new load balancer address.
 - **V1 values are accepted under `modernPam`.** `sshConfig.CAPublicKey`, `sshConfig.service.type`,
   `.externalTrafficPolicy` and `.annotations`, and `env` are mapped to their V2 keys, and everything else under
   `sshConfig`, `webConfig` and `customCA` is accepted and not applied. The install notes list which was which. A key

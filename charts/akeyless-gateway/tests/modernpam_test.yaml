@@ -1,0 +1,131 @@
+suite: akeyless-gateway Modern PAM wiring
+templates:
+  - templates/deployment.yaml
+release:
+  name: gw
+  namespace: ns
+set:
+  globalConfig.gatewayAuth.gatewayAccessId: p-xxxxxxxxxxxx
+  globalConfig.gatewayAuth.gatewayAccessType: azure_ad
+tests:
+  - it: is off by default and gives the gateway no Modern PAM address
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REMOTE_ACCESS_SSH_SERVICE_INTERNAL_URL
+          any: true
+
+  - it: points the gateway at the control and web Services on their default ports
+    set:
+      modernPam.enabled: true
+      modernPam.gateway.url: http://gw-akeyless-gateway.ns.svc.cluster.local:8000/api/v2
+      modernPam.broker.accessId: p-yyyyyyyyyyyy
+      modernPam.broker.existingSecret: broker
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REMOTE_ACCESS_SSH_SERVICE_INTERNAL_URL
+            value: http://gw-modern-pam.ns.svc.cluster.local:9900
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REMOTE_ACCESS_WEB_SERVICE_INTERNAL_URL
+            value: http://gw-modern-pam-web.ns.svc.cluster.local:8888
+
+  - it: follows a changed control and web port
+    set:
+      modernPam.enabled: true
+      modernPam.gateway.url: http://gw-akeyless-gateway.ns.svc.cluster.local:8000/api/v2
+      modernPam.broker.accessId: p-yyyyyyyyyyyy
+      modernPam.broker.existingSecret: broker
+      modernPam.control.port: 9901
+      modernPam.web.port: 8889
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REMOTE_ACCESS_SSH_SERVICE_INTERNAL_URL
+            value: http://gw-modern-pam.ns.svc.cluster.local:9901
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REMOTE_ACCESS_WEB_SERVICE_INTERNAL_URL
+            value: http://gw-modern-pam-web.ns.svc.cluster.local:8889
+
+  - it: gives the gateway no web address when the web gate is off
+    set:
+      modernPam.enabled: true
+      modernPam.gateway.url: http://gw-akeyless-gateway.ns.svc.cluster.local:8000/api/v2
+      modernPam.broker.accessId: p-yyyyyyyyyyyy
+      modernPam.broker.existingSecret: broker
+      modernPam.web.enabled: false
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REMOTE_ACCESS_WEB_SERVICE_INTERNAL_URL
+          any: true
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REMOTE_ACCESS_SSH_SERVICE_INTERNAL_URL
+            value: http://gw-modern-pam.ns.svc.cluster.local:9900
+
+  - it: gives the gateway no web address when the Modern PAM ingress is the web path
+    set:
+      modernPam.enabled: true
+      modernPam.gateway.url: http://gw-akeyless-gateway.ns.svc.cluster.local:8000/api/v2
+      modernPam.broker.accessId: p-yyyyyyyyyyyy
+      modernPam.broker.existingSecret: broker
+      modernPam.ingress.enabled: true
+      modernPam.ingress.rules:
+        - hostname: console.example.com
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REMOTE_ACCESS_WEB_SERVICE_INTERNAL_URL
+          any: true
+
+  - it: refuses the old and the new bastion in one release
+    set:
+      sra.enabled: true
+      modernPam.enabled: true
+      modernPam.gateway.url: http://gw-akeyless-gateway.ns.svc.cluster.local:8000/api/v2
+      modernPam.broker.accessId: p-yyyyyyyyyyyy
+      modernPam.broker.existingSecret: broker
+    asserts:
+      - failedTemplate:
+          errorPattern: sra.enabled and modernPam.enabled are both true
+
+  - it: refuses a plaintext secret in the Modern PAM env under the strict policy
+    set:
+      strictSecurityPolicy.enabled: true
+      modernPam.enabled: true
+      modernPam.gateway.url: http://gw-akeyless-gateway.ns.svc.cluster.local:8000/api/v2
+      modernPam.broker.accessId: p-yyyyyyyyyyyy
+      modernPam.broker.existingSecret: broker
+      modernPam.extraEnv:
+        - name: MY_PASSWORD
+          value: not-a-secret-store
+    asserts:
+      - failedTemplate:
+          errorPattern: potential secret 'MY_PASSWORD' in modernPam.extraEnv
+
+  - it: allows a secret reference in the Modern PAM env under the strict policy
+    set:
+      strictSecurityPolicy.enabled: true
+      modernPam.enabled: true
+      modernPam.gateway.url: http://gw-akeyless-gateway.ns.svc.cluster.local:8000/api/v2
+      modernPam.broker.accessId: p-yyyyyyyyyyyy
+      modernPam.broker.existingSecret: broker
+      modernPam.extraEnv:
+        - name: MY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: s
+              key: k
+    asserts:
+      - notFailedTemplate: {}

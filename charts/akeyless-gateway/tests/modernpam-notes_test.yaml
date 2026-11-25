@@ -1,0 +1,98 @@
+suite: akeyless-gateway Modern PAM install notes
+templates:
+  - templates/NOTES.txt
+release:
+  name: gw
+  namespace: ns
+set:
+  globalConfig.gatewayAuth.gatewayAccessId: p-xxxxxxxxxxxx
+  globalConfig.gatewayAuth.gatewayAccessType: azure_ad
+tests:
+  - it: says nothing about Modern PAM when it is off
+    asserts:
+      - notMatchRegexRaw:
+          pattern: Modern PAM
+
+  - it: says the pod will not start until the non-production switch is set
+    set:
+      modernPam.enabled: true
+      modernPam.gateway.url: http://gw-akeyless-gateway.ns.svc.cluster.local:8000/api/v2
+      modernPam.broker.accessId: p-yyyyyyyyyyyy
+      modernPam.broker.existingSecret: broker
+    asserts:
+      - matchRegexRaw:
+          pattern: ACTION REQUIRED - the Modern PAM pod will not start
+      - matchRegexRaw:
+          pattern: modernPam.broker.allowInProcessNonProduction=true
+      - notMatchRegexRaw:
+          pattern: NOT FOR PRODUCTION
+
+  - it: says not for production when the switch is on
+    set:
+      modernPam.enabled: true
+      modernPam.gateway.url: http://gw-akeyless-gateway.ns.svc.cluster.local:8000/api/v2
+      modernPam.broker.accessId: p-yyyyyyyyyyyy
+      modernPam.broker.existingSecret: broker
+      modernPam.broker.allowInProcessNonProduction: true
+    asserts:
+      - matchRegexRaw:
+          pattern: NOT FOR PRODUCTION
+      - notMatchRegexRaw:
+          pattern: ACTION REQUIRED
+
+  - it: says every target is refused until its host key is trusted
+    set:
+      modernPam.enabled: true
+      modernPam.gateway.url: http://gw-akeyless-gateway.ns.svc.cluster.local:8000/api/v2
+      modernPam.broker.accessId: p-yyyyyyyyyyyy
+      modernPam.broker.existingSecret: broker
+      modernPam.broker.allowInProcessNonProduction: true
+    asserts:
+      - matchRegexRaw:
+          pattern: Connections to your targets will be refused until you trust their host keys
+      - matchRegexRaw:
+          pattern: modernPam.ssh.knownHosts.entries
+
+  - it: drops the host key warning once a host key is listed
+    set:
+      modernPam.enabled: true
+      modernPam.gateway.url: http://gw-akeyless-gateway.ns.svc.cluster.local:8000/api/v2
+      modernPam.broker.accessId: p-yyyyyyyyyyyy
+      modernPam.broker.existingSecret: broker
+      modernPam.broker.allowInProcessNonProduction: true
+      modernPam.ssh.knownHosts.entries:
+        - "[10.0.0.5]:22 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExample"
+    asserts:
+      - notMatchRegexRaw:
+          pattern: refused until you trust their host keys
+
+  - it: tells the customer to back up the SSH host key secret when SSH is on
+    set:
+      modernPam.enabled: true
+      modernPam.gateway.url: http://gw-akeyless-gateway.ns.svc.cluster.local:8000/api/v2
+      modernPam.broker.accessId: p-yyyyyyyyyyyy
+      modernPam.broker.existingSecret: broker
+      modernPam.broker.allowInProcessNonProduction: true
+      modernPam.ssh.enabled: true
+      modernPam.ssh.caPublicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQExample
+    asserts:
+      - matchRegexRaw:
+          pattern: Back up secret gw-modern-pam-hostkey
+
+  - it: lists each V1 key placed under modernPam and what became of it
+    set:
+      modernPam.enabled: true
+      modernPam.gateway.url: http://gw-akeyless-gateway.ns.svc.cluster.local:8000/api/v2
+      modernPam.broker.accessId: p-yyyyyyyyyyyy
+      modernPam.broker.existingSecret: broker
+      modernPam.broker.allowInProcessNonProduction: true
+      modernPam.sshConfig.CAPublicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQExample
+      modernPam.sshConfig.service.type: ClusterIP
+      modernPam.webConfig.something: 1
+    asserts:
+      - matchRegexRaw:
+          pattern: mapped    modernPam.sshConfig.CAPublicKey -> modernPam.ssh.caPublicKey
+      - matchRegexRaw:
+          pattern: mapped    modernPam.sshConfig.service.type -> modernPam.ssh.service.type
+      - matchRegexRaw:
+          pattern: webConfig. every key under it that is not listed as mapped above is accepted and not applied

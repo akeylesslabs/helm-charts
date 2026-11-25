@@ -414,7 +414,7 @@ spec:
             {{- if .Values.sra.enabled }}
             {{-  include "akeyless-gateway.unifiedGatewaySraGatewayConfig" . | nindent 10 }}
             {{- end }}
-            {{- if .Values.modernPam.enabled }}
+            {{- if include "akeyless-gateway.modernPamEnabled" . }}
             {{- include "akeyless-gateway.modernPamGatewayConfig" . | nindent 10 }}
             {{- end }}
             ## tls config

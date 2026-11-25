@@ -599,6 +599,11 @@ gateway:
 ##                                  (take the Service name and port from the release: kubectl get svc -n <namespace>)
 ##   modernPam.broker.accessId      the access id of the identity the broker signs in with
 ##   modernPam.broker.existingSecret  a Secret holding that identity's access key
+##   modernPam.broker.allowInProcessNonProduction  true to run Modern PAM at all. It accepts that the broker
+##                                  shares the bastion's process, so this build is for evaluation only. Without
+##                                  it the Modern PAM pod refuses to start, and the install notes say so.
+## Also needed before any session works: the host key of every SSH target in modernPam.ssh.knownHosts.entries.
+## A target that is not listed is refused, for browser sessions as well as SSH.
 ## Values written for the V1 sra: block may be placed under modernPam as they are: sshConfig.CAPublicKey,
 ## sshConfig.service.type, .externalTrafficPolicy, .annotations and env are mapped, the rest of sshConfig, webConfig
 ## and customCA is accepted and not applied, and the install notes list which was which. A V1 key that has the same
@@ -606,6 +611,10 @@ gateway:
 ## never valid still fails by name.
 modernPam:
   enabled: false
+  image:
+    ## The bastion image, pinned by digest so the tag cannot move under a release. The digest is the one Docker
+    ## Hub serves for the bundled chart's own tag, and it moves together with the chart pin in Chart.yaml.
+    digest: sha256:082c66e69bb3feab476af02274dd1f83b3254f53efdcc3b56d61e509247f0b15
   ## The V2 chart is bundled under the alias modernPam, which Helm uses as its chart name, and a mixed case name is not
   ## a valid Kubernetes name. This is what names its Deployment and Services: <release>-modern-pam.
   nameOverride: modern-pam

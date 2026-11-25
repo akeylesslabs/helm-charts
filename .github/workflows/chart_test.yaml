@@ -22,7 +22,9 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Run release-script unit tests
-        run: bash .github/scripts/test_select_charts.sh
+        run: |
+          bash .github/scripts/test_select_charts.sh
+          bash .github/scripts/test_verify_bundled_chart.sh
 
 
   chart-test:

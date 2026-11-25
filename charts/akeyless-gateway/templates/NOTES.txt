@@ -1,11 +1,49 @@
-{{- if .Values.modernPam.enabled }}
+{{- if include "akeyless-gateway.modernPamEnabled" . }}
+{{- $mp := .Values.modernPam | default dict }}
+{{- $gw := $mp.gateway | default dict }}
+{{- $broker := $mp.broker | default dict }}
+{{- $ssh := $mp.ssh | default dict }}
+{{- $hostKey := $ssh.hostKey | default dict }}
+{{- $knownHosts := $ssh.knownHosts | default dict }}
+{{- $ingress := $mp.ingress | default dict }}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   Akeyless Gateway + Modern PAM
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Modern PAM {{ index .Chart.Annotations "modernPamVersion" }} is installed as the V2 bastion of this gateway.
-Gateway address the V2 bastion uses: {{ .Values.modernPam.gateway.url | default "not set, modernPam.gateway.url is required" }}
-Web console path: {{ if .Values.modernPam.ingress.enabled }}the Modern PAM ingress{{ else }}the gateway proxy{{ end }}, never both.
+Gateway address the V2 bastion uses: {{ $gw.url | default "not set, modernPam.gateway.url is required" }}
+Web console path: {{ if $ingress.enabled }}the Modern PAM ingress{{ else }}the gateway proxy{{ end }}, never both.
+{{- if $broker.allowInProcessNonProduction }}
+
+NOT FOR PRODUCTION
+  Credential handling is not yet isolated from session traffic, so a fault in
+  one session could expose credentials beyond it. Use for evaluation only.
+{{- else }}
+
+ACTION REQUIRED - the Modern PAM pod will not start.
+  Set modernPam.broker.allowInProcessNonProduction=true to run it outside production:
+    helm upgrade {{ .Release.Name }} -n {{ .Release.Namespace }} <chart> --reset-then-reuse-values \
+      --set modernPam.broker.allowInProcessNonProduction=true
+  That needs Helm 3.14 or later. On an older Helm, export the release's values first:
+    helm get values {{ .Release.Name }} -n {{ .Release.Namespace }} -o yaml > values.yaml
+    helm upgrade {{ .Release.Name }} -n {{ .Release.Namespace }} <chart> -f values.yaml \
+      --set modernPam.broker.allowInProcessNonProduction=true
+{{- end }}
+{{- if and (not $knownHosts.existingSecret) (not $knownHosts.entries) }}
+
+Connections to your targets will be refused until you trust their host keys.
+  This applies to browser sessions as well as SSH.
+  Collect a key:  ssh-keyscan -p <port> <target>
+  Then set modernPam.ssh.knownHosts.entries, or point modernPam.ssh.knownHosts.existingSecret
+  at a secret you manage.
+{{- end }}
+{{- if and $ssh.enabled (not $hostKey.existingSecret) }}
+
+Back up secret {{ include "akeyless-gateway.modernPamFullname" . }}-hostkey - it is this server's SSH identity.
+  It survives uninstall and is reused on reinstall. If you lose it, every client
+  that has connected will refuse to reconnect until they clear the old key from
+  their known_hosts.
+{{- end }}
 {{- $legacy := include "akeyless-gateway.modernPamLegacyNotes" . | trim }}
 {{- if $legacy }}
 
