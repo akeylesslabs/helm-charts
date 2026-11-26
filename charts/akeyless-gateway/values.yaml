@@ -154,6 +154,12 @@ globalConfig:
       # storageClass: ""
       # size: 10Gi
 
+    ## OpenShift / user-namespaces clusters: run the standalone cache pod in its own Linux user namespace.
+    ## The restricted-v3 SCC rejects pods that do not set hostUsers: false, so set this when the cache pod
+    ## must be admitted under restricted-v3. Unset (default) = the field is not rendered.
+    ## Not used by cacheHA (Redis HA): the redis-ha subchart has no hostUsers option.
+    # hostUsers: false
+
     ## Pod-level security context for the cache pod.
     ## fsGroup: 1000 is the GID of the redis group in the official Redis Alpine image and is
     ## required when persistence.enabled=true so that the mounted /data volume is chown'ed
@@ -268,6 +274,12 @@ gateway:
     labels: {}
 
     replicaCount: 1
+
+    ## OpenShift / user-namespaces clusters: run the Gateway pod in its own Linux user namespace.
+    ## Unset (default) = the field is not rendered and the manifest is unchanged.
+    ## false = isolated user namespace (container UIDs, including root, map to unprivileged UIDs on the node).
+    ## Cannot be combined with hostNetwork, hostPID or hostIPC. Requires cluster support for user namespaces.
+    # hostUsers: false
 
     ## Deployment update strategy configuration
     ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
@@ -641,6 +653,10 @@ sra:
         data:
       topologySpreadConstraints: []
       strategy: {}
+      ## OpenShift / user-namespaces clusters: run the SRA Web pod in its own Linux user namespace.
+      ## Unset (default) = the field is not rendered and the manifest is unchanged.
+      ## Cannot be combined with hostNetwork, hostPID or hostIPC. Requires cluster support for user namespaces.
+      # hostUsers: false
     replicaCount: 1
 
     # Example for enabling pod-level securityContext for volume permissions:

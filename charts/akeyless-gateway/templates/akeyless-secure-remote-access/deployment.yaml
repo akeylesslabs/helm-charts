@@ -37,6 +37,10 @@ spec:
           {{- toYaml .Values.sra.webConfig.deployment.labels | nindent 8 }}
         {{- end }}
     spec:
+      {{- /* hostUsers: OpenShift / user-namespaces clusters. Rendered only when set (false is a valid value). */}}
+      {{- if not (kindIs "invalid" .Values.sra.webConfig.deployment.hostUsers) }}
+      hostUsers: {{ .Values.sra.webConfig.deployment.hostUsers }}
+      {{- end }}
       {{- include "akeyless-sra-web.podSecurityContext" . | nindent 6 }}
       serviceAccountName: {{ include "akeyless-gateway.getServiceAccountName" . }}
       {{- if .Values.sra.webConfig.deployment.nodeSelector }}

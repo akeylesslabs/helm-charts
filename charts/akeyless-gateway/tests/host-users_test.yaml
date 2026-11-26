@@ -1,0 +1,66 @@
+suite: akeyless-gateway hostUsers (user namespaces / OpenShift)
+tests:
+  - it: gateway omits hostUsers when unset (default)
+    template: templates/deployment.yaml
+    asserts:
+      - notExists:
+          path: spec.template.spec.hostUsers
+
+  - it: gateway renders hostUsers false
+    template: templates/deployment.yaml
+    set:
+      gateway.deployment.hostUsers: false
+    asserts:
+      - equal:
+          path: spec.template.spec.hostUsers
+          value: false
+
+  - it: gateway renders hostUsers true
+    template: templates/deployment.yaml
+    set:
+      gateway.deployment.hostUsers: true
+    asserts:
+      - equal:
+          path: spec.template.spec.hostUsers
+          value: true
+
+  - it: cache omits hostUsers when unset (default)
+    template: templates/akeyless-cache/cache.yaml
+    asserts:
+      - notExists:
+          path: spec.template.spec.hostUsers
+
+  - it: cache renders hostUsers false
+    template: templates/akeyless-cache/cache.yaml
+    set:
+      globalConfig.clusterCache.hostUsers: false
+    asserts:
+      - equal:
+          path: spec.template.spec.hostUsers
+          value: false
+
+  - it: SRA web omits hostUsers when unset (default)
+    template: templates/akeyless-secure-remote-access/deployment.yaml
+    set:
+      sra.enabled: true
+    asserts:
+      - notExists:
+          path: spec.template.spec.hostUsers
+
+  - it: SRA web renders hostUsers false
+    template: templates/akeyless-secure-remote-access/deployment.yaml
+    set:
+      sra.enabled: true
+      sra.webConfig.deployment.hostUsers: false
+    asserts:
+      - equal:
+          path: spec.template.spec.hostUsers
+          value: false
+
+  - it: gateway hostUsers does not leak into the cache pod
+    template: templates/akeyless-cache/cache.yaml
+    set:
+      gateway.deployment.hostUsers: false
+    asserts:
+      - notExists:
+          path: spec.template.spec.hostUsers
