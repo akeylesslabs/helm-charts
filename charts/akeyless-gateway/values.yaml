@@ -269,6 +269,12 @@ gateway:
 
     replicaCount: 1
 
+    ## OpenShift / user-namespaces clusters: run the Gateway pod in its own Linux user namespace.
+    ## Unset (default) = the field is not rendered and the manifest is unchanged.
+    ## false = isolated user namespace (container UIDs, including root, map to unprivileged UIDs on the node).
+    ## Cannot be combined with hostNetwork, hostPID or hostIPC. Requires cluster support for user namespaces.
+    # hostUsers: false
+
     ## Deployment update strategy configuration
     ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
     strategy: {}
@@ -641,6 +647,10 @@ sra:
         data:
       topologySpreadConstraints: []
       strategy: {}
+      ## OpenShift / user-namespaces clusters: run the SRA Web pod in its own Linux user namespace.
+      ## Unset (default) = the field is not rendered and the manifest is unchanged.
+      ## Cannot be combined with hostNetwork, hostPID or hostIPC. Requires cluster support for user namespaces.
+      # hostUsers: false
     replicaCount: 1
 
     # Example for enabling pod-level securityContext for volume permissions:

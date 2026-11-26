@@ -39,6 +39,10 @@ spec:
           {{- toYaml .Values.gateway.deployment.labels | nindent 8 }}
         {{- end }}
     spec:
+      {{- /* hostUsers: OpenShift / user-namespaces clusters. Rendered only when set (false is a valid value). */}}
+      {{- if not (kindIs "invalid" .Values.gateway.deployment.hostUsers) }}
+      hostUsers: {{ .Values.gateway.deployment.hostUsers }}
+      {{- end }}
       {{- if .Values.gateway.deployment.affinity.enabled }}
       affinity:
       {{- toYaml .Values.gateway.deployment.affinity.data | nindent 8 }}

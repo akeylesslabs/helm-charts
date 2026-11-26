@@ -318,6 +318,30 @@ The feature is **opt-in and default-off**. When false, the deployment is unchang
 - **Splunk forwarder / file-based log forwarding:** not supported under a read-only rootfs.
 - **FIPS:** supported. Under a read-only rootfs the image activates FIPS via `OPENSSL_CONF` and selects the FIPS binary without mutating the rootfs.
 
+## User Namespaces (`hostUsers`) - OpenShift
+
+For OpenShift, or any Kubernetes cluster with user namespaces enabled, you can run the pods in their own Linux user namespace. Container UIDs, including root, then map to an unprivileged range on the node.
+
+```yaml
+gateway:
+  deployment:
+    hostUsers: false
+sra:
+  webConfig:
+    deployment:
+      hostUsers: false   # only relevant when sra.enabled=true
+```
+
+The feature is **opt-in**. When `hostUsers` is unset, the field is not rendered and the manifest is unchanged. A value of `false` is rendered as `hostUsers: false` in the pod spec.
+
+**Requirements and limitations:**
+
+- The cluster needs user-namespace support: the Kubernetes feature, a container runtime that supports it, and a recent kernel.
+- With `hostUsers: false`, the pod cannot use `hostNetwork`, `hostPID` or `hostIPC`.
+- The SRA SSH bastion (`sra.sshConfig`) is not covered. It needs root, extra capabilities and mounts for its chroot sessions.
+- On OpenShift, you can pin the SCC with the pod annotation `openshift.io/required-scc: restricted-v3`. The chart does not set it. Add it yourself through `gateway.deployment.pod.annotations` (Gateway) or `sra.webConfig.deployment.annotations` (SRA Web).
+- To verify, check that `/proc/self/uid_map` in the container shows a non-identity mapping.
+
 ## Argo CD Instructions
 When deploying the Akeyless Gateway with Argo CD, follow these instructions:
 ```yaml
