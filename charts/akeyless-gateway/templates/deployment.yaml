@@ -414,6 +414,9 @@ spec:
             {{- if .Values.sra.enabled }}
             {{-  include "akeyless-gateway.unifiedGatewaySraGatewayConfig" . | nindent 10 }}
             {{- end }}
+            {{- if include "akeyless-gateway.modernPamEnabled" . }}
+            {{- include "akeyless-gateway.modernPamGatewayConfig" . | nindent 10 }}
+            {{- end }}
             ## tls config
             {{- if .Values.globalConfig.TLSConf.enabled }}
             - name: ENABLE_TLS_CONFIGURE

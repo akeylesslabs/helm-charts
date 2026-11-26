@@ -22,13 +22,16 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Run release-script unit tests
-        run: bash .github/scripts/test_select_charts.sh
+        run: |
+          bash .github/scripts/test_select_charts.sh
+          bash .github/scripts/test_verify_bundled_chart.sh
 
 
   chart-test:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
+      packages: read
 
     steps:
       - name: Checkout
@@ -70,6 +73,15 @@ jobs:
         run: |
           helm repo add dandydeveloper https://dandydeveloper.github.io/charts/
           helm repo update
+
+      - name: Log in to the registry of the bundled Modern PAM chart
+        # Not for a pull request from a fork, so a fork's workflow run never holds a token that can read the package.
+        if: steps.list-changed.outputs.changed == 'true' && github.event.pull_request.head.repo.full_name == github.repository
+        # The akeyless-gateway chart bundles a private OCI chart, and the package must also grant this
+        # repository Read access under its Actions access settings for this token to read it.
+        env:
+          REGISTRY_TOKEN: ${{ github.token }}
+        run: printf '%s' "$REGISTRY_TOKEN" | helm registry login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
 
       - name: Run chart-testing lint
         if: steps.list-changed.outputs.changed == 'true'

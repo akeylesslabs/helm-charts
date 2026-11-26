@@ -901,6 +901,14 @@ Usage: {{ include "akeyless-gateway.validateNoPlaintextSecrets" . }}
       {{- fail (printf "strictSecurityPolicy.enabled: detected potential secret '%s' in sra.env. Use secretKeyRef or existingSecret instead" .name) }}
     {{- end }}
   {{- end }}
+  {{- $modernPam := .Values.modernPam | default dict }}
+  {{- range $list := list "extraEnv" "env" }}
+  {{- range (index $modernPam $list | default list) }}
+    {{- if and (regexMatch $sensitivePattern .name) (not .valueFrom) (not (has .name $allowPlaintextEnvNames)) }}
+      {{- fail (printf "strictSecurityPolicy.enabled: detected potential secret '%s' in modernPam.%s. Use secretKeyRef or existingSecret instead" .name $list) }}
+    {{- end }}
+  {{- end }}
+  {{- end }}
 {{- end }}
 {{- end -}}
 

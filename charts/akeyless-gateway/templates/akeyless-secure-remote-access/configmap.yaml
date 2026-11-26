@@ -1,3 +1,4 @@
+{{- include "akeyless-gateway.modernPamGuard" . -}}
 {{- if eq .Values.sra.enabled true }}
 apiVersion: v1
 kind: ConfigMap
