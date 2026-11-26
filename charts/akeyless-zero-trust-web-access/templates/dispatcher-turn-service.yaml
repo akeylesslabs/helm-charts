@@ -1,0 +1,31 @@
+{{- if not .Values.dispatcher.turn.externalHost }}
+{{- fail "dispatcher.turn.externalHost is required" }}
+{{- end }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "akeyless-zero-web-access.fullname" . }}-turn
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: dispatcher-turn
+{{- include "akeyless-zero-web-access.labels" . | nindent 4 }}
+  {{- with .Values.dispatcher.turn.serviceAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.ipFamilyPolicy }}
+  ipFamilyPolicy: {{ . }}
+  {{- end }}
+  {{- with .Values.ipFamilies }}
+  ipFamilies:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  type: LoadBalancer
+  ports:
+    - name: turn
+      port: {{ .Values.dispatcher.turn.port | default 3478 }}
+      targetPort: turn
+      protocol: UDP
+  selector:
+    app: dispatcher

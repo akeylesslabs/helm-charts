@@ -40,8 +40,12 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
             - name: MTX_WEBRTCADDITIONALHOSTS
-              value: "{{ if .Values.mediamtx.additionalHosts }}{{ join "," .Values.mediamtx.additionalHosts }},{{ end }}$(NODE_IP)"
+              value: "{{ if .Values.mediamtx.additionalHosts }}{{ join "," .Values.mediamtx.additionalHosts }},{{ end }}$(NODE_IP),$(POD_IP)"
           ports:
             - name: whip
               containerPort: {{ .Values.mediamtx.webrtcPort }}
@@ -75,11 +79,11 @@ spec:
               port: {{ .Values.mediamtx.webrtcPort }}
             initialDelaySeconds: 10
             periodSeconds: 20
-{{- with .Values.mediamtx.nodeSelector }}
+{{- with .Values.webWorker.nodeSelector }}
       nodeSelector:
 {{- toYaml . | nindent 8 }}
 {{- end }}
-{{- with .Values.mediamtx.tolerations }}
+{{- with .Values.webWorker.tolerations }}
       tolerations:
 {{- toYaml . | nindent 8 }}
 {{- end }}
@@ -112,6 +116,35 @@ spec:
     app: mediamtx
     app.kubernetes.io/instance: {{ .Release.Name }}
   internalTrafficPolicy: Local
+  ports:
+    - name: whip
+      port: {{ .Values.mediamtx.webrtcPort }}
+      targetPort: {{ .Values.mediamtx.webrtcPort }}
+      protocol: TCP
+    - name: ice
+      port: {{ .Values.mediamtx.iceUDPPort }}
+      targetPort: {{ .Values.mediamtx.iceUDPPort }}
+      protocol: UDP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "akeyless-zero-web-access.mediamtxDiscovery" . }}
+  labels:
+    app: mediamtx
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  clusterIP: None
+  {{- with .Values.ipFamilyPolicy }}
+  ipFamilyPolicy: {{ . }}
+  {{- end }}
+  {{- with .Values.ipFamilies }}
+  ipFamilies:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  selector:
+    app: mediamtx
+    app.kubernetes.io/instance: {{ .Release.Name }}
   ports:
     - name: whip
       port: {{ .Values.mediamtx.webrtcPort }}

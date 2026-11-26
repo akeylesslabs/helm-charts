@@ -104,7 +104,8 @@ dispatcher:
   image:
     repository: akeyless/zero-trust-web-dispatcher
     pullPolicy: Always
-    # tag: latest
+    ## Defaults to the chart appVersion.
+    # tag:
     imagePullSecrets: []
 
   containerName: "web-dispatcher"
@@ -137,6 +138,28 @@ dispatcher:
     ##
     type: LoadBalancer
     port: 9000
+
+  ## TURN relay for the live view, for viewers that cannot reach the media servers directly.
+  ## The chart creates a UDP-only LoadBalancer Service, <fullname>-turn, for it.
+  ##
+  turn:
+    ## Required. The DNS name or reserved IP that viewers use to reach the TURN Service's
+    ## load balancer. Choose it before install: a name you control that resolves to the LB,
+    ## or an IP you reserved and assign to the LB through serviceAnnotations.
+    ##
+    externalHost: ""
+    ## The public TURN port, on the load balancer.
+    ##
+    port: 3478
+    ## Annotations of the TURN Service. AWS NLB with reserved Elastic IPs, for example:
+    ##   service.beta.kubernetes.io/aws-load-balancer-type: external
+    ##   service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+    ##   service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+    ##   service.beta.kubernetes.io/aws-load-balancer-eip-allocations: eipalloc-0123456789abcdef0,eipalloc-0fedcba9876543210
+    ##   service.beta.kubernetes.io/aws-load-balancer-healthcheck-protocol: TCP
+    ##   service.beta.kubernetes.io/aws-load-balancer-healthcheck-port: "9000"
+    ##
+    serviceAnnotations: {}
 
   ## Set resources: {} to clear the defaults.
   ##
@@ -180,7 +203,8 @@ webWorker:
   image:
     repository: akeyless/zero-trust-web-worker
     pullPolicy: Always
-    # tag: latest
+    ## Defaults to the chart appVersion.
+    # tag:
     imagePullSecrets: []
 
   containerName: "web-worker"
@@ -222,6 +246,12 @@ webWorker:
   ## for example on an HPA scale down or an upgrade.
   ##
   terminationGracePeriodSeconds: 3600
+
+  ## Place the workers and the media servers. A worker publishes to the media server on its own node,
+  ## so the chart applies both to the worker Deployment and the media server DaemonSet.
+  ##
+  nodeSelector: {}
+  tolerations: []
 
   env: []
 
@@ -298,7 +328,8 @@ webProxy:
   image:
     repository: akeyless/zero-trust-web-proxy
     pullPolicy: Always
-    # tag: latest
+    ## Defaults to the chart appVersion.
+    # tag:
     imagePullSecrets: []
 
   containerName: "web-proxy"
@@ -378,9 +409,6 @@ mediamtx:
       memory: 128Mi
     limits:
       memory: 1Gi
-
-  nodeSelector: {}
-  tolerations: []
 
   ## A media server restart ends the live view and the recording of every session on its node,
   ## so an upgrade does not restart it. Delete the pod on a node with no sessions to move it to the new version.

@@ -16,6 +16,15 @@ Akeyless Zero Trust Web Access, IPv6 and dual-stack
 - On IPv6-only or IPv6-primary clusters, do not roll back to an older ZTWA version.
   Older images listen on IPv4 only and fail readiness.
 
+Akeyless Zero Trust Web Access, TURN relay
+==========================================
+
+Viewers that cannot reach the media servers directly get their video through the TURN
+Service {{ include "akeyless-zero-web-access.fullname" . }}-turn, over UDP {{ .Values.dispatcher.turn.port }}.
+Point {{ .Values.dispatcher.turn.externalHost }} at its load balancer.
+Allow UDP {{ .Values.dispatcher.turn.port }} from the viewers' networks.
+The media servers must be able to reach the dispatcher pod over UDP ports 32768-60999.
+
 {{- $wptInDispatcherEnv := false }}
 {{- range .Values.dispatcher.env }}{{- if eq (get . "name") "WEB_PROXY_TYPE" }}{{- $wptInDispatcherEnv = true }}{{- end }}{{- end }}
 {{- if $wptInDispatcherEnv }}

@@ -133,7 +133,7 @@ The web worker runs a Chromium-based browser (`akeyless/zero-trust-web-worker`).
 1. Rewrite any custom `webWorker.config.policies` from Firefox schema to Chrome Enterprise JSON.
 2. Review the worker pod spec changes (`/config` emptyDir, policy mount path) before rollout.
 3. Open the live view's network path. Browsers now get the video straight from a media server on each node, over UDP `mediamtx.iceUDPPort` (default `8189`), on top of the dispatcher's port. Allow it from users' networks to every node that runs workers, or to the addresses in `mediamtx.additionalHosts`. There is no TCP fallback. The port is a hostPort, so the cluster's CNI must support hostPort, and two releases in one cluster need different ports. Namespaces under Pod Security `baseline` or `restricted`, and OpenShift's `restricted` SCC, refuse a hostPort, and there the media server does not start. Install into a namespace that allows it.
-4. Keep the supported layout: one dispatcher per worker pool, on the same node as its workers.
+4. Keep the supported layout: one dispatcher per worker pool. Workers no longer run on the dispatcher's node, so the dispatcher must be image `3.0.1` or later, which reaches the media server on every node and runs the TURN relay. Leave `dispatcher.image.tag` unset to get the chart's `appVersion`, or pin `3.0.1` or later.
 5. Recording now comes from the media server, out of the live stream:
    - The 4 hour cap is gone. A session is recorded for its full length, in files of up to 24 hours.
    - The live view and the recording fail together.
@@ -143,7 +143,8 @@ The web worker runs a Chromium-based browser (`akeyless/zero-trust-web-worker`).
    - Finished recordings wait in `recordings/` on the shared volume. `.mkv` recordings an older worker left on the volume are uploaded as they are.
 6. A chart upgrade does not restart the media server, so live sessions survive it. To move a node's media server to the new version, delete its pod while no sessions run on that node.
 7. A proxy or ingress in front of the dispatcher must keep the browser's `Host` header. The live routes compare the browser's `Origin` with it, and answer 403 when they differ.
-8. Move your values to the 4.0.0 layout, see the next section.
+8. Set `dispatcher.turn.externalHost`, now required. The dispatcher relays the video of viewers that cannot reach a media server directly, through a TURN server on UDP `dispatcher.turn.port` (default `3478`). The chart creates a UDP-only LoadBalancer Service, `<fullname>-turn`, for it. Choose the address before you install: a DNS name you control that resolves to the load balancer, or a reserved IP you assign to it with `dispatcher.turn.serviceAnnotations` (on AWS, an NLB with `aws-load-balancer-eip-allocations` and a TCP:9000 health check). Allow UDP `3478` from users' networks to that load balancer, and UDP `32768-60999` from the media servers to the dispatcher pod. Viewers on networks that block UDP get no video. The dispatcher must stay at one replica, and a restart drops the relayed sessions.
+9. Move your values to the 4.0.0 layout, see the next section.
 
 #### Upgrading to the 4.0.0 values layout
 
@@ -178,6 +179,7 @@ Upgrade with your values file (`-f <values file>`) or `--reset-then-reuse-values
 | `HPA.webWorker.sessionTerminationGracePeriodSeconds` | `webWorker.terminationGracePeriodSeconds` |
 | `HPA.dispatcher` | Removed. The chart runs one dispatcher per worker pool |
 | `dispatcher.initContainer`, `webProxy.initContainer` | Removed. The dispatcher and the web proxy read their settings from env |
+| `mediamtx.nodeSelector`, `mediamtx.tolerations` | `webWorker.nodeSelector`, `webWorker.tolerations`, which place the workers and the media servers |
 
 When a field was set in both `sessionRecording.upload` and `dispatcher.config.recording`, keep the `dispatcher.config.recording` value. The old chart used that one.
 
@@ -344,16 +346,19 @@ The following table lists the configurable parameters of the Zero Trust Web Acce
 | `webWorker.image.imagePullSecrets`        | Extra pull secret refs for the web worker main; merged at the pod                                                     | `[]`                                                         |
 | `validator.image.imagePullSecrets`         | Extra pull secret refs for the post-install validator Pod; merged with `image.imagePullSecrets`                    | `[]`                                                         |
 | `dispatcher.image.repository`             | Zero Trust Web Access Dispatcher image name                                                                          | `akeyless/zero-trust-web-dispatcher`                         |
-| `dispatcher.image.tag`                    | Zero Trust Web Access Dispatcher image tag                                                                           | `latest`                                                     |      
+| `dispatcher.image.tag`                    | Zero Trust Web Access Dispatcher image tag (defaults to the chart `appVersion`)                                      | `nil`                                                        |      
 | `dispatcher.image.pullPolicy`             | Zero Trust Web Access Dispatcher image pull policy                                                                   | `Always`                                                     |  
 | `dispatcher.containerName`                | Zero Trust Web Access Dispatcher container name                                                                      | `web-dispatcher`                                             |    
+| `dispatcher.turn.externalHost`            | **Required.** DNS name or reserved IP that viewers use to reach the TURN Service's load balancer                    | `""`                                                         |
+| `dispatcher.turn.port`                    | Public TURN port on the load balancer (UDP)                                                                          | `3478`                                                       |
+| `dispatcher.turn.serviceAnnotations`      | Annotations of the TURN LoadBalancer Service, for example reserved EIPs on an AWS NLB                                | `{}`                                                         |
 | `dispatcher.replicaCount`                 | Number of dispatchers. Must be `1`, one dispatcher per worker pool                                                                     | `1`                                                          |
 | `dispatcher.livenessProbe`                | Liveness probe configuration for Zero Trust Web Access Dispatcher                                                    | Check `values.yaml` file                                     |                   
 | `dispatcher.readinessProbe`               | Readiness probe configuration for Zero Trust Web Access Dispatcher                                                   | Check `values.yaml` file                                     |         
 | `dispatcher.resources.limits`             | The resources limits for Zero Trust Web Access Dispatcher containers (If HPA is enabled these must be set)           | `memory: 512Mi`                                              |
 | `dispatcher.resources.requests`           | The requested resources for Zero Trust Web Access Dispatcher containers (If HPA is enabled these must be set)        | `cpu: 100m, memory: 128Mi`                                   |
 | `webWorker.image.repository`              | Zero Trust Web Access Web Worker image name                                                                          | `akeyless/zero-trust-web-worker`                             |
-| `webWorker.image.tag`                     | Zero Trust Web Access Web Worker image tag                                                                           | `latest`                                                     |      
+| `webWorker.image.tag`                     | Zero Trust Web Access Web Worker image tag (defaults to the chart `appVersion`)                                      | `nil`                                                        |      
 | `webWorker.image.pullPolicy`              | Zero Trust Web Access Web Worker image pull policy                                                                   | `Always`                                                     |
 | `webWorker.containerName`                 | Zero Trust Web Access Web Worker container name                                                                      | `web-worker`                                                 |
 | `webWorker.replicaCount`                  | Number of Zero Trust Web Access Web Worker nodes                                                                     | `5`                                                          |
@@ -361,6 +366,8 @@ The following table lists the configurable parameters of the Zero Trust Web Acce
 | `webWorker.readinessProbe`                | Readiness probe configuration for Zero Trust Web Access Web Worker                                                   | Check `values.yaml` file                                     |         
 | `webWorker.resources.limits`              | The resources limits for Zero Trust Web Access Web Worker containers (If HPA is enabled these must be set)           | `memory: 2Gi`                                                |
 | `webWorker.resources.requests`            | The requested resources for Zero Trust Web Access Web Worker containers (If HPA is enabled these must be set)        | `cpu: 1000m, memory: 1Gi`                                    |
+| `webWorker.nodeSelector`                  | Node labels for the workers and the media servers. The chart applies it to both, so every worker has one on its node | `{}`                                                         |
+| `webWorker.tolerations`                   | Tolerations for the workers and the media servers. The chart applies them to both, so every worker has one on its node | `[]`                                                         |
 | `webProxy.image.repository`               | Zero Trust Web Access Proxy image name                                                                              | `akeyless/zero-trust-web-proxy`                              |
 | `webProxy.image.tag`                      | Zero Trust Web Access Proxy image tag (defaults to the chart `appVersion`)                                          | `nil`                                                        |
 | `webProxy.image.pullPolicy`               | Zero Trust Web Access Proxy image pull policy                                                                       | `Always`                                                     |

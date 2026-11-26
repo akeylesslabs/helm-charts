@@ -1,0 +1,127 @@
+suite: mediamtx services
+release:
+  name: ztwa
+  namespace: sra
+set:
+  dispatcher.turn.externalHost: turn.example.com
+  config.ztwaAuth.ztwaAccessID: p-priv
+  config.ztwaAuth.authorizedAccessIDs: [p-1]
+tests:
+  - it: "renders a headless discovery Service for every mediamtx pod"
+    template: templates/mediamtx-daemonset.yaml
+    documentSelector:
+      path: metadata.name
+      value: ztwa-disc-mtx
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: spec.clusterIP
+          value: None
+      - equal:
+          path: spec.selector.app
+          value: mediamtx
+      - contains:
+          path: spec.ports
+          content:
+            name: whip
+            port: 8889
+            targetPort: 8889
+            protocol: TCP
+
+  - it: "keeps the node-local Service for the workers"
+    template: templates/mediamtx-daemonset.yaml
+    documentSelector:
+      path: spec.internalTrafficPolicy
+      value: Local
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: ztwa-mediamtx
+
+  - it: "points the dispatcher at the discovery Service"
+    template: templates/dispatcher-deployment.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MEDIA_SERVER
+            value: ztwa-disc-mtx:8889
+
+  - it: "the longest release name keeps the discovery Service within 63 characters"
+    release:
+      name: r2345678901234567890123456789012345678901234567890123
+    asserts:
+      - equal:
+          path: metadata.name
+          value: r2345678901234567890123456789012345678901234567890123-disc-mtx
+        template: templates/mediamtx-daemonset.yaml
+        documentSelector:
+          path: spec.clusterIP
+          value: None
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MEDIA_SERVER
+            value: r2345678901234567890123456789012345678901234567890123-disc-mtx:8889
+        template: templates/dispatcher-deployment.yaml
+
+  - it: "lets workers run on any node"
+    template: templates/web-worker-deployment.yaml
+    asserts:
+      - notExists:
+          path: spec.template.spec.affinity.podAffinity
+      - notExists:
+          path: spec.template.spec.nodeSelector
+      - notExists:
+          path: spec.template.spec.tolerations
+
+  - it: "webWorker.nodeSelector and tolerations place both the workers and the media servers"
+    set:
+      webWorker.nodeSelector:
+        ztwa: "true"
+      webWorker.tolerations:
+        - {key: dedicated, value: ztwa, effect: NoSchedule}
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value: {ztwa: "true"}
+        template: templates/web-worker-deployment.yaml
+      - equal:
+          path: spec.template.spec.tolerations
+          value: [{key: dedicated, value: ztwa, effect: NoSchedule}]
+        template: templates/web-worker-deployment.yaml
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value: {ztwa: "true"}
+        template: templates/mediamtx-daemonset.yaml
+        documentSelector:
+          path: kind
+          value: DaemonSet
+      - equal:
+          path: spec.template.spec.tolerations
+          value: [{key: dedicated, value: ztwa, effect: NoSchedule}]
+        template: templates/mediamtx-daemonset.yaml
+        documentSelector:
+          path: kind
+          value: DaemonSet
+
+  - it: "mediamtx.nodeSelector fails and names webWorker.nodeSelector"
+    template: templates/configmap.yaml
+    set:
+      mediamtx.nodeSelector:
+        ztwa: "true"
+    asserts:
+      - failedTemplate:
+          errorPattern: "mediamtx.nodeSelector moved to webWorker.nodeSelector"
+
+  - it: "mediamtx.tolerations fails and names webWorker.tolerations"
+    template: templates/configmap.yaml
+    set:
+      mediamtx.tolerations:
+        - {key: dedicated, value: ztwa, effect: NoSchedule}
+    asserts:
+      - failedTemplate:
+          errorPattern: "mediamtx.tolerations moved to webWorker.tolerations"

@@ -59,6 +59,27 @@
       "type": "object",
       "additionalProperties": true,
       "properties": {
+        "turn": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "externalHost": {
+              "type": "string",
+              "description": "Required. DNS name or reserved IP that viewers use to reach the TURN Service's load balancer."
+            },
+            "port": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65535,
+              "description": "Public TURN port on the load balancer."
+            },
+            "serviceAnnotations": {
+              "type": "object",
+              "additionalProperties": { "type": "string" },
+              "description": "Annotations of the TURN LoadBalancer Service."
+            }
+          }
+        },
         "image": {
           "type": "object",
           "additionalProperties": true,
