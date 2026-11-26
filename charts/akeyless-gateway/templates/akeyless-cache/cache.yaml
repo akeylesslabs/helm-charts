@@ -31,6 +31,10 @@ spec:
       labels:
         {{- include "akeyless-gateway.clusterCache.labels" . | nindent 8 }}
     spec:
+      {{- /* hostUsers: OpenShift / user-namespaces clusters (restricted-v3 requires it). Rendered only when set (false is a valid value). */}}
+      {{- if not (kindIs "invalid" .Values.globalConfig.clusterCache.hostUsers) }}
+      hostUsers: {{ .Values.globalConfig.clusterCache.hostUsers }}
+      {{- end }}
       {{- include "cache.imagePullSecrets" . | indent 2 }}
       {{- if .Values.gateway.deployment.tolerations }}
       tolerations:

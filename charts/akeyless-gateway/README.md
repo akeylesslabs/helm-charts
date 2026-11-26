@@ -326,6 +326,9 @@ For OpenShift, or any Kubernetes cluster with user namespaces enabled, you can r
 gateway:
   deployment:
     hostUsers: false
+globalConfig:
+  clusterCache:
+    hostUsers: false     # the standalone cache pod; restricted-v3 rejects pods that do not set it
 sra:
   webConfig:
     deployment:
@@ -339,6 +342,8 @@ The feature is **opt-in**. When `hostUsers` is unset, the field is not rendered 
 - The cluster needs user-namespace support: the Kubernetes feature, a container runtime that supports it, and a recent kernel.
 - With `hostUsers: false`, the pod cannot use `hostNetwork`, `hostPID` or `hostIPC`.
 - The SRA SSH bastion (`sra.sshConfig`) is not covered. It needs root, extra capabilities and mounts for its chroot sessions.
+- **Cache:** the `restricted-v3` SCC rejects any pod that does not set `hostUsers: false`, so set `globalConfig.clusterCache.hostUsers: false` as well when the standalone cache is enabled (the default).
+- **Redis HA (`cacheHA.enabled=true`):** the `redis-ha` subchart has no `hostUsers` option, so this chart cannot set it on those pods. They are not admitted by `restricted-v3`. On OpenShift the subchart removes its default `runAsUser`/`fsGroup`, so those pods are expected to run under `restricted-v2`. Verify this on your cluster.
 - On OpenShift, you can pin the SCC with the pod annotation `openshift.io/required-scc: restricted-v3`. The chart does not set it. Add it yourself through `gateway.deployment.pod.annotations` (Gateway) or `sra.webConfig.deployment.annotations` (SRA Web).
 - To verify, check that `/proc/self/uid_map` in the container shows a non-identity mapping.
 
